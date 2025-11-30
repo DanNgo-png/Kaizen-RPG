@@ -1,0 +1,54 @@
+/* The side navigation menu container */
+.sidenav {
+    height: 100%;
+    width: 60px; 
+    position: fixed;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    background-color: var(--bg-sidebar); 
+    overflow-x: hidden;
+    padding-top: 60px;
+    transition: 0.5s;
+    text-wrap: nowrap;
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-button {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1001;
+    
+    /* Visual Styling */
+    background-color: var(--bg-sidebar);
+    color: var(--text-primary);
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    /* transition: 0.3s; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sidebar-toggle-button img {
+    width: 32px; 
+    height: 32px; 
+    display: block;
+}
+
+.sidebar-toggle-button:hover {
+    background-color: var(--bg-hover);
+    border-radius: 50%; /* Circle shadow for hover effect */
+}
+
+/* Responsive adjustments */
+@media screen and (max-height: 450px) {
+    .sidenav {
+        padding-top: 15px;
+    }
+    .sidenav a {
+        font-size: 18px;
+    }
+}

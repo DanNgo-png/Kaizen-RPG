@@ -1,0 +1,71 @@
+/* --- General Button Reset for Sidebar --- */
+/* Targets the Dropdown headers, Focus button, and items inside dropdowns */
+.dropdown-button,
+.focus-button,
+.dropdown-container button,
+.sidenav a {
+    width: 100%;
+    text-align: left;
+    padding: 12px 20px 12px 32px; /* More vertical padding for better click area */
+    
+    /* Remove default HTML button styles */
+    background-color: transparent;
+    border: none;
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    font-size: 20px;
+    
+    display: block;
+    cursor: pointer;
+    outline: none;
+    transition: background-color 0.3s;
+}
+
+/* Hover Effects */
+.dropdown-button:hover,
+.focus-button:hover,
+.dropdown-container button:hover,
+.sidenav a:hover {
+    background-color: var(--bg-hover);
+}
+
+/* --- Dropdown Specific Styles --- */
+/* Active State (When dropdown is open) */
+.dropdown-button.active {
+    background-color: var(--accent-active-bg);
+    color: var(--accent-active-text);
+}
+
+/* The Container for sub-items (Hidden by default) */
+.dropdown-container {
+    display: none; /* Crucial: This hides the list items initially */
+    background-color: var(--bg-sidebar-inner);
+}
+
+/* Sub-items indentation */
+.dropdown-container button {
+    padding-left: 48px; /* Indent items more than the header */
+    font-size: 18px;    /* Slightly smaller font */
+    opacity: 0.9;
+}
+
+/* --- Collapsed State Styles --- */
+/* Hide text in all buttons when sidebar is collapsed */
+.sidenav.collapsed .dropdown-button,
+.sidenav.collapsed .focus-button,
+.sidenav.collapsed .dropdown-container button,
+.sidenav.collapsed a {
+    color: transparent;
+    transition: color 0.3s; /* Makes it fade out smoothly */
+    /* pointer-events: none; Optional: prevents clicking invisible text */
+}
+
+/* Ensure arrow icons (if you add them) or other elements also hide/adjust if needed */
+.sidenav.collapsed .fa-caret-down {
+    display: none;
+}
+
+/* Prevent dropdowns from accidentally showing in collapsed mode */
+.sidenav.collapsed .dropdown-container {
+    display: none !important;
+}

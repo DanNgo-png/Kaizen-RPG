@@ -1,0 +1,13 @@
+/* MAIN PAGE */
+@import url('css/variables.css');
+@import url('css/base.css');
+@import url('css/sidebar-layout.css');
+@import url('css/sidebar-items.css');
+
+/* FOCUS PAGE */
+@import url('css/focus-standard/focus-dot.css');
+@import url('css/focus-standard/focus-dropdown.css');
+@import url('css/focus-standard/focus-footer-button.css');
+@import url('css/focus-standard/focus-standard-layout.css');
+@import url('css/focus-standard/focus-stat-icons.css');
+@import url('css/focus-standard/timer-circle.css');

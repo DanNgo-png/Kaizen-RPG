@@ -1,0 +1,31 @@
+:root {
+    /* MAIN PAGE */
+        /* Colors */
+        --bg-body: #191A1C;
+        --bg-sidebar: #2C2C2C;
+        --bg-sidebar-inner: #262626;
+        --bg-hover: #3D3D3D;
+        --accent-active-bg: #1C398E;
+        --accent-active-text: #8EC5FF;
+        --text-primary: white;
+        
+        /* Fonts */
+        /* --font-main: "DM Sans", serif; */
+        --font-main: "Segoe UI", sans-serif;
+        
+        /* Dimensions */
+        --sidebar-width: 250px; /* Used in JS, useful to reference conceptually */
+
+    /* FOCUS PAGE */
+    --surface-color: #1f2937;
+    --circle-bg: #132e2d;
+    --focus-text-primary: #ffffff;
+    --text-secondary: #9ca3af;
+    --accent-green: #059669;
+    --accent-green-hover: #047857;
+    --timer-text: #6ee7b7;
+    --timer-bg-text: #8dfeb0;
+    --stat-fire: #f59e0b;
+    --stat-blue: #3b82f6;
+    --stat-check: #10b981;
+}

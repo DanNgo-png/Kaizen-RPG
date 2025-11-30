@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kaizen RPG</title>
+    <link rel="stylesheet" href="layout.css">
+</head>
+
+<body>
+
+    <!-- SIDE BAR -->
+    <button id="sidebar-toggle" class="sidebar-toggle-button">
+        <img src="assets/menu.png" alt="Menu">
+    </button>
+
+    <div id="mySidenav" class="sidenav collapsed">
+        <div class="dropdown">
+            <button class="dropdown-button">Plan</button>
+            <div class="dropdown-container">
+                <button>Todo Lists</button>
+                <button>Kanban Board</button>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="dropdown-button">Focus</button>
+            <div class="dropdown-container">
+                <button class="focus-button">Standard</button>
+                <button>Flexible</button>
+                <button>Settings</button>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="dropdown-button">Timeframes</button>
+            <div class="dropdown-container">
+                <button>Today</button>
+                <button>This Week</button>
+                <button>This Quarter</button>
+                <button>This Year</button>
+            </div>
+        </div>
+
+        <div class="dropdown">
+            <button class="dropdown-button">Analyze</button>
+            <div class="dropdown-container">
+                <button>Overview</button>
+                <button>Day</button>
+                <button>Week</button>
+                <button>Year</button>
+            </div>
+        </div>
+
+    </div>
+    <!-- SIDE BAR END -->
+
+    <div id="main" style="margin-left: 60px">
+        <p>Hello world</p>
+    </div>
+    
+    <script src="js/neutralino.js"></script>
+    <script src="js/onWindowClose.js"></script>
+    <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,28 @@
+/* Stats (Top Right) */
+.stats-container {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat.fire {
+    color: var(--stat-fire);
+}
+
+.stat.time {
+    color: var(--stat-blue);
+}
+
+.stat.done {
+    color: var(--stat-check);
+}

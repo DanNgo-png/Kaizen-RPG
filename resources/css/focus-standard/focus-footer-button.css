@@ -1,0 +1,25 @@
+footer {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.footer-btn {
+    background-color: transparent;
+    border: 1px solid #374151;
+    color: #d1d5db;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: 0.2s;
+    margin-bottom: 20px;
+}
+
+.footer-btn:hover {
+    background-color: #1f2937;
+}

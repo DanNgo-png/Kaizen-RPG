@@ -1,0 +1,12 @@
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    font-family: var(--font-main);
+    margin: 0;
+}
+
+/* Style page content */
+#main {
+    transition: margin-left 0.5s; /* sidebar open speed */
+    padding: 50px;
+}
