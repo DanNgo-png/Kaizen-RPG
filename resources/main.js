@@ -5,7 +5,7 @@ import { configureSidebar } from './js/focus/configureSidebar.js'
 
 function app() {
     handleDropdowns()
-    
+
     // Sidebar Toggle
     const sidebarToggle = document.getElementById("sidebar-toggle");
     if (sidebarToggle) {
@@ -24,7 +24,7 @@ function app() {
     // If you have a button to go back home, add a listener for './pages/home.html'
 
     // Event delegation for dynamically loaded content
-    document.addEventListener('click', function(event) {
+    document.addEventListener('click', function (event) {
         // Configure Sidebar Button
         if (event.target.closest('#configure-footer-button')) {
             configureSidebar();

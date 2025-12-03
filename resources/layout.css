@@ -11,3 +11,7 @@
 @import url('css/focus-standard/focus-standard-layout.css');
 @import url('css/focus-standard/focus-stat-icons.css');
 @import url('css/focus-standard/timer-circle.css');
+
+    /* CONFIGURE SIDE BAR */
+    @import url('css/focus-standard/focus-sidebar-layout.css');
+    @import url('css/focus-standard/focus-sidebar-items.css');
