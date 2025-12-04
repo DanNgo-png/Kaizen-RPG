@@ -36,7 +36,7 @@ function app() {
     const focusStandardButton = document.querySelector(".focus-standard-button");
     if (focusStandardButton) {
         focusStandardButton.addEventListener("click", async () => {
-            await loadPage('./pages/focus-standard.html');
+            await loadPage('./pages/focus/focus-standard.html');
             initFocusTimer();
         });
     }
@@ -55,7 +55,7 @@ function app() {
     const focusFlexibleButton = document.querySelector(".focus-flexible-button");
     if (focusFlexibleButton) {
         focusFlexibleButton.addEventListener("click", async () => {
-            await loadPage('./pages/focus-flexible.html');
+            await loadPage('./pages/focus/focus-flexible.html');
             initFlexibleFocusTimer();
         });
     }
@@ -155,6 +155,14 @@ function app() {
     if (analyzeCustom) {
         analyzeCustom.addEventListener("click", async () => {
             await loadPage('./pages/analyze/custom.html');
+            // placeholder(); 
+        });
+    }
+
+    const mainSettingsButton = document.querySelector(".main-settings-button");
+    if (mainSettingsButton) {
+        mainSettingsButton.addEventListener("click", async () => {
+            await loadPage('./pages/main-settings/main-settings.html');
             // placeholder(); 
         });
     }
