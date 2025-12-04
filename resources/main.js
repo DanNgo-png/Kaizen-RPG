@@ -2,7 +2,7 @@ import { handleDropdowns } from './js/dropdown.js'
 import { toggleSideBar } from './js/toggleSideBar.js'
 import { loadPage } from './js/router.js'
 import { configureSidebar } from './js/focus/configureSidebar.js'
-import { initFocusTimer } from './js/focus/focusTimer.js' 
+import { initFocusTimer } from './js/focus/focusTimer.js'
 import { initFlexibleFocusTimer } from './js/focus/flexible/focusTimer.js'
 
 function app() {
@@ -37,16 +37,26 @@ function app() {
     if (focusStandardButton) {
         focusStandardButton.addEventListener("click", async () => {
             await loadPage('./pages/focus-standard.html');
-            initFocusTimer(); 
+            initFocusTimer();
         });
     }
+
+    // Focus: Standard; Configure Sidebar
+    document.addEventListener('click', function (event) {
+        // Configure Sidebar Button
+        if (event.target.closest('#configure-footer-button')) {
+            configureSidebar();
+            return; // Stop further checks
+        }
+        // NOTE: You can add more delegated events here in the future
+    });
 
     // Setup "Focus: Flexible" Button
     const focusFlexibleButton = document.querySelector(".focus-flexible-button");
     if (focusFlexibleButton) {
         focusFlexibleButton.addEventListener("click", async () => {
             await loadPage('./pages/focus-flexible.html');
-            initFlexibleFocusTimer(); 
+            initFlexibleFocusTimer();
         });
     }
 
@@ -54,24 +64,100 @@ function app() {
     const focusSettingsButton = document.querySelector(".focus-settings-button");
     if (focusSettingsButton) {
         focusSettingsButton.addEventListener("click", async () => {
-            await loadPage('./pages/focus-settings.html');
+            await loadPage('./pages/focus/focus-settings.html');
             // placeholder(); 
         });
     }
 
-    // 3. Setup "Home" Buttons (Optional)
-    // If you have a button to go back home, add a listener for './pages/home.html'
+    // "Timeframe: Today"
+    const todayTimeframeButton = document.querySelector(".today-timeframe-button");
+    if (todayTimeframeButton) {
+        todayTimeframeButton.addEventListener("click", async () => {
+            await loadPage('./pages/timeframes/today.html');
+            // placeholder(); 
+        });
+    }
 
-    // Event delegation for dynamically loaded content
-    document.addEventListener('click', function (event) {
-        // Configure Sidebar Button
-        if (event.target.closest('#configure-footer-button')) {
-            configureSidebar();
-            return; // Stop further checks
-        }
+    // "Timeframe: This Week"
+    const weekTimeframeButton = document.querySelector(".week-timeframe-button");
+    if (weekTimeframeButton) {
+        weekTimeframeButton.addEventListener("click", async () => {
+            await loadPage('./pages/timeframes/this-week.html');
+            // placeholder(); 
+        });
+    }
 
-        // NOTE: You can add more delegated events here in the future
-    });
+    // "Timeframe: This Quarter"
+    const quarterTimeframeButton = document.querySelector(".quarter-timeframe-button");
+    if (quarterTimeframeButton) {
+        quarterTimeframeButton.addEventListener("click", async () => {
+            await loadPage('./pages/timeframes/this-quarter.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Timeframe: This Year"
+    const yearTimeframeButton = document.querySelector(".year-timeframe-button");
+    if (yearTimeframeButton) {
+        yearTimeframeButton.addEventListener("click", async () => {
+            await loadPage('./pages/timeframes/this-year.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Analyze: Overview"
+    const analyzeOverview = document.querySelector(".analyze-overview-button");
+    if (analyzeOverview) {
+        analyzeOverview.addEventListener("click", async () => {
+            await loadPage('./pages/analyze/overview.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Analyze: Day"
+    const analyzeDay = document.querySelector(".analyze-day-button");
+    if (analyzeDay) {
+        analyzeDay.addEventListener("click", async () => {
+            await loadPage('./pages/analyze/day.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Analyze: Week"
+    const analyzeWeek = document.querySelector(".analyze-week-button");
+    if (analyzeWeek) {
+        analyzeWeek.addEventListener("click", async () => {
+            await loadPage('./pages/analyze/week.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Analyze: Month"
+    const analyzeMonth = document.querySelector(".analyze-month-button");
+    if (analyzeMonth) {
+        analyzeMonth.addEventListener("click", async () => {
+            await loadPage('./pages/analyze/month.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Analyze: Year"
+    const analyzeYear = document.querySelector(".analyze-year-button");
+    if (analyzeYear) {
+        analyzeYear.addEventListener("click", async () => {
+            await loadPage('./pages/analyze/year.html');
+            // placeholder(); 
+        });
+    }
+
+    // "Analyze: Custom"
+    const analyzeCustom = document.querySelector(".analyze-custom-button");
+    if (analyzeCustom) {
+        analyzeCustom.addEventListener("click", async () => {
+            await loadPage('./pages/analyze/custom.html');
+            // placeholder(); 
+        });
+    }
 }
 
 app()
