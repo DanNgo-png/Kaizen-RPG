@@ -1,0 +1,184 @@
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--focus-flexible-bg-body);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: var(--text-white);
+}
+
+/* --- 2. Widget Container --- */
+.widget-container {
+    background-color: var(--bg-widget);
+    padding: 24px;
+    border-radius: var(--radius-lg);
+    width: 500px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* --- 3. Stats Row --- */
+.stats-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.stat-card {
+    background-color: var(--card-bg);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px 10px;
+    border-radius: var(--radius-sm);
+    border: 2px solid transparent;
+    /* Reserve space for border */
+}
+
+.stat-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    font-weight: 700;
+    color: var(--text-grey);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+}
+
+.stat-time {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* Active State: Focus (Green) */
+.stat-card.active-focus {
+    border-color: var(--accent-green);
+    background-color: rgba(44, 110, 73, 0.15);
+    /* Very subtle green bg */
+}
+
+.stat-card.active-focus .stat-label,
+.stat-card.active-focus .stat-time {
+    color: #e0e0e0;
+    /* Slightly brighter text */
+}
+
+/* Active State: Break (Brown) - Use this class for the Break state */
+.stat-card.active-break {
+    border-color: var(--accent-brown);
+    background-color: rgba(166, 110, 78, 0.15);
+}
+
+/* --- 4. Controls Row --- */
+.controls-row {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    height: 60px;
+}
+
+button {
+    border: none;
+    cursor: pointer;
+    font-family: "Segoe UI", sans-serif;
+    transition: filter 0.2s ease;
+}
+
+button:hover {
+    filter: brightness(1.1);
+}
+
+/* Icon Buttons */
+.btn-icon {
+    width: 60px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.btn-blue {
+    background-color: var(--accent-blue);
+}
+
+.btn-transparent {
+    background-color: transparent;
+    color: var(--text-grey);
+}
+
+.btn-transparent:hover {
+    color: var(--text-white);
+}
+
+/* Main Action Button */
+.btn-main {
+    flex: 1;
+    border-radius: var(--radius-sm);
+    font-size: 18px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 0 20px;
+}
+
+.btn-brown {
+    background-color: var(--accent-brown);
+}
+
+.btn-green {
+    background-color: var(--accent-green-bright);
+}
+
+/* The 'B' Key Hint */
+.key-hint {
+    background-color: rgba(0, 0, 0, 0.2);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    position: absolute;
+    right: 16px;
+}
+
+/* --- 5. Footer Row --- */
+.footer-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 5px;
+}
+
+.footer-link {
+    color: var(--text-grey);
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.footer-link:hover {
+    color: var(--text-white);
+}
+
+.footer-logo-placeholder {
+    width: 20px;
+    height: 4px;
+    background-color: #333;
+    border-radius: 2px;
+}

@@ -20,3 +20,9 @@
 .dot.inactive {
     background-color: #4b5563;
 }
+
+/* Blue Dot for break sessions */
+.dot.break-active {
+    background-color: var(--stat-blue); /* Uses your existing blue variable */
+    box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 3px var(--stat-blue);
+}

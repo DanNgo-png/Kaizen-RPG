@@ -1,7 +1,7 @@
 /* --- General Button Reset for Sidebar --- */
 /* Targets the Dropdown headers, Focus button, and items inside dropdowns */
 .dropdown-button,
-.focus-button,
+.focus-standard-button,
 .dropdown-container button,
 .sidenav a {
     width: 100%;
@@ -23,7 +23,7 @@
 
 /* Hover Effects */
 .dropdown-button:hover,
-.focus-button:hover,
+.focus-standard-button:hover,
 .dropdown-container button:hover,
 .sidenav a:hover {
     background-color: var(--bg-hover);
@@ -52,7 +52,7 @@
 /* --- Collapsed State Styles --- */
 /* Hide text in all buttons when sidebar is collapsed */
 .sidenav.collapsed .dropdown-button,
-.sidenav.collapsed .focus-button,
+.sidenav.collapsed .focus-standard-button,
 .sidenav.collapsed .dropdown-container button,
 .sidenav.collapsed a {
     color: transparent;

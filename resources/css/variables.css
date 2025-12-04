@@ -29,5 +29,27 @@
     --stat-blue: #3b82f6;
     --stat-check: #10b981;
         /* CONFIGURE SIDE BAR */
-        
+
+    /* FOCUS FLEXIBLE PAGE */
+        /* Colors */
+        --focus-flexible-bg-body: #191A1C;
+        --bg-widget: #181818;
+
+        --card-bg: #222222;
+        --card-bg-active: #1d2b24;
+        /* Subtle green tint for active focus */
+
+        --text-white: #eeeeee;
+        --text-grey: #888888;
+
+        /* --accent-green: #2c6e49; */
+        --accent-green-bright: #438e66;
+        --accent-brown: #a66e4e;
+        --accent-brown-dark: #8c5e3c;
+        --accent-blue: #5b85b7;
+
+        /* Spacing */
+        --radius-sm: 6px;
+        --radius-md: 8px;
+        --radius-lg: 12px;
 }

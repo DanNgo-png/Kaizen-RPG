@@ -1,10 +1,11 @@
-/* MAIN PAGE */
+/* === MAIN PAGE === */
 @import url('css/variables.css');
 @import url('css/base.css');
 @import url('css/sidebar-layout.css');
 @import url('css/sidebar-items.css');
 
-/* FOCUS PAGE */
+/* === FOCUS PAGE === */
+/* STANDARD TIMER */
 @import url('css/focus-standard/focus-dot.css');
 @import url('css/focus-standard/focus-dropdown.css');
 @import url('css/focus-standard/focus-footer-button.css');
@@ -15,3 +16,6 @@
     /* CONFIGURE SIDE BAR */
     @import url('css/focus-standard/focus-sidebar-layout.css');
     @import url('css/focus-standard/focus-sidebar-items.css');
+
+/* FLEXIBLE TIMER */
+@import url('css/focus/focus-flexible/main.css')

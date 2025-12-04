@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Focus - Kaizen RPG</title>
+</head>
+<body>
+	<div class="widget-container">
+
+		<!-- TOP SECTION: Stats -->
+		<div class="stats-row">
+			<!-- Focus Box (Active State) -->
+			<div id="card-focus" class="stat-card active-focus">
+				<span class="stat-label">FOCUS</span>
+				<span id="time-focus" class="stat-time">00:24</span>
+			</div>
+
+			<!-- Breaks Box -->
+			<div id="card-break" class="stat-card">
+				<span class="stat-label">BREAKS</span>
+				<span id="time-break" class="stat-time">00:00</span>
+			</div>
+
+			<!-- Balance Box -->
+			<div class="stat-card">
+				<span class="stat-label">BALANCE</span>
+				<span class="stat-time">00:07</span>
+			</div>
+		</div>
+
+		<!-- MIDDLE SECTION: Controls -->
+		<div class="controls-row">
+			<!-- Flag Button -->
+			<button class="btn-icon btn-blue">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<path d="M5 21V4H19L15.5 9.5L19 15H5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+						stroke-linejoin="round" />
+				</svg>
+			</button>
+
+			<!-- Main Action Button (Brown State) -->
+			<button id="btn-action" class="btn-main btn-brown">
+				<span>TAKE A BREAK</span>
+				<span class="key-hint">B</span>
+			</button>
+
+			<!-- Clock Button -->
+			<button class="btn-icon btn-transparent">
+				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+					<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" />
+					<path d="M12 7V12L15 15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+						stroke-linejoin="round" />
+				</svg>
+			</button>
+		</div>
+
+		<!-- BOTTOM SECTION: Footer -->
+		<div class="footer-row">
+			<a href="#" class="footer-link">LOG EXCEPTION</a>
+
+			<!-- Placeholder for the logo covered by red scribble -->
+			<div class="footer-logo-placeholder"></div>
+
+			<a href="#" class="footer-link">EDIT SESSION</a>
+		</div>
+	</div>
+</body>
+</html>
