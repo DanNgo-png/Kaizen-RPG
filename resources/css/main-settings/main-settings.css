@@ -1,0 +1,65 @@
+.main-settings {
+    width: 100%;
+    /* Remove the huge padding so the button fills the space */
+    padding: 0;
+    
+    /* Keep it at the bottom */
+    margin-top: auto;
+    
+    /* Visual separator */
+    border-top: 1px solid var(--bg-hover);
+}
+
+.main-settings-button {
+    position: relative;
+    width: 100%;
+    padding: 12px 20px 12px 18px;
+
+    /* Flexbox for aligning icon and text */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+
+    /* Visual Styling */
+    background-color: transparent;
+    color: var(--text-primary);
+    border: none;
+    cursor: pointer;
+    font-size: 20px;
+    font-family: var(--font-main);
+    transition: background-color 0.3s;
+}
+
+.main-settings-button:hover {
+    background-color: var(--bg-hover);
+}
+
+/* Style the icon specifically */
+.main-settings-button i {
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
+/* --- Collapsed State Styles --- */
+
+/* 1. Hide the text */
+.sidenav.collapsed .settings-text {
+    width: 0;
+    opacity: 0;
+    margin-left: 0;
+    overflow: hidden;
+    transition: width 0.3s ease, opacity 0.3s ease, margin-left 0.3s ease;
+}
+
+/* 2. Standard Text Style */
+.settings-text {
+    margin-left: 10px; /* Space between icon and text */
+    white-space: nowrap;
+    font-size: 20px;
+    
+    /* Ensure it animates back in smoothly */
+    width: auto; 
+    opacity: 1;
+    transition: width 0.3s ease, opacity 0.3s ease, margin-left 0.3s ease;
+}
