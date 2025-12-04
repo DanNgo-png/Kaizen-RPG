@@ -1,16 +1,18 @@
 /* The side navigation menu container */
 .sidenav {
     height: 100%;
-    width: 60px; 
+    width: 60px;
     position: fixed;
     z-index: 1;
     top: 0;
     left: 0;
-    background-color: var(--bg-sidebar); 
+    background-color: var(--bg-sidebar);
     overflow-x: hidden;
     padding-top: 60px;
     transition: 0.5s;
     text-wrap: nowrap;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Sidebar Toggle Button */
@@ -19,7 +21,7 @@
     top: 10px;
     left: 10px;
     z-index: 1001;
-    
+
     /* Visual Styling */
     background-color: var(--bg-sidebar);
     color: var(--text-primary);
@@ -33,14 +35,15 @@
 }
 
 .sidebar-toggle-button img {
-    width: 32px; 
-    height: 32px; 
+    width: 32px;
+    height: 32px;
     display: block;
 }
 
 .sidebar-toggle-button:hover {
     background-color: var(--bg-hover);
-    border-radius: 50%; /* Circle shadow for hover effect */
+    border-radius: 50%;
+    /* Circle shadow for hover effect */
 }
 
 /* Responsive adjustments */
@@ -48,6 +51,7 @@
     .sidenav {
         padding-top: 15px;
     }
+
     .sidenav a {
         font-size: 18px;
     }
