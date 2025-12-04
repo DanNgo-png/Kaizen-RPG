@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Focus - Kaizen RPG</title>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body>
+	<!-- Top Right Stats -->
+	<div class="stats-container">
+		<div class="stat fire"><i class="fa-solid fa-fire"></i> 0</div>
+		<div class="stat time"><i class="fa-regular fa-clock"></i> 0m</div>
+		<div class="stat done"><i class="fa-regular fa-circle-check"></i> 0</div>
+	</div>
+
+	<div class="focus-standard-main">
+		<!-- Dropdown (Add a tag) -->
+		<header>
+			<div class="focus-dropdown">
+				<div class="focus-dropdown-left">
+					<i class="fa-solid fa-tag"></i>
+					<span>Add a tag</span>
+				</div>
+				<i class="fa-solid fa-chevron-down"></i>
+			</div>
+		</header>
+		<!-- Pagination Dots -->
+		<div class="dots">
+			<div class="dot active"></div>
+			<div class="dot inactive"></div>
+		</div>
+
+		<!-- Timer Circle -->
+		<div id="timer-circle" class="timer-wrapper">
+			<span id="timer-label" class="focus-text">Focus</span>
+			<span class="timer-count">05:00</span>
+		</div>
+
+		<!-- Controls -->
+		<div class="actions">
+			<!-- 1. Main Action Button (Start / Pause / Resume) -->
+			<button id="main-action-btn" class="start-focus-button">
+      	<i class="fa-solid fa-play"></i> <span id="main-btn-text">Start Focus Session</span>
+      </button>
+
+			<!-- 2. Secondary Button (Skip Break) - Hidden by default -->
+			<button id="skip-break-btn" class="secondary-button hidden">
+				<i class="fa-solid fa-forward-step"></i> Skip Break
+			</button>
+
+			<!-- 3. Volume (Always visible) -->
+			<button class="button-icon">
+				<i class="fa-solid fa-volume-high"></i>
+			</button>
+
+			<!-- 4. Stop Button - Hidden by default -->
+			<button id="stop-btn" class="button-icon hidden">
+				<i class="fa-regular fa-circle-stop"></i>
+			</button>
+		</div>
+
+		<footer>
+			<!-- Sidebar content goes here -->
+			<div id="configure-sidebar">
+				<!-- Header -->
+				<div class="header">
+					<h1>Focus Settings</h1>
+					<button class="close-btn">&times;</button>
+				</div>
+
+				<!-- Timer Type Selector -->
+				<div class="timer-type-label">Timer Type</div>
+				<div class="type-selector" id="type-selector-container">
+					<div class="selector-glider"></div>
+					<button id="btn-mode-timer" class="type-btn active">Timer</button>
+					<button id="btn-mode-stopwatch" class="type-btn">Stopwatch</button>
+				</div>
+
+				<!-- 2. WRAP EXISTING CARDS in this new div -->
+				<div id="timer-settings-container">
+					<!-- Focus Duration Card -->
+					<div class="card border-green">
+						<div class="row">
+							<span class="label">Focus Duration</span>
+							<div class="stepper">
+								<button id="focus-minus">-</button>
+								<input type="number" id="focus-val" class="stepper-input" value="5">
+								<button id="focus-plus">+</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Break Duration Card -->
+					<div class="card border-blue">
+						<div class="row">
+							<span class="label">Break Duration</span>
+							<div class="stepper">
+								<button id="break-minus">-</button>
+								<input type="number" id="break-val" class="stepper-input" value="5">
+								<button id="break-plus">+</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Iterations Card -->
+					<div class="card border-purple">
+						<div class="row">
+							<span class="label">Iterations</span>
+							<div class="stepper">
+								<button id="iter-minus">-</button>
+								<input type="number" id="iter-val" class="stepper-input" value="1">
+								<button id="iter-plus">+</button>
+							</div>
+						</div>
+					</div>
+
+					<!-- Long Break Card (Updated) -->
+					<div class="card border-periwinkle">
+						<div class="row">
+							<div class="text-group">
+								<span class="label">Long Break</span>
+								<div id="long-break-subtext" class="subtext">Extended breaks every 4 iterations</div>
+							</div>
+							<label class="switch"> <!-- Toggle Switch -->
+								<input type="checkbox" id="long-break-toggle">
+								<span class="slider round"></span>
+							</label>
+						</div>
+
+						<!-- Hidden Options Container (with Animation) -->
+						<div class="hidden-options" id="long-break-options">
+							<div class="hidden-inner">
+								<div class="row mt-20">
+									<span class="label">Duration</span>
+									<div class="stepper">
+										<button id="lb-dur-minus">-</button>
+										<input type="number" id="lb-dur-val" class="stepper-input" value="25">
+										<button id="lb-dur-plus">+</button>
+									</div>
+								</div>
+								<div class="row mt-20">
+									<span class="label">Interval</span>
+									<div class="stepper">
+										<button id="lb-int-minus">-</button>
+										<input type="number" id="lb-int-val" class="stepper-input" value="4">
+										<button id="lb-int-plus">+</button>
+									</div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- 3. ADD THIS: The New Stopwatch UI -->
+				<div id="stopwatch-settings-container" style="display: none;">
+					<div class="card stopwatch-card">
+						<div class="stopwatch-header">Stopwatch Mode</div>
+
+						<div class="stopwatch-buttons">
+							<button class="sw-btn sw-focus active">Focus</button>
+							<button class="sw-btn sw-break">Break</button>
+						</div>
+
+						<div class="stopwatch-desc">
+							Stopwatch will count up from zero in your selected mode
+						</div>
+					</div>
+				</div>
+
+				<!-- Footer Summary -->
+				<div class="footer-card">
+					<div class="footer-text">Total Time: <b id="summary-total">0 min</b></div>
+					<div class="footer-text">Session Ends: <b id="summary-end">--:--</b></div>
+				</div>
+			</div>
+
+			<button class="configure-footer-button" id="configure-footer-button"><i
+					class="fa-solid fa-gear"></i>Configure</button>
+			<button class="log-footer-button"><i class="fa-regular fa-pen-to-square"></i> Log</button>
+			<button class="todo-footer-button"><i class="fa-regular fa-square-check"></i> Todo</button>
+		</footer>
+	</div>
+</body>
+
+</html>
