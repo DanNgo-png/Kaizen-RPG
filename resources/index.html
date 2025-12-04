@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kaizen RPG</title>
     <link rel="stylesheet" href="layout.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 
 <body>
@@ -28,7 +30,7 @@
             <div class="dropdown-container">
                 <button class="focus-standard-button">Standard</button>
                 <button class="focus-flexible-button">Flexible</button>
-                <button class="focus-settings-button">Settings</button> 
+                <button class="focus-settings-button">Settings</button>
             </div>
         </div>
 
@@ -54,16 +56,34 @@
             </div>
         </div>
 
+        <div class="dropdown">
+            <button class="dropdown-button">Game</button>
+            <div class="dropdown-container">
+                <button>Party</button>
+                <button>Quests</button>
+                <button>Inventory</button>
+                <button>Settings</button>
+            </div>
+        </div>
+
+        <div class="main-settings">
+            <button class="main-settings-button">
+                <i class="fa-solid fa-gear"></i>
+                <span class="settings-text">Settings</span>
+            </button>
+        </div>
+
     </div>
     <!-- SIDE BAR END -->
 
     <div id="main" style="margin-left: 60px">
         <p>Hello world</p>
     </div>
-    
+
     <script src="js/neutralino.js"></script>
     <script src="js/onWindowClose.js"></script>
     <script src="js/run_python/runPython.js"></script>
     <script type="module" src="main.js"></script>
 </body>
+
 </html>
