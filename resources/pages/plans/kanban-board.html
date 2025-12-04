@@ -3,9 +3,419 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Kanban - Kaizen RPG</title>
+    <style>
+        /* --- Layout Overrides for Kanban View --- */
+        #main {
+            /* Use a safer padding that respects box-model */
+            padding: 20px 0 0 20px !important; 
+            /* Prevent the entire page from scrolling; we want internal scrolling only */
+            overflow: hidden !important; 
+            height: 100vh; 
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box; /* Ensure padding doesn't expand width */
+        }
+
+        /* --- Kanban Container Styles --- */
+        .kanban-container {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1; 
+            min-height: 0; /* Crucial for nested scrolling */
+            width: 100%;
+            color: var(--text-primary, #fff);
+            font-family: var(--font-main, "Segoe UI", sans-serif);
+            animation: fadeIn 0.4s ease-out;
+            padding-right: 20px; /* Right padding for the whole container */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .kanban-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--bg-hover, #3D3D3D);
+            flex-shrink: 0;
+            padding-right: 10px; /* Alignment fix */
+        }
+
+        .kanban-header h2 {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .kanban-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid var(--bg-hover, #3D3D3D);
+            color: var(--text-secondary, #9ca3af);
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-secondary:hover {
+            border-color: var(--text-primary, #fff);
+            color: var(--text-primary, #fff);
+        }
+
+        .btn-primary {
+            background-color: var(--accent-active-bg, #1C398E);
+            color: var(--accent-active-text, #8EC5FF);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: filter 0.2s;
+        }
+        .btn-primary:hover {
+            filter: brightness(1.2);
+        }
+
+        /* Board Layout */
+        .board-scroll-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding-bottom: 20px; /* Space for scrollbar */
+            padding-left: 5px;   /* Small visual buffer on the left */
+            flex-grow: 1;
+            align-items: flex-start;
+            width: 100%;
+            
+            /* Scrollbar styling for Firefox */
+            scrollbar-width: thin;
+            scrollbar-color: var(--bg-hover, #3D3D3D) transparent;
+        }
+
+        /* Webkit Scrollbar */
+        .board-scroll-container::-webkit-scrollbar {
+            height: 10px;
+        }
+        .board-scroll-container::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.1);
+            border-radius: 4px;
+            margin-left: 20px; /* Keep scrollbar away from edge */
+            margin-right: 20px;
+        }
+        .board-scroll-container::-webkit-scrollbar-thumb {
+            background: var(--bg-hover, #3D3D3D);
+            border-radius: 4px;
+        }
+        .board-scroll-container::-webkit-scrollbar-thumb:hover {
+            background: #4b5563;
+        }
+
+        /* Column */
+        .kanban-column {
+            background-color: #121212;
+            border: 1px solid var(--bg-sidebar, #2C2C2C);
+            
+            /* Adjusted size */
+            min-width: 280px; 
+            max-width: 280px; 
+            
+            border-radius: 10px;
+            display: flex;
+            flex-direction: column;
+            max-height: 100%;
+            flex-shrink: 0; /* Prevent squishing */
+        }
+
+        .column-header {
+            padding: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--bg-sidebar, #2C2C2C);
+            cursor: grab;
+            flex-shrink: 0;
+        }
+
+        .column-title {
+            font-weight: 600;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .column-count {
+            background-color: var(--bg-hover, #3D3D3D);
+            color: var(--text-secondary, #9ca3af);
+            font-size: 12px;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+
+        .column-options {
+            color: var(--text-secondary, #9ca3af);
+            cursor: pointer;
+            padding: 4px;
+        }
+        .column-options:hover { color: #fff; }
+
+        /* Top Borders */
+        .col-todo { border-top: 3px solid #f59e0b; }
+        .col-progress { border-top: 3px solid #3b82f6; }
+        .col-done { border-top: 3px solid #10b981; }
+
+        /* Task List Area */
+        .task-container {
+            padding: 10px;
+            overflow-y: auto;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            min-height: 50px;
+        }
+        .task-container::-webkit-scrollbar { width: 6px; }
+        .task-container::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+
+        /* Cards */
+        .kanban-card {
+            background-color: var(--bg-sidebar-inner, #262626);
+            border: 1px solid transparent;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: grab;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+        .kanban-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            border-color: var(--bg-hover, #3D3D3D);
+        }
+        .kanban-card:active { cursor: grabbing; }
+
+        /* Tags */
+        .card-tags {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+        }
+        .tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .tag-design { background-color: rgba(236, 72, 153, 0.2); color: #f472b6; }
+        .tag-dev { background-color: rgba(59, 130, 246, 0.2); color: #60a5fa; }
+        .tag-urgent { background-color: rgba(239, 68, 68, 0.2); color: #f87171; }
+
+        .card-title { font-size: 14px; margin-bottom: 10px; line-height: 1.4; }
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+            color: var(--text-secondary, #9ca3af);
+            margin-top: 8px;
+        }
+        .card-meta { display: flex; gap: 10px; }
+        .card-meta i { margin-right: 4px; }
+
+        /* Add Card Button */
+        .btn-add-card {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary, #9ca3af);
+            padding: 10px;
+            text-align: left;
+            cursor: pointer;
+            margin: 0 10px 10px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-add-card:hover {
+            background-color: var(--bg-hover, #3D3D3D);
+            color: var(--text-primary, #fff);
+        }
+
+        /* New Column Button */
+        .btn-new-column {
+            min-width: 280px; /* Match column width */
+            height: 50px;
+            border: 2px dashed var(--bg-hover, #3D3D3D);
+            background: transparent;
+            color: var(--text-secondary, #9ca3af);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+        .btn-new-column:hover {
+            border-color: #6b7280;
+            color: white;
+        }
+    </style>
 </head>
 <body>
-    <p>placeholder: kanban-board.html</p>
+    <div class="kanban-container">
+        
+        <!-- Header -->
+        <header class="kanban-header">
+            <h2><i class="fa-solid fa-table-columns" style="color: var(--stat-blue, #3b82f6);"></i> Kanban Board</h2>
+            <div class="kanban-controls">
+                <button class="btn-secondary"><i class="fa-solid fa-filter"></i> Filter</button>
+                <button class="btn-primary"><i class="fa-solid fa-plus"></i> Add Column</button>
+            </div>
+        </header>
+
+        <!-- Board -->
+        <div class="board-scroll-container">
+
+            <!-- COLUMN 1: TODO -->
+            <div class="kanban-column col-todo">
+                <div class="column-header">
+                    <span class="column-title">To Do <span class="column-count">3</span></span>
+                    <i class="fa-solid fa-ellipsis column-options"></i>
+                </div>
+                <div class="task-container" id="todo-tasks">
+                    
+                    <div class="kanban-card" draggable="true">
+                        <div class="card-tags">
+                            <span class="tag tag-design">Design</span>
+                            <span class="tag tag-urgent">High</span>
+                        </div>
+                        <div class="card-title">Create wireframes for "Analyze" dashboard</div>
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span><i class="fa-regular fa-comment"></i> 2</span>
+                                <span><i class="fa-solid fa-paperclip"></i> 1</span>
+                            </div>
+                            <div class="card-user"><i class="fa-solid fa-circle-user"></i></div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-card" draggable="true">
+                        <div class="card-tags">
+                            <span class="tag tag-dev">Dev</span>
+                        </div>
+                        <div class="card-title">Setup Python backend integration</div>
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span><i class="fa-regular fa-comment"></i> 0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                     <div class="kanban-card" draggable="true">
+                        <div class="card-tags">
+                            <span class="tag tag-dev">Dev</span>
+                        </div>
+                        <div class="card-title">Implement drag and drop logic</div>
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span><i class="fa-regular fa-clock"></i> 2d</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <button class="btn-add-card"><i class="fa-solid fa-plus"></i> Add Card</button>
+            </div>
+
+            <!-- COLUMN 2: IN PROGRESS -->
+            <div class="kanban-column col-progress">
+                <div class="column-header">
+                    <span class="column-title">In Progress <span class="column-count">1</span></span>
+                    <i class="fa-solid fa-ellipsis column-options"></i>
+                </div>
+                <div class="task-container" id="progress-tasks">
+                    
+                    <div class="kanban-card" draggable="true">
+                        <div class="card-tags">
+                            <span class="tag tag-design">Design</span>
+                        </div>
+                        <div class="card-title">Finalize color palette for Dark Mode</div>
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span><i class="fa-regular fa-comment"></i> 5</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <button class="btn-add-card"><i class="fa-solid fa-plus"></i> Add Card</button>
+            </div>
+
+            <!-- COLUMN 3: DONE -->
+            <div class="kanban-column col-done">
+                <div class="column-header">
+                    <span class="column-title">Done <span class="column-count">2</span></span>
+                    <i class="fa-solid fa-ellipsis column-options"></i>
+                </div>
+                <div class="task-container" id="done-tasks">
+                    
+                    <div class="kanban-card" draggable="true" style="opacity: 0.7;">
+                        <div class="card-tags">
+                            <span class="tag tag-dev">Dev</span>
+                        </div>
+                        <div class="card-title">Initialize Neutralinojs project</div>
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span style="color: var(--stat-check, #10b981);"><i class="fa-solid fa-check"></i> Completed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="kanban-card" draggable="true" style="opacity: 0.7;">
+                        <div class="card-tags">
+                            <span class="tag tag-design">Design</span>
+                        </div>
+                        <div class="card-title">Gather reference images for RPG theme</div>
+                        <div class="card-footer">
+                            <div class="card-meta">
+                                <span style="color: var(--stat-check, #10b981);"><i class="fa-solid fa-check"></i> Completed</span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <button class="btn-add-card"><i class="fa-solid fa-plus"></i> Add Card</button>
+            </div>
+
+            <!-- Add New Column -->
+            <button class="btn-new-column">
+                <i class="fa-solid fa-plus"></i> New Column
+            </button>
+
+        </div>
+    </div>
 </body>
 </html>

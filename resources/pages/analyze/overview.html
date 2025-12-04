@@ -1,11 +1,503 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Overview - Kaizen RPG</title>
+	<style>
+		/* --- Scoped Styles for Overview Dashboard --- */
+		.overview-container {
+			max-width: 1200px;
+			margin: 0 auto;
+			color: var(--text-primary, #fff);
+			font-family: var(--font-main, "Segoe UI", sans-serif);
+			animation: fadeIn 0.4s ease-out;
+			padding-top: 230px;
+			padding-bottom: 40px;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(10px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		/* Grid Layout */
+		.dashboard-grid {
+			display: grid;
+			grid-template-columns: 1fr 1.4fr;
+			/* Left col narrower than calendar */
+			gap: 20px;
+			margin-bottom: 20px;
+		}
+
+		/* Mobile Responsive */
+		@media (max-width: 900px) {
+			.dashboard-grid {
+				grid-template-columns: 1fr;
+			}
+		}
+
+		/* Common Card Style */
+		.dash-card {
+			background-color: var(--surface-color, #1f2937);
+			border: 1px solid var(--bg-hover, #374151);
+			border-radius: 16px;
+			padding: 24px;
+			display: flex;
+			flex-direction: column;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+		}
+
+		.card-header {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			margin-bottom: 20px;
+		}
+
+		.card-header i {
+			font-size: 1.2rem;
+		}
+
+		.card-title {
+			font-size: 1.1rem;
+			font-weight: 700;
+		}
+
+		.card-subtitle {
+			color: var(--text-secondary, #9ca3af);
+			font-size: 0.9rem;
+			margin-top: -15px;
+			margin-bottom: 20px;
+		}
+
+		/* --- 1. Today's Focus --- */
+		.today-stats {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 15px;
+		}
+
+		.stat-box {
+			background-color: #172033;
+			/* Darker blue bg */
+			border: 1px solid #2d3648;
+			border-radius: 12px;
+			padding: 20px 10px;
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+
+		.stat-box.blue-theme {
+			background: linear-gradient(145deg, rgba(30, 58, 138, 0.2), rgba(30, 58, 138, 0.05));
+			border-color: rgba(59, 130, 246, 0.2);
+		}
+
+		.stat-box i {
+			font-size: 1.2rem;
+			margin-bottom: 5px;
+		}
+
+		.stat-box .label {
+			font-size: 0.85rem;
+			color: #93c5fd;
+			/* Light blue text */
+		}
+
+		.stat-box .value {
+			font-size: 1.4rem;
+			font-weight: 700;
+			color: #bfdbfe;
+		}
+
+		/* --- 2. Streaks --- */
+		.left-column {
+			display: flex;
+			flex-direction: column;
+			gap: 20px;
+		}
+
+		.streak-info {
+			display: flex;
+			gap: 10px;
+			color: var(--text-secondary, #9ca3af);
+			font-size: 0.9rem;
+			margin-bottom: 20px;
+			line-height: 1.4;
+		}
+
+		.streak-boxes {
+			display: grid;
+			grid-template-columns: 1fr 1fr;
+			gap: 15px;
+		}
+
+		.streak-box {
+			background: linear-gradient(145deg, rgba(120, 53, 15, 0.2), rgba(120, 53, 15, 0.05));
+			/* Orange/Brown tint */
+			border: 1px solid rgba(245, 158, 11, 0.2);
+			border-radius: 12px;
+			padding: 20px 10px;
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			gap: 8px;
+		}
+
+		.streak-box .label {
+			font-size: 0.85rem;
+			color: #fcd34d;
+			/* Light yellow/orange */
+			font-weight: 600;
+		}
+
+		.streak-box .value {
+			font-size: 1.4rem;
+			font-weight: 700;
+			color: #f59e0b;
+			/* Orange */
+		}
+
+		.streak-box i {
+			color: #f59e0b;
+			font-size: 1.2rem;
+			margin-bottom: 4px;
+		}
+
+		/* --- 3. Calendar --- */
+		.calendar-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			margin-bottom: 20px;
+			padding: 0 10px;
+		}
+
+		.calendar-nav-btn {
+			background: none;
+			border: none;
+			color: var(--text-secondary);
+			cursor: pointer;
+			font-size: 0.9rem;
+		}
+
+		.month-title {
+			font-weight: 700;
+			font-size: 1.1rem;
+		}
+
+		.calendar-grid {
+			display: grid;
+			grid-template-columns: repeat(7, 1fr);
+			gap: 8px;
+			text-align: center;
+			margin-bottom: 25px;
+		}
+
+		.day-label {
+			font-size: 0.8rem;
+			color: var(--text-secondary);
+			font-weight: 600;
+			margin-bottom: 10px;
+		}
+
+		.day-cell {
+			aspect-ratio: 1;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			border-radius: 6px;
+			font-size: 0.9rem;
+			color: var(--text-secondary);
+			background-color: rgba(255, 255, 255, 0.03);
+			cursor: default;
+		}
+
+		.day-cell.empty {
+			background-color: transparent;
+		}
+
+		/* Day States */
+		.day-cell.focused {
+			background-color: #10b981;
+			/* Green Activity */
+			color: #064e3b;
+			font-weight: 700;
+		}
+
+		.day-cell.selected {
+			background-color: #d1fae5;
+			/* Light green selection */
+			color: #065f46;
+			font-weight: 700;
+			border: 2px solid #10b981;
+		}
+
+		.day-cell.today {
+			background-color: transparent;
+			border: 1px solid #4b5563;
+			color: white;
+		}
+
+		.calendar-stats-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 15px;
+		}
+
+		.cal-stat {
+			background-color: rgba(6, 78, 59, 0.4);
+			/* Dark Green bg */
+			padding: 12px;
+			border-radius: 8px;
+			text-align: center;
+		}
+
+		.cal-stat-label {
+			font-size: 0.8rem;
+			color: #d1fae5;
+			margin-bottom: 4px;
+		}
+
+		.cal-stat-value {
+			font-size: 1.1rem;
+			font-weight: 700;
+			color: #34d399;
+			/* Bright green */
+		}
+
+		/* --- 4. Lifetime Focus --- */
+		.lifetime-row {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 20px;
+		}
+
+		.lifetime-box {
+			background: linear-gradient(145deg, rgba(88, 28, 135, 0.2), rgba(88, 28, 135, 0.05));
+			/* Purple tint */
+			border: 1px solid rgba(139, 92, 246, 0.2);
+			border-radius: 12px;
+			padding: 25px;
+			text-align: center;
+			display: flex;
+			flex-direction: column;
+			gap: 10px;
+		}
+
+		.lifetime-box i {
+			color: #a78bfa;
+			font-size: 1.3rem;
+			margin-bottom: 5px;
+		}
+
+		.lifetime-label {
+			font-size: 0.9rem;
+			color: white;
+			font-weight: 600;
+		}
+
+		.lifetime-value {
+			font-size: 1.5rem;
+			font-weight: 700;
+			color: #e9d5ff;
+			/* Light purple */
+		}
+
+		@media (max-width: 600px) {
+
+			.today-stats,
+			.streak-boxes,
+			.calendar-stats-row,
+			.lifetime-row {
+				grid-template-columns: 1fr;
+			}
+		}
+	</style>
 </head>
+
 <body>
-    <p>placeholder: overview.html</p>
+	<div class="overview-container">
+
+		<div class="dashboard-grid">
+
+			<!-- LEFT COLUMN -->
+			<div class="left-column">
+
+				<!-- Today's Focus Card -->
+				<div class="dash-card">
+					<div class="card-header">
+						<i class="fa-regular fa-clock" style="color: #60a5fa;"></i>
+						<span class="card-title" style="color: #60a5fa;">Today's Focus</span>
+					</div>
+					<div class="card-subtitle">Thursday, December 4</div>
+
+					<div class="today-stats">
+						<div class="stat-box blue-theme">
+							<i class="fa-regular fa-clock" style="color: #60a5fa;"></i>
+							<span class="label">Focus Time</span>
+							<span class="value">0m</span>
+						</div>
+						<div class="stat-box blue-theme">
+							<i class="fa-solid fa-check-double" style="color: #818cf8;"></i>
+							<span class="label">Sessions</span>
+							<span class="value">0</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Streaks Card -->
+				<div class="dash-card">
+					<div class="card-header">
+						<i class="fa-solid fa-fire" style="color: #fb923c;"></i>
+						<span class="card-title" style="color: #fb923c;">Streaks</span>
+						<i class="fa-regular fa-circle-question"
+							style="color: var(--text-secondary); font-size: 0.9rem; margin-left: auto; cursor: pointer;"></i>
+					</div>
+
+					<div class="streak-info">
+						<i class="fa-solid fa-circle-exclamation" style="margin-top: 2px;"></i>
+						<span>5 more minutes needed today to maintain your streak.</span>
+					</div>
+
+					<div class="streak-boxes">
+						<div class="streak-box">
+							<i class="fa-solid fa-fire"></i>
+							<span class="label">Current Streak</span>
+							<span class="value">0 days</span>
+						</div>
+						<div class="streak-box">
+							<i class="fa-solid fa-trophy"></i>
+							<span class="label">Best Streak</span>
+							<span class="value">23 days</span>
+						</div>
+					</div>
+				</div>
+
+			</div>
+
+			<!-- RIGHT COLUMN (Calendar) -->
+			<div class="dash-card">
+				<div class="calendar-header">
+					<button class="calendar-nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+					<span class="month-title">December 2025</span>
+					<button class="calendar-nav-btn"><i class="fa-solid fa-chevron-right"></i></button>
+				</div>
+
+				<div class="calendar-grid">
+					<!-- Weekday Headers -->
+					<div class="day-label">Sun</div>
+					<div class="day-label">Mon</div>
+					<div class="day-label">Tue</div>
+					<div class="day-label">Wed</div>
+					<div class="day-label">Thu</div>
+					<div class="day-label">Fri</div>
+					<div class="day-label">Sat</div>
+
+					<!-- Calendar Days (Static Layout for Demo) -->
+					<!-- Row 1 -->
+					<div class="day-cell empty"></div>
+					<div class="day-cell focused">1</div>
+					<div class="day-cell">2</div>
+					<div class="day-cell selected">3</div>
+					<div class="day-cell today">4</div> <!-- Today -->
+					<div class="day-cell">5</div>
+					<div class="day-cell">6</div>
+
+					<!-- Row 2 -->
+					<div class="day-cell">7</div>
+					<div class="day-cell">8</div>
+					<div class="day-cell">9</div>
+					<div class="day-cell">10</div>
+					<div class="day-cell">11</div>
+					<div class="day-cell">12</div>
+					<div class="day-cell">13</div>
+
+					<!-- Row 3 -->
+					<div class="day-cell">14</div>
+					<div class="day-cell">15</div>
+					<div class="day-cell">16</div>
+					<div class="day-cell">17</div>
+					<div class="day-cell">18</div>
+					<div class="day-cell">19</div>
+					<div class="day-cell">20</div>
+
+					<!-- Row 4 -->
+					<div class="day-cell">21</div>
+					<div class="day-cell">22</div>
+					<div class="day-cell">23</div>
+					<div class="day-cell">24</div>
+					<div class="day-cell">25</div>
+					<div class="day-cell">26</div>
+					<div class="day-cell">27</div>
+
+					<!-- Row 5 -->
+					<div class="day-cell">28</div>
+					<div class="day-cell">29</div>
+					<div class="day-cell">30</div>
+					<div class="day-cell">31</div>
+				</div>
+
+				<div class="calendar-stats-row">
+					<div class="cal-stat">
+						<div class="cal-stat-label">Days Focused</div>
+						<div class="cal-stat-value">2 of 4</div>
+					</div>
+					<div class="cal-stat">
+						<div class="cal-stat-label">Avg Focus Day</div>
+						<div class="cal-stat-value">13m</div>
+					</div>
+					<div class="cal-stat">
+						<div class="cal-stat-label">Total Focus</div>
+						<div class="cal-stat-value">25m</div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+		<!-- BOTTOM ROW (Lifetime) -->
+		<div class="dash-card">
+			<div class="card-header">
+				<i class="fa-solid fa-chart-pie" style="color: #a78bfa;"></i>
+				<span class="card-title" style="color: white;">Lifetime Focus</span>
+			</div>
+			<div class="card-subtitle">Your total focus achievements since you started using Kaizen RPG</div>
+
+			<div class="lifetime-row">
+				<div class="lifetime-box">
+					<i class="fa-regular fa-clock"></i>
+					<span class="lifetime-label">Total Focus Time</span>
+					<span class="lifetime-value">55h 12m</span>
+				</div>
+				<div class="lifetime-box">
+					<i class="fa-solid fa-check-double"></i>
+					<span class="lifetime-label">Total Sessions</span>
+					<span class="lifetime-value">199</span>
+				</div>
+				<div class="lifetime-box">
+					<i class="fa-regular fa-calendar-check"></i>
+					<span class="lifetime-label">Focus Days</span>
+					<span class="lifetime-value">42</span>
+				</div>
+			</div>
+		</div>
+
+	</div>
 </body>
+
 </html>
