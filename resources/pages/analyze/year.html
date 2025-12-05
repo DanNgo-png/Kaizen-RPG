@@ -1,11 +1,469 @@
+<!-- pages/analyze/year.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Yearly Analytics - Kaizen RPG</title>
+    <style>
+        /* --- Scoped Styles for Year Page --- */
+        .year-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            color: var(--text-primary, #fff);
+            font-family: var(--font-main, "Segoe UI", sans-serif);
+            animation: fadeIn 0.4s ease-out;
+            padding-top: 40px; /* Adjust based on navbar height if needed */
+            padding-bottom: 40px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Header */
+        .year-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .year-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 0;
+        }
+
+        .year-selector {
+            background-color: var(--surface-color, #1f2937);
+            border: 1px solid var(--bg-hover, #374151);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            padding: 4px;
+        }
+
+        .year-btn {
+            background: none;
+            border: none;
+            color: var(--text-secondary, #9ca3af);
+            cursor: pointer;
+            padding: 6px 12px;
+            font-size: 14px;
+            transition: 0.2s;
+        }
+        .year-btn:hover { color: #fff; }
+
+        .current-year {
+            font-weight: 700;
+            color: #fff;
+            padding: 0 10px;
+        }
+
+        /* Top Row Grid */
+        .top-row {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .top-row { grid-template-columns: 1fr; }
+        }
+
+        /* Cards */
+        .analytics-card {
+            background-color: var(--surface-color, #1f2937);
+            border: 1px solid var(--bg-hover, #374151);
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Stats Grid (Left Card) */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            row-gap: 30px;
+            column-gap: 20px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .stat-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .stat-text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+
+        .stat-value {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #fff;
+            line-height: 1;
+        }
+
+        /* Icon & Text Colors */
+        .icon-blue { background-color: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .text-blue { color: #60a5fa; }
+
+        .icon-purple { background-color: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+        .text-purple { color: #a78bfa; }
+
+        .icon-green { background-color: rgba(16, 185, 129, 0.15); color: #34d399; }
+        .text-green { color: #34d399; }
+
+        .icon-periwinkle { background-color: rgba(99, 102, 241, 0.15); color: #818cf8; }
+        .text-periwinkle { color: #818cf8; }
+
+        .icon-yellow { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+        .text-yellow { color: #fbbf24; }
+
+        .icon-orange { background-color: rgba(234, 88, 12, 0.15); color: #fb923c; }
+        .text-orange { color: #fb923c; }
+
+        .icon-red { background-color: rgba(239, 68, 68, 0.15); color: #f87171; }
+        .text-red { color: #f87171; }
+
+        .icon-pink { background-color: rgba(236, 72, 153, 0.15); color: #f472b6; }
+        .text-pink { color: #f472b6; }
+
+
+        /* Chart Layout (Right Card) */
+        .chart-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 50px;
+            height: 100%;
+        }
+
+        /* Donut Chart via CSS Conic Gradient */
+        .donut-chart {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            /* 82% Blue, 18% Purple (approx) */
+            background: conic-gradient(
+                #8b5cf6 0% 18%, 
+                #2563eb 18% 100%
+            );
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .donut-hole {
+            width: 90px;
+            height: 90px;
+            background-color: var(--surface-color, #1f2937);
+            border-radius: 50%;
+        }
+
+        .chart-legend {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: grid;
+            grid-template-columns: 20px 80px 60px 40px;
+            align-items: center;
+            font-size: 14px;
+        }
+
+        .legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+        
+        .dot-blue { background-color: #2563eb; }
+        .dot-purple { background-color: #8b5cf6; }
+
+        .legend-name { font-weight: 600; color: #fff; }
+        .legend-val { color: var(--text-secondary, #9ca3af); text-align: right; }
+        .legend-perc { font-weight: 700; color: #fff; text-align: right; }
+
+
+        /* Bottom Heatmap */
+        .heatmap-container {
+            display: flex;
+            justify-content: space-between;
+            overflow-x: auto;
+            gap: 10px;
+            padding-bottom: 10px; /* Scrollbar space */
+        }
+        
+        /* Scrollbar styling */
+        .heatmap-container::-webkit-scrollbar { height: 8px; }
+        .heatmap-container::-webkit-scrollbar-thumb { background: #374151; border-radius: 4px; }
+        .heatmap-container::-webkit-scrollbar-track { background: transparent; }
+
+        .month-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .dots-grid {
+            display: grid;
+            grid-template-rows: repeat(7, 1fr); /* 7 days vertical */
+            grid-auto-flow: column; /* Fill columns first */
+            gap: 4px;
+        }
+
+        .dot {
+            width: 10px;
+            height: 10px;
+            background-color: #374151; /* Inactive grey */
+            border-radius: 2px;
+        }
+
+        /* Activity Levels */
+        .dot.l1 { background-color: #064e3b; } /* Darkest Green */
+        .dot.l2 { background-color: #10b981; } /* Mid Green */
+        .dot.l3 { background-color: #34d399; } /* Bright Green */
+        .dot.l4 { background-color: #d1fae5; } /* White-ish Green */
+
+        .month-label {
+            font-size: 11px;
+            color: var(--text-secondary, #9ca3af);
+            margin-top: 5px;
+        }
+        
+        .month-total {
+            font-size: 10px;
+            color: #6b7280;
+        }
+
+    </style>
 </head>
 <body>
-    <p>placeholder: year.html</p>
+    <div class="year-container">
+        
+        <!-- Header -->
+        <header class="year-header">
+            <h2>Yearly Analytics</h2>
+            <div class="year-selector">
+                <button class="year-btn"><i class="fa-solid fa-arrow-left"></i></button>
+                <span class="current-year">2025</span>
+                <button class="year-btn"><i class="fa-solid fa-arrow-right"></i></button>
+            </div>
+        </header>
+
+        <!-- Top Section -->
+        <div class="top-row">
+            
+            <!-- Statistics Card -->
+            <div class="analytics-card">
+                <div class="stats-grid">
+                    <!-- 1. Focus Time -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-blue">
+                            <i class="fa-regular fa-clock"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-blue">Focus Time</span>
+                            <span class="stat-value">55.3h</span>
+                        </div>
+                    </div>
+
+                    <!-- 2. Sessions -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-purple">
+                            <i class="fa-solid fa-check-double"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-purple">Sessions</span>
+                            <span class="stat-value">199</span>
+                        </div>
+                    </div>
+
+                    <!-- 3. Focus Days -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-green">
+                            <i class="fa-regular fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-green">Focus Days</span>
+                            <span class="stat-value">42</span>
+                        </div>
+                    </div>
+
+                    <!-- 4. Avg Session -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-periwinkle">
+                            <i class="fa-solid fa-trophy"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-periwinkle">Avg Session</span>
+                            <span class="stat-value">0.3h</span>
+                        </div>
+                    </div>
+
+                    <!-- 5. Best Day -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-yellow">
+                            <i class="fa-solid fa-bolt"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-yellow">Best Day</span>
+                            <span class="stat-value">5.5h</span>
+                        </div>
+                    </div>
+
+                    <!-- 6. Best Week -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-orange">
+                            <i class="fa-solid fa-bullseye"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-orange">Best Week</span>
+                            <span class="stat-value">13.8h</span>
+                        </div>
+                    </div>
+
+                    <!-- 7. Best Month -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-red">
+                            <i class="fa-regular fa-calendar"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-red">Best Month</span>
+                            <span class="stat-value">36.5h</span>
+                        </div>
+                    </div>
+
+                    <!-- 8. Best Streak -->
+                    <div class="stat-item">
+                        <div class="stat-icon icon-pink">
+                            <i class="fa-solid fa-fire"></i>
+                        </div>
+                        <div class="stat-text">
+                            <span class="stat-label text-pink">Best Streak</span>
+                            <span class="stat-value">23 days</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Chart Card -->
+            <div class="analytics-card">
+                <div class="chart-container">
+                    <div class="donut-chart">
+                        <div class="donut-hole"></div>
+                    </div>
+                    
+                    <div class="chart-legend">
+                        <div class="legend-item">
+                            <div class="legend-dot dot-blue"></div>
+                            <span class="legend-name">College</span>
+                            <span class="legend-val">45.3h</span>
+                            <span class="legend-perc">82%</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-dot dot-purple"></div>
+                            <span class="legend-name">Novel</span>
+                            <span class="legend-val">10h</span>
+                            <span class="legend-perc">18%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Bottom Heatmap Card -->
+        <div class="analytics-card">
+            <div class="heatmap-container" id="heatmap-grid">
+                <!-- Content generated via script for efficiency, 
+                     but visually matching the mockup -->
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Script to generate the heatmap dots -->
+    <script>
+        (function() {
+            const months = [
+                { name: 'Jan', h: '0h' }, { name: 'Feb', h: '0h' }, { name: 'Mar', h: '0h' }, 
+                { name: 'Apr', h: '0h' }, { name: 'May', h: '0h' }, { name: 'Jun', h: '0h' },
+                { name: 'Jul', h: '0h' }, { name: 'Aug', h: '0h' }, { name: 'Sep', h: '0h' },
+                { name: 'Oct', h: '18h' }, { name: 'Nov', h: '37h' }, { name: 'Dec', h: '0h' }
+            ];
+
+            const container = document.getElementById('heatmap-grid');
+            
+            months.forEach((m, index) => {
+                const group = document.createElement('div');
+                group.className = 'month-group';
+
+                // Grid of dots (5 columns x 7 rows = 35 dots roughly per month block)
+                const grid = document.createElement('div');
+                grid.className = 'dots-grid';
+
+                for(let i=0; i<35; i++) {
+                    const dot = document.createElement('div');
+                    dot.className = 'dot';
+                    
+                    // Simulate data for Oct (index 9) and Nov (index 10) based on image
+                    if (index === 9) { // Oct
+                        if (i > 15 && i % 3 === 0) dot.classList.add('l2');
+                        if (i > 20 && i % 4 === 0) dot.classList.add('l4');
+                    }
+                    if (index === 10) { // Nov
+                        if (i % 2 === 0) dot.classList.add('l3');
+                        if (i % 5 === 0) dot.classList.add('l4');
+                        if (i < 10) dot.classList.add('l2');
+                    }
+
+                    grid.appendChild(dot);
+                }
+
+                // Labels
+                const label = document.createElement('span');
+                label.className = 'month-label';
+                label.textContent = m.name;
+
+                const total = document.createElement('span');
+                total.className = 'month-total';
+                total.textContent = m.h;
+
+                group.appendChild(grid);
+                group.appendChild(label);
+                group.appendChild(total);
+                container.appendChild(group);
+            });
+        })();
+    </script>
 </body>
 </html>
