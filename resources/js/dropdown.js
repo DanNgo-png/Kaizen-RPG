@@ -63,7 +63,7 @@ export async function handleDropdowns() {
                 
                 // 4. Set Styles for Floating
                 dropdownContent.style.top = `${rect.top}px`;
-                dropdownContent.style.left = `75px`; // Fixed width of collapsed sidebar
+                dropdownContent.style.left = `85px`; // Fixed width of collapsed sidebar
                 
                 // 5. Show and Animate
                 dropdownContent.classList.add("floating-open");
