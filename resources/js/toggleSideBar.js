@@ -5,8 +5,8 @@ export async function toggleSideBar() {
     // Check if the sidebar is currently fully open
     if (sidenav.style.width === "250px") {
         // --- CLOSE STATE ---
-        sidenav.style.width = "60px";
-        main.style.marginLeft = "60px"; 
+        sidenav.style.width = "75px";
+        main.style.marginLeft = "75px"; 
         
         sidenav.classList.add("collapsed"); // This class signals CSS to hide text
         closeAllDropdowns(); // Automatically close any open dropdowns

@@ -1,7 +1,7 @@
 /* The side navigation menu container */
 .sidenav {
     height: 100%;
-    width: 60px;
+    width: 75px;
     position: fixed;
     z-index: 1;
     top: 0;
@@ -15,44 +15,44 @@
     flex-direction: column;
 }
 
+/* Hide scrollbar for Chrome/Safari/Opera */
+.sidenav::-webkit-scrollbar {
+    display: none;
+}
+
 /* Sidebar Toggle Button */
 .sidebar-toggle-button {
     position: fixed;
     top: 10px;
-    left: 10px;
+    left: 8px;
     z-index: 1001;
 
     /* Visual Styling */
-    background-color: var(--bg-sidebar);
+    background-color: transparent;
     color: var(--text-primary);
     border: none;
-    padding: 5px;
+    /* padding: 8px; */
+    padding: 12px 19px;
     cursor: pointer;
-    /* transition: 0.3s; */
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 8px;
+    transition: background-color 0.2s;
 }
 
-.sidebar-toggle-button img {
-    width: 32px;
-    height: 32px;
+.sidebar-toggle-button i {
+    font-size: 24px;
     display: block;
 }
 
 .sidebar-toggle-button:hover {
     background-color: var(--bg-hover);
-    border-radius: 50%;
-    /* Circle shadow for hover effect */
 }
 
 /* Responsive adjustments */
 @media screen and (max-height: 450px) {
     .sidenav {
         padding-top: 15px;
-    }
-
-    .sidenav a {
-        font-size: 18px;
     }
 }

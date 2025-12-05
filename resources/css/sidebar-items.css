@@ -1,25 +1,33 @@
 /* --- General Button Reset for Sidebar --- */
-/* Targets the Dropdown headers, Focus button, and items inside dropdowns */
 .dropdown-button,
 .focus-standard-button,
 .dropdown-container button,
 .sidenav a {
-    width: 100%;
-    text-align: left;
-    padding: 12px 20px 12px 32px;
-    /* More vertical padding for better click area */
+    /* Layout: Floating Pill */
+    width: calc(100% - 20px);
+    margin: 4px auto;
+    border-radius: 10px;
+    padding: 12px 16px;
 
-    /* Remove default HTML button styles */
+    /* Content Layout */
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    
+    /* Text Handling for Animation */
+    white-space: nowrap;
+    overflow: hidden;
+
+    /* Styling */
     background-color: transparent;
     border: none;
     color: var(--text-primary);
     font-family: var(--font-main);
-    font-size: 20px;
-
-    display: block;
+    font-size: 16px; /* Adjusted to fit pill shape better than 20px */
+    
     cursor: pointer;
     outline: none;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
 /* Hover Effects */
@@ -28,49 +36,104 @@
 .dropdown-container button:hover,
 .sidenav a:hover {
     background-color: var(--bg-hover);
+    transform: translateX(2px);
+}
+
+/* Icon Styling - Fixed width prevents squash during collapse */
+.dropdown-button i,
+.focus-standard-button i,
+.dropdown-container button i,
+.sidenav a i {
+    min-width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-right: 12px; /* Space between icon and text */
+    transition: margin 0.3s ease; /* Smooth transition if we change margin */
+}
+
+/* Text Styling - Controls the Fade */
+.sidebar-text {
+    opacity: 1;
+    transition: opacity 0.3s ease;
 }
 
 /* --- Dropdown Specific Styles --- */
-/* Active State (When dropdown is open) */
 .dropdown-button.active {
     background-color: var(--accent-active-bg);
     color: var(--accent-active-text);
 }
 
-/* The Container for sub-items (Hidden by default) */
 .dropdown-container {
     display: none;
-    /* Crucial: This hides the list items initially */
-    background-color: var(--bg-sidebar-inner);
+    background-color: transparent;
+    width: 100%;
+    padding: 1px 0;
 }
 
-/* Sub-items indentation */
+/* Indent sub-items via padding on the button itself */
 .dropdown-container button {
-    padding-left: 48px;
-    /* Indent items more than the header */
-    font-size: 18px;
-    /* Slightly smaller font */
-    opacity: 0.9;
+    opacity: 0.8;
+    padding-left: 48px; /* Indentation */
 }
 
 /* --- Collapsed State Styles --- */
-/* Hide text in all buttons when sidebar is collapsed */
-.sidenav.collapsed .dropdown-button,
-.sidenav.collapsed .focus-standard-button,
-.sidenav.collapsed .dropdown-container button,
-.sidenav.collapsed a {
-    color: transparent;
-    transition: color 0.3s;
-    /* Makes it fade out smoothly */
-    /* pointer-events: none; Optional: prevents clicking invisible text */
+
+/* 1. Fade out the text */
+.sidenav.collapsed .sidebar-text {
+    opacity: 0;
+    pointer-events: none;
 }
 
-/* Ensure arrow icons (if you add them) or other elements also hide/adjust if needed */
-.sidenav.collapsed .fa-caret-down {
-    display: none;
-}
-
-/* Prevent dropdowns from accidentally showing in collapsed mode */
+/* 4. Hide dropdown contents completely */
 .sidenav.collapsed .dropdown-container {
     display: none !important;
+}
+
+/* --- Floating Dropdown (Collapsed State) --- */
+
+/* Override the default 'display: none !important' when our JS adds the open class */
+.sidenav.collapsed .dropdown-container.floating-open {
+    display: flex !important;
+    flex-direction: column;
+    position: fixed; /* Fixed relative to viewport, easy to calculate from button rect */
+    width: 200px;
+    background-color: var(--bg-sidebar);
+    border: 1px solid var(--bg-hover);
+    border-left: none; /* Looks attached to sidebar */
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.5);
+    border-radius: 0 10px 10px 0;
+    z-index: 1005;
+    padding: 8px 0;
+    
+    /* Animation Initial State */
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+/* Animation Active State */
+.sidenav.collapsed .dropdown-container.floating-open.animate-in {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+/* Adjust button styles inside the floating menu */
+.sidenav.collapsed .dropdown-container.floating-open button {
+    padding-left: 20px; /* Reset indentation */
+    text-align: left;
+    color: var(--text-primary);
+}
+
+/* Ensure text is visible inside the floating menu (overriding the collapsed text hiding) */
+.sidenav.collapsed .dropdown-container.floating-open .sidebar-text {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Ensure icons are visible and spaced correctly */
+.sidenav.collapsed .dropdown-container.floating-open button i {
+    margin-right: 12px;
 }
