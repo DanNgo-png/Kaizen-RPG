@@ -11,3 +11,6 @@
 # Neutralinojs related files
 # .storage
 *.log
+.tmp/auth_info.json
+.tmp/window_state.config.json
+dist/Kaizen-RPG/.tmp/window_state.config.json
