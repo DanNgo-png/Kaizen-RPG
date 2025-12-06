@@ -4,9 +4,12 @@ import { loadPage } from './js/router.js'
 import { configureSidebar } from './js/focus/configureSidebar.js'
 import { initFocusTimer } from './js/focus/focusTimer.js'
 import { initFlexibleFocusTimer } from './js/focus/flexible/focusTimer.js'
+import { initSidebarTooltips } from './js/sidebarTooltip.js'
+import { initHeatmap } from './js/analyze/heat-map.js'
 
 function app() {
     handleDropdowns()
+    initSidebarTooltips()
 
     // Sidebar Toggle
     const sidebarToggle = document.getElementById("sidebar-toggle");
@@ -146,7 +149,7 @@ function app() {
     if (analyzeYear) {
         analyzeYear.addEventListener("click", async () => {
             await loadPage('./pages/analyze/year.html');
-            // placeholder(); 
+            initHeatmap(); 
         });
     }
 
