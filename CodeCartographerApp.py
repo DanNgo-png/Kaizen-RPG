@@ -81,7 +81,7 @@ class FileGrabberTool(ctk.CTkToplevel):
 
         # Settings
         self.output_folder_name = "temp_result"
-        self.target_extensions = {'.html', '.css', '.js'}
+        self.target_extensions = {'.html', '.css', '.js', '.json'}
         self.ignore_list = {'neutralino.js','neutralino.d.ts','node_modules', '.git', '__pycache__', '.vscode', '.DS_Store'}
         self.settings_window = None 
 

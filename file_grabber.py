@@ -16,7 +16,7 @@ class App(Tk):
 
         # --- Application Settings (Defaults) ---
         self.output_folder_name = "temp_result"
-        self.target_extensions = {'.html', '.css', '.js'}
+        self.target_extensions = {'.html', '.css', '.js', '.json'}
         # Default ignored items (common junk folders)
         self.ignore_list = {'neutralino.js','neutralino.d.ts','node_modules', '.git', '__pycache__', '.vscode', '.DS_Store'}
         
