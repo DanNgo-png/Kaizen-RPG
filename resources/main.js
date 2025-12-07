@@ -162,14 +162,6 @@ function app() {
         });
     }
 
-    const mainSettingsButton = document.querySelector(".main-settings-button");
-    if (mainSettingsButton) {
-        mainSettingsButton.addEventListener("click", async () => {
-            await loadPage('./pages/main-settings/main-settings.html');
-            // placeholder(); 
-        });
-    }
-
     const gameModeButton = document.querySelector(".game-modes-button");
     if (gameModeButton) {
         gameModeButton.addEventListener("click", async () => {
@@ -206,6 +198,14 @@ function app() {
     if (gameSettingsButton) {
         gameSettingsButton.addEventListener("click", async () => {
             await loadPage('./pages/games/game-settings.html');
+            // placeholder(); 
+        });
+    }
+
+    const mainSettingsButton = document.querySelector(".main-settings-button");
+    if (mainSettingsButton) {
+        mainSettingsButton.addEventListener("click", async () => {
+            await loadPage('./pages/main-settings/main-settings.html');
             // placeholder(); 
         });
     }
