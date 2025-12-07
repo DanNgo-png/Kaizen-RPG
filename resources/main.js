@@ -169,6 +169,46 @@ function app() {
             // placeholder(); 
         });
     }
+
+    const gameModeButton = document.querySelector(".game-modes-button");
+    if (gameModeButton) {
+        gameModeButton.addEventListener("click", async () => {
+            await loadPage('./pages/games/game-modes.html');
+            // placeholder(); 
+        });
+    }
+
+    const partyButton = document.querySelector(".game-party-button");
+    if (partyButton) {
+        partyButton.addEventListener("click", async () => {
+            await loadPage('./pages/games/party.html');
+            // placeholder(); 
+        });
+    }
+
+    const questButton = document.querySelector(".game-quests-button");
+    if (questButton) {
+        questButton.addEventListener("click", async () => {
+            await loadPage('./pages/games/quests.html');
+            // placeholder(); 
+        });
+    }
+
+    const inventoryButton = document.querySelector(".game-inventory-button");
+    if (inventoryButton) {
+        inventoryButton.addEventListener("click", async () => {
+            await loadPage('./pages/games/inventory.html');
+            // placeholder(); 
+        });
+    }
+
+    const gameSettingsButton = document.querySelector(".game-settings-button");
+    if (gameSettingsButton) {
+        gameSettingsButton.addEventListener("click", async () => {
+            await loadPage('./pages/games/game-settings.html');
+            // placeholder(); 
+        });
+    }
 }
 
 app()
