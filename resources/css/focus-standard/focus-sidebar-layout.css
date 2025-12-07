@@ -16,6 +16,24 @@
     --selector-active: #aeb6c4;
 }
 
+.focus-standard-main {
+    animation: fadeIn 0.4s ease-out; /* newly added */
+    width: 100%; /* newly added */
+    overflow: hidden; /* newly added */
+}
+
+@keyframes fadeIn { /* newly added */
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 /* --- Configure Sidebar --- */
 #configure-sidebar {
     position: fixed;
@@ -25,9 +43,11 @@
     width: 500px;
     background-color: var(--configure-bg-color);
     z-index: 1002;
+    visibility: hidden; /* newly added */
+
     /* Higher than other elements */
     transform: translateX(calc(100% + 20px));
-    transition: transform 0.3s ease-in-out;
+    transition: transform 0.3s ease-in-out, visibility 0.3s; /* newly added */
     padding: 50px;
     box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
     border-radius: 20px;
@@ -40,7 +60,9 @@
 }
 
 #configure-sidebar.configure-sidebar-open {
+    visibility: visible;
     transform: translateX(0);
+    transition: transform 0.3s ease-in-out, visibility 0s;
 }
 
 /* Width of the scrollbar */
@@ -294,14 +316,16 @@
 /* 2. Base Input Style */
 .stepper-input {
     background: transparent;
-    border: 1px solid transparent; /* Invisible border by default */
+    border: 1px solid transparent;
+    /* Invisible border by default */
     border-radius: 6px;
     color: var(--text-white, white);
     font-family: inherit;
     font-size: 16px;
     font-weight: 500;
     text-align: center;
-    width: 50px; /* Fixed width prevents layout jumping */
+    width: 50px;
+    /* Fixed width prevents layout jumping */
     outline: none;
     padding: 4px 0;
     transition: border-color 0.2s, background-color 0.2s;
@@ -311,7 +335,8 @@
 /* 3. Focus State (The white box effect) */
 .stepper-input:focus {
     border-color: rgba(255, 255, 255, 0.8);
-    background-color: rgba(255, 255, 255, 0.05); /* Subtle background highlight */
+    background-color: rgba(255, 255, 255, 0.05);
+    /* Subtle background highlight */
 }
 
 /* Toggle Switch */
@@ -456,22 +481,26 @@ input:checked+.slider:before {
 /* --- Break Mode Styles (Blue) --- */
 /* When the circle has this class, it turns blue */
 .timer-wrapper.break-mode {
-    background-color: #1e3a8a; /* Dark Blue bg */
+    background-color: #1e3a8a;
+    /* Dark Blue bg */
     border: 1px solid #1d4ed8;
 }
 
 .timer-wrapper.break-mode .focus-text {
-    color: #93c5fd; /* Light Blue text */
+    color: #93c5fd;
+    /* Light Blue text */
 }
 
 .timer-wrapper.break-mode .timer-count {
-    color: #bfdbfe; /* Very Light Blue text */
+    color: #bfdbfe;
+    /* Very Light Blue text */
 }
 
 /* Change the Main Button to Blue when in Break Mode */
 .start-focus-button.break-mode-btn {
     background-color: var(--accent-blue, #2563eb);
 }
+
 .start-focus-button.break-mode-btn:hover {
     background-color: #1d4ed8;
 }
