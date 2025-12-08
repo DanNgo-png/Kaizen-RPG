@@ -1,11 +1,532 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Weekly Analytics - Kaizen RPG</title>
+  <style>
+    /* --- Scoped Styles for Week Analytics --- */
+    .week-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      color: var(--text-primary, #fff);
+      font-family: var(--font-main, "Segoe UI", sans-serif);
+      animation: fadeIn 0.4s ease-out;
+      padding-top: 200px;
+      padding-bottom: 40px;
+      width: 100%;
+      /* Removed overflow: hidden to ensure header isn't clipped */
+    }
+
+    @keyframes fadeIn {
+
+      /* Reduced movement distance to prevent large layout shifts */
+      from {
+        opacity: 0;
+        transform: translateY(-5px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Header */
+    .week-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+      min-height: 40px;
+      /* Ensure visual height */
+      flex-shrink: 0;
+      /* Prevent collapsing */
+    }
+
+    .week-header h2 {
+      font-size: 24px;
+      font-weight: 700;
+      margin: 0;
+      letter-spacing: 0.5px;
+      color: #fff;
+      /* Explicit color */
+    }
+
+    .date-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary, #9ca3af);
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .nav-btn:hover {
+      color: #fff;
+    }
+
+    .date-picker-wrapper {
+      position: relative;
+      background-color: var(--surface-color, #1f2937);
+      border: 1px solid var(--bg-hover, #374151);
+      border-radius: 6px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+    }
+
+    .date-input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.9rem;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .date-input::-webkit-calendar-picker-indicator {
+      filter: invert(1);
+      cursor: pointer;
+    }
+
+    /* --- Top Section Grid --- */
+    .analytics-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      /* Summary vs Chart ratio */
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    /* Card Base */
+    .a-card {
+      background-color: var(--surface-color, #1f2937);
+      border: 1px solid var(--bg-hover, #374151);
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      position: relative;
+    }
+
+    /* Left Card: Summary */
+    .summary-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      gap: 30px;
+    }
+
+    .summary-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #fff;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--bg-hover, #374151);
+      width: 100%;
+      margin-bottom: 10px;
+    }
+
+    .kpi-group {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .kpi-label {
+      color: var(--text-secondary, #9ca3af);
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    .kpi-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.1;
+    }
+
+    .kpi-sub {
+      font-size: 0.85rem;
+      color: var(--text-secondary, #9ca3af);
+    }
+
+    /* Right Card: Donut Chart */
+    .donut-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 60px;
+      height: 100%;
+    }
+
+    .donut-chart {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      /* 100% Blue */
+      background: conic-gradient(#2563eb 0% 100%, transparent 0);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    /* Inner circle to make it a donut */
+    .donut-chart::after {
+      content: "";
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background-color: var(--surface-color, #1f2937);
+      border-radius: 50%;
+    }
+
+    /* Segments lines (Optional visual detail from screenshot) */
+    .donut-segment-line {
+      position: absolute;
+      width: 2px;
+      height: 100%;
+      background-color: var(--surface-color, #1f2937);
+      top: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+
+    .legend-row {
+      display: grid;
+      grid-template-columns: 20px 80px 80px 50px;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background-color: #2563eb;
+    }
+
+    .legend-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .legend-time {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      text-align: right;
+    }
+
+    .legend-perc {
+      font-weight: 700;
+      font-size: 0.95rem;
+      text-align: right;
+    }
+
+    /* --- Bottom Section: Bar Chart --- */
+    .bar-chart-container {
+      height: 300px;
+      position: relative;
+      margin-top: 20px;
+      padding-left: 40px;
+      /* Space for Y-axis labels */
+    }
+
+    /* Y-Axis Labels */
+    .y-axis {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      color: #6b7280;
+      font-size: 0.8rem;
+      padding-bottom: 40px;
+      /* Offset for X-axis height */
+    }
+
+    /* Grid Lines */
+    .grid-line {
+      position: absolute;
+      left: 40px;
+      right: 0;
+      height: 1px;
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    /* Bars Wrapper */
+    .bars-wrapper {
+      display: flex;
+      justify-content: space-around;
+      align-items: flex-end;
+      height: 100%;
+      padding-bottom: 40px;
+      /* Space for X-axis labels */
+      padding-top: 20px;
+      /* Space for top label */
+    }
+
+    .bar-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 10%;
+      position: relative;
+      height: 100%;
+      justify-content: flex-end;
+    }
+
+    .bar {
+      width: 50px;
+      background-color: #2563eb;
+      border: 1px solid #000;
+      /* Subtle border for contrast */
+      border-radius: 2px 2px 0 0;
+      transition: height 0.5s ease-out;
+      position: relative;
+      min-height: 1px;
+      /* Ensure 0 values have a baseline */
+    }
+
+    /* Bar Tooltip/Value Label */
+    .bar-value {
+      position: absolute;
+      top: -25px;
+      width: 100%;
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .x-label {
+      margin-top: 10px;
+      text-align: center;
+      color: #9ca3af;
+      font-size: 0.85rem;
+      line-height: 1.2;
+    }
+
+    .x-label span {
+      display: block;
+    }
+
+    .x-label .day-name {
+      font-weight: 600;
+      color: #d1d5db;
+    }
+
+    .x-label .day-date {
+      font-size: 0.75rem;
+    }
+
+    .chart-legend-bottom {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 10px;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .analytics-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .donut-wrapper {
+        flex-direction: column;
+        gap: 30px;
+      }
+
+      .bar {
+        width: 30px;
+      }
+    }
+  </style>
 </head>
+
 <body>
-    <p>placeholder: week.html</p>
+  <div class="week-container">
+
+    <!-- Header -->
+    <header class="week-header">
+      <h2>Week of Dec 1 - Dec 7, 2025</h2>
+      <div class="date-controls">
+        <button class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <div class="date-picker-wrapper">
+          <input type="date" class="date-input" value="2025-12-01">
+        </div>
+        <button class="nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </header>
+
+    <!-- Top Grid -->
+    <div class="analytics-grid">
+
+      <!-- Summary Card -->
+      <div class="a-card summary-card">
+        <div class="summary-title">Weekly Summary</div>
+
+        <div class="kpi-group">
+          <span class="kpi-label">Focus Time</span>
+          <span class="kpi-value">2h 42m</span>
+          <span class="kpi-sub">Previous week: 5h 53m</span>
+        </div>
+
+        <div class="kpi-group">
+          <span class="kpi-label">Sessions</span>
+          <span class="kpi-value">8</span>
+        </div>
+      </div>
+
+      <!-- Donut Chart Card -->
+      <div class="a-card">
+        <div class="donut-wrapper">
+          <div class="donut-chart">
+            <!-- Simulated Segment line -->
+            <div class="donut-segment-line"></div>
+          </div>
+
+          <div class="chart-legend-container">
+            <div class="legend-row">
+              <div class="legend-dot"></div>
+              <span class="legend-name">College</span>
+              <span class="legend-time">2h 42m</span>
+              <span class="legend-perc">100%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Bar Chart Card -->
+    <div class="a-card">
+
+      <div class="bar-chart-container">
+        <!-- Y-Axis Labels -->
+        <div class="y-axis">
+          <span>4h</span>
+          <span>2h</span>
+          <span>0m</span>
+        </div>
+
+        <!-- Horizontal Grid Lines -->
+        <div class="grid-line" style="top: 0;"></div>
+        <div class="grid-line" style="top: 50%; transform: translateY(-20px);"></div> <!-- Approx 2h mark -->
+        <div class="grid-line" style="bottom: 40px;"></div>
+
+        <!-- Bars -->
+        <div class="bars-wrapper">
+
+          <!-- Mon: 24m (10%) -->
+          <div class="bar-group">
+            <div class="bar" style="height: 10%;">
+              <span class="bar-value">24m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Mon</span>
+              <span class="day-date">Dec 1</span>
+            </div>
+          </div>
+
+          <!-- Tue: 0m -->
+          <div class="bar-group">
+            <div class="bar" style="height: 1px; background-color: #374151;">
+              <span class="bar-value">0m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Tue</span>
+              <span class="day-date">Dec 2</span>
+            </div>
+          </div>
+
+          <!-- Wed: 0m -->
+          <div class="bar-group">
+            <div class="bar" style="height: 1px; background-color: #374151;">
+              <span class="bar-value">0m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Wed</span>
+              <span class="day-date">Dec 3</span>
+            </div>
+          </div>
+
+          <!-- Thu: 5m (2%) -->
+          <div class="bar-group">
+            <div class="bar" style="height: 2%;">
+              <span class="bar-value">5m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Thu</span>
+              <span class="day-date">Dec 4</span>
+            </div>
+          </div>
+
+          <!-- Fri: 0m -->
+          <div class="bar-group">
+            <div class="bar" style="height: 1px; background-color: #374151;">
+              <span class="bar-value">0m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Fri</span>
+              <span class="day-date">Dec 5</span>
+            </div>
+          </div>
+
+          <!-- Sat: 2h 13m (55%) -->
+          <div class="bar-group">
+            <div class="bar" style="height: 55%;">
+              <span class="bar-value">2h 13m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Sat</span>
+              <span class="day-date">Dec 6</span>
+            </div>
+          </div>
+
+          <!-- Sun: 0m -->
+          <div class="bar-group">
+            <div class="bar" style="height: 1px; background-color: #374151;">
+              <span class="bar-value">0m</span>
+            </div>
+            <div class="x-label">
+              <span class="day-name">Sun</span>
+              <span class="day-date">Dec 7</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="chart-legend-bottom">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #2563eb;"></div>
+          <span>College</span>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
 </body>
+
 </html>
