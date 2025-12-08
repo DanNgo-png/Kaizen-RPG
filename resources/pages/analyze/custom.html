@@ -1,11 +1,491 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Custom Analytics - Kaizen RPG</title>
+	<style>
+		/* --- Scoped Styles for Custom Analytics --- */
+		.custom-container {
+			max-width: 1200px;
+			margin: 0 auto;
+			color: var(--text-primary, #fff);
+			font-family: var(--font-main, "Segoe UI", sans-serif);
+			animation: fadeIn 0.4s ease-out;
+			padding-top: 20px;
+			padding-bottom: 40px;
+			width: 100%;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(-5px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+
+		/* Header */
+		.custom-header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding-top: 40px;
+			margin-bottom: 30px;
+			flex-wrap: wrap;
+			gap: 20px;
+		}
+
+		.custom-header h2 {
+			font-size: 24px;
+			font-weight: 700;
+			margin: 0;
+			letter-spacing: 0.5px;
+			color: #fff;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+		}
+
+		/* Range Picker Controls */
+		.range-controls {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			background-color: var(--surface-color, #1f2937);
+			padding: 8px 15px;
+			border-radius: 8px;
+			border: 1px solid var(--bg-hover, #374151);
+		}
+
+		.range-label {
+			color: var(--text-secondary, #9ca3af);
+			font-size: 0.9rem;
+			font-weight: 600;
+		}
+
+		.date-input-wrapper {
+			position: relative;
+			background-color: var(--bg-body, #111827);
+			border: 1px solid var(--bg-hover, #374151);
+			border-radius: 4px;
+			padding: 4px 8px;
+		}
+
+		.date-input {
+			background: transparent;
+			border: none;
+			color: #fff;
+			font-family: inherit;
+			font-size: 0.9rem;
+			outline: none;
+			cursor: pointer;
+		}
+
+		.date-input::-webkit-calendar-picker-indicator {
+			filter: invert(1);
+			cursor: pointer;
+		}
+
+		.btn-apply {
+			background-color: var(--accent-green, #059669);
+			color: #fff;
+			border: none;
+			padding: 6px 16px;
+			border-radius: 4px;
+			font-weight: 600;
+			cursor: pointer;
+			transition: background-color 0.2s;
+			margin-left: 10px;
+		}
+
+		.btn-apply:hover {
+			background-color: var(--accent-green-hover, #047857);
+		}
+
+		/* --- Top Section Grid --- */
+		.analytics-grid {
+			display: grid;
+			grid-template-columns: 1fr 1fr 1fr;
+			gap: 24px;
+			margin-bottom: 24px;
+		}
+
+		/* Card Base */
+		.a-card {
+			background-color: var(--surface-color, #1f2937);
+			border: 1px solid var(--bg-hover, #374151);
+			border-radius: 12px;
+			padding: 24px;
+			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+			position: relative;
+			display: flex;
+			flex-direction: column;
+		}
+
+		/* KPI Card Styles */
+		.kpi-card {
+			align-items: flex-start;
+			justify-content: center;
+			gap: 10px;
+		}
+
+		.kpi-icon {
+			width: 40px;
+			height: 40px;
+			border-radius: 8px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			font-size: 1.2rem;
+			margin-bottom: 5px;
+		}
+
+		.icon-blue {
+			background: rgba(37, 99, 235, 0.15);
+			color: #3b82f6;
+		}
+
+		.icon-purple {
+			background: rgba(139, 92, 246, 0.15);
+			color: #a78bfa;
+		}
+
+		.icon-green {
+			background: rgba(16, 185, 129, 0.15);
+			color: #34d399;
+		}
+
+		.kpi-title {
+			color: var(--text-secondary, #9ca3af);
+			font-size: 0.9rem;
+			font-weight: 600;
+		}
+
+		.kpi-val {
+			font-size: 2rem;
+			font-weight: 700;
+			color: #fff;
+		}
+
+		.kpi-meta {
+			font-size: 0.85rem;
+			color: #6b7280;
+		}
+
+		/* Middle Section: Distribution */
+		.distribution-grid {
+			display: grid;
+			grid-template-columns: 2fr 1fr;
+			gap: 24px;
+			margin-bottom: 24px;
+		}
+
+		.chart-header {
+			margin-bottom: 20px;
+			border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+			padding-bottom: 10px;
+		}
+
+		.chart-title {
+			font-size: 1.1rem;
+			font-weight: 700;
+			color: #fff;
+		}
+
+		/* CSS Donut Implementation */
+		.donut-container {
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			height: 100%;
+			gap: 40px;
+		}
+
+		.donut-chart {
+			width: 160px;
+			height: 160px;
+			border-radius: 50%;
+			/* 60% Blue, 30% Purple, 10% Green */
+			background: conic-gradient(#2563eb 0% 60%,
+					#8b5cf6 60% 90%,
+					#10b981 90% 100%);
+			position: relative;
+		}
+
+		.donut-chart::after {
+			content: "";
+			position: absolute;
+			top: 50%;
+			left: 50%;
+			transform: translate(-50%, -50%);
+			width: 80px;
+			height: 80px;
+			background-color: var(--surface-color, #1f2937);
+			border-radius: 50%;
+		}
+
+		.legend {
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.legend-item {
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			font-size: 0.9rem;
+		}
+
+		.dot {
+			width: 10px;
+			height: 10px;
+			border-radius: 50%;
+		}
+
+		.l-blue {
+			background: #2563eb;
+		}
+
+		.l-purple {
+			background: #8b5cf6;
+		}
+
+		.l-green {
+			background: #10b981;
+		}
+
+		.l-val {
+			margin-left: auto;
+			font-weight: 700;
+			color: #d1d5db;
+		}
+
+		/* Bottom Section: Trend Chart */
+		.trend-container {
+			height: 250px;
+			position: relative;
+			margin-top: 20px;
+			display: flex;
+			align-items: flex-end;
+			justify-content: space-between;
+			padding-left: 30px;
+			/* Space for Y Axis */
+			gap: 2%;
+		}
+
+		.y-axis {
+			position: absolute;
+			left: 0;
+			top: 0;
+			bottom: 0;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			color: #6b7280;
+			font-size: 0.75rem;
+			padding-bottom: 25px;
+		}
+
+		.grid-lines {
+			position: absolute;
+			left: 30px;
+			right: 0;
+			top: 0;
+			bottom: 25px;
+			display: flex;
+			flex-direction: column;
+			justify-content: space-between;
+			pointer-events: none;
+		}
+
+		.line {
+			width: 100%;
+			height: 1px;
+			background: rgba(255, 255, 255, 0.05);
+		}
+
+		/* Bars */
+		.bar {
+			flex: 1;
+			background-color: #3b82f6;
+			border-radius: 2px 2px 0 0;
+			min-width: 8px;
+			position: relative;
+			transition: height 0.3s;
+		}
+
+		.bar:hover {
+			background-color: #60a5fa;
+		}
+
+		.bar:hover::after {
+			content: attr(data-val);
+			position: absolute;
+			bottom: 100%;
+			left: 50%;
+			transform: translateX(-50%);
+			background: #111;
+			padding: 2px 6px;
+			font-size: 0.7rem;
+			border-radius: 4px;
+			margin-bottom: 4px;
+			white-space: nowrap;
+		}
+
+		@media (max-width: 900px) {
+			.analytics-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.distribution-grid {
+				grid-template-columns: 1fr;
+			}
+
+			.custom-header {
+				flex-direction: column;
+				align-items: flex-start;
+			}
+
+			.range-controls {
+				width: 100%;
+				justify-content: space-between;
+				flex-wrap: wrap;
+			}
+		}
+	</style>
 </head>
+
 <body>
-    <p>placeholder: custom.html</p>
+	<div class="custom-container">
+
+		<!-- Header -->
+		<header class="custom-header">
+			<h2><i class="fa-solid fa-filter" style="color: #a78bfa;"></i> Custom Analytics</h2>
+
+			<div class="range-controls">
+				<span class="range-label">From:</span>
+				<div class="date-input-wrapper">
+					<input type="date" class="date-input" value="2025-11-01">
+				</div>
+
+				<span class="range-label">To:</span>
+				<div class="date-input-wrapper">
+					<input type="date" class="date-input" value="2025-11-15">
+				</div>
+
+				<button class="btn-apply">Apply</button>
+			</div>
+		</header>
+
+		<!-- KPI Grid -->
+		<div class="analytics-grid">
+
+			<!-- KPI 1 -->
+			<div class="a-card kpi-card">
+				<div class="kpi-icon icon-blue"><i class="fa-regular fa-clock"></i></div>
+				<span class="kpi-title">Total Focus</span>
+				<span class="kpi-val">28h 15m</span>
+				<span class="kpi-meta">Avg 1h 53m / day</span>
+			</div>
+
+			<!-- KPI 2 -->
+			<div class="a-card kpi-card">
+				<div class="kpi-icon icon-purple"><i class="fa-solid fa-layer-group"></i></div>
+				<span class="kpi-title">Total Sessions</span>
+				<span class="kpi-val">42</span>
+				<span class="kpi-meta">Avg 2.8 sessions / day</span>
+			</div>
+
+			<!-- KPI 3 -->
+			<div class="a-card kpi-card">
+				<div class="kpi-icon icon-green"><i class="fa-regular fa-calendar-check"></i></div>
+				<span class="kpi-title">Days Active</span>
+				<span class="kpi-val">12 / 15</span>
+				<span class="kpi-meta">80% consistency</span>
+			</div>
+
+		</div>
+
+		<!-- Distribution & Trend -->
+		<div class="distribution-grid">
+
+			<!-- Trend Chart -->
+			<div class="a-card">
+				<div class="chart-header">
+					<div class="chart-title">Focus Trend</div>
+				</div>
+
+				<div class="trend-container">
+					<div class="y-axis">
+						<span>4h</span><span>3h</span><span>2h</span><span>1h</span><span>0h</span>
+					</div>
+					<div class="grid-lines">
+						<div class="line"></div>
+						<div class="line"></div>
+						<div class="line"></div>
+						<div class="line"></div>
+						<div class="line"></div>
+					</div>
+
+					<!-- Mock Bars for 15 days -->
+					<div class="bar" style="height: 40%;" data-val="1h 36m"></div>
+					<div class="bar" style="height: 60%;" data-val="2h 24m"></div>
+					<div class="bar" style="height: 20%;" data-val="48m"></div>
+					<div class="bar" style="height: 80%;" data-val="3h 12m"></div>
+					<div class="bar" style="height: 0%;" data-val="0m"></div>
+					<div class="bar" style="height: 50%;" data-val="2h"></div>
+					<div class="bar" style="height: 90%;" data-val="3h 36m"></div>
+					<div class="bar" style="height: 30%;" data-val="1h 12m"></div>
+					<div class="bar" style="height: 45%;" data-val="1h 48m"></div>
+					<div class="bar" style="height: 55%;" data-val="2h 12m"></div>
+					<div class="bar" style="height: 10%;" data-val="24m"></div>
+					<div class="bar" style="height: 0%;" data-val="0m"></div>
+					<div class="bar" style="height: 70%;" data-val="2h 48m"></div>
+					<div class="bar" style="height: 65%;" data-val="2h 36m"></div>
+					<div class="bar" style="height: 25%;" data-val="1h"></div>
+				</div>
+			</div>
+
+			<!-- Tag Breakdown -->
+			<div class="a-card">
+				<div class="chart-header">
+					<div class="chart-title">Tag Distribution</div>
+				</div>
+
+				<div class="donut-container">
+					<!-- Donut -->
+					<div class="donut-chart"></div>
+				</div>
+
+				<div class="legend" style="margin-top: 20px;">
+					<div class="legend-item">
+						<div class="dot l-blue"></div>
+						<span>College</span>
+						<span class="l-val">60%</span>
+					</div>
+					<div class="legend-item">
+						<div class="dot l-purple"></div>
+						<span>RPG Dev</span>
+						<span class="l-val">30%</span>
+					</div>
+					<div class="legend-item">
+						<div class="dot l-green"></div>
+						<span>Reading</span>
+						<span class="l-val">10%</span>
+					</div>
+				</div>
+			</div>
+
+		</div>
+
+	</div>
 </body>
+
 </html>
