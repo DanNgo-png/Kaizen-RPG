@@ -1,5 +1,5 @@
 @echo off
-set "dan_laptop=C:\Users\danng\OneDrive\Desktop\Projects\Code Cartographer"
+set "dan_laptop=C:\Users\danng\OneDrive\Desktop\Projects\Code-Cartographer"
 set "dan_computer=C:\Users\minhn\Desktop\Projects\Code-Cartographer"
 
 if exist "%dan_laptop%\main.py" (
