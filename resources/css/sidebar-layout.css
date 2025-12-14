@@ -13,6 +13,7 @@
     text-wrap: nowrap;
     display: flex;
     flex-direction: column;
+    white-space: nowrap;
 }
 
 /* Hide scrollbar for Chrome/Safari/Opera */

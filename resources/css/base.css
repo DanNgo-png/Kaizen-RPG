@@ -6,7 +6,8 @@ body {
 }
 
 /* Style page content */
-#main {
+#default-page {
     transition: margin-left 0.5s; /* sidebar open speed */
-    padding: 50px;
+    margin-left: 75px;
+    padding: 20px;
 }

@@ -4,6 +4,13 @@
 @import url('css/sidebar-layout.css');
 @import url('css/sidebar-items.css');
 
+/* === PLAN PAGE === */
+/* TODO LIST */
+@import url('css/plan/todo-list/todo-list.css');
+/* KANBAN BOARD */
+@import url('css/plan/kanban-board/kanban-board.css');
+@import url('css/plan/kanban-board/buttons.css');
+
 /* === FOCUS PAGE === */
 /* STANDARD TIMER */
 @import url('css/focus-standard/focus-dot.css');
