@@ -2,8 +2,6 @@
 .kanban-container {
     display: flex;
     flex-direction: column;
-    flex-grow: 1;
-    /* Crucial for nested scrolling */
     width: 100%;
     color: var(--text-primary, #fff);
     font-family: var(--font-main, "Segoe UI", sans-serif);
@@ -11,7 +9,6 @@
     flex-direction: column;
     box-sizing: border-box;
     overflow: hidden;
-    padding-top: 20px;
     height: 100vh;
 }
 
