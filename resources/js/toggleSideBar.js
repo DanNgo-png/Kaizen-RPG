@@ -5,7 +5,7 @@ export async function toggleSideBar() {
     // Check if the sidebar is currently fully open
     if (sidenav.style.width === "250px") {
         // --- CLOSE STATE ---
-        default_page.style.marginLeft = "75px"; 
+        default_page.style.marginLeft = "0px"; 
         sidenav.style.width = "75px";
         
         sidenav.classList.add("collapsed"); // This class signals CSS to hide text
@@ -13,7 +13,7 @@ export async function toggleSideBar() {
     } else {
         // --- OPEN STATE ---
         sidenav.style.width = "250px";
-        default_page.style.marginLeft = "250px";
+        default_page.style.marginLeft = "175px";
         
         // Remove the class so text reappears
         sidenav.classList.remove("collapsed");
