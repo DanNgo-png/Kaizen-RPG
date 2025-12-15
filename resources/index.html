@@ -10,158 +10,156 @@
 </head>
 
 <body>
-	<div class="main-container">
-		<!-- SIDE BAR -->
-		<button id="sidebar-toggle" class="sidebar-toggle-button">
-			<i class="fa-solid fa-bars"></i>
-		</button>
+	<!-- SIDE BAR -->
+	<button id="sidebar-toggle" class="sidebar-toggle-button">
+		<i class="fa-solid fa-bars"></i>
+	</button>
 
-		<div id="mySidenav" class="sidenav collapsed">
+	<div id="mySidenav" class="sidenav collapsed">
 
-			<!-- PLAN -->
-			<div class="dropdown">
-				<button class="dropdown-button" data-tooltip="Plan">
-					<i class="fa-solid fa-layer-group"></i>
-					<span class="sidebar-text">Plan</span>
+		<!-- PLAN -->
+		<div class="dropdown">
+			<button class="dropdown-button" data-tooltip="Plan">
+				<i class="fa-solid fa-layer-group"></i>
+				<span class="sidebar-text">Plan</span>
+			</button>
+			<div class="dropdown-container">
+				<button class="todo-lists-button">
+					<i class="fa-solid fa-list-check"></i>
+					<span class="sidebar-text">Todo Lists</span>
 				</button>
-				<div class="dropdown-container">
-					<button class="todo-lists-button">
-						<i class="fa-solid fa-list-check"></i>
-						<span class="sidebar-text">Todo Lists</span>
-					</button>
-					<button class="kanban-board-button">
-						<i class="fa-solid fa-table-columns"></i>
-						<span class="sidebar-text">Kanban Board</span>
-					</button>
-				</div>
-			</div>
-
-			<!-- FOCUS -->
-			<div class="dropdown">
-				<button class="dropdown-button" data-tooltip="Focus">
-					<i class="fa-solid fa-bullseye"></i>
-					<span class="sidebar-text">Focus</span>
-				</button>
-				<div class="dropdown-container">
-					<button class="focus-standard-button">
-						<i class="fa-regular fa-clock"></i>
-						<span class="sidebar-text">Standard</span>
-					</button>
-					<button class="focus-flexible-button">
-						<i class="fa-solid fa-stopwatch"></i>
-						<span class="sidebar-text">Flexible</span>
-					</button>
-					<button class="focus-settings-button">
-						<i class="fa-solid fa-sliders"></i>
-						<span class="sidebar-text">Settings</span>
-					</button>
-				</div>
-			</div>
-
-			<!-- TIMEFRAMES -->
-			<div class="dropdown">
-				<button class="dropdown-button" data-tooltip="Timeframes">
-					<i class="fa-regular fa-calendar"></i>
-					<span class="sidebar-text">Timeframes</span>
-				</button>
-				<div class="dropdown-container">
-					<button class="today-timeframe-button">
-						<i class="fa-solid fa-sun"></i>
-						<span class="sidebar-text">Today</span>
-					</button>
-					<button class="week-timeframe-button">
-						<i class="fa-solid fa-calendar-week"></i>
-						<span class="sidebar-text">This Week</span>
-					</button>
-					<button class="quarter-timeframe-button">
-						<i class="fa-solid fa-chart-pie"></i>
-						<span class="sidebar-text">This Quarter</span>
-					</button>
-					<button class="year-timeframe-button">
-						<i class="fa-solid fa-calendar-check"></i>
-						<span class="sidebar-text">This Year</span>
-					</button>
-				</div>
-			</div>
-
-			<!-- ANALYZE -->
-			<div class="dropdown">
-				<button class="dropdown-button" data-tooltip="Analyze">
-					<i class="fa-solid fa-chart-simple"></i>
-					<span class="sidebar-text">Analyze</span>
-				</button>
-				<div class="dropdown-container">
-					<button class="analyze-overview-button">
-						<i class="fa-solid fa-binoculars"></i>
-						<span class="sidebar-text">Overview</span>
-					</button>
-					<button class="analyze-day-button">
-						<i class="fa-solid fa-circle-notch"></i>
-						<span class="sidebar-text">Day</span>
-					</button>
-					<button class="analyze-week-button">
-						<i class="fa-solid fa-chart-column"></i>
-						<span class="sidebar-text">Week</span>
-					</button>
-					<button class="analyze-month-button">
-						<i class="fa-solid fa-calendar-days"></i>
-						<span class="sidebar-text">Month</span>
-					</button>
-					<button class="analyze-year-button">
-						<i class="fa-solid fa-flag-checkered"></i>
-						<span class="sidebar-text">Year</span>
-					</button>
-					<button class="analyze-custom-button">
-						<i class="fa-solid fa-filter"></i>
-						<span class="sidebar-text">Custom</span>
-					</button>
-				</div>
-			</div>
-
-			<!-- GAMES -->
-			<div class="dropdown">
-				<button class="dropdown-button" data-tooltip="Games">
-					<i class="fa-solid fa-gamepad"></i>
-					<span class="sidebar-text">Games</span>
-				</button>
-				<div class="dropdown-container">
-					<button class="game-modes-button">
-						<i class="fa-solid fa-dice"></i>
-						<span class="sidebar-text">Game Modes</span>
-					</button>
-					<button class="game-party-button">
-						<i class="fa-solid fa-users"></i>
-						<span class="sidebar-text">Party</span>
-					</button>
-					<button class="game-quests-button">
-						<i class="fa-solid fa-scroll"></i>
-						<span class="sidebar-text">Quests</span>
-					</button>
-					<button class="game-inventory-button">
-						<i class="fa-solid fa-suitcase"></i>
-						<span class="sidebar-text">Inventory</span>
-					</button>
-					<button class="game-settings-button">
-						<i class="fa-solid fa-wrench"></i>
-						<span class="sidebar-text">Settings</span>
-					</button>
-				</div>
-			</div>
-
-			<!-- MAIN SETTINGS -->
-			<div class="main-settings">
-				<button class="main-settings-button" data-tooltip="Settings">
-					<i class="fa-solid fa-gear"></i>
-					<span class="settings-text">Settings</span>
+				<button class="kanban-board-button">
+					<i class="fa-solid fa-table-columns"></i>
+					<span class="sidebar-text">Kanban Board</span>
 				</button>
 			</div>
-
 		</div>
-		<!-- SIDE BAR END -->
 
-		<div id="default-page">
-			<p>Hello world</p>
+		<!-- FOCUS -->
+		<div class="dropdown">
+			<button class="dropdown-button" data-tooltip="Focus">
+				<i class="fa-solid fa-bullseye"></i>
+				<span class="sidebar-text">Focus</span>
+			</button>
+			<div class="dropdown-container">
+				<button class="focus-standard-button">
+					<i class="fa-regular fa-clock"></i>
+					<span class="sidebar-text">Standard</span>
+				</button>
+				<button class="focus-flexible-button">
+					<i class="fa-solid fa-stopwatch"></i>
+					<span class="sidebar-text">Flexible</span>
+				</button>
+				<button class="focus-settings-button">
+					<i class="fa-solid fa-sliders"></i>
+					<span class="sidebar-text">Settings</span>
+				</button>
+			</div>
 		</div>
+
+		<!-- TIMEFRAMES -->
+		<div class="dropdown">
+			<button class="dropdown-button" data-tooltip="Timeframes">
+				<i class="fa-regular fa-calendar"></i>
+				<span class="sidebar-text">Timeframes</span>
+			</button>
+			<div class="dropdown-container">
+				<button class="today-timeframe-button">
+					<i class="fa-solid fa-sun"></i>
+					<span class="sidebar-text">Today</span>
+				</button>
+				<button class="week-timeframe-button">
+					<i class="fa-solid fa-calendar-week"></i>
+					<span class="sidebar-text">This Week</span>
+				</button>
+				<button class="quarter-timeframe-button">
+					<i class="fa-solid fa-chart-pie"></i>
+					<span class="sidebar-text">This Quarter</span>
+				</button>
+				<button class="year-timeframe-button">
+					<i class="fa-solid fa-calendar-check"></i>
+					<span class="sidebar-text">This Year</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- ANALYZE -->
+		<div class="dropdown">
+			<button class="dropdown-button" data-tooltip="Analyze">
+				<i class="fa-solid fa-chart-simple"></i>
+				<span class="sidebar-text">Analyze</span>
+			</button>
+			<div class="dropdown-container">
+				<button class="analyze-overview-button">
+					<i class="fa-solid fa-binoculars"></i>
+					<span class="sidebar-text">Overview</span>
+				</button>
+				<button class="analyze-day-button">
+					<i class="fa-solid fa-circle-notch"></i>
+					<span class="sidebar-text">Day</span>
+				</button>
+				<button class="analyze-week-button">
+					<i class="fa-solid fa-chart-column"></i>
+					<span class="sidebar-text">Week</span>
+				</button>
+				<button class="analyze-month-button">
+					<i class="fa-solid fa-calendar-days"></i>
+					<span class="sidebar-text">Month</span>
+				</button>
+				<button class="analyze-year-button">
+					<i class="fa-solid fa-flag-checkered"></i>
+					<span class="sidebar-text">Year</span>
+				</button>
+				<button class="analyze-custom-button">
+					<i class="fa-solid fa-filter"></i>
+					<span class="sidebar-text">Custom</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- GAMES -->
+		<div class="dropdown">
+			<button class="dropdown-button" data-tooltip="Games">
+				<i class="fa-solid fa-gamepad"></i>
+				<span class="sidebar-text">Games</span>
+			</button>
+			<div class="dropdown-container">
+				<button class="game-modes-button">
+					<i class="fa-solid fa-dice"></i>
+					<span class="sidebar-text">Game Modes</span>
+				</button>
+				<button class="game-party-button">
+					<i class="fa-solid fa-users"></i>
+					<span class="sidebar-text">Party</span>
+				</button>
+				<button class="game-quests-button">
+					<i class="fa-solid fa-scroll"></i>
+					<span class="sidebar-text">Quests</span>
+				</button>
+				<button class="game-inventory-button">
+					<i class="fa-solid fa-suitcase"></i>
+					<span class="sidebar-text">Inventory</span>
+				</button>
+				<button class="game-settings-button">
+					<i class="fa-solid fa-wrench"></i>
+					<span class="sidebar-text">Settings</span>
+				</button>
+			</div>
+		</div>
+
+		<!-- MAIN SETTINGS -->
+		<div class="main-settings">
+			<button class="main-settings-button" data-tooltip="Settings">
+				<i class="fa-solid fa-gear"></i>
+				<span class="settings-text">Settings</span>
+			</button>
+		</div>
+
+	</div>
+	<!-- SIDE BAR END -->
+
+	<div id="default-page">
+		<p>Hello world</p>
 	</div>
 
 	<script src="js/neutralino.js"></script>
