@@ -12,17 +12,17 @@
 @import url('css/plan/kanban-board/buttons.css');
 
 /* === FOCUS PAGE === */
-/* STANDARD TIMER */
-@import url('css/focus-standard/focus-dot.css');
-@import url('css/focus-standard/focus-dropdown.css');
-@import url('css/focus-standard/focus-footer-button.css');
-@import url('css/focus-standard/focus-standard-layout.css');
-@import url('css/focus-standard/focus-stat-icons.css');
-@import url('css/focus-standard/timer-circle.css');
+/* STANDARD TIMER: MAIN */
+@import url('css/focus/focus-standard/focus-dot.css');
+@import url('css/focus/focus-standard/focus-footer-button.css');
+@import url('css/focus/focus-standard/focus-dropdown.css');
+@import url('css/focus/focus-standard/focus-standard-layout.css');
+@import url('css/focus/focus-standard/focus-stat-icons.css');
+@import url('css/focus/focus-standard/timer-circle.css');
 
-/* CONFIGURE SIDE BAR */
-@import url('css/focus-standard/focus-sidebar-layout.css');
-@import url('css/focus-standard/focus-sidebar-items.css');
+/* STANDARD TIMER: CONFIGURE SIDE BAR */
+@import url('css/focus/focus-standard/focus-sidebar-layout.css');
+@import url('css/focus/focus-standard/focus-sidebar-items.css');
 
 /* FLEXIBLE TIMER */
 @import url('css/focus/focus-flexible/main.css');
