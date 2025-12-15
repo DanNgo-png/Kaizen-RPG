@@ -1,0 +1,129 @@
+<div class="kanban-container">
+	<!-- Header -->
+	<header class="kanban-header">
+		<h2>
+			<i class="fa-solid fa-table-columns" style="color: var(--accent-blue, #3b82f6);"></i>
+			Development Board
+		</h2>
+		<div class="kanban-controls">
+			<!-- Uses styles from buttons.css -->
+			<button class="btn-secondary"><i class="fa-solid fa-filter"></i> Filter</button>
+			<button class="btn-primary"><i class="fa-solid fa-plus"></i> New Issue</button>
+		</div>
+	</header>
+
+	<!-- Board Scrolling Area -->
+	<div class="board-scroll-container">
+
+		<!-- Column 1: To Do -->
+		<div class="kanban-column col-todo">
+			<div class="column-header">
+				<span class="column-title">
+					<span class="status-dot todo-dot"></span> To Do
+					<span class="column-count">2</span>
+				</span>
+				<i class="fa-solid fa-ellipsis column-options"></i>
+			</div>
+
+			<div class="task-container">
+				<!-- Card 1 -->
+				<div class="kanban-card">
+					<div class="card-tags">
+						<span class="tag tag-design">Design</span>
+						<span class="tag tag-urgent">Urgent</span>
+					</div>
+					<div class="card-title">Complete the Kaizen RPG UI design</div>
+					<div class="card-footer">
+						<span class="card-id">#TASK-1</span>
+						<div class="card-meta">
+							<span><i class="fa-regular fa-comment"></i> 2</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Card 2 -->
+				<div class="kanban-card">
+					<div class="card-tags">
+						<span class="tag tag-design">Design</span>
+					</div>
+					<div class="card-title">Draft game mechanics for Party system</div>
+					<div class="card-footer">
+						<span class="card-id">#TASK-2</span>
+						<div class="card-meta">
+							<span><i class="fa-regular fa-clock"></i> Dec 2</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<button class="btn-add-card"><i class="fa-solid fa-plus"></i> Add card</button>
+		</div>
+
+		<!-- Column 2: In Progress -->
+		<div class="kanban-column col-progress">
+			<div class="column-header">
+				<span class="column-title">
+					<span class="status-dot progress-dot"></span> In Progress
+					<span class="column-count">1</span>
+				</span>
+				<i class="fa-solid fa-ellipsis column-options"></i>
+			</div>
+
+			<div class="task-container">
+				<!-- Card 3 -->
+				<div class="kanban-card">
+					<div class="card-tags">
+						<span class="tag tag-dev">Dev</span>
+					</div>
+					<div class="card-title">Implement Sidebar navigation logic</div>
+					<div class="card-footer">
+						<span class="card-id">#TASK-3</span>
+						<div class="card-meta">
+							<span><img src="https://ui-avatars.com/api/?name=User&background=random&size=16&rounded=true"
+									alt="User"></span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<button class="btn-add-card"><i class="fa-solid fa-plus"></i> Add card</button>
+		</div>
+
+		<!-- Column 3: Done -->
+		<div class="kanban-column col-done">
+			<div class="column-header">
+				<span class="column-title">
+					<span class="status-dot done-dot"></span> Done
+					<span class="column-count">1</span>
+				</span>
+				<i class="fa-solid fa-ellipsis column-options"></i>
+			</div>
+
+			<div class="task-container">
+				<!-- Card 4 -->
+				<div class="kanban-card">
+					<div class="card-tags">
+						<span class="tag tag-dev">Dev</span>
+					</div>
+					<div class="card-title" style="text-decoration: line-through; color: var(--text-secondary);">
+						Setup project file structure
+					</div>
+					<div class="card-footer">
+						<span class="card-id">#TASK-4</span>
+						<div class="card-meta">
+							<span><i class="fa-solid fa-check"></i> Nov 29</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<button class="btn-add-card"><i class="fa-solid fa-plus"></i> Add card</button>
+		</div>
+
+		<!-- New Column Button Placeholder -->
+		<button class="btn-new-column">
+			<i class="fa-solid fa-plus"></i> New Section
+		</button>
+
+	</div>
+</div>
