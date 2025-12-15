@@ -1,0 +1,29 @@
+footer {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 10px;
+}
+
+.configure-footer-button,
+.log-footer-button,
+.todo-footer-button {
+    background-color: transparent;
+    border: 1px solid #374151;
+    color: #d1d5db;
+    padding: 10px 18px;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: 0.2s;
+    margin-bottom: 20px;
+}
+
+.configure-footer-button:hover,
+.log-footer-button:hover,
+.todo-footer-button:hover {
+    background-color: #1f2937;
+}

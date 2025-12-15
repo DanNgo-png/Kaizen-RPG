@@ -1,0 +1,26 @@
+.timer-wrapper {
+    width: 360px;
+    height: 360px;
+    background-color: var(--circle-bg);
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+.focus-text {
+    color: var(--timer-text);
+    font-size: 17.5px;
+    font-weight: 500;
+    margin-bottom: 5px;
+    letter-spacing: 0.5px;
+}
+
+.timer-count {
+    color: var(--timer-bg-text);
+    font-size: 52.5px;
+    font-weight: 700;
+    line-height: 1;
+}

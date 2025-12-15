@@ -1,0 +1,29 @@
+/* Stats (Top Right) */
+.stats-container {
+    position: fixed; /* Changed from absolute to fixed */
+    right: 20px; /* Adjusted to align with page padding */
+    top: 20px; /* Adjusted to align with page padding */
+    display: flex;
+    gap: 15px;
+    font-size: 0.9rem;
+    font-weight: 600;
+    z-index: 100; /* Ensure it's on top of other content */
+}
+
+.stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stat.fire {
+    color: var(--stat-fire);
+}
+
+.stat.time {
+    color: var(--stat-blue);
+}
+
+.stat.done {
+    color: var(--stat-check);
+}
