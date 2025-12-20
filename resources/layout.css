@@ -32,6 +32,8 @@
 /* === ANALYZE PAGE === */
 
 /* === GAME PAGE === */
+/* GAME MODES */
+@import url('css/games/game-modes.css');
 
 /* === MAIN SETTINGS === */
 @import url('css/main-settings/main-settings.css');

@@ -14,6 +14,7 @@
   },
   "author": "neutralinojs-community",
   "dependencies": {
+    "better-sqlite3": "^12.5.0",
     "node-neutralino": "^2.0.0"
   },
   "devDependencies": {

@@ -1,341 +1,96 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Todo Lists - Kaizen RPG</title>
-    <style>
-        /* --- Scoped Styles for Todo Page --- */
-        .todo-container {
-            max-width: 900px;
-            margin: 0 auto;
-            color: var(--text-primary, #fff);
-            font-family: var(--font-main, "Segoe UI", sans-serif);
-            animation: fadeIn 0.4s ease-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        /* Header Section */
-        .todo-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid var(--bg-hover, #3D3D3D);
-        }
-
-        .todo-header h2 {
-            font-size: 24px;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin: 0;
-        }
-
-        .btn-new-list {
-            background-color: var(--bg-hover, #3D3D3D);
-            color: var(--text-primary, #fff);
-            border: 1px solid transparent;
-            padding: 8px 16px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s;
-        }
-
-        .btn-new-list:hover {
-            background-color: var(--bg-sidebar, #2C2C2C);
-            border-color: var(--text-secondary, #9ca3af);
-        }
-
-        /* Input Section */
-        .input-group {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 30px;
-            background-color: var(--bg-sidebar, #2C2C2C);
-            padding: 10px 15px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            border: 1px solid var(--bg-hover, #3D3D3D);
-        }
-
-        .todo-input {
-            flex-grow: 1;
-            background: transparent;
-            border: none;
-            color: var(--text-primary, #fff);
-            font-size: 16px;
-            padding: 8px;
-            outline: none;
-        }
-
-        .todo-input::placeholder {
-            color: #6b7280; /* Gray-500 */
-        }
-
-        .btn-add {
-            background-color: var(--accent-active-bg, #1C398E);
-            color: var(--accent-active-text, #8EC5FF);
-            border: none;
-            padding: 8px 24px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: filter 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .btn-add:hover {
-            filter: brightness(1.2);
-        }
-
-        /* Filter Tabs */
-        .tabs {
-            display: flex;
-            gap: 20px;
-            margin-bottom: 20px;
-            padding-left: 5px;
-        }
-
-        .tab-btn {
-            background: none;
-            border: none;
-            color: #9ca3af; /* Gray-400 */
-            font-size: 15px;
-            font-weight: 500;
-            cursor: pointer;
-            padding-bottom: 8px;
-            position: relative;
-            transition: color 0.2s;
-        }
-
-        .tab-btn:hover {
-            color: var(--text-primary, #fff);
-        }
-
-        .tab-btn.active {
-            color: var(--text-primary, #fff);
-        }
-
-        .tab-btn.active::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background-color: var(--accent-green, #059669);
-            box-shadow: 0 0 8px var(--accent-green, #059669);
-        }
-
-        /* Task List */
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .task-item {
-            background-color: var(--bg-sidebar-inner, #262626);
-            padding: 15px 20px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            transition: transform 0.2s, background-color 0.2s;
-            border: 1px solid transparent;
-        }
-
-        .task-item:hover {
-            background-color: var(--bg-hover, #3D3D3D);
-            transform: translateX(4px);
-            border-color: #4b5563;
-        }
-
-        .task-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-grow: 1;
-        }
-
-        /* Custom Checkbox */
-        .check-container {
-            position: relative;
-            width: 22px;
-            height: 22px;
-            cursor: pointer;
-        }
-
-        .check-container input {
-            position: absolute;
-            opacity: 0;
-            cursor: pointer;
-            height: 0;
-            width: 0;
-        }
-
-        .checkmark {
-            position: absolute;
-            top: 0;
-            left: 0;
-            height: 22px;
-            width: 22px;
-            background-color: transparent;
-            border: 2px solid #6b7280;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .check-container:hover input ~ .checkmark {
-            border-color: var(--accent-green, #059669);
-        }
-
-        .check-container input:checked ~ .checkmark {
-            background-color: var(--accent-green, #059669);
-            border-color: var(--accent-green, #059669);
-        }
-
-        .checkmark:after {
-            content: "";
-            position: absolute;
-            display: none;
-        }
-
-        .check-container input:checked ~ .checkmark:after {
-            display: block;
-        }
-
-        .check-container .checkmark:after {
-            left: 7px;
-            top: 3px;
-            width: 5px;
-            height: 10px;
-            border: solid white;
-            border-width: 0 2px 2px 0;
-            transform: rotate(45deg);
-        }
-
-        /* Task Text */
-        .task-text {
-            font-size: 16px;
-            transition: color 0.2s;
-            word-break: break-word;
-        }
-
-        .task-item.completed .task-text {
-            text-decoration: line-through;
-            color: #6b7280;
-        }
-
-        /* Delete Button */
-        .btn-delete {
-            background: transparent;
-            border: none;
-            color: #6b7280;
-            cursor: pointer;
-            padding: 8px;
-            border-radius: 6px;
-            transition: all 0.2s;
-            opacity: 0; /* Hidden by default until hover */
-        }
-
-        .task-item:hover .btn-delete {
-            opacity: 1;
-        }
-
-        .btn-delete:hover {
-            color: #ef4444; /* Red */
-            background-color: rgba(239, 68, 68, 0.1);
-        }
-
-        /* Empty State */
-        .empty-state {
-            text-align: center;
-            color: #6b7280;
-            margin-top: 60px;
-            padding: 20px;
-            border: 2px dashed var(--bg-hover, #3D3D3D);
-            border-radius: 12px;
-        }
-    </style>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Todo Lists - Kaizen RPG</title>
 </head>
+
 <body>
-    <div class="todo-container">
-        <!-- Header -->
-        <header class="todo-header">
-            <h2><i class="fa-solid fa-list-check" style="color: var(--accent-green, #059669);"></i> Todo Lists</h2>
-            <button class="btn-new-list"><i class="fa-solid fa-plus"></i> New List</button>
-        </header>
+	<div class="todo-container">
 
-        <!-- Input Area -->
-        <div class="input-group">
-            <input type="text" id="new-task-input" class="todo-input" placeholder="What needs to be done?">
-            <button id="add-task-btn" class="btn-add">
-                Add Task
-            </button>
-        </div>
+		<!-- Header -->
+		<header class="todo-header">
+			<h2>
+				<i class="fa-solid fa-list-check" style="color: var(--accent-green, #059669);"></i>
+				Todo Lists
+			</h2>
+			<button class="btn-new-list"><i class="fa-solid fa-plus"></i>
+				New List
+			</button>
+		</header>
 
-        <!-- Filter Tabs -->
-        <div class="tabs">
-            <button class="tab-btn active">All Tasks</button>
-            <button class="tab-btn">Pending</button>
-            <button class="tab-btn">Completed</button>
-        </div>
+		<!-- Input Area -->
+		<div class="input-group">
+			<input type="text" id="new-task-input" class="todo-input" placeholder="What needs to be done?">
+			<select id="priority-input" class="priority-select">
+				<option value="p1">Priority 1 (Red)</option>
+				<option value="p2">Priority 2 (Orange)</option>
+				<option value="p3">Priority 3 (Blue)</option>
+				<option value="p4" selected>Priority 4 (Default)</option>
+			</select>
+			<button id="add-task-btn" class="btn-add">Add Task</button>
+		</div>
 
-        <!-- Task List -->
-        <div class="task-list" id="todo-list-container">
-            <!-- Example Task: Pending -->
-            <div class="task-item">
-                <div class="task-left">
-                    <label class="check-container">
-                        <input type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <span class="task-text">Complete the Kaizen RPG UI design</span>
-                </div>
-                <button class="btn-delete" title="Delete Task">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
+		<!-- Filter Tabs -->
+		<div class="tabs">
+			<button class="tab-btn active" data-filter="all">All Tasks <span class="count-badge">0</span></button>
+			<button class="tab-btn" data-filter="pending">Pending <span class="count-badge">0</span></button>
+			<button class="tab-btn" data-filter="completed">Completed <span class="count-badge">0</span></button>
 
-            <!-- Example Task: Completed -->
-            <div class="task-item completed">
-                <div class="task-left">
-                    <label class="check-container">
-                        <input type="checkbox" checked>
-                        <span class="checkmark"></span>
-                    </label>
-                    <span class="task-text">Setup project file structure</span>
-                </div>
-                <button class="btn-delete" title="Delete Task">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
+			<button id="clear-completed-btn" class="btn-clear">
+				<i class="fa-solid fa-broom"></i> Clear Completed
+			</button>
+		</div>
 
-            <!-- Example Task: Pending -->
-            <div class="task-item">
-                <div class="task-left">
-                    <label class="check-container">
-                        <input type="checkbox">
-                        <span class="checkmark"></span>
-                    </label>
-                    <span class="task-text">Review focus timer logic</span>
-                </div>
-                <button class="btn-delete" title="Delete Task">
-                    <i class="fa-solid fa-trash"></i>
-                </button>
-            </div>
-        </div>
-    </div>
+		<!-- Task List -->
+		<div class="task-list" id="todo-list-container">
+			<!-- Tasks injected here -->
+
+			<!-- Example Task: Pending -->
+			<div class="task-item">
+				<div class="task-left">
+					<label class="check-container">
+						<input type="checkbox">
+						<span class="checkmark"></span>
+					</label>
+					<span class="task-text">Complete the Kaizen RPG UI design</span>
+				</div>
+				<button class="btn-delete" title="Delete Task">
+					<i class="fa-solid fa-trash"></i>
+				</button>
+			</div>
+
+			<!-- Example Task: Completed -->
+			<div class="task-item completed">
+				<div class="task-left">
+					<label class="check-container">
+						<input type="checkbox" checked>
+						<span class="checkmark"></span>
+					</label>
+					<span class="task-text">Setup project file structure</span>
+				</div>
+				<button class="btn-delete" title="Delete Task">
+					<i class="fa-solid fa-trash"></i>
+				</button>
+			</div>
+
+			<!-- Example Task: Pending -->
+			<div class="task-item">
+				<div class="task-left">
+					<label class="check-container">
+						<input type="checkbox">
+						<span class="checkmark"></span>
+					</label>
+					<span class="task-text">Review focus timer logic</span>
+				</div>
+				<button class="btn-delete" title="Delete Task">
+					<i class="fa-solid fa-trash"></i>
+				</button>
+			</div>
+		</div>
+	</div>
 </body>
+
 </html>
