@@ -1,0 +1,77 @@
+.btn-secondary {
+    background-color: transparent;
+    border: 1px solid var(--bg-hover, #3D3D3D);
+    color: var(--text-secondary, #9ca3af);
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-secondary:hover {
+    border-color: var(--text-primary, #fff);
+    color: var(--text-primary, #fff);
+}
+
+.btn-primary {
+    background-color: var(--accent-active-bg, #1C398E);
+    color: var(--accent-active-text, #8EC5FF);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: filter 0.2s;
+}
+
+.btn-primary:hover {
+    filter: brightness(1.2);
+}
+
+/* Add Card Button */
+.btn-add-card {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #9ca3af);
+    padding: 10px;
+    text-align: left;
+    cursor: pointer;
+    margin: 0 10px 10px 10px;
+    border-radius: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.btn-add-card:hover {
+    background-color: var(--bg-hover, #3D3D3D);
+    color: var(--text-primary, #fff);
+}
+
+/* New Column Button */
+.btn-new-column {
+    min-width: 280px;
+    /* Match column width */
+    height: 50px;
+    border: 2px dashed var(--bg-hover, #3D3D3D);
+    background: transparent;
+    color: var(--text-secondary, #9ca3af);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-new-column:hover {
+    border-color: #6b7280;
+    color: white;
+}

@@ -6,7 +6,10 @@ body {
 }
 
 /* Style page content */
-#main {
+#default-page {
+    position: absolute; /* this position: absolute fixes the 'sidebar covering contents' issue */
+    top: 0;
     transition: margin-left 0.5s; /* sidebar open speed */
-    padding: 50px;
-}
+    padding: 20px;
+    left: 75px;
+} 

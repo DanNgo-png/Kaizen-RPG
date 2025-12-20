@@ -1,11 +1,118 @@
+<!-- pages/games/game-modes.html -->
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Game Modes - Kaizen RPG</title>
 </head>
+
 <body>
-    <p>placeholder: game-modes.html</p>
+	<div class="game-modes-container">
+		<!-- Header -->
+		<!-- <header class="game-header">
+			<h2>
+				<i class="fa-solid fa-shield-halved" style="color: var(--stat-fire, #f59e0b);"></i>
+				Company Origins
+			</h2>
+			<p class="header-subtitle">Choose how your mercenary company tracks your progress. Higher difficulty yields rarer
+				loot.</p>
+		</header> -->
+		<header class="game-header">
+			<div class="header-content">
+				<div class="header-main">
+					<div class="header-icon">
+						<i class="fa-solid fa-shield-halved"></i>
+					</div>
+					<div class="header-titles">
+						<h2>Company Origins</h2>
+						<div class="header-divider"></div>
+						<p>Choose your company's starting background. Higher difficulty yields rarer loot and higher renown.</p>
+					</div>
+				</div>
+			</div>
+		</header>
+
+		<!-- Grid Layout -->
+		<div class="modes-grid">
+
+			<!-- MODE 1: THE SELLSWORDS (Standard) -->
+			<div class="mode-card featured">
+				<div class="mode-badge">Recommended</div>
+				<div class="mode-icon-wrapper icon-green">
+					<i class="fa-solid fa-users-viewfinder"></i>
+				</div>
+				<div class="mode-content">
+					<h3>The Sellswords</h3>
+					<p class="mode-description">The classic experience. Complete tasks to earn Gold and XP. Failed focus sessions
+						result in minor Fatigue, but no permanent injuries to your squad.</p>
+					<ul class="mode-features">
+						<li><i class="fa-solid fa-check"></i> Standard Loot Drops</li>
+						<li><i class="fa-solid fa-check"></i> Flexible Focus permitted</li>
+						<li><i class="fa-solid fa-xmark"></i> No Permadeath</li>
+					</ul>
+					<button class="btn-primary">Start Campaign</button>
+				</div>
+			</div>
+
+			<!-- MODE 2: LONE WOLF (Hardcore) -->
+			<div class="mode-card">
+				<div class="mode-icon-wrapper icon-purple">
+					<i class="fa-solid fa-user-ninja"></i>
+				</div>
+				<div class="mode-content">
+					<h3>Lone Wolf</h3>
+					<p class="mode-description">You start with one elite Mercenary. All Focus Time goes to their stats.
+						**Permadeath Enabled:** If you fail 3 focus sessions in a row, the mercenary retires and you lose their
+						gear.</p>
+					<ul class="mode-features">
+						<li><i class="fa-solid fa-bolt"></i> +50% XP Multiplier</li>
+						<li><i class="fa-solid fa-skull"></i> High Risk: Permadeath</li>
+						<li><i class="fa-solid fa-gem"></i> Exclusive Legendary Gear</li>
+					</ul>
+					<button class="btn-secondary">Accept Challenge</button>
+				</div>
+			</div>
+
+			<!-- MODE 3: THE GREAT WAR (Timed/Event) -->
+			<div class="mode-card">
+				<div class="mode-icon-wrapper icon-red">
+					<i class="fa-solid fa-chess-rook"></i>
+				</div>
+				<div class="mode-content">
+					<h3>The Great War</h3>
+					<p class="mode-description">A season-based mode. Contribute Focus Hours to a global or faction-based goal.
+						Defend your "stronghold" by completing your daily Kanban board.</p>
+					<ul class="mode-features">
+						<li><i class="fa-solid fa-calendar-day"></i> Weekly Faction Rewards</li>
+						<li><i class="fa-solid fa-shield-cat"></i> Strategic Base Building</li>
+						<li><i class="fa-solid fa-ranking-star"></i> Leaderboard Access</li>
+					</ul>
+					<button class="btn-secondary">Join Frontlines</button>
+				</div>
+			</div>
+
+			<!-- MODE 4: IRONMAN PATROL (Quick/Gritty) -->
+			<div class="mode-card">
+				<div class="mode-icon-wrapper icon-blue">
+					<i class="fa-solid fa-hourglass-start"></i>
+				</div>
+				<div class="mode-content">
+					<h3>Ironman Patrol</h3>
+					<p class="mode-description">A "Roguelite" productivity mode. Every focus session is a random encounter. Fail a
+						timer, and the "run" ends, resetting your daily gold multiplier.</p>
+					<ul class="mode-features">
+						<li><i class="fa-solid fa-dice"></i> Random Stat Buffs</li>
+						<li><i class="fa-solid fa-fire-flame-curved"></i> Streak-only progression</li>
+						<li><i class="fa-solid fa-briefcase"></i> Quick 25m sessions</li>
+					</ul>
+					<button class="btn-secondary">Begin Patrol</button>
+				</div>
+			</div>
+
+		</div>
+	</div>
 </body>
+
 </html>

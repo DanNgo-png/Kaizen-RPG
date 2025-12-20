@@ -3,7 +3,7 @@
     height: 100%;
     width: 75px;
     position: fixed;
-    z-index: 1;
+    z-index: 1000; /* added */
     top: 0;
     left: 0;
     background-color: var(--bg-sidebar);
@@ -13,6 +13,7 @@
     text-wrap: nowrap;
     display: flex;
     flex-direction: column;
+    white-space: nowrap;
 }
 
 /* Hide scrollbar for Chrome/Safari/Opera */
@@ -24,15 +25,20 @@
 .sidebar-toggle-button {
     position: fixed;
     top: 10px;
-    left: 8px;
-    z-index: 1001;
+    left: 50%; /* Move to center of screen... */
+    transform: translateX(-50%); /* ...then shift back by half its own width */
+    
+    /* However, this centers it to the WINDOW, not the sidebar. */
+    /* To center it within the 75px sidebar: */
+    left: 37.5px; /* Half of 75px */
+    transform: translateX(-50%);
 
     /* Visual Styling */
     background-color: transparent;
     color: var(--text-primary);
     border: none;
     /* padding: 8px; */
-    padding: 12px 19px;
+    padding: 12px 15px;
     cursor: pointer;
     display: flex;
     align-items: center;

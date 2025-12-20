@@ -1,5 +1,5 @@
 export async function loadPage(pageUrl) {
-    const main = document.getElementById("main");
+    const default_page = document.getElementById("default-page");
     
     try {
         // 1. Fetch the file
@@ -13,11 +13,11 @@ export async function loadPage(pageUrl) {
         // 3. Get the text (HTML)
         const html = await response.text();
 
-        // 4. Inject it into the main div
-        main.innerHTML = html;
+        // 4. Inject it into the default-page div
+        default_page.innerHTML = html;
         
     } catch (error) {
         console.error("Error loading page:", error);
-        main.innerHTML = "<h1>Error loading content</h1>";
+        default_page.innerHTML = "<h1>Error loading content</h1>";
     }
 }

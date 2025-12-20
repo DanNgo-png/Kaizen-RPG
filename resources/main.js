@@ -2,6 +2,7 @@ import { handleDropdowns } from './js/dropdown.js'
 import { toggleSideBar } from './js/toggleSideBar.js'
 import { loadPage } from './js/router.js'
 import { configureSidebar } from './js/focus/configureSidebar.js'
+import { initTodoList } from './js/plans/todoListManager.js'
 import { initFocusTimer } from './js/focus/focusTimer.js'
 import { initFlexibleFocusTimer } from './js/focus/flexible/focusTimer.js'
 import { initSidebarTooltips } from './js/sidebarTooltip.js'
@@ -22,7 +23,7 @@ function app() {
     if (todoListsButton) {
         todoListsButton.addEventListener("click", async () => {
             await loadPage('./pages/plans/todo-lists.html');
-            // placeholder(); 
+            initTodoList();
         });
     }
 
