@@ -309,6 +309,7 @@
 /* Priority Selector Styling */
 .priority-select {
     background: var(--bg-sidebar-inner, #262626);
+    font-family: var(--font-main);
     color: var(--text-primary, #fff);
     border: 1px solid var(--bg-hover, #3D3D3D);
     border-radius: 6px;
