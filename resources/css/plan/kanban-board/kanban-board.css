@@ -102,7 +102,7 @@
     /* Prevent squishing */
 }
 
-.column-header {
+.kanban-column-header {
     padding: 15px;
     display: flex;
     justify-content: space-between;
