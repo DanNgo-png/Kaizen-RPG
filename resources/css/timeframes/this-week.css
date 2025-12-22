@@ -1,0 +1,333 @@
+/* --- This Week Scoped Styles --- */
+
+.week-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 20px 20px 20px;
+    animation: fadeIn 0.4s ease-out;
+    overflow: hidden;
+    /* Container doesn't scroll, inner parts do */
+}
+
+/* 1. Header */
+.week-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--bg-hover);
+    padding-bottom: 15px;
+}
+
+.week-title h2 {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.week-date-range {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+.week-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.w-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.w-stat-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.w-stat-val {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* 2. Main Layout (Sidebar + Grid) */
+.week-layout {
+    display: flex;
+    gap: 20px;
+    flex-grow: 1;
+    min-height: 0;
+    /* Critical for nested scrolling */
+}
+
+/* --- Left Sidebar: Weekly Backlog --- */
+.weekly-pool {
+    width: 280px;
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    padding: 15px;
+}
+
+.pool-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.btn-add-week-task {
+    background: transparent;
+    border: 1px dashed var(--text-secondary);
+    color: var(--text-secondary);
+    width: 100%;
+    padding: 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: 0.2s;
+    margin-bottom: 10px;
+}
+
+.btn-add-week-task:hover {
+    border-color: var(--accent-green);
+    color: var(--accent-green);
+    background-color: rgba(16, 185, 129, 0.05);
+}
+
+.pool-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 5px;
+}
+
+/* --- Right Side: 7-Day Grid --- */
+.week-grid-wrapper {
+    flex-grow: 1;
+    overflow-x: auto;
+    /* Allow horizontal scroll if screen narrow */
+    overflow-y: hidden;
+    background-color: var(--bg-body);
+    border-radius: 12px;
+    border: 1px solid var(--bg-hover);
+}
+
+.week-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(220px, 1fr));
+    /* 7 Days */
+    height: 100%;
+    /* No gap, using borders instead for a calendar feel */
+}
+
+/* Day Column */
+.day-column {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--bg-hover);
+    background-color: var(--surface-color);
+    transition: background-color 0.2s;
+}
+
+.day-column:last-child {
+    border-right: none;
+}
+
+/* Today Highlight */
+.day-column.is-today {
+    background-color: rgba(37, 99, 235, 0.03);
+    /* Subtle Blue Tint */
+}
+
+.day-column.is-today .day-header {
+    background-color: rgba(37, 99, 235, 0.1);
+    color: #60a5fa;
+    border-bottom: 1px solid rgba(37, 99, 235, 0.2);
+}
+
+/* Weekend Styling */
+.day-column.weekend {
+    background-color: rgba(0, 0, 0, 0.15);
+    /* Slightly darker */
+}
+
+/* Day Header */
+.day-header {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--bg-hover);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.day-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+}
+
+.day-number {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.day-progress {
+    width: 100%;
+    height: 3px;
+    background-color: var(--bg-hover);
+    margin-top: 8px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.day-progress-bar {
+    height: 100%;
+    background-color: var(--accent-green);
+    width: 0%;
+    /* JS updates this */
+}
+
+/* Day Tasks Area */
+.day-tasks {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* --- Task Cards (Shared Style for Pool & Days) --- */
+.week-card {
+    background-color: var(--bg-sidebar-inner);
+    border: 1px solid transparent;
+    border-radius: 6px;
+    padding: 10px;
+    cursor: grab;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, border-color 0.2s;
+    position: relative;
+}
+
+.week-card:hover {
+    border-color: var(--text-secondary);
+    transform: translateY(-2px);
+    z-index: 10;
+}
+
+.week-card:active {
+    cursor: grabbing;
+}
+
+/* Priority Indicators */
+.week-card.p-high {
+    border-left: 3px solid #ef4444;
+}
+
+.week-card.p-med {
+    border-left: 3px solid #f59e0b;
+}
+
+/* Completed State */
+.week-card.completed {
+    opacity: 0.5;
+    background-color: transparent;
+    border: 1px solid var(--bg-hover);
+}
+
+.week-card.completed .wc-title {
+    text-decoration: line-through;
+}
+
+/* Card Content */
+.wc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 6px;
+}
+
+.wc-title {
+    font-size: 0.9rem;
+    color: #e5e7eb;
+    line-height: 1.3;
+    word-break: break-word;
+}
+
+.wc-check {
+    cursor: pointer;
+    color: var(--text-secondary);
+    margin-left: 8px;
+    flex-shrink: 0;
+}
+
+.wc-check:hover {
+    color: var(--accent-green);
+}
+
+.wc-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 4px;
+}
+
+/* Tags */
+.wc-tag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background-color: rgba(255, 255, 255, 0.05);
+    color: var(--text-secondary);
+}
+
+.wc-est {
+    font-size: 0.75rem;
+    color: #6b7280;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Scrollbar Styling for internal containers */
+.pool-list::-webkit-scrollbar,
+.day-tasks::-webkit-scrollbar,
+.week-grid-wrapper::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.pool-list::-webkit-scrollbar-thumb,
+.day-tasks::-webkit-scrollbar-thumb,
+.week-grid-wrapper::-webkit-scrollbar-thumb {
+    background-color: var(--bg-hover);
+    border-radius: 3px;
+}
+
+/* Ghost Card (Drag placeholder) */
+.week-card.ghost {
+    background: transparent;
+    border: 2px dashed var(--text-secondary);
+    opacity: 0.5;
+}

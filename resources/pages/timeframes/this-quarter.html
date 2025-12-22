@@ -1,11 +1,190 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>This Quarter - Kaizen RPG</title>
 </head>
+
 <body>
-    <p>placeholder: this-quarter.html</p>
+	<div class="quarter-container">
+
+		<!-- Header -->
+	<header class="quarter-header">
+		<div class="header-left">
+			<h2>
+				<i class="fa-solid fa-chart-pie"></i> Q4 2025
+				<span class="quarter-date-range">Oct 1 - Dec 31</span>
+			</h2>
+			<div class="quarter-progress-wrapper">
+				<div class="qp-label">
+					<span>Quarter Progress</span>
+					<span>88%</span>
+				</div>
+				<div class="qp-track">
+					<div class="qp-fill" style="width: 88%;"></div>
+				</div>
+			</div>
+		</div>
+
+		<div class="header-right">
+			<button class="btn-strategic-review">
+				<i class="fa-solid fa-chess"></i> Strategic Review
+			</button>
+		</div>
+	</header>
+
+	<!-- Main Layout -->
+	<div class="quarter-layout">
+
+		<!-- Left: Quarterly Goals (OKRs) -->
+		<div class="quarter-goals-panel">
+			<div class="panel-header">
+				<h3><i class="fa-solid fa-crosshairs"></i> Objectives (OKRs)</h3>
+				<button class="btn-icon-sm"><i class="fa-solid fa-plus"></i></button>
+			</div>
+
+			<div class="goals-list">
+				<!-- Goal 1 -->
+				<div class="goal-card">
+					<div class="goal-header">
+						<span class="goal-title">Launch MVP to Beta Users</span>
+						<span class="goal-status status-track">On Track</span>
+					</div>
+					<div class="key-results">
+						<div class="kr-item">
+							<i class="fa-regular fa-circle-check"></i>
+							<span>Complete Core UI</span>
+						</div>
+						<div class="kr-item">
+							<i class="fa-regular fa-circle"></i>
+							<span>Onboard 50 users</span>
+						</div>
+					</div>
+					<div class="goal-progress-mini">
+						<div class="gpm-fill" style="width: 70%;"></div>
+					</div>
+				</div>
+
+				<!-- Goal 2 -->
+				<div class="goal-card">
+					<div class="goal-header">
+						<span class="goal-title">Improve Physical Health</span>
+						<span class="goal-status status-risk">At Risk</span>
+					</div>
+					<div class="key-results">
+						<div class="kr-item">
+							<i class="fa-regular fa-circle-check"></i>
+							<span>Gym 3x/week avg</span>
+						</div>
+					</div>
+					<div class="goal-progress-mini">
+						<div class="gpm-fill risk" style="width: 40%;"></div>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<!-- Right: 13-Week Board -->
+		<div class="quarter-board">
+			
+			<!-- Month 1 -->
+			<div class="month-column">
+				<div class="month-header">
+					<span class="month-name">October</span>
+					<span class="month-progress">Done</span>
+				</div>
+				<div class="weeks-list">
+					<div class="week-block past">
+						<span class="wb-label">Week 40</span>
+						<span class="wb-theme">Planning & Setup</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 41</span>
+						<span class="wb-theme">Database Design</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 42</span>
+						<span class="wb-theme">Backend API</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 43</span>
+						<span class="wb-theme">Auth System</span>
+						<div class="wb-milestone" title="Milestone Reached"><i class="fa-solid fa-diamond"></i></div>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 44</span>
+						<span class="wb-theme">Frontend Init</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Month 2 -->
+			<div class="month-column">
+				<div class="month-header">
+					<span class="month-name">November</span>
+					<span class="month-progress">Done</span>
+				</div>
+				<div class="weeks-list">
+					<div class="week-block past">
+						<span class="wb-label">Week 45</span>
+						<span class="wb-theme">Dashboard UI</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 46</span>
+						<span class="wb-theme">Focus Timer Logic</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 47</span>
+						<span class="wb-theme">Data Persistence</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 48</span>
+						<span class="wb-theme">Settings Page</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Month 3 -->
+			<div class="month-column">
+				<div class="month-header">
+					<span class="month-name">December</span>
+					<span class="month-progress active">Current</span>
+				</div>
+				<div class="weeks-list">
+					<div class="week-block past">
+						<span class="wb-label">Week 49</span>
+						<span class="wb-theme">Kanban Feature</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 50</span>
+						<span class="wb-theme">Refactoring</span>
+					</div>
+					<div class="week-block past">
+						<span class="wb-label">Week 51</span>
+						<span class="wb-theme">Testing & Bugfix</span>
+					</div>
+					
+					<!-- Current Week -->
+					<div class="week-block current">
+						<div class="wb-header">
+							<span class="wb-label">Week 52</span>
+							<span class="wb-badge">Now</span>
+						</div>
+						<span class="wb-theme">Release Prep & Polish</span>
+						<div class="wb-focus-items">
+							<span><i class="fa-solid fa-caret-right"></i> Finalize HTML/CSS</span>
+							<span><i class="fa-solid fa-caret-right"></i> Documentation</span>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+
+	</div>
+</div>
 </body>
 </html>

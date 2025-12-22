@@ -1,11 +1,192 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Today - Kaizen RPG</title>
 </head>
+
 <body>
-    <p>placeholder: today.html</p>
+	<div class="today-container">
+		<!-- Header: Date & Check-in -->
+		<header class="timeframe-header">
+			<div class="header-left">
+				<div class="date-display">
+					<span class="weekday">Monday</span>
+					<span class="full-date">December 22, 2025</span>
+				</div>
+				<div class="daily-goal">
+					<i class="fa-solid fa-bullseye"></i>
+					<span>Focus: Finish the UI implementation</span>
+				</div>
+			</div>
+			<div class="header-right">
+				<!-- Review / Reflection Action -->
+				<button class="btn-review">
+					<i class="fa-solid fa-mug-hot"></i> Morning Review
+				</button>
+			</div>
+		</header>
+
+		<!-- Quick Capture Bar -->
+		<div class="capture-bar">
+			<div class="capture-input-wrapper">
+				<i class="fa-solid fa-plus"></i>
+				<input type="text" class="capture-input" placeholder="Quick capture: What's on your mind?">
+				<span class="shortcut-hint">Enter</span>
+			</div>
+		</div>
+
+		<!-- Main Split Layout -->
+		<div class="day-split-view">
+
+			<!-- LEFT: Priorities / Task Pool -->
+			<div class="task-pool-column">
+				<div class="column-header">
+					<h3><i class="fa-solid fa-list-ul"></i> Priorities</h3>
+					<span class="count-badge">5 Pending</span>
+				</div>
+
+				<div class="task-list">
+
+					<!-- High Priority Task -->
+					<div class="day-task-card p1">
+						<div class="task-check"><i class="fa-regular fa-square"></i></div>
+						<div class="task-content">
+							<span class="task-title">Finalize "Today" View HTML</span>
+							<div class="task-tags">
+								<span class="tag tag-dev">Dev</span>
+								<span class="tag tag-urgent">Urgent</span>
+							</div>
+						</div>
+						<div class="task-drag"><i class="fa-solid fa-grip-vertical"></i></div>
+					</div>
+
+					<!-- Normal Task -->
+					<div class="day-task-card">
+						<div class="task-check"><i class="fa-regular fa-square"></i></div>
+						<div class="task-content">
+							<span class="task-title">Review QTR.ai methodology</span>
+							<div class="task-tags">
+								<span class="tag tag-design">Research</span>
+							</div>
+						</div>
+						<div class="task-drag"><i class="fa-solid fa-grip-vertical"></i></div>
+					</div>
+
+					<!-- Stale/Snoozed Task (The "Paralysis" Prevention) -->
+					<div class="day-task-card stagnant">
+						<div class="task-check"><i class="fa-regular fa-square"></i></div>
+						<div class="task-content">
+							<span class="task-title">Update documentation assets</span>
+							<div class="task-tags">
+								<span class="tag tag-stale"><i class="fa-solid fa-clock-rotate-left"></i> 102d
+									old</span>
+							</div>
+						</div>
+						<div class="task-actions">
+							<button class="btn-icon-sm" title="Reschedule"><i class="fa-solid fa-calendar-arrow-right"></i></button>
+						</div>
+					</div>
+
+					<!-- Completed Task -->
+					<div class="day-task-card completed">
+						<div class="task-check"><i class="fa-solid fa-square-check"></i></div>
+						<div class="task-content">
+							<span class="task-title">Morning Standup</span>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- RIGHT: Timeline / Schedule -->
+			<div class="schedule-column">
+				<div class="column-header">
+					<h3><i class="fa-regular fa-calendar"></i> Schedule</h3>
+					<button class="btn-icon-sm"><i class="fa-solid fa-calendar-day"></i> GCal</button>
+				</div>
+
+				<div class="timeline-container">
+					<!-- Current Time Indicator (Visual Mockup) -->
+					<div class="current-time-line" style="top: 340px;">
+						<span class="time-now">1:28 PM</span>
+					</div>
+
+					<!-- Time Slots -->
+					<div class="time-slot" data-time="09:00">
+						<span class="time-label">9 AM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<!-- Event Block: Done -->
+					<div class="event-block past" style="top: 20px; height: 50px;">
+						<span class="event-title">Standup</span>
+						<span class="event-time">9:00 - 9:30</span>
+					</div>
+
+					<div class="time-slot" data-time="10:00">
+						<span class="time-label">10 AM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<!-- Event Block: Deep Work -->
+					<div class="event-block focus-block" style="top: 80px; height: 110px;">
+						<span class="event-title"><i class="fa-solid fa-brain"></i> Deep Work: UI Dev</span>
+						<span class="event-time">10:00 - 12:00</span>
+					</div>
+
+					<div class="time-slot" data-time="11:00">
+						<span class="time-label">11 AM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<div class="time-slot" data-time="12:00">
+						<span class="time-label">12 PM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<!-- Event Block: Lunch -->
+					<div class="event-block break-block" style="top: 200px; height: 50px;">
+						<span class="event-title">Lunch Break</span>
+					</div>
+
+					<div class="time-slot" data-time="13:00">
+						<span class="time-label">1 PM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<div class="time-slot" data-time="14:00">
+						<span class="time-label">2 PM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<!-- Ghost Block (Planned but not confirmed) -->
+					<div class="event-block ghost-block" style="top: 320px; height: 50px;">
+						<span class="event-title">Review Methodologies</span>
+						<span class="event-time">Plan</span>
+					</div>
+
+					<div class="time-slot" data-time="15:00">
+						<span class="time-label">3 PM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<div class="time-slot" data-time="16:00">
+						<span class="time-label">4 PM</span>
+						<div class="slot-line"></div>
+					</div>
+
+					<div class="time-slot" data-time="17:00">
+						<span class="time-label">5 PM</span>
+						<div class="slot-line"></div>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
 </body>
+
 </html>

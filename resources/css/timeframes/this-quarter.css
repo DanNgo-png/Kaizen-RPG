@@ -1,0 +1,350 @@
+/* --- This Quarter Scoped Styles --- */
+.quarter-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 20px 20px 20px;
+    animation: fadeIn 0.4s ease-out;
+    overflow: hidden;
+}
+
+/* 1. Header */
+.quarter-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--bg-hover);
+    padding-bottom: 15px;
+}
+
+.header-left h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.5rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quarter-date-range {
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 400;
+    margin-left: 10px;
+}
+
+.quarter-progress-wrapper {
+    width: 300px;
+}
+
+.qp-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.qp-track {
+    width: 100%;
+    height: 6px;
+    background-color: var(--bg-hover);
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.qp-fill {
+    height: 100%;
+    background-color: var(--accent-green);
+}
+
+.btn-strategic-review {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    color: var(--text-primary);
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+}
+
+.btn-strategic-review:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--text-secondary);
+}
+
+/* 2. Main Layout */
+.quarter-layout {
+    display: flex;
+    gap: 25px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* --- Left: Goals Panel --- */
+.quarter-goals-panel {
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+}
+
+.panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    color: #d1d5db;
+    font-weight: 600;
+}
+
+.goals-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    padding-right: 5px;
+}
+
+/* Goal Card */
+.goal-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 10px;
+    padding: 15px;
+    transition: transform 0.2s;
+}
+
+.goal-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--text-secondary);
+}
+
+.goal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 10px;
+}
+
+.goal-title {
+    font-weight: 600;
+    color: #fff;
+    font-size: 0.95rem;
+    line-height: 1.3;
+}
+
+.goal-status {
+    font-size: 0.65rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+    white-space: nowrap;
+    margin-left: 8px;
+}
+
+.status-track {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #34d399;
+}
+
+.status-risk {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+}
+
+.key-results {
+    margin-bottom: 12px;
+}
+
+.kr-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+}
+
+.kr-item i {
+    font-size: 0.8rem;
+}
+
+.goal-progress-mini {
+    width: 100%;
+    height: 4px;
+    background-color: var(--bg-body);
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.gpm-fill {
+    height: 100%;
+    background-color: var(--stat-blue);
+}
+
+.gpm-fill.risk {
+    background-color: var(--stat-fire);
+}
+
+/* --- Right: Quarter Board (13 Weeks) --- */
+.quarter-board {
+    flex-grow: 1;
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    /* 3 Months */
+    overflow: hidden;
+}
+
+/* Month Column */
+.month-column {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--bg-hover);
+    background-color: var(--surface-color);
+}
+
+.month-column:last-child {
+    border-right: none;
+}
+
+.month-header {
+    padding: 15px;
+    border-bottom: 1px solid var(--bg-hover);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.month-name {
+    font-weight: 700;
+    font-size: 1rem;
+    color: #fff;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.month-progress {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.month-progress.active {
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.weeks-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Week Block */
+.week-block {
+    background-color: var(--bg-sidebar-inner);
+    border: 1px solid transparent;
+    border-radius: 8px;
+    padding: 12px;
+    position: relative;
+    min-height: 70px;
+}
+
+/* Past Weeks */
+.week-block.past {
+    opacity: 0.6;
+    border-color: var(--bg-hover);
+    background-color: transparent;
+}
+
+.week-block.past .wb-theme {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+/* Current Week */
+.week-block.current {
+    background-color: rgba(37, 99, 235, 0.1);
+    border: 1px solid var(--stat-blue);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.wb-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+
+.wb-label {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.week-block.current .wb-label {
+    color: var(--stat-blue);
+}
+
+.wb-badge {
+    background-color: var(--stat-blue);
+    color: white;
+    font-size: 0.65rem;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-weight: 700;
+}
+
+.wb-theme {
+    display: block;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 5px;
+}
+
+.wb-focus-items {
+    margin-top: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.wb-focus-items span {
+    font-size: 0.8rem;
+    color: #d1d5db;
+}
+
+.wb-milestone {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    color: var(--accent-green);
+}
+
+/* Scrollbars */
+.goals-list::-webkit-scrollbar,
+.weeks-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.goals-list::-webkit-scrollbar-thumb,
+.weeks-list::-webkit-scrollbar-thumb {
+    background-color: var(--bg-hover);
+    border-radius: 3px;
+}

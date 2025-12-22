@@ -1,11 +1,173 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>This Year - Kaizen RPG</title>
 </head>
+
 <body>
-    <p>placeholder: this-year.html</p>
+	<div class="year-container">
+		<!-- Header -->
+		<header class="year-header">
+			<div class="header-main">
+				<div class="year-title-group">
+					<h2><i class="fa-solid fa-calendar-check"></i> 2025</h2>
+					<span class="year-theme">"The Year of the Architect"</span>
+				</div>
+				<div class="year-stats">
+					<div class="y-stat">
+						<span class="ys-label">Days Gone</span>
+						<span class="ys-val">356 / 365</span>
+					</div>
+					<div class="y-stat">
+						<span class="ys-label">Goals Met</span>
+						<span class="ys-val text-green">12 / 15</span>
+					</div>
+				</div>
+			</div>
+
+			<!-- Year Progress Bar -->
+			<div class="year-progress-track">
+				<div class="year-progress-fill" style="width: 97%;"></div>
+			</div>
+		</header>
+
+		<!-- Layout -->
+		<div class="year-layout">
+
+			<!-- Left: Pillars / North Stars -->
+			<div class="year-sidebar">
+				<div class="sidebar-header">
+					<h3><i class="fa-solid fa-mountain"></i> Pillars</h3>
+					<p>Your non-negotiable standards.</p>
+				</div>
+
+				<div class="pillars-list">
+					<div class="pillar-card">
+						<div class="pillar-icon p-blue"><i class="fa-solid fa-laptop-code"></i></div>
+						<div class="pillar-content">
+							<h4>Career Growth</h4>
+							<span>Senior Dev Promotion</span>
+						</div>
+					</div>
+
+					<div class="pillar-card">
+						<div class="pillar-icon p-green"><i class="fa-solid fa-heart-pulse"></i></div>
+						<div class="pillar-content">
+							<h4>Vitality</h4>
+							<span>Run a Marathon</span>
+						</div>
+					</div>
+
+					<div class="pillar-card">
+						<div class="pillar-icon p-gold"><i class="fa-solid fa-sack-dollar"></i></div>
+						<div class="pillar-content">
+							<h4>Wealth</h4>
+							<span>Save $20k</span>
+						</div>
+					</div>
+				</div>
+
+				<div class="year-quote">
+					"We tend to overestimate what we can do in a day, and underestimate what we can do in a year."
+				</div>
+			</div>
+
+			<!-- Right: The 4 Quarters -->
+			<div class="quarters-grid">
+
+				<!-- Q1: Concluded -->
+				<div class="quarter-card past">
+					<div class="qc-header">
+						<span class="qc-title">Q1: Foundation</span>
+						<span class="qc-status"><i class="fa-solid fa-check"></i> Done</span>
+					</div>
+					<div class="qc-goals">
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Complete Python Bootcamp</span>
+						</div>
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Launch Portfolio Site</span>
+						</div>
+						<div class="qc-goal fail">
+							<i class="fa-solid fa-xmark"></i>
+							<span>Read 5 Books (3/5)</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Q2: Concluded -->
+				<div class="quarter-card past">
+					<div class="qc-header">
+						<span class="qc-title">Q2: Acceleration</span>
+						<span class="qc-status"><i class="fa-solid fa-check"></i> Done</span>
+					</div>
+					<div class="qc-goals">
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Secure Freelance Contract</span>
+						</div>
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Start Gym Routine</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Q3: Concluded -->
+				<div class="quarter-card past">
+					<div class="qc-header">
+						<span class="qc-title">Q3: Expansion</span>
+						<span class="qc-status"><i class="fa-solid fa-check"></i> Done</span>
+					</div>
+					<div class="qc-goals">
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Travel to Japan</span>
+						</div>
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Hit 10k Savings</span>
+						</div>
+					</div>
+				</div>
+
+				<!-- Q4: Current -->
+				<div class="quarter-card current">
+					<div class="qc-header">
+						<span class="qc-title">Q4: Completion</span>
+						<span class="qc-status status-live">Active</span>
+					</div>
+					<div class="qc-date">Oct 1 - Dec 31</div>
+
+					<div class="qc-goals">
+						<div class="qc-goal done">
+							<i class="fa-regular fa-square-check"></i>
+							<span>Release Kaizen RPG Alpha</span>
+						</div>
+						<div class="qc-goal active">
+							<i class="fa-regular fa-square"></i>
+							<span>Plan 2026 Roadmap</span>
+						</div>
+						<div class="qc-goal active">
+							<i class="fa-regular fa-square"></i>
+							<span>Review Annual Finances</span>
+						</div>
+					</div>
+
+					<div class="qc-footer">
+						<button class="btn-open-quarter">View Q4 Board <i class="fa-solid fa-arrow-right"></i></button>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
 </body>
+
 </html>

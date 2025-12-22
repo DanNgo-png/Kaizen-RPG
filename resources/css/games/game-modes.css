@@ -55,7 +55,7 @@
 /* The "Battle Brothers" style horizontal line */
 .header-divider {
     height: 2px;
-    width: 350px; /* Short accent line */
+    width: 400px; /* Short accent line */
     background: linear-gradient(90deg, var(--stat-fire) 0%, transparent 100%);
     margin: 4px 0 8px 0;
 }

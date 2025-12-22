@@ -1,0 +1,329 @@
+/* --- Quests Page Styles --- */
+.quests-container {
+    max-width: 1200px;
+    margin: 0;
+    padding-top: 10px;
+    padding-bottom: 40px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+/* Header Stats */
+.quest-header-stats {
+    margin-left: auto;
+    display: flex;
+    gap: 30px;
+    padding-right: 20px;
+}
+
+.q-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.q-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+}
+
+.q-val {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.text-gold {
+    color: #facc15;
+}
+
+.text-yellow {
+    color: #f59e0b;
+}
+
+/* Tabs */
+.quest-tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid var(--bg-hover);
+    padding-bottom: 10px;
+}
+
+.tab-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.tab-btn:hover {
+    color: #fff;
+    background-color: var(--bg-hover);
+}
+
+.tab-btn.active {
+    color: #fff;
+    background-color: var(--bg-hover);
+    box-shadow: 0 2px 0 var(--accent-green) inset;
+    /* Top border effect */
+}
+
+/* --- Active Contract Card --- */
+.active-contract-card {
+    background-color: var(--surface-color);
+    border: 1px solid #4b5563;
+    border-left: 4px solid var(--accent-green);
+    border-radius: 12px;
+    padding: 25px;
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 40px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+}
+
+.contract-status-ribbon {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    background-color: var(--accent-green);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.contract-details {
+    flex: 1;
+}
+
+.contract-top {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.contract-title {
+    margin: 0;
+    font-size: 1.4rem;
+    color: #fff;
+}
+
+.difficulty-rating {
+    display: flex;
+    gap: 4px;
+    color: #ef4444;
+    /* Red skulls */
+    font-size: 1rem;
+}
+
+.contract-desc {
+    font-style: italic;
+    color: #d1d5db;
+    margin-bottom: 20px;
+    font-family: serif;
+    /* More narrative feel */
+    font-size: 1.05rem;
+    line-height: 1.5;
+}
+
+.objectives-list {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid var(--bg-hover);
+}
+
+.objective {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+    color: #d1d5db;
+}
+
+.objective:last-child {
+    margin-bottom: 0;
+}
+
+.objective.completed {
+    color: var(--stat-check);
+    text-decoration: line-through;
+    opacity: 0.7;
+}
+
+.contract-rewards {
+    display: flex;
+    gap: 20px;
+}
+
+.reward-item {
+    background-color: var(--bg-body);
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #facc15;
+    border: 1px solid #4b5563;
+}
+
+.contract-actions {
+    display: flex;
+    align-items: center;
+    padding-left: 20px;
+    border-left: 1px solid var(--bg-hover);
+    height: 100%;
+}
+
+.btn-abandon {
+    background: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.btn-abandon:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+/* --- Available Contracts (Parchment Grid) --- */
+.section-label {
+    font-size: 1.1rem;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--bg-hover);
+    padding-bottom: 10px;
+}
+
+.contracts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 25px;
+}
+
+.parchment-card {
+    background-color: #e5e5e5;
+    color: #1f2937;
+    border-radius: 2px;
+    padding: 25px;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s;
+}
+
+.parchment-card:hover {
+    transform: translateY(-5px);
+}
+
+/* Wax Seal */
+.seal {
+    position: absolute;
+    top: -10px;
+    right: 20px;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 1.1rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.seal-red {
+    background-color: #b91c1c;
+}
+
+.seal-blue {
+    background-color: #1e3a8a;
+}
+
+.seal-green {
+    background-color: #15803d;
+}
+
+.parchment-header {
+    margin-bottom: 15px;
+    padding-right: 30px;
+    /* Space for seal */
+}
+
+.parchment-header h4 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: #111;
+}
+
+.difficulty-rating.small {
+    font-size: 0.8rem;
+    color: #b91c1c;
+    /* Dark red for paper */
+}
+
+.parchment-text {
+    font-family: serif;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    margin-bottom: 20px;
+    color: #374151;
+    font-style: italic;
+}
+
+.parchment-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #a3a3a3;
+    padding-top: 15px;
+}
+
+.p-rewards {
+    font-weight: 700;
+    color: #854d0e;
+    /* Brownish gold */
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.loot-icon {
+    color: #7e22ce;
+    /* Purple loot */
+}
+
+.btn-accept {
+    background-color: #1f2937;
+    color: #fff;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 4px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: 0.2s;
+}
+
+.btn-accept:hover {
+    background-color: #374151;
+}

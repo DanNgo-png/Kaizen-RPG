@@ -28,12 +28,21 @@
 @import url('css/focus/focus-flexible/main.css');
 
 /* === TIMEFRAMES PAGE === */
+@import url('css/timeframes/today.css');
+@import url('css/timeframes/this-week.css');
+@import url('css/timeframes/this-quarter.css');
+@import url('css/timeframes/this-year.css');
 
 /* === ANALYZE PAGE === */
 
 /* === GAME PAGE === */
 /* GAME MODES */
 @import url('css/games/game-modes.css');
+@import url('css/games/party.css');
+@import url('css/games/quests.css');
+@import url('css/games/inventory.css');
+@import url('css/games/settings.css');
 
 /* === MAIN SETTINGS === */
-@import url('css/main-settings/main-settings.css');
+@import url('css/main-settings/main-settings-sidebar.css');
+@import url('css/main-settings/main.css');

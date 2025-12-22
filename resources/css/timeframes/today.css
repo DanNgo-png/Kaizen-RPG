@@ -1,0 +1,435 @@
+/* --- Today's View Scoped Styles --- */
+.today-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding-top: 10px;
+    padding-bottom: 20px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.4s ease-out;
+}
+
+/* 1. Header */
+.timeframe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--bg-hover);
+    padding-bottom: 15px;
+}
+
+.date-display {
+    display: flex;
+    flex-direction: column;
+}
+
+.weekday {
+    font-size: 0.9rem;
+    color: var(--accent-green);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+}
+
+.full-date {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.daily-goal {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #93c5fd;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+    width: fit-content;
+}
+
+.btn-review {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    color: var(--text-secondary);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: 0.2s;
+    font-weight: 600;
+}
+
+.btn-review:hover {
+    background-color: var(--bg-hover);
+    color: #fff;
+}
+
+/* 2. Quick Capture */
+.capture-bar {
+    margin-bottom: 25px;
+}
+
+.capture-input-wrapper {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: border-color 0.2s;
+}
+
+.capture-input-wrapper:focus-within {
+    border-color: var(--accent-green);
+}
+
+.capture-input-wrapper i {
+    color: var(--text-secondary);
+}
+
+.capture-input {
+    background: transparent;
+    border: none;
+    flex-grow: 1;
+    color: #fff;
+    font-size: 1rem;
+    outline: none;
+}
+
+.capture-input::placeholder {
+    color: #6b7280;
+}
+
+.shortcut-hint {
+    background-color: var(--bg-body);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--bg-hover);
+}
+
+/* 3. Split Layout */
+.day-split-view {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    flex-grow: 1;
+    min-height: 0;
+    /* Important for scrolling */
+}
+
+@media (max-width: 900px) {
+    .day-split-view {
+        grid-template-columns: 1fr;
+    }
+}
+
+.column-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 0 5px;
+}
+
+.column-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #d1d5db;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.count-badge {
+    background-color: var(--bg-hover);
+    font-size: 0.75rem;
+    padding: 2px 8px;
+    border-radius: 10px;
+    color: var(--text-secondary);
+}
+
+/* 4. Task Pool */
+.task-pool-column {
+    display: flex;
+    flex-direction: column;
+    overflow-y: hidden;
+}
+
+.task-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+/* Scrollbar Styling */
+.task-list::-webkit-scrollbar,
+.timeline-container::-webkit-scrollbar {
+    width: 6px;
+}
+
+.task-list::-webkit-scrollbar-thumb,
+.timeline-container::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 3px;
+}
+
+.day-task-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 8px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s, background-color 0.2s;
+    cursor: grab;
+    position: relative;
+}
+
+.day-task-card:hover {
+    background-color: #2d3648;
+    /* Slightly lighter than surface */
+    transform: translateX(2px);
+}
+
+/* Priority Borders /
+.day-task-card.p1 { border-left: 3px solid #ef4444; } / Red /
+.day-task-card.p2 { border-left: 3px solid #f59e0b; } / Orange */
+/* Completed State */
+.day-task-card.completed {
+    opacity: 0.6;
+}
+
+.day-task-card.completed .task-title {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.day-task-card.completed .task-check {
+    color: var(--stat-check);
+}
+
+/* Stagnant/Stale Task */
+.day-task-card.stagnant {
+    background-color: rgba(239, 68, 68, 0.05);
+    /* Subtle Red Tint */
+    border: 1px dashed rgba(239, 68, 68, 0.3);
+}
+
+.task-check {
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 1.1rem;
+}
+
+.task-content {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.task-title {
+    font-size: 0.95rem;
+    color: #f3f4f6;
+}
+
+.task-tags {
+    display: flex;
+    gap: 6px;
+}
+
+.tag {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+}
+
+.tag-dev {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+.tag-urgent {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.tag-design {
+    background: rgba(236, 72, 153, 0.2);
+    color: #f9a8d4;
+}
+
+.tag-stale {
+    background: #451a1a;
+    color: #fca5a5;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.task-drag {
+    color: #4b5563;
+    cursor: grab;
+}
+
+.task-actions {
+    margin-left: auto;
+}
+
+.btn-icon-sm {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.btn-icon-sm:hover {
+    color: #fff;
+}
+
+/* 5. Schedule / Timeline */
+.schedule-column {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--surface-color);
+    border-radius: 12px;
+    padding: 15px;
+    border: 1px solid var(--bg-hover);
+    height: 600px;
+    /* Fixed height for scroll */
+}
+
+.timeline-container {
+    flex-grow: 1;
+    overflow-y: auto;
+    position: relative;
+    padding-top: 10px;
+    /* Basic grid lines setup */
+}
+
+.time-slot {
+    height: 60px;
+    /* 1 hour height */
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+}
+
+.time-label {
+    width: 50px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-align: right;
+    padding-right: 10px;
+    transform: translateY(-50%);
+    /* Center label on line */
+}
+
+.slot-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Event Blocks */
+.event-block {
+    position: absolute;
+    left: 60px;
+    /* After label */
+    right: 10px;
+    background-color: #374151;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-size: 0.85rem;
+    display: flex;
+    flex-direction: column;
+    border-left: 3px solid #9ca3af;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.event-title {
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.event-time {
+    font-size: 0.7rem;
+    color: #d1d5db;
+}
+
+/* Event Types */
+.event-block.past {
+    background-color: #1f2937;
+    opacity: 0.6;
+    border-color: #4b5563;
+}
+
+.event-block.focus-block {
+    background-color: rgba(37, 99, 235, 0.2);
+    border-color: #3b82f6;
+}
+
+.event-block.break-block {
+    background-color: rgba(16, 185, 129, 0.1);
+    border-color: #10b981;
+}
+
+.event-block.ghost-block {
+    background-color: transparent;
+    border: 2px dashed #4b5563;
+    opacity: 0.7;
+}
+
+/* Current Time Indicator */
+.current-time-line {
+    position: absolute;
+    left: 50px;
+    right: 0;
+    height: 2px;
+    background-color: #ef4444;
+    z-index: 20;
+    pointer-events: none;
+}
+
+.current-time-line::before {
+    content: '';
+    position: absolute;
+    left: -5px;
+    top: -4px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ef4444;
+}
+
+.time-now {
+    position: absolute;
+    left: -55px;
+    top: -8px;
+    font-size: 0.75rem;
+    color: #ef4444;
+    font-weight: 700;
+}

@@ -1,11 +1,216 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>This Week - Kaizen RPG</title>
 </head>
+
 <body>
-    <p>placeholder: this-week.html</p>
+	<div class="week-container">
+		<!-- Header -->
+		<header class="week-header">
+			<div class="week-title">
+				<h2>
+					<i class="fa-solid fa-calendar-week"></i> Week 52
+					<span class="week-date-range">Dec 22 - Dec 28, 2025</span>
+				</h2>
+			</div>
+
+			<div class="week-stats">
+				<div class="w-stat">
+					<span class="w-stat-label">Completion</span>
+					<span class="w-stat-val text-green">15%</span>
+				</div>
+				<div class="w-stat">
+					<span class="w-stat-label">Focus Goal</span>
+					<span class="w-stat-val text-blue">24h</span>
+				</div>
+			</div>
+		</header>
+
+		<!-- Main Split Layout -->
+		<div class="week-layout">
+
+			<!-- Left: Weekly Backlog (The Pool) -->
+			<div class="weekly-pool">
+				<div class="pool-header">
+					<span>Weekly Backlog</span>
+					<span class="count-badge">3</span>
+				</div>
+
+				<button class="btn-add-week-task">
+					<i class="fa-solid fa-plus"></i> Add Task
+				</button>
+
+				<div class="pool-list">
+					<!-- Unscheduled Task -->
+					<div class="week-card">
+						<div class="wc-header">
+							<span class="wc-title">Draft Monthly Report</span>
+							<i class="fa-regular fa-square wc-check"></i>
+						</div>
+						<div class="wc-footer">
+							<span class="wc-tag">Admin</span>
+							<span class="wc-est"><i class="fa-regular fa-clock"></i> 2h</span>
+						</div>
+					</div>
+
+					<div class="week-card">
+						<div class="wc-header">
+							<span class="wc-title">Update Portfolio Site</span>
+							<i class="fa-regular fa-square wc-check"></i>
+						</div>
+						<div class="wc-footer">
+							<span class="wc-tag">Personal</span>
+							<span class="wc-est"><i class="fa-regular fa-clock"></i> 3h</span>
+						</div>
+					</div>
+
+					<div class="week-card p-med">
+						<div class="wc-header">
+							<span class="wc-title">Research competitor pricing</span>
+							<i class="fa-regular fa-square wc-check"></i>
+						</div>
+						<div class="wc-footer">
+							<span class="wc-tag">Work</span>
+							<span class="wc-est"><i class="fa-regular fa-clock"></i> 1h</span>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Right: 7-Day Grid -->
+			<div class="week-grid-wrapper">
+				<div class="week-grid">
+
+					<!-- Monday (TODAY) -->
+					<div class="day-column is-today">
+						<div class="day-header">
+							<span class="day-name">Mon</span>
+							<span class="day-number">22</span>
+							<div class="day-progress">
+								<div class="day-progress-bar" style="width: 40%;"></div>
+							</div>
+						</div>
+						<div class="day-tasks">
+							<div class="week-card p-high">
+								<div class="wc-header">
+									<span class="wc-title">Finalize "Today" View HTML</span>
+									<i class="fa-regular fa-square wc-check"></i>
+								</div>
+								<div class="wc-footer">
+									<span class="wc-tag">Dev</span>
+									<span class="wc-est">4h</span>
+								</div>
+							</div>
+
+							<div class="week-card completed">
+								<div class="wc-header">
+									<span class="wc-title">Morning Standup</span>
+									<i class="fa-solid fa-square-check wc-check"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Tuesday -->
+					<div class="day-column">
+						<div class="day-header">
+							<span class="day-name">Tue</span>
+							<span class="day-number">23</span>
+							<div class="day-progress">
+								<div class="day-progress-bar" style="width: 0%;"></div>
+							</div>
+						</div>
+						<div class="day-tasks">
+							<div class="week-card">
+								<div class="wc-header">
+									<span class="wc-title">Implement CSS for Week View</span>
+									<i class="fa-regular fa-square wc-check"></i>
+								</div>
+								<div class="wc-footer">
+									<span class="wc-tag">Dev</span>
+									<span class="wc-est">2h</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Wednesday -->
+					<div class="day-column">
+						<div class="day-header">
+							<span class="day-name">Wed</span>
+							<span class="day-number">24</span>
+							<div class="day-progress"></div>
+						</div>
+						<div class="day-tasks">
+							<!-- Empty state -->
+						</div>
+					</div>
+
+					<!-- Thursday -->
+					<div class="day-column">
+						<div class="day-header">
+							<span class="day-name">Thu</span>
+							<span class="day-number">25</span>
+							<div class="day-progress"></div>
+						</div>
+						<div class="day-tasks">
+							<div class="week-card">
+								<div class="wc-header">
+									<span class="wc-title">Christmas Holiday 🎄</span>
+								</div>
+								<div class="wc-footer">
+									<span class="wc-tag">Life</span>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Friday -->
+					<div class="day-column">
+						<div class="day-header">
+							<span class="day-name">Fri</span>
+							<span class="day-number">26</span>
+							<div class="day-progress"></div>
+						</div>
+						<div class="day-tasks"></div>
+					</div>
+
+					<!-- Saturday -->
+					<div class="day-column weekend">
+						<div class="day-header">
+							<span class="day-name">Sat</span>
+							<span class="day-number">27</span>
+							<div class="day-progress"></div>
+						</div>
+						<div class="day-tasks">
+							<div class="week-card">
+								<div class="wc-header">
+									<span class="wc-title">Weekly Review</span>
+									<i class="fa-regular fa-square wc-check"></i>
+								</div>
+							</div>
+						</div>
+					</div>
+
+					<!-- Sunday -->
+					<div class="day-column weekend">
+						<div class="day-header">
+							<span class="day-name">Sun</span>
+							<span class="day-number">28</span>
+							<div class="day-progress"></div>
+						</div>
+						<div class="day-tasks"></div>
+					</div>
+
+				</div>
+			</div>
+
+		</div>
+	</div>
 </body>
+
 </html>

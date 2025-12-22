@@ -1,0 +1,185 @@
+/* --- Game Settings Styles --- */
+.game-settings-container {
+    max-width: 1200px;
+    margin: 0;
+    padding-top: 10px;
+    padding-bottom: 40px;
+    animation: fadeIn 0.5s ease-out;
+}
+
+.settings-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+@media (max-width: 900px) {
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.settings-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Card Styling */
+.settings-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    padding: 15px 20px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--bg-hover);
+    font-weight: 700;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+}
+
+/* Setting Row */
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 70px;
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+}
+
+.setting-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 15px;
+}
+
+.setting-label {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.setting-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Controls */
+.setting-select {
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.setting-select:focus {
+    border-color: var(--accent-green);
+}
+
+/* Toggle Switch (Reused pattern, scoped colors if needed) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #374151;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--accent-green);
+}
+
+input:checked+.slider:before {
+    transform: translateX(22px);
+}
+
+/* Buttons */
+.btn-action {
+    background-color: var(--bg-hover);
+    border: 1px solid transparent;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.btn-action:hover {
+    background-color: #4b5563;
+}
+
+/* Danger Zone Specifics */
+.danger-zone {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.danger-zone .card-header {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.text-red {
+    color: #f87171;
+}
+
+.btn-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+    color: white;
+    border-color: #dc2626;
+}

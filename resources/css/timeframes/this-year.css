@@ -1,0 +1,336 @@
+/* --- This Year Scoped Styles --- */
+.year-container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 10px 20px 20px 20px;
+    animation: fadeIn 0.4s ease-out;
+    overflow: hidden;
+}
+
+/* 1. Header */
+.year-header {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-bottom: 30px;
+    flex-shrink: 0;
+}
+
+.header-main {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.year-title-group h2 {
+    margin: 0;
+    font-size: 2rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.year-theme {
+    color: var(--text-secondary);
+    font-style: italic;
+    font-size: 1rem;
+    margin-top: 4px;
+    display: block;
+    margin-left: 2px;
+}
+
+.year-stats {
+    display: flex;
+    gap: 30px;
+}
+
+.y-stat {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.ys-label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.ys-val {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.text-green {
+    color: var(--stat-check);
+}
+
+/* Year Progress Bar */
+.year-progress-track {
+    width: 100%;
+    height: 8px;
+    background-color: var(--bg-hover);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+}
+
+.year-progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--stat-blue) 0%, var(--accent-green) 100%);
+    border-radius: 4px;
+}
+
+/* 2. Main Layout */
+.year-layout {
+    display: flex;
+    gap: 30px;
+    flex-grow: 1;
+    min-height: 0;
+}
+
+/* --- Left Sidebar (Pillars) --- */
+.year-sidebar {
+    width: 280px;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    background-color: var(--bg-body);
+    border-right: 1px solid var(--bg-hover);
+}
+
+.sidebar-header h3 {
+    margin: 0 0 5px 0;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.sidebar-header p {
+    margin: 0 0 20px 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.pillars-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.pillar-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: transform 0.2s;
+}
+
+.pillar-card:hover {
+    transform: translateX(4px);
+    border-color: var(--text-secondary);
+}
+
+.pillar-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.p-blue {
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+}
+
+.p-green {
+    background-color: rgba(16, 185, 129, 0.15);
+    color: #34d399;
+}
+
+.p-gold {
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #fbbf24;
+}
+
+.pillar-content {
+    display: flex;
+    flex-direction: column;
+}
+
+.pillar-content h4 {
+    margin: 0;
+    font-size: 0.9rem;
+    color: #fff;
+}
+
+.pillar-content span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.year-quote {
+    margin-top: auto;
+    font-style: italic;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    border-left: 2px solid var(--bg-hover);
+    padding-left: 12px;
+    line-height: 1.4;
+}
+
+/* --- Right Grid (Quarters) --- */
+.quarters-grid {
+    flex-grow: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 20px;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+@media (max-width: 1000px) {
+    .quarters-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+    }
+}
+
+.quarter-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+
+/* Past Quarters */
+.quarter-card.past {
+    opacity: 0.7;
+    background-color: transparent;
+    border: 1px solid var(--bg-hover);
+}
+
+/* Current Quarter */
+.quarter-card.current {
+    border: 1px solid var(--stat-blue);
+    background-color: rgba(37, 99, 235, 0.05);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.qc-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.qc-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.qc-status {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-weight: 600;
+}
+
+.status-live {
+    color: var(--stat-blue);
+    background-color: rgba(37, 99, 235, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
+}
+
+.qc-date {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 15px;
+}
+
+.qc-goals {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-grow: 1;
+}
+
+.qc-goal {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #d1d5db;
+    font-size: 0.9rem;
+}
+
+.qc-goal.done {
+    text-decoration: line-through;
+    color: var(--text-secondary);
+}
+
+.qc-goal.done i {
+    color: var(--stat-check);
+}
+
+.qc-goal.fail {
+    color: var(--text-secondary);
+    opacity: 0.8;
+}
+
+.qc-goal.fail i {
+    color: var(--stat-fire);
+}
+
+.qc-goal.active {
+    color: #fff;
+    font-weight: 500;
+}
+
+.qc-footer {
+    margin-top: 15px;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-open-quarter {
+    background-color: var(--bg-body);
+    color: var(--stat-blue);
+    border: 1px solid var(--bg-hover);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    transition: 0.2s;
+}
+
+.btn-open-quarter:hover {
+    background-color: var(--stat-blue);
+    color: #fff;
+}
+
+/* Scrollbars */
+.quarters-grid::-webkit-scrollbar {
+    width: 6px;
+}
+
+.quarters-grid::-webkit-scrollbar-thumb {
+    background-color: var(--bg-hover);
+    border-radius: 3px;
+}
