@@ -1,29 +1,29 @@
-import { SettingsRepository } from './SQLite3/repositories/SettingsRepository.mjs';
-import { GameRepository } from './SQLite3/repositories/GameRepository.mjs';
-import { TaskRepository } from './SQLite3/repositories/TaskRepository.mjs';
+import { TaskController } from "../controllers/TaskController.mjs";
+import { MercenaryController } from "../controllers/MercenaryController.mjs";
 
 export class DataManager {
-    constructor() {
-        this.settings = new SettingsRepository();
-        this.game = new GameRepository();
-        this.tasks = new TaskRepository();
+    constructor(app) {
+        this.app = app;
+        this.controllers = [];
     }
 
-    // Unified Method
-    getInitialState() {
-        return {
-            config: this.settings.getTimerSettings(),
-            squad: this.game.getActiveMercenaries(),
-            todo: this.tasks.getActiveTasks()
-        };
+    initialize() {
+        console.log("⚙️ Initializing Data Manager...");
+
+        this.registerController(new TaskController());
+        this.registerController(new MercenaryController());
+        
+        // Add more controllers here as the game grows
+
+        console.log("✅ Data Manager Initialized");
     }
 
-    // Example: Starting the app
-    getStartupData() {
-        return {
-            timer: this.settings.getByCategory('timer'),
-            activeMods: this.mods.getEnabled(),
-            squad: this.game.getMercenaries()
-        };
+    registerController(controller) {
+        if (typeof controller.register === 'function') {
+            controller.register(this.app);
+            this.controllers.push(controller);
+        } else {
+            console.error(`❌ Controller ${controller.constructor.name} is missing a register() method.`);
+        }
     }
 }
