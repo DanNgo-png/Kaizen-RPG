@@ -11,6 +11,7 @@ import { initFocusTimer } from './js/focus/focusTimer.js'
 import { initFlexibleFocusTimer } from './js/focus/flexible/focusTimer.js'
 import { initSidebarTooltips } from './js/sidebarTooltip.js'
 import { initHeatmap } from './js/analyze/heat-map.js'
+import { initMenuButtons } from './js/games/playGameManager.js'
 
 async function app() {
     try {
@@ -170,11 +171,12 @@ async function app() {
             });
         }
 
-        const gameModeButton = document.querySelector(".game-modes-button");
-        if (gameModeButton) {
-            gameModeButton.addEventListener("click", async () => {
-                await loadPage('./pages/games/game-modes.html');
-                // placeholder(); 
+        // --- GAMES SECTION ---
+        const playGameButton = document.querySelector(".play-game-button");
+        if (playGameButton) {
+            playGameButton.addEventListener("click", async () => {
+                await loadPage('./pages/games/play-game.html');
+                initMenuButtons();
             });
         }
 
@@ -222,4 +224,4 @@ async function app() {
     }
 }
 
-app()
+app();
