@@ -1,5 +1,6 @@
 import { loadPage } from "../router.js";
 import { initGameModes } from "./gameModesManager.js";
+import { initModsManager } from "../mods/modsManager.js";
 
 export function initMenuButtons() {
     const newCampaignBtn = document.getElementById("btn-new-campaign");
@@ -27,6 +28,7 @@ export function initMenuButtons() {
     if (modsBtn) {
         modsBtn.addEventListener("click", async () => {
             await loadPage("./pages/mods/mods.html");
+            initModsManager(); 
         });
     }
 
