@@ -1,28 +1,53 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
+import path from 'path';
 import { initializeSchema } from './createTable.mjs';
 
-const DATABASE_FILE = 'data/dynamic/global/main_settings.db';
 const DATA_DIRECTORY = './data/dynamic/global';
-const database = initializeDatabase();
-export default database;
 
-function initializeDatabase() {
+// Cache to store active database connections
+// Key: dbName, Value: Database Instance
+const connections = new Map();
+
+function ensureDirectory() {
+    if (!fs.existsSync(DATA_DIRECTORY)) {
+        fs.mkdirSync(DATA_DIRECTORY, { recursive: true });
+    }
+}
+
+/**
+ * Factory function to get or create a database connection.
+ * 
+ * @param {string} dbName - The unique name for the database (e.g., 'user_tasks', 'game_data'). 
+ *                          This will be used as the filename: 'user_tasks.db'.
+ * @returns {Database} - The better-sqlite3 database instance.
+ */
+export function getDatabase(dbName) {
+    // 1. Check Cache: Return existing connection if available
+    if (connections.has(dbName)) {
+        return connections.get(dbName);
+    }
+
+    // 2. Setup File Path
+    ensureDirectory();
+    const filePath = path.join(DATA_DIRECTORY, `${dbName}.db`);
+    
     try {
-        if (!fs.existsSync(DATA_DIRECTORY)) {
-            fs.mkdirSync(DATA_DIRECTORY);
-        }
-
-        const database = new Database(DATABASE_FILE);
+        console.log(`🔌 Connecting to SQLite: ${dbName}.db ...`);
         
-        database.pragma('journal_mode = WAL'); // Performance optimization for SQLite
+        // 3. Create Connection
+        const db = new Database(filePath);
+        db.pragma('journal_mode = WAL'); // Optimization
 
-        initializeSchema(database);
+        // 4. Initialize Tables (Auto-run schema based on name)
+        initializeSchema(db, dbName);
 
-        console.log("✅ SQLite Connected & Ready");
-        return database;
+        // 5. Cache and Return
+        connections.set(dbName, db);
+        return db;
+
     } catch (error) {
-        console.error("❌ DB Init Error:", error);
+        console.error(`❌ DB Connection Error (${dbName}):`, error);
         throw error;
     }
 }
