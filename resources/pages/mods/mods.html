@@ -1,11 +1,198 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Mod Manager - Kaizen RPG</title>
 </head>
+
 <body>
-    <p>Placeholder: mods.html</p>
+	<div class="mods-container">
+
+		<!-- Header -->
+		<header class="mods-header">
+			<div class="header-left">
+				<h2><i class="fa-solid fa-puzzle-piece" style="color: #a78bfa;"></i> Mod Manager</h2>
+				<div class="mod-stats">
+					<span class="stat-badge"><i class="fa-solid fa-check"></i> 4 Active</span>
+					<span class="stat-badge"><i class="fa-solid fa-box-open"></i> 6 Installed</span>
+				</div>
+			</div>
+
+			<div class="header-actions">
+				<button class="btn-secondary" title="Check for Updates"><i class="fa-solid fa-rotate"></i></button>
+				<button class="btn-secondary" title="Open Mods Folder"><i class="fa-regular fa-folder-open"></i></button>
+				<button class="btn-primary" id="btn-import-mod"><i class="fa-solid fa-download"></i> Install
+					Mod</button>
+			</div>
+		</header>
+
+		<!-- Main Layout -->
+		<div class="mods-layout">
+
+			<!-- LEFT: Mod List / Load Order -->
+			<div class="mod-list-panel">
+
+				<!-- Toolbar -->
+				<div class="list-toolbar">
+					<div class="search-wrapper">
+						<i class="fa-solid fa-magnifying-glass"></i>
+						<input type="text" placeholder="Search mods..." class="mod-search">
+					</div>
+					<div class="sort-wrapper">
+						<button class="btn-icon-sm active" title="Sort by Load Order"><i class="fa-solid fa-list-ol"></i></button>
+						<button class="btn-icon-sm" title="Sort Alphabetically"><i class="fa-solid fa-arrow-down-a-z"></i></button>
+					</div>
+				</div>
+
+				<!-- The List -->
+				<div class="mod-list">
+
+					<!-- Mod Item 1 (Active) -->
+					<div class="mod-item active" data-id="core-ui-overhaul">
+						<div class="drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
+						<div class="mod-status-indicator"></div>
+						<div class="mod-icon">
+							<i class="fa-solid fa-paintbrush"></i>
+						</div>
+						<div class="mod-details-col">
+							<div class="mod-name-row">
+								<span class="mod-name">Dark Souls UI Overhaul</span>
+								<span class="mod-version">v1.2.0</span>
+							</div>
+							<span class="mod-author">by KaizenDev</span>
+						</div>
+						<div class="mod-controls">
+							<label class="switch sm">
+								<input type="checkbox" checked>
+								<span class="slider round"></span>
+							</label>
+						</div>
+					</div>
+
+					<!-- Mod Item 2 (Active) -->
+					<div class="mod-item active selected" data-id="pomodoro-hardcore">
+						<div class="drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
+						<div class="mod-status-indicator"></div>
+						<div class="mod-icon purple">
+							<i class="fa-solid fa-skull"></i>
+						</div>
+						<div class="mod-details-col">
+							<div class="mod-name-row">
+								<span class="mod-name">Pomodoro Hardcore</span>
+								<span class="mod-version">v0.5.0</span>
+							</div>
+							<span class="mod-author">by ProductivityBeast</span>
+						</div>
+						<div class="mod-controls">
+							<label class="switch sm">
+								<input type="checkbox" checked>
+								<span class="slider round"></span>
+							</label>
+						</div>
+					</div>
+
+					<!-- Mod Item 3 (Warning/Conflict) -->
+					<div class="mod-item warning" data-id="jira-integration">
+						<div class="drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
+						<div class="mod-status-indicator"></div>
+						<div class="mod-icon blue">
+							<i class="fa-brands fa-jira"></i>
+						</div>
+						<div class="mod-details-col">
+							<div class="mod-name-row">
+								<span class="mod-name">Jira Quest Sync</span>
+								<span class="mod-version">v2.0.1</span>
+								<i class="fa-solid fa-triangle-exclamation text-warning" title="Missing Dependency"></i>
+							</div>
+							<span class="mod-author">by CorpSlave</span>
+						</div>
+						<div class="mod-controls">
+							<label class="switch sm">
+								<input type="checkbox">
+								<span class="slider round"></span>
+							</label>
+						</div>
+					</div>
+
+					<!-- Mod Item 4 (Inactive) -->
+					<div class="mod-item inactive" data-id="fantasy-fonts">
+						<div class="drag-handle"><i class="fa-solid fa-grip-lines"></i></div>
+						<div class="mod-status-indicator"></div>
+						<div class="mod-icon gold">
+							<i class="fa-solid fa-font"></i>
+						</div>
+						<div class="mod-details-col">
+							<div class="mod-name-row">
+								<span class="mod-name">Fantasy Font Pack</span>
+								<span class="mod-version">v1.0</span>
+							</div>
+							<span class="mod-author">by TypoMancer</span>
+						</div>
+						<div class="mod-controls">
+							<label class="switch sm">
+								<input type="checkbox">
+								<span class="slider round"></span>
+							</label>
+						</div>
+					</div>
+
+				</div>
+			</div>
+
+			<!-- RIGHT: Mod Inspector -->
+			<div class="mod-inspector-panel">
+				<div class="inspector-header">
+					<div class="inspector-icon-large purple">
+						<i class="fa-solid fa-skull"></i>
+					</div>
+					<div class="inspector-title">
+						<h3>Pomodoro Hardcore</h3>
+						<span>v0.5.0 • Gameplay</span>
+					</div>
+				</div>
+
+				<div class="inspector-content">
+					<div class="inspector-meta">
+						<div class="meta-item">
+							<span class="label">Author</span>
+							<span class="value">ProductivityBeast</span>
+						</div>
+						<div class="meta-item">
+							<span class="label">Updated</span>
+							<span class="value">Dec 20, 2025</span>
+						</div>
+						<div class="meta-item">
+							<span class="label">Size</span>
+							<span class="value">145 KB</span>
+						</div>
+					</div>
+
+					<div class="inspector-desc">
+						<p>Changes the standard focus timer mechanics. Pausing the timer now drains HP. Failing a
+							session causes your character to lose a level.</p>
+						<p><i>"Focus or Die."</i></p>
+					</div>
+
+					<div class="inspector-section">
+						<h4>Dependencies</h4>
+						<div class="dependency-list">
+							<div class="dep-item valid"><i class="fa-solid fa-check"></i> Kaizen Core v1.0+</div>
+							<div class="dep-item valid"><i class="fa-solid fa-check"></i> Health System</div>
+						</div>
+					</div>
+
+					<div class="inspector-actions">
+						<button class="btn-block-action"><i class="fa-solid fa-sliders"></i> Configure Mod</button>
+						<button class="btn-block-action btn-danger-outline"><i class="fa-solid fa-trash"></i>
+							Uninstall</button>
+					</div>
+				</div>
+			</div>
+
+		</div>
+	</div>
 </body>
+
 </html>
