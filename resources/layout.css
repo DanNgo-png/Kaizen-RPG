@@ -43,6 +43,9 @@
 @import url('css/games/inventory.css');
 @import url('css/games/settings.css');
 
+/* EMPIRE BUILDER */
+@import url('css/games/empire-builder.css');
+
 /* === MAIN SETTINGS === */
 @import url('css/main-settings/main-settings-sidebar.css');
 @import url('css/main-settings/main.css');
