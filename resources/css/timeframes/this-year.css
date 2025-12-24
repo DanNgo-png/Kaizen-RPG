@@ -101,6 +101,7 @@
     flex-shrink: 0;
     background-color: var(--bg-body);
     border-right: 1px solid var(--bg-hover);
+    padding-right: 10px;
 }
 
 .sidebar-header h3 {
