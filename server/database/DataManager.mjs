@@ -1,5 +1,6 @@
 import { TaskController } from "../controllers/TaskController.mjs";
 import { MercenaryController } from "../controllers/MercenaryController.mjs";
+import { AppSettingsController } from "../controllers/AppSettingsController.mjs";
 
 export class DataManager {
     constructor(app) {
