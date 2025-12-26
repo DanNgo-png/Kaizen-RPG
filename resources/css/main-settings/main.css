@@ -134,6 +134,7 @@
     color: white;
     padding: 8px 12px;
     border-radius: 6px;
+    font-family: var(--font-main);
     font-size: 0.9rem;
     outline: none;
     cursor: pointer;
@@ -146,6 +147,7 @@
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
+    font-family: var(--font-main);
     font-weight: 500;
     transition: 0.2s;
     font-size: 0.9rem;
