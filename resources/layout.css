@@ -5,27 +5,28 @@
 @import url('css/sidebar-items.css');
 
 /* === PLAN PAGE === */
-/* TODO LIST */
-@import url('css/plan/todo-list/todo-list.css');
-/* KANBAN BOARD */
-@import url('css/plan/kanban-board/kanban-board.css');
-@import url('css/plan/kanban-board/buttons.css');
+    /* TODO LIST */
+    @import url('css/plan/todo-list/todo-list.css');
+
+    /* KANBAN BOARD */
+    @import url('css/plan/kanban-board/kanban-board.css');
+    @import url('css/plan/kanban-board/buttons.css');
 
 /* === FOCUS PAGE === */
-/* STANDARD TIMER: MAIN */
-@import url('css/focus/focus-standard/focus-dot.css');
-@import url('css/focus/focus-standard/focus-footer-button.css');
-@import url('css/focus/focus-standard/focus-dropdown.css');
-@import url('css/focus/focus-standard/focus-standard-layout.css');
-@import url('css/focus/focus-standard/focus-stat-icons.css');
-@import url('css/focus/focus-standard/timer-circle.css');
+    /* STANDARD TIMER: MAIN */
+    @import url('css/focus/focus-standard/focus-dot.css');
+    @import url('css/focus/focus-standard/focus-footer-button.css');
+    @import url('css/focus/focus-standard/focus-dropdown.css');
+    @import url('css/focus/focus-standard/focus-standard-layout.css');
+    @import url('css/focus/focus-standard/focus-stat-icons.css');
+    @import url('css/focus/focus-standard/timer-circle-GREEN.css');
 
-/* STANDARD TIMER: CONFIGURE SIDE BAR */
-@import url('css/focus/focus-standard/focus-sidebar-layout.css');
-@import url('css/focus/focus-standard/focus-sidebar-items.css');
+    /* STANDARD TIMER: CONFIGURE SIDE BAR */
+    @import url('css/focus/focus-standard/focus-sidebar-layout.css');
+    @import url('css/focus/focus-standard/focus-sidebar-items.css');
 
-/* FLEXIBLE TIMER */
-@import url('css/focus/focus-flexible/main.css');
+    /* FLEXIBLE TIMER */
+    @import url('css/focus/focus-flexible/main.css');
 
 /* === TIMEFRAMES PAGE === */
 @import url('css/timeframes/today.css');
@@ -34,17 +35,23 @@
 @import url('css/timeframes/this-year.css');
 
 /* === ANALYZE PAGE === */
+@import url('css/analyze/custom.css');
+@import url('css/analyze/day.css');
+@import url('css/analyze/month.css');
+@import url('css/analyze/overview.css');
+@import url('css/analyze/week.css');
+@import url('css/analyze/year.css');
 
 /* === GAME PAGE === */
-/* GAME MODES */
-@import url('css/games/game-modes.css');
-@import url('css/games/party.css');
-@import url('css/games/quests.css');
-@import url('css/games/inventory.css');
-@import url('css/games/settings.css');
+    /* GAME MODES */
+    @import url('css/games/game-modes.css');
+    @import url('css/games/party.css');
+    @import url('css/games/quests.css');
+    @import url('css/games/inventory.css');
+    @import url('css/games/settings.css');
 
-/* EMPIRE BUILDER */
-@import url('css/games/empire-builder.css');
+    /* EMPIRE BUILDER */
+    @import url('css/games/empire-builder.css');
 
 /* === MAIN SETTINGS === */
 @import url('css/main-settings/main-settings-sidebar.css');
