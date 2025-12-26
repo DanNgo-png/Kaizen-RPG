@@ -1,0 +1,308 @@
+/* --- Scoped Styles for Day Analytics --- */
+.day-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    color: var(--text-primary, #fff);
+    font-family: var(--font-main, "Segoe UI", sans-serif);
+    animation: fadeIn 0.4s ease-out;
+    padding-bottom: 40px;
+    width: 100%;
+    overflow: hidden;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.day-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.day-header h2 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 0.5px;
+}
+
+.day-date-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.day-nav-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary, #9ca3af);
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.day-nav-btn:hover {
+    color: #fff;
+}
+
+.day-picker-wrapper {
+    position: relative;
+    background-color: var(--surface-color, #1f2937);
+    border: 1px solid var(--bg-hover, #374151);
+    border-radius: 6px;
+    padding: 6px 10px;
+}
+
+.day-date-input {
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.9rem;
+    outline: none;
+    cursor: pointer;
+}
+
+/* Invert calendar icon for dark mode */
+.day-date-input::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
+/* Layout Grid */
+.day-analytics-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    /* Left col narrower than Right col */
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+.day-left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Card Styles */
+.day-card {
+    background-color: var(--surface-color, #1f2937);
+    border: 1px solid var(--bg-hover, #374151);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.day-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    margin-bottom: 20px;
+}
+
+.day-card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.day-card-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary, #9ca3af);
+}
+
+/* KPI Cards (Small) */
+.day-kpi-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+}
+
+.day-kpi-label {
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+}
+
+.day-kpi-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+/* Tag Chart Section */
+.day-chart-flex {
+    display: flex;
+    justify-content: center;
+    gap: 60px;
+    height: 100%;
+    padding-top: 10px;
+}
+
+/* CSS Donut Chart */
+.day-donut-chart {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    /* 100% Blue */
+    background: conic-gradient(#2563eb 0% 100%, transparent 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.day-donut-hole {
+    width: 90px;
+    height: 90px;
+    background-color: var(--surface-color, #1f2937);
+    border-radius: 50%;
+}
+
+.day-legend-row {
+    display: grid;
+    grid-template-columns: 20px 100px 80px 50px;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 12px 0;
+}
+
+.day-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #2563eb;
+}
+
+.day-legend-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.day-legend-time {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+.day-legend-perc {
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: right;
+}
+
+/* Timeline Section */
+.day-timeline-container {
+    position: relative;
+    margin-top: 40px;
+    /* Space for labels */
+    height: 80px;
+    display: flex;
+    align-items: flex-end;
+}
+
+/* The horizontal axis line */
+.day-timeline-axis {
+    position: absolute;
+    bottom: 25px;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background-color: #4b5563;
+}
+
+/* Ticks Wrapper */
+.day-timeline-ticks {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+}
+
+.day-tick {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    position: relative;
+}
+
+/* The vertical line */
+.day-tick::before {
+    content: '';
+    width: 1px;
+    height: 15px;
+    /* Height of tick mark */
+    background-color: #6b7280;
+    margin-bottom: -25px;
+    /* Push it down to intersect the axis */
+}
+
+.day-tick-label {
+    font-size: 0.75rem;
+    color: #6b7280;
+    margin-top: 35px;
+    /* Push label below axis */
+}
+
+/* Session Blocks */
+.day-session-block {
+    position: absolute;
+    bottom: 26px;
+    /* Sit on top of axis */
+    height: 40px;
+    background-color: #2563eb;
+    /* Blue */
+    border-radius: 4px;
+    opacity: 0.8;
+    border: 1px solid #60a5fa;
+    /* Positioning would be calculated by JS in real app */
+    right: 0;
+    width: 18%;
+    /* Approx width for 2 hours out of 11 shown */
+}
+
+.day-timeline-legend {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 20px;
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.day-legend-marker {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #2563eb;
+}
+
+@media (max-width: 900px) {
+    .day-analytics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .day-chart-flex {
+        flex-direction: column;
+        gap: 30px;
+    }
+}

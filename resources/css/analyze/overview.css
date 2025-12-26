@@ -1,0 +1,321 @@
+/* --- Scoped Styles for Overview Dashboard --- */
+.overview-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    color: var(--text-primary, #fff);
+    font-family: var(--font-main, "Segoe UI", sans-serif);
+    animation: fadeIn 0.4s ease-out;
+    /* NO NEED padding-top: 230px; */
+    padding-bottom: 40px;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Grid Layout */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    /* Left col narrower than calendar */
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 900px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Common Card Style */
+.dash-card {
+    background-color: var(--surface-color, #1f2937);
+    border: 1px solid var(--bg-hover, #374151);
+    border-radius: 16px;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.card-header i {
+    font-size: 1.2rem;
+}
+
+.card-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+}
+
+.card-subtitle {
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.9rem;
+    margin-top: -15px;
+    margin-bottom: 20px;
+}
+
+/* --- 1. Today's Focus --- */
+.today-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.stat-box {
+    background-color: #172033;
+    /* Darker blue bg */
+    border: 1px solid #2d3648;
+    border-radius: 12px;
+    padding: 20px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.stat-box.blue-theme {
+    background: linear-gradient(145deg, rgba(30, 58, 138, 0.2), rgba(30, 58, 138, 0.05));
+    border-color: rgba(59, 130, 246, 0.2);
+}
+
+.stat-box i {
+    font-size: 1.2rem;
+    margin-bottom: 5px;
+}
+
+.stat-box .label {
+    font-size: 0.85rem;
+    color: #93c5fd;
+    /* Light blue text */
+}
+
+.stat-box .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #bfdbfe;
+}
+
+/* --- 2. Streaks --- */
+.left-column {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.streak-info {
+    display: flex;
+    gap: 10px;
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    line-height: 1.4;
+}
+
+.streak-boxes {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 15px;
+}
+
+.streak-box {
+    background: linear-gradient(145deg, rgba(120, 53, 15, 0.2), rgba(120, 53, 15, 0.05));
+    /* Orange/Brown tint */
+    border: 1px solid rgba(245, 158, 11, 0.2);
+    border-radius: 12px;
+    padding: 20px 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.streak-box .label {
+    font-size: 0.85rem;
+    color: #fcd34d;
+    /* Light yellow/orange */
+    font-weight: 600;
+}
+
+.streak-box .value {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #f59e0b;
+    /* Orange */
+}
+
+.streak-box i {
+    color: #f59e0b;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+}
+
+/* --- 3. Calendar --- */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 0 10px;
+}
+
+.calendar-nav-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.month-title {
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 8px;
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.day-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background-color: rgba(255, 255, 255, 0.03);
+    cursor: default;
+}
+
+.day-cell.empty {
+    background-color: transparent;
+}
+
+/* Day States */
+.day-cell.focused {
+    background-color: #10b981;
+    /* Green Activity */
+    color: #064e3b;
+    font-weight: 700;
+}
+
+.day-cell.selected {
+    background-color: #d1fae5;
+    /* Light green selection */
+    color: #065f46;
+    font-weight: 700;
+    border: 2px solid #10b981;
+}
+
+.day-cell.today {
+    background-color: transparent;
+    border: 1px solid #4b5563;
+    color: white;
+}
+
+.calendar-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 15px;
+}
+
+.cal-stat {
+    background-color: rgba(6, 78, 59, 0.4);
+    /* Dark Green bg */
+    padding: 12px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.cal-stat-label {
+    font-size: 0.8rem;
+    color: #d1fae5;
+    margin-bottom: 4px;
+}
+
+.cal-stat-value {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #34d399;
+    /* Bright green */
+}
+
+/* --- 4. Lifetime Focus --- */
+.lifetime-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.lifetime-box {
+    background: linear-gradient(145deg, rgba(88, 28, 135, 0.2), rgba(88, 28, 135, 0.05));
+    /* Purple tint */
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lifetime-box i {
+    color: #a78bfa;
+    font-size: 1.3rem;
+    margin-bottom: 5px;
+}
+
+.lifetime-label {
+    font-size: 0.9rem;
+    color: white;
+    font-weight: 600;
+}
+
+.lifetime-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #e9d5ff;
+    /* Light purple */
+}
+
+@media (max-width: 600px) {
+
+    .today-stats,
+    .streak-boxes,
+    .calendar-stats-row,
+    .lifetime-row {
+        grid-template-columns: 1fr;
+    }
+}
