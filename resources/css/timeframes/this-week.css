@@ -156,7 +156,7 @@
     /* Subtle Blue Tint */
 }
 
-.day-column.is-today .day-header {
+.day-column.is-today .timeframe-day-header {
     background-color: rgba(37, 99, 235, 0.1);
     color: #60a5fa;
     border-bottom: 1px solid rgba(37, 99, 235, 0.2);
@@ -169,7 +169,7 @@
 }
 
 /* Day Header */
-.day-header {
+.timeframe-day-header {
     padding: 12px 15px;
     border-bottom: 1px solid var(--bg-hover);
     display: flex;

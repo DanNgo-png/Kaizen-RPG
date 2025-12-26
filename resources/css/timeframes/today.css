@@ -103,21 +103,13 @@
     border: none;
     flex-grow: 1;
     color: #fff;
+    font-family: var(--font-main);
     font-size: 1rem;
     outline: none;
 }
 
 .capture-input::placeholder {
     color: #6b7280;
-}
-
-.shortcut-hint {
-    background-color: var(--bg-body);
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    border: 1px solid var(--bg-hover);
 }
 
 /* 3. Split Layout */

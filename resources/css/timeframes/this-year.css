@@ -9,7 +9,7 @@
 }
 
 /* 1. Header */
-.year-header {
+.timeframe-year-header {
     display: flex;
     flex-direction: column;
     gap: 15px;
