@@ -12,10 +12,13 @@ import { initFlexibleFocusTimer } from './js/focus/flexible/focusTimer.js'
 import { initSidebarTooltips } from './js/sidebarTooltip.js'
 import { initHeatmap } from './js/analyze/heat-map.js'
 import { initMenuButtons } from './js/games/playGameManager.js'
+import { initMainSettings } from './js/main-settings/mainSettingsManager.js'; // Import
+import { SettingsAPI } from './js/api/SettingsAPI.js'; // Import
 
 async function app() {
     try {
         EventRegistry.init();
+        SettingsAPI.getSetting('fontFamily'); 
         await GameAPI.getMercenaries();
         handleDropdowns()
         initSidebarTooltips()
@@ -216,7 +219,7 @@ async function app() {
         if (mainSettingsButton) {
             mainSettingsButton.addEventListener("click", async () => {
                 await loadPage('./pages/main-settings/main-settings.html');
-                // placeholder(); 
+                initMainSettings();
             });
         }
     } catch (error) {
