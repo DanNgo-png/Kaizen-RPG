@@ -1,5 +1,14 @@
 export async function loadPage(pageUrl) {
     const default_page = document.getElementById("default-page");
+
+    // --- Special Case: Detach layout for Play Game screen ---
+    // This allows the Game Menu to be centered in the viewport 
+    // regardless of sidebar state.
+    if (pageUrl.includes('play-game.html')) {
+        default_page.classList.add('full-viewport-view');
+    } else {
+        default_page.classList.remove('full-viewport-view');
+    }
     
     try {
         // 1. Fetch the file

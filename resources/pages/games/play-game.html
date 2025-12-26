@@ -37,15 +37,18 @@
 		.title-group {
 			text-align: center;
 			margin-bottom: 60px;
+			width: 100%; /* added */
+			padding: 0 20px; /* added */
+			box-sizing: border-box; /* added */
 		}
 
 		.game-logo {
-			font-size: 5rem;
+			font-size: clamp(3rem, 8vw, 6rem); /* added */
 			font-weight: 900;
 			text-transform: uppercase;
 			letter-spacing: 8px;
 			margin: 0;
-			line-height: 1;
+			line-height: 1.1;
 			/* Metal/Silver Gradient Text */
 			background: linear-gradient(180deg, #ffffff 0%, #9ca3af 100%);
 			background-clip: text;
@@ -56,7 +59,7 @@
 		}
 
 		.game-subtitle {
-			font-size: 1.25rem;
+			font-size: clamp(0.9rem, 2vw, 1.25rem); /* added */
 			color: var(--accent-active-text, #8EC5FF);
 			font-weight: 600;
 			letter-spacing: 6px;
