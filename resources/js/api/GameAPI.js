@@ -1,4 +1,4 @@
-const EXTENSION_ID = "js.node-neutralino.projectRunner";
+import { EXTENSION_ID } from "./_extension_id.js";
 
 export const GameAPI = {
     // --- TASKS ---

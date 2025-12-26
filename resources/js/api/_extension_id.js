@@ -1,0 +1,1 @@
+export const EXTENSION_ID = "js.node-neutralino.projectRunner";
