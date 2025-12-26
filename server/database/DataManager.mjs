@@ -13,7 +13,7 @@ export class DataManager {
 
         this.registerController(new TaskController());
         this.registerController(new MercenaryController());
-        
+        this.registerController(new AppSettingsController());
         // Add more controllers here as the game grows
 
         console.log("✅ Data Manager Initialized");
