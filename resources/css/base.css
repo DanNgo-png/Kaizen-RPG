@@ -12,4 +12,34 @@ body {
     transition: margin-left 0.5s; /* sidebar open speed */
     padding: 20px;
     left: 75px;
+
+    /* Ensure default page takes up correct width context */
+    /* width: calc(100% - 75px);  */
+    /* Subtract sidebar width to prevent horizontal scroll default */
+    /* box-sizing: border-box;  */
 } 
+
+/* --- Special Case: Full Viewport Pages (e.g. Play Menu) --- */
+#default-page.full-viewport-view {
+    /* Reset positioning to fill the screen */
+    left: 0 !important;
+    top: 0 !important;
+    
+    /* Override sidebar JS toggling margins */
+    margin-left: 0 !important;
+    
+    /* Force full dimensions */
+    width: 100vw !important;
+    height: 100vh !important;
+    
+    /* Remove padding so the game background touches edges */
+    padding: 0 !important;
+    
+    /* Ensure it sits behind the sidebar (sidebar z-index is 1000) 
+       but on top of the body background */
+    z-index: 1; 
+    
+    /* Allow internal scrolling if content overflows */
+    overflow-y: auto;
+    overflow-x: hidden;
+}
