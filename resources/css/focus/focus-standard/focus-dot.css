@@ -1,28 +1,28 @@
 /* Pagination Dots (Tiny dots above the timer) */
-.dots {
+.focus-dots {
     display: flex;
     gap: 7px;
     margin-top: 25px;
     margin-bottom: 15px;
 }
 
-.dot {
+.focus-dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
 }
 
-.dot.active {
+.focus-dot.active {
     background-color: var(--stat-check);
     box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 3px var(--stat-check);
 }
 
-.dot.inactive {
+.focus-dot.inactive {
     background-color: #4b5563;
 }
 
 /* Blue Dot for break sessions */
-.dot.break-active {
+.focus-dot.break-active {
     background-color: var(--stat-blue); /* Uses your existing blue variable */
     box-shadow: 0 0 0 2px var(--bg-color), 0 0 0 3px var(--stat-blue);
 }
