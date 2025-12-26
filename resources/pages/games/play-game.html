@@ -2,201 +2,205 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Play - Kaizen RPG</title>
-	<style>
-		/* --- Scoped Styles for Game Main Menu --- */
-		.play-menu-container {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			height: 100%;
-			/* Ensures vertical centering within the content area */
-			min-height: 85vh;
-			animation: menuFadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
-			color: var(--text-primary);
-			/* Subtle blue glow in center */
-			background: radial-gradient(circle at center, rgba(28, 57, 142, 0.15) 0%, transparent 60%);
-		}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Play - Kaizen RPG</title>
+  <style>
+    /* --- Scoped Styles for Game Main Menu --- */
+    .play-menu-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      /* Ensures vertical centering within the content area */
+      min-height: 85vh;
+      animation: fadeIn 0.5s ease-out;
+      color: var(--text-primary); /* Subtle blue glow in center */
+      background: radial-gradient(circle at center, rgba(28, 57, 142, 0.15) 0%, transparent 60%);
+    }
 
-		@keyframes menuFadeIn {
-			from {
-				opacity: 0;
-				transform: scale(0.98);
-			}
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
 
-			to {
-				opacity: 1;
-				transform: scale(1);
-			}
-		}
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
 
-		/* Hero Title */
-		.title-group {
-			text-align: center;
-			margin-bottom: 60px;
-			width: 100%; /* added */
-			padding: 0 20px; /* added */
-			box-sizing: border-box; /* added */
-		}
+    /* Hero Title */
+    .title-group {
+      text-align: center;
+      margin-bottom: 60px;
+      width: 100%;
+      /* added */
+      padding: 0 20px;
+      /* added */
+      box-sizing: border-box;
+      /* added */
+    }
 
-		.game-logo {
-			font-size: clamp(3rem, 8vw, 6rem); /* added */
-			font-weight: 900;
-			text-transform: uppercase;
-			letter-spacing: 8px;
-			margin: 0;
-			line-height: 1.1;
-			/* Metal/Silver Gradient Text */
-			background: linear-gradient(180deg, #ffffff 0%, #9ca3af 100%);
-			background-clip: text;
-			-webkit-background-clip: text;
-			-webkit-text-fill-color: transparent;
-			/* Shadow for depth */
-			filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
-		}
+    .game-logo {
+      font-size: clamp(3rem, 8vw, 6rem);
+      /* added */
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 8px;
+      margin: 0;
+      line-height: 1.1;
+      /* Metal/Silver Gradient Text */
+      background: linear-gradient(180deg, #ffffff 0%, #9ca3af 100%);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      /* Shadow for depth */
+      filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.5));
+    }
 
-		.game-subtitle {
-			font-size: clamp(0.9rem, 2vw, 1.25rem); /* added */
-			color: var(--accent-active-text, #8EC5FF);
-			font-weight: 600;
-			letter-spacing: 6px;
-			text-transform: uppercase;
-			margin-top: 15px;
-			opacity: 0.9;
-			text-shadow: 0 0 10px rgba(28, 57, 142, 0.5);
-		}
+    .game-subtitle {
+      font-size: clamp(0.9rem, 2vw, 1.25rem);
+      /* added */
+      color: var(--accent-active-text, #8EC5FF);
+      font-weight: 600;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      margin-top: 15px;
+      opacity: 0.9;
+      text-shadow: 0 0 10px rgba(28, 57, 142, 0.5);
+    }
 
-		/* Menu List */
-		.menu-list {
-			display: flex;
-			flex-direction: column;
-			gap: 16px;
-			width: 100%;
-			max-width: 320px;
-		}
+    /* Menu List */
+    .menu-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      width: 100%;
+      max-width: 320px;
+    }
 
-		/* Menu Buttons */
-		.menu-btn {
-			position: relative;
-			background: rgba(31, 41, 55, 0.6);
-			/* Surface color transparent */
-			border: 1px solid var(--bg-hover, #3D3D3D);
-			color: var(--text-secondary, #9ca3af);
-			font-family: var(--font-main);
-			font-size: 1.1rem;
-			font-weight: 600;
-			text-transform: uppercase;
-			letter-spacing: 2px;
-			padding: 18px 0;
-			cursor: pointer;
-			transition: all 0.2s ease;
-			overflow: hidden;
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 12px;
-			border-radius: 4px;
-			/* Slight rounding */
-		}
+    /* Menu Buttons */
+    .menu-btn {
+      position: relative;
+      background: rgba(31, 41, 55, 0.6);
+      /* Surface color transparent */
+      border: 1px solid var(--bg-hover, #3D3D3D);
+      color: var(--text-secondary, #9ca3af);
+      font-family: var(--font-main);
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      padding: 18px 0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      border-radius: 4px;
+      /* Slight rounding */
+    }
 
-		/* Hover Effect: Left Bar & Glow */
-		.menu-btn::before {
-			content: '';
-			position: absolute;
-			top: 0;
-			left: 0;
-			bottom: 0;
-			width: 4px;
-			background-color: var(--accent-active-text, #8EC5FF);
-			transform: scaleY(0);
-			transition: transform 0.2s ease;
-		}
+    /* Hover Effect: Left Bar & Glow */
+    .menu-btn::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 4px;
+      background-color: var(--accent-active-text, #8EC5FF);
+      transform: scaleY(0);
+      transition: transform 0.2s ease;
+    }
 
-		.menu-btn:hover {
-			color: #fff;
-			background: var(--bg-hover, #3D3D3D);
-			border-color: var(--text-primary, #fff);
-			transform: translateX(5px);
-			box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-		}
+    .menu-btn:hover {
+      color: #fff;
+      background: var(--bg-hover, #3D3D3D);
+      border-color: var(--text-primary, #fff);
+      transform: translateX(5px);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
 
-		.menu-btn:hover::before {
-			transform: scaleY(1);
-		}
+    .menu-btn:hover::before {
+      transform: scaleY(1);
+    }
 
-		.menu-btn:active {
-			transform: translateX(5px) scale(0.98);
-		}
+    .menu-btn:active {
+      transform: translateX(5px) scale(0.98);
+    }
 
-		/* Primary Button (New Campaign) Specifics */
-		.menu-btn.primary {
-			color: #fff;
-			background: rgba(28, 57, 142, 0.4);
-			border-color: var(--accent-active-bg, #1C398E);
-		}
+    /* Primary Button (New Campaign) Specifics */
+    .menu-btn.primary {
+      color: #fff;
+      background: rgba(28, 57, 142, 0.4);
+      border-color: var(--accent-active-bg, #1C398E);
+    }
 
-		.menu-btn.primary:hover {
-			background: var(--accent-active-bg, #1C398E);
-			box-shadow: 0 0 25px rgba(28, 57, 142, 0.6);
-		}
+    .menu-btn.primary:hover {
+      background: var(--accent-active-bg, #1C398E);
+      box-shadow: 0 0 25px rgba(28, 57, 142, 0.6);
+    }
 
-		.menu-btn i {
-			font-size: 1rem;
-			opacity: 0.7;
-			transition: opacity 0.2s;
-		}
+    .menu-btn i {
+      font-size: 1rem;
+      opacity: 0.7;
+      transition: opacity 0.2s;
+    }
 
-		.menu-btn:hover i {
-			opacity: 1;
-		}
+    .menu-btn:hover i {
+      opacity: 1;
+    }
 
-		/* Footer / Version */
-		.version-badge {
-			margin-top: 80px;
-			font-size: 0.85rem;
-			color: var(--text-secondary);
-			opacity: 0.4;
-			font-family: monospace;
-		}
-	</style>
+    /* Footer / Version */
+    .version-badge {
+      margin-top: 80px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      opacity: 0.4;
+      font-family: monospace;
+    }
+  </style>
 </head>
 
 <body>
-	<div class="play-menu-container">
+  <div class="play-menu-container">
 
-		<div class="title-group">
-			<h1 class="game-logo">Kaizen RPG</h1>
-			<div class="game-subtitle">Productivity Evolved</div>
-		</div>
+    <div class="title-group">
+      <h1 class="game-logo">Kaizen RPG</h1>
+      <div class="game-subtitle">Productivity Evolved</div>
+    </div>
 
-		<div class="menu-list">
-			<!-- New Campaign: Intended to navigate to 'game-modes.html' -->
-			<button id="btn-new-campaign" class="menu-btn primary">
-				<i class="fa-solid fa-dragon"></i> New Campaign
-			</button>
+    <div class="menu-list">
+      <!-- New Campaign: Intended to navigate to 'game-modes.html' -->
+      <button id="btn-new-campaign" class="menu-btn primary">
+        <i class="fa-solid fa-dragon"></i> New Campaign
+      </button>
 
-			<!-- Load Game: Placeholder or Load Saves -->
-			<button id="btn-load-campaign" class="menu-btn">
-				<i class="fa-solid fa-floppy-disk"></i> Load Campaign
-			</button>
+      <!-- Load Game: Placeholder or Load Saves -->
+      <button id="btn-load-campaign" class="menu-btn">
+        <i class="fa-solid fa-floppy-disk"></i> Load Campaign
+      </button>
 
-			<!-- Mods: Intended to navigate to 'mods.html' -->
-			<button id="btn-mods" class="menu-btn">
-				<i class="fa-solid fa-puzzle-piece"></i> Mods
-			</button>
+      <!-- Mods: Intended to navigate to 'mods.html' -->
+      <button id="btn-mods" class="menu-btn">
+        <i class="fa-solid fa-puzzle-piece"></i> Mods
+      </button>
 
-			<!-- Settings: Intended to navigate to 'game-settings.html' -->
-			<button id="btn-game-settings" class="menu-btn">
-				<i class="fa-solid fa-wrench"></i> Config
-			</button>
-		</div>
+      <!-- Settings: Intended to navigate to 'game-settings.html' -->
+      <button id="btn-game-settings" class="menu-btn">
+        <i class="fa-solid fa-wrench"></i> Config
+      </button>
+    </div>
 
-		<div class="version-badge">Build v1.0.0-alpha</div>
+    <div class="version-badge">Build v1.0.0-alpha</div>
 
-	</div>
+  </div>
 </body>
 
 </html>
