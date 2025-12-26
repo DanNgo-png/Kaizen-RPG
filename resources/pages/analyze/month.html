@@ -5,361 +5,6 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Monthly Analytics - Kaizen RPG</title>
-	<style>
-		/* --- Scoped Styles for Month Analytics --- */
-		.month-container {
-			max-width: 1200px;
-			margin: 0 auto;
-			color: var(--text-primary, #fff);
-			font-family: var(--font-main, "Segoe UI", sans-serif);
-			animation: fadeIn 0.4s ease-out;
-			padding-bottom: 40px;
-			width: 100%;
-		}
-
-		@keyframes fadeIn {
-			from {
-				opacity: 0;
-				transform: translateY(-5px);
-			}
-
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-
-		/* Header */
-		.month-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 30px;
-			min-height: 40px;
-			flex-shrink: 0;
-		}
-
-		.month-header h2 {
-			font-size: 24px;
-			font-weight: 700;
-			margin: 0;
-			letter-spacing: 0.5px;
-			color: #fff;
-		}
-
-		.date-controls {
-			display: flex;
-			align-items: center;
-			gap: 12px;
-		}
-
-		.nav-btn {
-			background: transparent;
-			border: none;
-			color: var(--text-secondary, #9ca3af);
-			cursor: pointer;
-			font-size: 0.9rem;
-			transition: color 0.2s;
-			display: flex;
-			align-items: center;
-			gap: 5px;
-		}
-
-		.nav-btn:hover {
-			color: #fff;
-		}
-
-		.month-picker-wrapper {
-			position: relative;
-			background-color: var(--surface-color, #1f2937);
-			border: 1px solid var(--bg-hover, #374151);
-			border-radius: 6px;
-			padding: 6px 10px;
-			display: flex;
-			align-items: center;
-		}
-
-		.date-input {
-			background: transparent;
-			border: none;
-			color: #fff;
-			font-family: inherit;
-			font-size: 0.9rem;
-			outline: none;
-			cursor: pointer;
-		}
-
-		.date-input::-webkit-calendar-picker-indicator {
-			filter: invert(1);
-			cursor: pointer;
-		}
-
-		/* --- Top Section Grid --- */
-		.analytics-grid {
-			display: grid;
-			grid-template-columns: 1fr 2fr;
-			gap: 24px;
-			margin-bottom: 24px;
-		}
-
-		/* Card Base */
-		.a-card {
-			background-color: var(--surface-color, #1f2937);
-			border: 1px solid var(--bg-hover, #374151);
-			border-radius: 12px;
-			padding: 30px;
-			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-			position: relative;
-		}
-
-		/* Left Card: Summary */
-		.summary-card {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			align-items: center;
-			text-align: center;
-			gap: 25px;
-		}
-
-		.summary-title {
-			font-size: 1.1rem;
-			font-weight: 700;
-			color: #fff;
-			padding-bottom: 10px;
-			border-bottom: 2px solid var(--bg-hover, #374151);
-			width: 100%;
-			margin-bottom: 5px;
-		}
-
-		.kpi-group {
-			display: flex;
-			flex-direction: column;
-			gap: 5px;
-		}
-
-		.kpi-label {
-			color: var(--text-secondary, #9ca3af);
-			font-size: 0.95rem;
-			font-weight: 600;
-		}
-
-		.kpi-value {
-			font-size: 2.2rem;
-			font-weight: 700;
-			color: #fff;
-			line-height: 1.1;
-		}
-
-		.kpi-sub {
-			font-size: 0.85rem;
-			color: var(--text-secondary, #9ca3af);
-			opacity: 0.8;
-		}
-
-		/* Right Card: Donut Chart */
-		.donut-wrapper {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 60px;
-			height: 100%;
-		}
-
-		.donut-chart {
-			width: 180px;
-			height: 180px;
-			border-radius: 50%;
-			/* 85% Blue, 15% Purple */
-			background: conic-gradient(#8b5cf6 0% 15%, #2563eb 15% 100%);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			position: relative;
-		}
-
-		.donut-chart::after {
-			content: "";
-			position: absolute;
-			width: 90px;
-			height: 90px;
-			background-color: var(--surface-color, #1f2937);
-			border-radius: 50%;
-		}
-
-		.legend-col {
-			display: flex;
-			flex-direction: column;
-			gap: 15px;
-		}
-
-		.legend-row {
-			display: grid;
-			grid-template-columns: 20px 100px 80px 50px;
-			align-items: center;
-			padding-bottom: 5px;
-			border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-		}
-
-		.legend-dot {
-			width: 12px;
-			height: 12px;
-			border-radius: 50%;
-		}
-
-		.dot-blue {
-			background-color: #2563eb;
-		}
-
-		.dot-purple {
-			background-color: #8b5cf6;
-		}
-
-		.legend-name {
-			font-weight: 600;
-			font-size: 0.95rem;
-		}
-
-		.legend-time {
-			color: var(--text-secondary);
-			font-size: 0.95rem;
-			text-align: right;
-		}
-
-		.legend-perc {
-			font-weight: 700;
-			font-size: 0.95rem;
-			text-align: right;
-		}
-
-		/* --- Bottom Section: Monthly Trend Chart --- */
-		.bar-chart-container {
-			height: 280px;
-			position: relative;
-			margin-top: 20px;
-			padding-left: 40px;
-			/* Allow horizontal scroll if needed on small screens, but hide on large */
-			overflow-x: auto;
-		}
-
-		.bar-chart-container::-webkit-scrollbar {
-			height: 6px;
-		}
-
-		.bar-chart-container::-webkit-scrollbar-thumb {
-			background-color: var(--bg-hover);
-			border-radius: 3px;
-		}
-
-		/* Y-Axis Labels */
-		.y-axis {
-			position: absolute;
-			left: 0;
-			top: 0;
-			bottom: 40px;
-			/* Account for X labels */
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-			color: #6b7280;
-			font-size: 0.75rem;
-		}
-
-		/* Grid Lines */
-		.grid-line {
-			position: absolute;
-			left: 40px;
-			right: 0;
-			height: 1px;
-			background-color: rgba(255, 255, 255, 0.05);
-			pointer-events: none;
-		}
-
-		/* Bars Wrapper */
-		.bars-wrapper {
-			display: flex;
-			justify-content: space-between;
-			align-items: flex-end;
-			height: 100%;
-			padding-bottom: 30px;
-			/* Space for X-axis labels */
-			padding-top: 10px;
-			padding-right: 10px;
-			min-width: 100%;
-			/* Ensure it fills space */
-		}
-
-		.bar-group {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			flex: 1;
-			/* Distribute space evenly */
-			position: relative;
-			height: 100%;
-			justify-content: flex-end;
-			min-width: 20px;
-			/* Minimum width per day */
-		}
-
-		.bar {
-			width: 12px;
-			/* Thinner bars for month view */
-			background-color: #2563eb;
-			border-radius: 2px 2px 0 0;
-			transition: height 0.5s ease-out, background-color 0.2s;
-			position: relative;
-			min-height: 1px;
-		}
-
-		.bar:hover {
-			background-color: #60a5fa;
-			/* Lighter blue on hover */
-		}
-
-		/* Bar Tooltip (Simple CSS hover) */
-		.bar:hover::after {
-			content: attr(data-value);
-			position: absolute;
-			bottom: 100%;
-			left: 50%;
-			transform: translateX(-50%);
-			background-color: #111827;
-			padding: 4px 8px;
-			border-radius: 4px;
-			font-size: 0.75rem;
-			white-space: nowrap;
-			margin-bottom: 5px;
-			border: 1px solid #374151;
-			z-index: 10;
-		}
-
-		.x-label {
-			margin-top: 8px;
-			text-align: center;
-			color: #6b7280;
-			font-size: 0.7rem;
-			position: absolute;
-			bottom: 0;
-			width: 100%;
-		}
-
-		/* Highlight specific bars (e.g. weekends or milestones) if needed */
-		.bar.weekend {
-			opacity: 0.6;
-		}
-
-		@media (max-width: 900px) {
-			.analytics-grid {
-				grid-template-columns: 1fr;
-			}
-
-			.donut-wrapper {
-				flex-direction: column;
-				gap: 30px;
-			}
-		}
-	</style>
 </head>
 
 <body>
@@ -368,57 +13,57 @@
 		<!-- Header -->
 		<header class="month-header">
 			<h2>December 2025</h2>
-			<div class="date-controls">
-				<button class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+			<div class="month-date-controls">
+				<button class="month-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
 				<div class="month-picker-wrapper">
 					<!-- input type="month" is supported in modern browsers -->
-					<input type="month" class="date-input" value="2025-12">
+					<input type="month" class="month-date-input" value="2025-12">
 				</div>
-				<button class="nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+				<button class="month-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
 			</div>
 		</header>
 
 		<!-- Top Grid -->
-		<div class="analytics-grid">
+		<div class="month-analytics-grid">
 
 			<!-- Summary Card -->
-			<div class="a-card summary-card">
-				<div class="summary-title">Monthly Summary</div>
+			<div class="month-card month-summary-card">
+				<div class="month-summary-title">Monthly Summary</div>
 
-				<div class="kpi-group">
-					<span class="kpi-label">Total Focus</span>
-					<span class="kpi-value">45h 12m</span>
-					<span class="kpi-sub">Avg 1.5h / day</span>
+				<div class="month-kpi-group">
+					<span class="month-kpi-label">Total Focus</span>
+					<span class="month-kpi-value">45h 12m</span>
+					<span class="month-kpi-sub">Avg 1.5h / day</span>
 				</div>
 
-				<div class="kpi-group">
-					<span class="kpi-label">Sessions</span>
-					<span class="kpi-value">98</span>
+				<div class="month-kpi-group">
+					<span class="month-kpi-label">Sessions</span>
+					<span class="month-kpi-value">98</span>
 				</div>
 
-				<div class="kpi-group">
-					<span class="kpi-label">Most Active Day</span>
-					<span class="kpi-value" style="font-size: 1.5rem;">Dec 14</span>
+				<div class="month-kpi-group">
+					<span class="month-kpi-label">Most Active Day</span>
+					<span class="month-kpi-value" style="font-size: 1.5rem;">Dec 14</span>
 				</div>
 			</div>
 
 			<!-- Donut Chart Card -->
-			<div class="a-card">
-				<div class="donut-wrapper">
-					<div class="donut-chart"></div>
+			<div class="month-card">
+				<div class="month-donut-wrapper">
+					<div class="month-donut-chart"></div>
 
-					<div class="legend-col">
-						<div class="legend-row">
-							<div class="legend-dot dot-blue"></div>
-							<span class="legend-name">College</span>
-							<span class="legend-time">38h 20m</span>
-							<span class="legend-perc">85%</span>
+					<div class="month-legend-col">
+						<div class="month-legend-row">
+							<div class="month-legend-dot month-dot-blue"></div>
+							<span class="month-legend-name">College</span>
+							<span class="month-legend-time">38h 20m</span>
+							<span class="month-legend-perc">85%</span>
 						</div>
-						<div class="legend-row">
-							<div class="legend-dot dot-purple"></div>
-							<span class="legend-name">RPG Dev</span>
-							<span class="legend-time">6h 52m</span>
-							<span class="legend-perc">15%</span>
+						<div class="month-legend-row">
+							<div class="month-legend-dot month-dot-purple"></div>
+							<span class="month-legend-name">RPG Dev</span>
+							<span class="month-legend-time">6h 52m</span>
+							<span class="month-legend-perc">15%</span>
 						</div>
 					</div>
 				</div>
@@ -427,12 +72,12 @@
 		</div>
 
 		<!-- Bottom Bar Chart Card -->
-		<div class="a-card">
-			<div class="summary-title" style="border:none; text-align: left; margin-bottom: 0;">Daily Trend</div>
+		<div class="month-card">
+			<div class="month-summary-title" style="border:none; text-align: left; margin-bottom: 0;">Daily Trend</div>
 
-			<div class="bar-chart-container">
+			<div class="month-chart-container">
 				<!-- Y-Axis Labels -->
-				<div class="y-axis">
+				<div class="month-y-axis">
 					<span>4h</span>
 					<span>3h</span>
 					<span>2h</span>
@@ -441,126 +86,126 @@
 				</div>
 
 				<!-- Horizontal Grid Lines -->
-				<div class="grid-line" style="top: 10px;"></div>
-				<div class="grid-line" style="top: 25%;"></div>
-				<div class="grid-line" style="top: 50%;"></div>
-				<div class="grid-line" style="top: 75%;"></div>
-				<div class="grid-line" style="bottom: 30px;"></div>
+				<div class="month-grid-line" style="top: 10px;"></div>
+				<div class="month-grid-line" style="top: 25%;"></div>
+				<div class="month-grid-line" style="top: 50%;"></div>
+				<div class="month-grid-line" style="top: 75%;"></div>
+				<div class="month-grid-line" style="bottom: 30px;"></div>
 
 				<!-- Bars (31 Days) -->
-				<div class="bars-wrapper">
+				<div class="month-bars-wrapper">
 
 					<!-- Simulating a month of data -->
 					<!-- We use CSS variables or inline styles for height % based on 4h max -->
 
 					<!-- Week 1 -->
-					<div class="bar-group">
-						<div class="bar" style="height: 10%;" data-value="24m"></div>
-						<div class="x-label">1</div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 10%;" data-value="24m"></div>
+						<div class="month-x-label">1</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 5%;" data-value="12m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 5%;" data-value="12m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 0%; background: #374151;" data-value="0m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 40%;" data-value="1h 36m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 40%;" data-value="1h 36m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 20%;" data-value="48m"></div>
-						<div class="x-label">5</div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 20%;" data-value="48m"></div>
+						<div class="month-x-label">5</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 60%;" data-value="2h 24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 60%;" data-value="2h 24m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 10%;" data-value="24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 10%;" data-value="24m"></div>
 					</div>
 
 					<!-- Week 2 -->
-					<div class="bar-group">
-						<div class="bar" style="height: 80%;" data-value="3h 12m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 80%;" data-value="3h 12m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 50%;" data-value="2h"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 50%;" data-value="2h"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 30%;" data-value="1h 12m"></div>
-						<div class="x-label">10</div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 30%;" data-value="1h 12m"></div>
+						<div class="month-x-label">10</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 0%; background: #374151;" data-value="0m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 45%;" data-value="1h 48m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 45%;" data-value="1h 48m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 90%;" data-value="3h 36m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 90%;" data-value="3h 36m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 100%;" data-value="4h"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 100%;" data-value="4h"></div>
 					</div>
 
 					<!-- Week 3 -->
-					<div class="bar-group">
-						<div class="bar" style="height: 20%;" data-value="48m"></div>
-						<div class="x-label">15</div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 20%;" data-value="48m"></div>
+						<div class="month-x-label">15</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 10%;" data-value="24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 10%;" data-value="24m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 5%;" data-value="12m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 5%;" data-value="12m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 0%; background: #374151;" data-value="0m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 60%;" data-value="2h 24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 60%;" data-value="2h 24m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 70%;" data-value="2h 48m"></div>
-						<div class="x-label">20</div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 70%;" data-value="2h 48m"></div>
+						<div class="month-x-label">20</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 15%;" data-value="36m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 15%;" data-value="36m"></div>
 					</div>
 
 					<!-- Week 4 -->
-					<div class="bar-group">
-						<div class="bar" style="height: 35%;" data-value="1h 24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 35%;" data-value="1h 24m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 40%;" data-value="1h 36m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 40%;" data-value="1h 36m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 25%;" data-value="1h"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 25%;" data-value="1h"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 55%;" data-value="2h 12m"></div>
-						<div class="x-label">25</div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 55%;" data-value="2h 12m"></div>
+						<div class="month-x-label">25</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 85%;" data-value="3h 24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 85%;" data-value="3h 24m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar weekend" style="height: 40%;" data-value="1h 36m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar weekend" style="height: 40%;" data-value="1h 36m"></div>
 					</div>
 
 					<!-- Week 5 -->
-					<div class="bar-group">
-						<div class="bar" style="height: 20%;" data-value="48m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 20%;" data-value="48m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 10%;" data-value="24m"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 10%;" data-value="24m"></div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 0%; background: #374151;" data-value="0m"></div>
-						<div class="x-label">30</div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
+						<div class="month-x-label">30</div>
 					</div>
-					<div class="bar-group">
-						<div class="bar" style="height: 50%;" data-value="2h"></div>
+					<div class="month-bar-group">
+						<div class="month-bar" style="height: 50%;" data-value="2h"></div>
 					</div>
 
 				</div>

@@ -5,319 +5,6 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<title>Day Analytics - Kaizen RPG</title>
-	<style>
-		/* --- Scoped Styles for Day Analytics --- */
-		.day-container {
-			max-width: 1600px;
-			margin: 0 auto;
-			color: var(--text-primary, #fff);
-			font-family: var(--font-main, "Segoe UI", sans-serif);
-			animation: fadeIn 0.4s ease-out;
-			padding-bottom: 40px;
-			width: 100%;
-			overflow: hidden;
-		}
-
-		@keyframes fadeIn {
-			from {
-				opacity: 0;
-				transform: translateY(-10px);
-			}
-
-			to {
-				opacity: 1;
-				transform: translateY(0);
-			}
-		}
-
-		/* Header */
-		.day-header {
-			display: flex;
-			justify-content: space-between;
-			align-items: center;
-			margin-bottom: 30px;
-		}
-
-		.day-header h2 {
-			font-size: 24px;
-			font-weight: 700;
-			margin: 0;
-			letter-spacing: 0.5px;
-		}
-
-		.date-controls {
-			display: flex;
-			align-items: center;
-			gap: 8px;
-		}
-
-		.nav-btn {
-			background: transparent;
-			border: none;
-			color: var(--text-secondary, #9ca3af);
-			cursor: pointer;
-			font-size: 0.9rem;
-			transition: color 0.2s;
-			display: flex;
-			align-items: center;
-			gap: 5px;
-		}
-
-		.nav-btn:hover {
-			color: #fff;
-		}
-
-		.date-picker-wrapper {
-			position: relative;
-			background-color: var(--surface-color, #1f2937);
-			border: 1px solid var(--bg-hover, #374151);
-			border-radius: 6px;
-			padding: 6px 10px;
-		}
-
-		.date-input {
-			background: transparent;
-			border: none;
-			color: #fff;
-			font-family: inherit;
-			font-size: 0.9rem;
-			outline: none;
-			cursor: pointer;
-		}
-
-		/* Invert calendar icon for dark mode */
-		.date-input::-webkit-calendar-picker-indicator {
-			filter: invert(1);
-			cursor: pointer;
-		}
-
-		/* Layout Grid */
-		.analytics-grid {
-			display: grid;
-			grid-template-columns: 1fr 2fr;
-			/* Left col narrower than Right col */
-			gap: 24px;
-			margin-bottom: 24px;
-		}
-
-		.left-column {
-			display: flex;
-			flex-direction: column;
-			gap: 24px;
-		}
-
-		/* Card Styles */
-		.a-card {
-			background-color: var(--surface-color, #1f2937);
-			border: 1px solid var(--bg-hover, #374151);
-			border-radius: 12px;
-			padding: 24px;
-			box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-			position: relative;
-		}
-
-		.card-header {
-			display: flex;
-			flex-direction: column;
-			gap: 5px;
-			margin-bottom: 20px;
-		}
-
-		.card-title {
-			font-size: 1.1rem;
-			font-weight: 700;
-			display: flex;
-			align-items: center;
-			gap: 10px;
-		}
-
-		.card-subtitle {
-			font-size: 0.9rem;
-			color: var(--text-secondary, #9ca3af);
-		}
-
-		/* KPI Cards (Small) */
-		.kpi-content {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			justify-content: center;
-			padding: 10px 0;
-		}
-
-		.kpi-label {
-			color: var(--text-secondary, #9ca3af);
-			font-size: 0.9rem;
-			margin-bottom: 8px;
-		}
-
-		.kpi-value {
-			font-size: 2rem;
-			font-weight: 700;
-			color: #fff;
-		}
-
-		/* Tag Chart Section */
-		.chart-flex {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			gap: 60px;
-			height: 100%;
-			padding-top: 10px;
-		}
-
-		/* CSS Donut Chart */
-		.donut-chart {
-			width: 180px;
-			height: 180px;
-			border-radius: 50%;
-			/* 100% Blue */
-			background: conic-gradient(#2563eb 0% 100%, transparent 0);
-			display: flex;
-			align-items: center;
-			justify-content: center;
-		}
-
-		.donut-hole {
-			width: 90px;
-			height: 90px;
-			background-color: var(--surface-color, #1f2937);
-			border-radius: 50%;
-		}
-
-		.legend-row {
-			display: grid;
-			grid-template-columns: 20px 100px 80px 50px;
-			align-items: center;
-			border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-			padding: 12px 0;
-		}
-
-		.legend-dot {
-			width: 10px;
-			height: 10px;
-			border-radius: 50%;
-			background-color: #2563eb;
-		}
-
-		.legend-name {
-			font-weight: 600;
-			font-size: 0.9rem;
-		}
-
-		.legend-time {
-			color: var(--text-secondary);
-			font-size: 0.9rem;
-			text-align: right;
-		}
-
-		.legend-perc {
-			font-weight: 700;
-			font-size: 0.9rem;
-			text-align: right;
-		}
-
-		/* Timeline Section */
-		.timeline-container {
-			position: relative;
-			margin-top: 40px;
-			/* Space for labels */
-			height: 80px;
-			display: flex;
-			align-items: flex-end;
-		}
-
-		/* The horizontal axis line */
-		.timeline-axis {
-			position: absolute;
-			bottom: 25px;
-			left: 0;
-			right: 0;
-			height: 2px;
-			background-color: #4b5563;
-		}
-
-		/* Ticks Wrapper */
-		.timeline-ticks {
-			display: flex;
-			justify-content: space-between;
-			width: 100%;
-			position: relative;
-			z-index: 1;
-		}
-
-		.tick {
-			display: flex;
-			flex-direction: column;
-			align-items: center;
-			gap: 10px;
-			position: relative;
-		}
-
-		/* The vertical line */
-		.tick::before {
-			content: '';
-			width: 1px;
-			height: 15px;
-			/* Height of tick mark */
-			background-color: #6b7280;
-			margin-bottom: -25px;
-			/* Push it down to intersect the axis */
-		}
-
-		.tick-label {
-			font-size: 0.75rem;
-			color: #6b7280;
-			margin-top: 35px;
-			/* Push label below axis */
-		}
-
-		/* Session Blocks */
-		.session-block {
-			position: absolute;
-			bottom: 26px;
-			/* Sit on top of axis */
-			height: 40px;
-			background-color: #2563eb;
-			/* Blue */
-			border-radius: 4px;
-			opacity: 0.8;
-			border: 1px solid #60a5fa;
-			/* Positioning would be calculated by JS in real app */
-			/* For demo (10PM to 12PM roughly) */
-			right: 0;
-			width: 18%;
-			/* Approx width for 2 hours out of 11 shown */
-		}
-
-		.timeline-legend {
-			display: flex;
-			justify-content: center;
-			gap: 10px;
-			margin-top: 20px;
-			font-size: 0.8rem;
-			color: var(--text-secondary);
-		}
-
-		.legend-marker {
-			width: 10px;
-			height: 10px;
-			border-radius: 50%;
-			background-color: #2563eb;
-		}
-
-		@media (max-width: 900px) {
-			.analytics-grid {
-				grid-template-columns: 1fr;
-			}
-
-			.chart-flex {
-				flex-direction: column;
-				gap: 30px;
-			}
-		}
-	</style>
 </head>
 
 <body>
@@ -326,67 +13,67 @@
 		<!-- Header -->
 		<header class="day-header">
 			<h2>Saturday, December 6</h2>
-			<div class="date-controls">
-				<button class="nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
-				<div class="date-picker-wrapper">
-					<input type="date" class="date-input" value="2025-12-06">
+			<div class="day-date-controls">
+				<button class="day-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+				<div class="day-picker-wrapper">
+					<input type="date" class="day-date-input" value="2025-12-06">
 				</div>
-				<button class="nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+				<button class="day-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
 			</div>
 		</header>
 
 		<!-- Main Grid -->
-		<div class="analytics-grid">
+		<div class="day-analytics-grid">
 
 			<!-- LEFT COLUMN (Stats) -->
-			<div class="left-column">
+			<div class="day-left-column">
 
 				<!-- Focus Time Card -->
-				<div class="a-card">
-					<div class="card-title" style="color: #60a5fa;">
+				<div class="day-card">
+					<div class="day-card-title" style="color: #60a5fa;">
 						<i class="fa-regular fa-clock"></i> Focus Time
 					</div>
-					<div class="kpi-content">
-						<span class="kpi-label">Total Minutes</span>
-						<span class="kpi-value">2h 9m</span>
+					<div class="day-kpi-content">
+						<span class="day-kpi-label">Total Minutes</span>
+						<span class="day-kpi-value">2h 9m</span>
 					</div>
 				</div>
 
 				<!-- Focus Sessions Card -->
-				<div class="a-card">
-					<div class="card-title" style="color: #60a5fa;">
+				<div class="day-card">
+					<div class="day-card-title" style="color: #60a5fa;">
 						<i class="fa-solid fa-chart-column"></i> Focus Sessions
 					</div>
-					<div class="kpi-content">
-						<span class="kpi-label">Total Sessions</span>
-						<span class="kpi-value">3</span>
+					<div class="day-kpi-content">
+						<span class="day-kpi-label">Total Sessions</span>
+						<span class="day-kpi-value">3</span>
 					</div>
 				</div>
 
 			</div>
 
 			<!-- RIGHT COLUMN (Chart) -->
-			<div class="a-card">
-				<div class="card-header">
-					<div class="card-title" style="color: #60a5fa;">
+			<div class="day-card">
+				<div class="day-card-header">
+					<div class="day-card-title" style="color: #60a5fa;">
 						<i class="fa-solid fa-tag"></i> Focus Time by Tag
 					</div>
-					<div class="card-subtitle">See how you spent your focus time across different tags</div>
+					<div class="day-card-subtitle">See how you spent your focus time across different tags</div>
 				</div>
 
-				<div class="chart-flex">
+				<div class="day-chart-flex">
 					<!-- Donut -->
-					<div class="donut-chart">
-						<div class="donut-hole"></div>
+					<div class="day-donut-chart">
+						<div class="day-donut-hole"></div>
 					</div>
 
 					<!-- Legend -->
-					<div class="chart-legend-container">
-						<div class="legend-row">
-							<div class="legend-dot"></div>
-							<span class="legend-name">College</span>
-							<span class="legend-time">2h 9m</span>
-							<span class="legend-perc">100%</span>
+					<div class="day-chart-legend-container">
+						<div class="day-legend-row">
+							<div class="day-legend-dot"></div>
+							<span class="day-legend-name">College</span>
+							<span class="day-legend-time">2h 9m</span>
+							<span class="day-legend-perc">100%</span>
 						</div>
 					</div>
 				</div>
@@ -395,42 +82,42 @@
 		</div>
 
 		<!-- BOTTOM ROW (Timeline) -->
-		<div class="a-card">
-			<div class="card-title" style="color: #60a5fa;">
+		<div class="day-card">
+			<div class="day-card-title" style="color: #60a5fa;">
 				<i class="fa-regular fa-calendar-check"></i> Daily Timeline
 			</div>
 
-			<div class="timeline-container">
+			<div class="day-timeline-container">
 				<!-- Visual Session Block (Static Demo: 10PM - 12PM) -->
 				<!-- Also small block at 3PM and 5PM to match screenshot "blips" -->
-				<div class="session-block" style="left: 27%; width: 5px; height: 30px;"></div> <!-- 3pm blip -->
-				<div class="session-block" style="left: 45%; width: 5px; height: 30px;"></div> <!-- 5pm blip -->
-				<div class="session-block"></div> <!-- The big block at the end -->
+				<div class="day-session-block" style="left: 27%; width: 5px; height: 30px;"></div> <!-- 3pm blip -->
+				<div class="day-session-block" style="left: 45%; width: 5px; height: 30px;"></div> <!-- 5pm blip -->
+				<div class="day-session-block"></div> <!-- The big block at the end -->
 
 				<!-- The Axis Line -->
-				<div class="timeline-axis"></div>
+				<div class="day-timeline-axis"></div>
 
 				<!-- Ticks -->
-				<div class="timeline-ticks">
+				<div class="day-timeline-ticks">
 					<!-- Generating ticks 1PM to 12PM -->
-					<div class="tick"><span class="tick-label">1PM</span></div>
-					<div class="tick"><span class="tick-label">2PM</span></div>
-					<div class="tick"><span class="tick-label">3PM</span></div>
-					<div class="tick"><span class="tick-label">4PM</span></div>
-					<div class="tick"><span class="tick-label">5PM</span></div>
-					<div class="tick"><span class="tick-label">6PM</span></div>
-					<div class="tick"><span class="tick-label">7PM</span></div>
-					<div class="tick"><span class="tick-label">8PM</span></div>
-					<div class="tick"><span class="tick-label">9PM</span></div>
-					<div class="tick"><span class="tick-label">10PM</span></div>
-					<div class="tick"><span class="tick-label">11PM</span></div>
-					<div class="tick"><span class="tick-label">12PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">1PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">2PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">3PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">4PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">5PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">6PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">7PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">8PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">9PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">10PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">11PM</span></div>
+					<div class="day-tick"><span class="day-tick-label">12PM</span></div>
 				</div>
 			</div>
 
-			<div class="timeline-legend">
+			<div class="day-timeline-legend">
 				<div style="display: flex; align-items: center; gap: 6px;">
-					<div class="legend-marker"></div>
+					<div class="day-legend-marker"></div>
 					<span>College</span>
 				</div>
 			</div>
