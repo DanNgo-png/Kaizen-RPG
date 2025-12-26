@@ -18,5 +18,6 @@ dist/Kaizen-RPG/.tmp/window_state.config.json
 window_state.config.json
 node_modules
 temp_example
+backup_files
 *.db-shm
 *.db-wal
