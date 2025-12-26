@@ -2,232 +2,244 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Main Settings - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Main Settings - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="main-settings-container">
-		<div class="ms-header">
-			<div class="ms-icon-box">
-				<i class="fa-solid fa-gear"></i>
-			</div>
-			<div class="ms-title">
-				<h2>Application Settings</h2>
-				<p>Configure general preferences, appearance, and data management.</p>
-			</div>
-		</div>
+  <div class="main-settings-container">
+    <div class="ms-header">
+      <div class="ms-icon-box">
+        <i class="fa-solid fa-gear"></i>
+      </div>
+      <div class="ms-title">
+        <h2>Application Settings</h2>
+        <p>Configure general preferences, appearance, and data management.</p>
+      </div>
+    </div>
 
-		<div class="ms-grid">
+    <div class="ms-grid">
 
-			<!-- LEFT COLUMN -->
-			<div class="ms-column">
+      <!-- LEFT COLUMN -->
+      <div class="ms-column">
 
-				<!-- Appearance -->
-				<div class="ms-card">
-					<div class="ms-card-header">
-						<i class="fa-solid fa-palette"></i> Appearance
-					</div>
+        <!-- Appearance -->
+        <div class="ms-card">
+          <div class="ms-card-header">
+            <i class="fa-solid fa-palette"></i> Appearance
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Theme</span>
-							<span class="ms-desc">Select application color scheme</span>
-						</div>
-						<select class="ms-select">
-							<option value="system">System Default</option>
-							<option value="dark" selected>Dark Mode</option>
-							<option value="light">Light Mode</option>
-						</select>
-					</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Theme</span>
+              <span class="ms-desc">Select application color scheme</span>
+            </div>
+            <select class="ms-select">
+              <option value="system">System Default</option>
+              <option value="dark" selected>Dark Mode</option>
+              <option value="light">Light Mode</option>
+            </select>
+          </div>
 
-					<!-- Font Family -->
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Font Family</span>
-							<!-- <span class="ms-desc">Customize the application text style</span> -->
-							<span class="ms-desc">Import .ttf files to /resources/assets/fonts/</span>
-						</div>
-						<div style="display: flex; gap: 10px;">
-							<button id="btn-open-fonts" class="ms-btn" title="Open Fonts Folder">
-								<i class="fa-regular fa-folder-open"></i>
-							</button>
-							<select id="setting-font-family" class="ms-select" style="width: 200px;">
-								<optgroup label="Standard">
-									<option value="segoe" selected>Segoe UI (Default)</option>
-									<option value="arial">Arial</option>
-									<option value="inter">Inter (dont' have it)</option>
-									<option value="roboto">Roboto</option>
-									<option value="system">System Sans-Serif (dont' have it)</option>
-									<option value="mono">Monospace</option>
-								</optgroup>
-								<!-- Custom Group will be injected by JS -->
-							</select>
-						</div>
-					</div>
+          <!-- Font Family -->
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Font Family</span>
+              <!-- <span class="ms-desc">Customize the application text style</span> -->
+              <span class="ms-desc">Import .ttf files to /resources/assets/fonts/</span>
+            </div>
+            <div style="display: flex; gap: 10px;">
+              <button id="btn-open-fonts" class="ms-btn" title="Open Fonts Folder">
+                <i class="fa-regular fa-folder-open"></i>
+              </button>
+              <select id="setting-font-family" class="ms-select" style="width: 200px;">
+                <optgroup label="Standard">
+                  <option value="segoe" selected>Segoe UI (Default)</option>
+                  <option value="arial">Arial</option>
+                  <option value="inter">Inter (dont' have it)</option>
+                  <option value="roboto">Roboto</option>
+                  <option value="system">System Sans-Serif (dont' have it)</option>
+                  <option value="mono">Monospace</option>
+                </optgroup>
+                <!-- Custom Group will be injected by JS -->
+              </select>
+            </div>
+          </div>
 
-					<!-- Font Size -->
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Font Size</span>
-							<span class="ms-desc">Adjust global text scaling</span>
-						</div>
-						<select class="ms-select">
-							<option value="sm">Small</option>
-							<option value="md" selected>Medium</option>
-							<option value="lg">Large</option>
-							<option value="xl">Extra Large</option>
-						</select>
-					</div>
+          <!-- Font Size -->
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Font Size</span>
+              <span class="ms-desc">Adjust global text scaling</span>
+            </div>
+            <select class="ms-select">
+              <option value="sm">Small</option>
+              <option value="md" selected>Medium</option>
+              <option value="lg">Large</option>
+              <option value="xl">Extra Large</option>
+            </select>
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Sidebar Behavior</span>
-							<span class="ms-desc">Auto-collapse sidebar on small screens</span>
-						</div>
-						<label class="switch">
-							<input type="checkbox" checked>
-							<span class="slider round"></span>
-						</label>
-					</div>
-				</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Sidebar Behavior</span>
+              <span class="ms-desc">Auto-collapse sidebar on small screens</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
 
-				<!-- System -->
-				<div class="ms-card">
-					<div class="ms-card-header">
-						<i class="fa-solid fa-desktop"></i> System
-					</div>
+        <!-- System -->
+        <div class="ms-card">
+          <div class="ms-card-header">
+            <i class="fa-solid fa-desktop"></i> System
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Run on Startup</span>
-							<span class="ms-desc">Launch Kaizen RPG when computer starts</span>
-						</div>
-						<label class="switch">
-							<input type="checkbox">
-							<span class="slider round"></span>
-						</label>
-					</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Run on Startup</span>
+              <span class="ms-desc">Launch Kaizen RPG when computer starts</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>
 
-					<!-- NEW: Enable Custom Startup Page -->
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Custom Startup Page</span>
-							<span class="ms-desc">Load a specific view on launch</span>
-						</div>
-						<label class="switch">
-							<input type="checkbox">
-							<span class="slider round"></span>
-						</label>
-					</div>
+          <!-- NEW: Enable Custom Startup Page -->
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Custom Startup Page</span>
+              <span class="ms-desc">Load a specific view on launch</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox">
+              <span class="slider round"></span>
+            </label>
+          </div>
 
-					<!-- NEW: Startup Page Selector -->
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Startup View</span>
-							<span class="ms-desc">Select default screen</span>
-						</div>
-						<select class="ms-select">
-							<option value="overview">Dashboard Overview</option>
-							<option value="focus">Focus Timer</option>
-							<option value="todo">Todo Lists</option>
-							<option value="kanban">Kanban Board</option>
-							<option value="game">Game Menu</option>
-							<option value="empire">Empire Builder</option>
-						</select>
-					</div>
+          <!-- NEW: Startup Page Selector -->
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Startup View</span>
+              <span class="ms-desc">Select default screen</span>
+            </div>
+            <select class="ms-select">
+              <option value="overview">Dashboard Overview</option>
+              <option value="focus">Focus Timer</option>
+              <option value="todo">Todo Lists</option>
+              <option value="kanban">Kanban Board</option>
+              <option value="game">Game Menu</option>
+              <option value="empire">Empire Builder</option>
+            </select>
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Close to Tray</span>
-							<span class="ms-desc">Keep running in background when closed</span>
-						</div>
-						<label class="switch">
-							<input type="checkbox" checked>
-							<span class="slider round"></span>
-						</label>
-					</div>
-				</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Close to Tray</span>
+              <span class="ms-desc">Keep running in background when closed</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" checked>
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
 
-			</div>
+      </div>
 
-			<!-- RIGHT COLUMN -->
-			<div class="ms-column">
+      <!-- RIGHT COLUMN -->
+      <div class="ms-column">
 
-				<!-- Data Management -->
-				<div class="ms-card">
-					<div class="ms-card-header">
-						<i class="fa-solid fa-database"></i> Data & Storage
-					</div>
+        <!-- Data Management -->
+        <div class="ms-card">
+          <div class="ms-card-header">
+            <i class="fa-solid fa-database"></i> Data & Storage
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Data Location</span>
-							<span class="ms-desc">/data/saves/</span>
-						</div>
-						<button class="ms-btn"><i class="fa-regular fa-folder-open"></i> Open Folder</button>
-					</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Data Location</span>
+              <span class="ms-desc">/data/saves/</span>
+            </div>
+            <button class="ms-btn"><i class="fa-regular fa-folder-open"></i> Open Folder</button>
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Backup Data</span>
-							<span class="ms-desc">Create a local snapshot of your progress</span>
-						</div>
-						<button class="ms-btn"><i class="fa-solid fa-download"></i> Backup Now</button>
-					</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Backup Data</span>
+              <span class="ms-desc">Create a local snapshot of your progress</span>
+            </div>
+            <button class="ms-btn"><i class="fa-solid fa-download"></i> Backup Now</button>
+          </div>
 
-					<!-- NEW: Reset Option -->
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label" style="color: #f87171;">Reset to Defaults</span>
-							<span class="ms-desc">Restore original application configuration</span>
-						</div>
-						<button class="ms-btn" style="border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; background: rgba(239, 68, 68, 0.1);">
-                            <i class="fa-solid fa-rotate-left"></i> Reset
-                        </button>
-					</div>
-				</div>
+          <!-- Reset Option -->
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label" style="color: #f87171;">Reset to Defaults</span>
+              <span class="ms-desc">Restore original application configuration</span>
+            </div>
+            <button class="ms-btn"
+              style="border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; background: rgba(239, 68, 68, 0.1);">
+              <i class="fa-solid fa-rotate-left"></i> Reset
+            </button>
+          </div>
 
-				<!-- Updates & About -->
-				<div class="ms-card">
-					<div class="ms-card-header">
-						<i class="fa-solid fa-circle-info"></i> About
-					</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label" style="color: #f87171;">Reset Game Data</span>
+              <span class="ms-desc">Permanently delete all save files and progress</span>
+            </div>
+            <button id="btn-reset-game-data" class="ms-btn"
+              style="border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; background: rgba(239, 68, 68, 0.1);">
+              <i class="fa-solid fa-skull"></i> Wipe Data
+            </button>
+          </div>
+        </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Current Version</span>
-							<span class="ms-desc">Checking for updates...</span>
-						</div>
-						<div class="version-badge">v1.0.0-alpha</div>
-					</div>
+        <!-- Updates & About -->
+        <div class="ms-card">
+          <div class="ms-card-header">
+            <i class="fa-solid fa-circle-info"></i> About
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Changelog</span>
-							<span class="ms-desc">View recent changes and features</span>
-						</div>
-						<button class="ms-btn">View Notes</button>
-					</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Current Version</span>
+              <span class="ms-desc">Checking for updates...</span>
+            </div>
+            <div class="version-badge">v1.0.0-alpha</div>
+          </div>
 
-					<div class="ms-row">
-						<div class="ms-info">
-							<span class="ms-label">Check for Updates</span>
-						</div>
-						<button class="ms-btn ms-btn-primary">Check Now</button>
-					</div>
-				</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Changelog</span>
+              <span class="ms-desc">View recent changes and features</span>
+            </div>
+            <button class="ms-btn">View Notes</button>
+          </div>
 
-			</div>
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Check for Updates</span>
+            </div>
+            <button class="ms-btn ms-btn-primary">Check Now</button>
+          </div>
+        </div>
 
-		</div>
+      </div>
 
-		<div class="about-footer">
-			<p>Kaizen RPG &copy; 2025. Built with Neutralinojs.</p>
-		</div>
+    </div>
 
-	</div>
+    <div class="about-footer">
+      <p>Kaizen RPG &copy; 2025. Built with Neutralinojs.</p>
+    </div>
+
+  </div>
 </body>
 
 </html>
