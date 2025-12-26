@@ -2,18 +2,18 @@ import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 
 // UI Routers
-import { handleDropdowns } from './js/dropdown.js'
-import { toggleSideBar } from './js/toggleSideBar.js'
-import { loadPage } from './js/router.js'
-import { configureSidebar } from './js/focus/configureSidebar.js'
-import { initTodoList } from './js/plans/todoListManager.js'
-import { initFocusTimer } from './js/focus/focusTimer.js'
-import { initFlexibleFocusTimer } from './js/focus/flexible/focusTimer.js'
-import { initSidebarTooltips } from './js/sidebarTooltip.js'
-import { initHeatmap } from './js/analyze/heat-map.js'
-import { initMenuButtons } from './js/games/playGameManager.js'
-import { initMainSettings } from './js/main-settings/mainSettingsManager.js'; // Import
-import { SettingsAPI } from './js/api/SettingsAPI.js'; // Import
+import { handleDropdowns } from './js/dropdown.js';
+import { toggleSideBar } from './js/toggleSideBar.js';
+import { loadPage } from './js/router.js';
+import { configureSidebar } from './js/focus/configureSidebar.js';
+import { initTodoList } from './js/plans/todoListManager.js';
+import { initFocusTimer } from './js/focus/standard/FocusTimer.js';
+import { initFlexibleFocusTimer } from './js/focus/flexible/FocusTimer.js';
+import { initSidebarTooltips } from './js/sidebarTooltip.js';
+import { initHeatmap } from './js/analyze/heat-map.js';
+import { initMenuButtons } from './js/games/playGameManager.js';
+import { initMainSettings } from './js/main-settings/mainSettingsManager.js'; 
+import { SettingsAPI } from './js/api/SettingsAPI.js'; 
 
 async function app() {
     try {
