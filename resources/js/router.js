@@ -1,14 +1,58 @@
+/**
+ * --- ROUTE MIDDLEWARE CONFIGURATION ---
+ * Define special cases for specific URLs here.
+ * Keys are substrings of the URL (e.g., 'play-game.html').
+ * Values are functions that run when that page loads.
+ */
+const routeMiddleware = {
+    // Case 1: Game Menu (Full screen, covers sidebar)
+    'play-game.html': {
+        onEnter: (container) => container.classList.add('full-viewport-view'),
+        onLeave: (container) => container.classList.remove('full-viewport-view')
+    },
+    
+    // Case 2: Focus Timer (Centered relative to available space, respects sidebar)
+    'focus-standard.html': {
+        onEnter: (container) => container.classList.add('centered-content-view'),
+        onLeave: (container) => container.classList.remove('centered-content-view')
+    }
+};
+
+/**
+ * Applies specific logic based on the URL and cleans up previous states.
+ * @param {string} url - The URL being loaded
+ * @param {HTMLElement} container - The container element
+ */
+function handleRouteLogic(url, container) {
+    // 1. CLEANUP: Run 'onLeave' for all defined routes to ensure clean state
+    // This acts as a reset mechanism so we don't need a specific 'else' block inside loadPage
+    Object.values(routeMiddleware).forEach(handler => {
+        if (typeof handler.onLeave === 'function') {
+            handler.onLeave(container);
+        }
+    });
+
+    // 2. MATCH & EXECUTE: Find if the current URL matches a config key
+    const matchedKey = Object.keys(routeMiddleware).find(key => url.includes(key));
+    
+    if (matchedKey) {
+        const handler = routeMiddleware[matchedKey];
+        if (typeof handler.onEnter === 'function') {
+            handler.onEnter(container);
+        }
+    }
+}
+
+/**
+ * Generic Page Loader
+ * @param {string} pageUrl - Path to the HTML file
+ */
 export async function loadPage(pageUrl) {
     const default_page = document.getElementById("default-page");
 
-    // --- Special Case: Detach layout for Play Game screen ---
-    // This allows the Game Menu to be centered in the viewport 
-    // regardless of sidebar state.
-    if (pageUrl.includes('play-game.html')) {
-        default_page.classList.add('full-viewport-view');
-    } else {
-        default_page.classList.remove('full-viewport-view');
-    }
+    // --- SCALABLE LOGIC HANDLER ---
+    // Decouples specific UI logic from the fetching mechanism
+    handleRouteLogic(pageUrl, default_page);
     
     try {
         // 1. Fetch the file
