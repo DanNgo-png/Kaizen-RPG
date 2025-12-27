@@ -1,0 +1,51 @@
+/* --- NEW: Locked State & Warning Banner --- */
+
+.locked-warning {
+    background-color: rgba(69, 26, 3, 0.4); /* Dark brown/orange bg */
+    border: 1px solid #d97706; /* Orange border */
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    color: #fbbf24; /* Light orange text */
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.locked-warning i {
+    font-size: 16px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.locked-warning a {
+    color: #fcd34d;
+    text-decoration: underline;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.locked-warning a:hover {
+    color: #fff;
+}
+
+/* When the sidebar has the 'settings-locked' class */
+#configure-sidebar.settings-locked .timer-type-label,
+#configure-sidebar.settings-locked .type-selector,
+#configure-sidebar.settings-locked #timer-settings-container,
+#configure-sidebar.settings-locked #stopwatch-settings-container,
+#configure-sidebar.settings-locked .footer-card {
+    opacity: 0.5;
+    pointer-events: none;
+    filter: grayscale(0.5);
+}
+
+/* Ensure the header and warning remain interactive */
+#configure-sidebar.settings-locked .header,
+#configure-sidebar.settings-locked .locked-warning {
+    opacity: 1;
+    pointer-events: auto;
+    filter: none;
+}

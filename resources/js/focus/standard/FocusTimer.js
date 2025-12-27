@@ -6,21 +6,41 @@ export function initFocusTimer() {
 
     // --- State ---
     let timerInterval = null;
-    let timeLeft = 0;
+    let timeValue = 0; 
     let isPaused = false;
-    let currentMode = 'focus'; // 'focus' | 'break'
+    let currentMode = 'focus'; 
+    let isStopwatch = false;   
 
     // --- Core Logic ---
 
+    const loadStateFromConfig = () => {
+        isStopwatch = TimerConfig.isStopwatchMode();
+
+        if (isStopwatch) {
+            currentMode = TimerConfig.getStopwatchSubMode();
+            if (!timerInterval && !isPaused) {
+                timeValue = 0;
+            }
+        } else {
+            if (!timerInterval && !isPaused) {
+                const minutes = currentMode === 'focus' 
+                    ? TimerConfig.getFocusDuration() 
+                    : TimerConfig.getBreakDuration();
+                timeValue = minutes * 60;
+            }
+        }
+    };
+
     const startTimer = () => {
-        // If starting from 0 or default placeholder text, load config
-        // (Hardcoded "05:00" check is a safety for fresh loads)
-        if (timeLeft <= 0) {
-            loadDurationFromConfig();
+        if (!isPaused && !timerInterval) {
+            loadStateFromConfig();
         }
         
         isPaused = false;
         timerInterval = setInterval(tick, 1000);
+        
+        // LOCK SIDEBAR
+        ui.setSidebarLocked(true);
         render();
     };
 
@@ -36,67 +56,120 @@ export function initFocusTimer() {
         timerInterval = null;
         isPaused = false;
         
-        // Reset logic: usually resetting sets mode back to focus or keeps current mode reset?
-        // Standard behavior: Reset to Focus
-        currentMode = 'focus';
-        loadDurationFromConfig();
+        if (isStopwatch) {
+            timeValue = 0;
+        } else {
+            currentMode = 'focus';
+            const minutes = TimerConfig.getFocusDuration();
+            timeValue = minutes * 60;
+        }
+        
+        // UNLOCK SIDEBAR
+        ui.setSidebarLocked(false);
         render();
     };
 
     const skipPhase = () => {
+        if (isStopwatch) return; 
+        clearInterval(timerInterval);
+        timerInterval = null;
+        isPaused = false;
+        
+        // Pass 'true' to indicate this was skipped manually
+        handlePhaseComplete(true);
+    };
+
+    const handlePhaseComplete = (skipped = false) => {
         clearInterval(timerInterval);
         timerInterval = null;
         isPaused = false;
 
-        // Force switch logic
-        handlePhaseComplete();
-    };
+        // UNLOCK SIDEBAR (Session ended)
+        ui.setSidebarLocked(false);
 
-    const loadDurationFromConfig = () => {
-        const minutes = currentMode === 'focus' 
-            ? TimerConfig.getFocusDuration() 
-            : TimerConfig.getBreakDuration();
-        timeLeft = minutes * 60;
-    };
-
-    const handlePhaseComplete = () => {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        isPaused = false;
-
-        // 1. Update Dots based on what just finished
-        ui.advanceDots(currentMode);
-
-        // 2. Switch Mode
-        if (currentMode === 'focus') {
-            currentMode = 'break';
-        } else {
-            currentMode = 'focus';
+        if (!isStopwatch) {
+            // Only play sound if NOT skipped (Natural completion)
+            if (!skipped) {
+                ui.playAlarm();
+            }
+            
+            ui.advanceDots(currentMode);
+            currentMode = (currentMode === 'focus') ? 'break' : 'focus';
+            const minutes = currentMode === 'focus' 
+                ? TimerConfig.getFocusDuration() 
+                : TimerConfig.getBreakDuration();
+            timeValue = minutes * 60;
         }
 
-        // 3. Load new time
-        loadDurationFromConfig();
         render();
     };
 
     const tick = () => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            ui.updateTimeDisplay(timeLeft);
+        if (isStopwatch) {
+            timeValue++;
+            ui.updateTimeDisplay(timeValue);
         } else {
-            handlePhaseComplete();
+            if (timeValue > 0) {
+                timeValue--;
+                ui.updateTimeDisplay(timeValue);
+            } else {
+                handlePhaseComplete(); // Natural completion (sound plays)
+            }
         }
     };
 
     const render = () => {
         ui.setModeVisuals(currentMode);
-        ui.setControlsState(!!timerInterval, isPaused, currentMode);
-        ui.updateTimeDisplay(timeLeft);
+        ui.setControlsState(!!timerInterval, isPaused, currentMode, isStopwatch);
+        ui.updateTimeDisplay(timeValue);
     };
 
-    // --- Event Listeners ---
+    // --- Listeners ---
 
-    const bindEvents = () => {
+    const bindConfigEvents = () => {
+        const typeButtons = document.querySelectorAll('.type-btn');
+        typeButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setTimeout(() => {
+                    stopTimer(); 
+                    loadStateFromConfig();
+                    render();
+                }, 50);
+            });
+        });
+
+        const swButtons = document.querySelectorAll('.sw-btn');
+        swButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                setTimeout(() => {
+                    if (TimerConfig.isStopwatchMode()) {
+                        currentMode = TimerConfig.getStopwatchSubMode();
+                        render();
+                    }
+                }, 50);
+            });
+        });
+        
+        const inputs = document.querySelectorAll('.stepper-input');
+        inputs.forEach(input => {
+            input.addEventListener('change', () => {
+               if (!timerInterval && !isStopwatch) {
+                   loadStateFromConfig();
+                   render();
+               }
+            });
+        });
+        
+        const unlockLink = document.getElementById('unlock-end-session');
+        if (unlockLink) {
+            unlockLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                stopTimer();
+            });
+        }
+    };
+
+    const bindControlEvents = () => {
         const mainBtn = document.getElementById('main-action-btn');
         const stopBtn = document.getElementById('stop-btn');
         const skipBtn = document.getElementById('skip-break-btn');
@@ -118,9 +191,8 @@ export function initFocusTimer() {
     };
 
     // --- Initialization ---
-    bindEvents();
-    
-    // Load initial state without auto-starting
-    loadDurationFromConfig();
+    bindControlEvents();
+    bindConfigEvents();
+    loadStateFromConfig();
     render();
 }

@@ -1,80 +1,195 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Focus - Kaizen RPG</title>
-	<style>
-		/* Added Transition Animation */
-		.widget-container {
-			animation: fadeIn 0.4s ease-out;
-		}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus - Kaizen RPG</title>
+  <style>
+    .widget-container {
+      animation: fadeIn 0.4s ease-out;
+    }
 
-		@keyframes fadeIn {
-			from { opacity: 0; transform: translateY(10px); }
-			to { opacity: 1; transform: translateY(0); }
-		}
-	</style>
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
 </head>
+
 <body>
-	<div class="widget-container">
+  <WIDGET_CONTAINER class="widget-container">
 
-		<!-- TOP SECTION: Stats -->
-		<div class="stats-row">
-			<!-- Focus Box (Active State) -->
-			<div id="card-focus" class="stat-card active-focus">
-				<span class="stat-label">FOCUS</span>
-				<span id="time-focus" class="stat-time">00:24</span>
-			</div>
+    <!-- TOP SECTION: Stats (Now Buttons) -->
+    <div class="stats-row">
+      <!-- Focus Box -->
+      <button id="card-focus" class="stat-card active-focus js-stat-btn">
+        <span class="stat-label">FOCUS</span>
+        <span id="time-focus" class="stat-time">00:00</span>
+      </button>
 
-			<!-- Breaks Box -->
-			<div id="card-break" class="stat-card">
-				<span class="stat-label">BREAKS</span>
-				<span id="time-break" class="stat-time">00:00</span>
-			</div>
+      <!-- Breaks Box -->
+      <button id="card-break" class="stat-card js-stat-btn">
+        <span class="stat-label">BREAKS</span>
+        <span id="time-break" class="stat-time">00:00</span>
+      </button>
 
-			<!-- Balance Box -->
-			<div class="stat-card">
-				<span class="stat-label">BALANCE</span>
-				<span class="stat-time">00:07</span>
-			</div>
-		</div>
+      <!-- Balance Box -->
+      <button class="stat-card js-stat-btn">
+        <span class="stat-label">BALANCE</span>
+        <span class="stat-time">00:00</span>
+      </button>
+    </div>
 
-		<!-- MIDDLE SECTION: Controls -->
-		<div class="controls-row">
-			<!-- Flag Button -->
-			<button class="btn-icon btn-blue">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<path d="M5 21V4H19L15.5 9.5L19 15H5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-						stroke-linejoin="round" />
-				</svg>
-			</button>
+    <!-- MIDDLE SECTION: Controls -->
+    <div class="controls-row">
+      <!-- Flag Button -->
+      <button id="btn-conclude-session" class="btn-icon btn-blue">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M5 21V4H19L15.5 9.5L19 15H5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </button>
 
-			<!-- Main Action Button (Brown State) -->
-			<button id="btn-action" class="btn-main btn-brown">
-				<span>TAKE A BREAK</span>
-				<span class="key-hint">B</span>
-			</button>
+      <!-- NEW: Conclude Session Overlay -->
+      <div id="conclude-overlay" class="modal-overlay hidden">
+        <div class="modal-content conclude-content">
+          <p class="conclude-intro">Conclude this session by recording your total time spent in focus/break. <span
+              id="session-start-text"></span></p>
 
-			<!-- Clock Button -->
-			<button class="btn-icon btn-transparent">
-				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-					<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" />
-					<path d="M12 7V12L15 15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-						stroke-linejoin="round" />
-				</svg>
-			</button>
-		</div>
+          <!-- Focus Slider -->
+          <div class="conclude-row">
+            <div class="conclude-label-group">
+              <span class="stat-label">TIME IN FOCUS</span>
+              <span id="conclude-focus-time" class="stat-time text-green">00:00</span>
+            </div>
+            <input type="range" id="slider-focus" class="conclude-slider focus-slider" min="0" max="120">
+          </div>
 
-		<!-- BOTTOM SECTION: Footer -->
-		<div class="footer-row">
-			<a href="#" class="footer-link">LOG EXCEPTION</a>
+          <!-- Break Slider -->
+          <div class="conclude-row">
+            <div class="conclude-label-group">
+              <span class="stat-label">TIME IN BREAK</span>
+              <span id="conclude-break-time" class="stat-time text-brown">00:00</span>
+            </div>
+            <input type="range" id="slider-break" class="conclude-slider break-slider" min="0" max="60">
+          </div>
 
-			<!-- Placeholder for the logo covered by red scribble -->
-			<div class="footer-logo-placeholder"></div>
+          <div class="modal-actions">
+            <button id="btn-get-rewards" class="btn-main btn-blue" style="width: 100%; height: 50px; gap: 10px;">
+              <i class="fa-solid fa-flag"></i> GET REWARDS!
+            </button>
+          </div>
+        </div>
+      </div>
 
-			<a href="#" class="footer-link">EDIT SESSION</a>
-		</div>
-	</div>
+      <!-- Main Action Button -->
+      <button id="btn-action" class="btn-main btn-brown">
+        <span>TAKE A BREAK</span>
+        <span class="key-hint">B</span>
+      </button>
+
+      <!-- Clock Button -->
+      <button class="btn-icon btn-transparent">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2.5" />
+          <path d="M12 7V12L15 15" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
+            stroke-linejoin="round" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- BOTTOM SECTION: Footer -->
+    <div class="footer-row">
+      <a href="#" class="footer-link">LOG EXCEPTION</a>
+      <div class="footer-logo-placeholder"></div>
+      <a href="#" id="btn-edit-session" class="footer-link">EDIT SESSION</a>
+    </div>
+  </WIDGET_CONTAINER>
+
+  <!-- Edit Session Overlay -->
+  <div id="edit-session-overlay" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-icon"><i class="fa-solid fa-pen-to-square"></i></div>
+      <h2>Edit Session</h2>
+
+      <div style="text-align: left; margin-top: 20px;">
+        <!-- Ratio Selection -->
+        <label class="stat-label" style="display: block; margin-bottom: 8px;">Focus Ratio</label>
+        <select id="select-ratio" class="ms-select" style="width: 100%; margin-bottom: 20px;">
+          <option value="2">2:1 Relaxed</option>
+          <option value="3" selected>3:1 Standard</option>
+          <option value="4">4:1 Industrious</option>
+          <option value="5">5:1 Hard Mode</option>
+          <option value="6">6:1 Grinding</option>
+        </select>
+
+        <!-- Tag Input -->
+        <label class="stat-label" style="display: block; margin-bottom: 8px;">Session Tags</label>
+        <input type="text" id="input-tags" class="todo-input"
+          style="width: 100%; border: 1px solid #333; border-radius: 6px; padding: 10px; background: #111;"
+          placeholder="e.g. Coding, Design">
+      </div>
+
+      <div class="modal-actions" style="margin-top: 30px;">
+        <button id="btn-save-edit" class="btn-main btn-green" style="font-size: 14px; height: 45px;">
+          SAVE CHANGES
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Info Overlay -->
+  <div id="flexible-overlay" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-icon"><i class="fa-solid fa-circle-info"></i></div>
+      <h2>Session Status</h2>
+      <p id="overlay-text">Calculating stats...</p>
+      <div class="modal-actions">
+        <button id="btn-close-overlay" class="btn-secondary" style="width: 100%;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alarm Clock Overlay -->
+  <div id="alarm-overlay" class="modal-overlay hidden">
+    <div class="modal-content alarm-content">
+      <div class="alarm-header">
+        <h2>Set alarm clock</h2>
+        <button class="test-sound-btn">
+          Test sound <i class="fa-solid fa-volume-high"></i>
+        </button>
+      </div>
+      <p class="alarm-description">
+        The alarm clock delivers a notification and plays a sound at the time limit.
+        You can turn off the sound in Focus Settings.
+      </p>
+
+      <div class="alarm-grid">
+        <button class="alarm-btn cancel">Cancel<br>alarm</button>
+        <button class="alarm-btn" data-mins="5">5 min</button>
+        <button class="alarm-btn" data-mins="10">10 min</button>
+        <button class="alarm-btn" data-mins="15">15 min</button>
+
+        <button class="alarm-btn" data-mins="20">20 min</button>
+        <button class="alarm-btn" data-mins="25">25 min</button>
+        <button class="alarm-btn" data-mins="30">30 min</button>
+        <button class="alarm-btn" data-mins="45">45 min</button>
+
+        <button class="alarm-btn" data-mins="50">50 min</button>
+        <button class="alarm-btn" data-mins="60">1 hour</button>
+        <button class="alarm-btn" data-mins="120">2 hour</button>
+        <button class="alarm-btn" data-mins="180">3 hour</button>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>

@@ -73,6 +73,14 @@
 					<button class="close-btn">&times;</button>
 				</div>
 
+        <!-- NEW: Locked Warning Banner -->
+				<div id="settings-locked-warning" class="locked-warning hidden">
+					<i class="fa-solid fa-triangle-exclamation"></i>
+					<div class="warning-text">
+						Settings are locked during an active session. To unlock, either finish the current session or <a href="#" id="unlock-end-session">end it</a>.
+					</div>
+				</div>
+
 				<!-- Timer Type Selector -->
 				<div class="timer-type-label">Timer Type</div>
 				<div class="type-selector" id="type-selector-container">
@@ -119,7 +127,7 @@
 						</div>
 					</div>
 
-					<!-- Long Break Card (Updated) -->
+					<!-- Long Break Card -->
 					<div class="card border-periwinkle">
 						<div class="row">
 							<div class="text-group">
@@ -156,7 +164,7 @@
 					</div>
 				</div>
 
-				<!-- 3. ADD THIS: The New Stopwatch UI -->
+				<!-- 3. Stopwatch UI -->
 				<div id="stopwatch-settings-container" style="display: none;">
 					<div class="card stopwatch-card">
 						<div class="stopwatch-header">Stopwatch Mode</div>
