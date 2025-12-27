@@ -24,9 +24,11 @@
     /* STANDARD TIMER: CONFIGURE SIDE BAR */
     @import url('css/focus/focus-standard/focus-sidebar-layout.css');
     @import url('css/focus/focus-standard/focus-sidebar-items.css');
+    @import url('css/focus/focus-standard/locked-state-warning.css');
 
     /* FLEXIBLE TIMER */
     @import url('css/focus/focus-flexible/main.css');
+    @import url('css/focus/focus-flexible/overlay.css');
 
 /* === TIMEFRAMES PAGE === */
 @import url('css/timeframes/today.css');
