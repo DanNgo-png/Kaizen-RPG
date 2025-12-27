@@ -43,3 +43,24 @@ body {
     overflow-y: auto;
     overflow-x: hidden;
 }
+
+/* --- Special Layout: Centered Content View (e.g. Focus Timer) --- */
+#default-page.centered-content-view {
+    /* 1. Fill the available horizontal space to the right of sidebar */
+    right: 0; 
+    
+    /* 2. Fill vertical height to allow vertical centering */
+    height: 100vh;
+    
+    /* 3. Use Flexbox to center the content (the timer) */
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center;
+    
+    /* 4. Prevent scrolling if the timer fits */
+    overflow: hidden; 
+    
+    /* 5. Override default padding if it interferes with perfect centering */
+    padding: 0; 
+}
