@@ -38,7 +38,7 @@
 }
 
 /* Common Card Style */
-.dash-card {
+.analyze-overview-card {
     background-color: var(--surface-color, #1f2937);
     border: 1px solid var(--bg-hover, #374151);
     border-radius: 16px;
@@ -48,14 +48,14 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.card-header {
+.analyze-overview-card-header {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 20px;
 }
 
-.card-header i {
+.analyze-overview-card-header i {
     font-size: 1.2rem;
 }
 
