@@ -1,43 +1,41 @@
 /* The side navigation menu container */
 .sidenav {
-    height: 100%;
+    height: 100vh; /* Changed to vh to ensure it fills viewport exactly */
     width: 75px;
     position: fixed;
-    z-index: 1000; /* added */
+    z-index: 1000;
     top: 0;
     left: 0;
     background-color: var(--bg-sidebar);
-    overflow-x: hidden;
-    padding-top: 60px;
     transition: 0.5s;
-    text-wrap: nowrap;
     display: flex;
-    flex-direction: column;
+    flex-direction: column; /* Stack Top, Middle, Bottom */
     white-space: nowrap;
+    overflow: hidden; /* Sidebar itself shouldn't scroll */
 }
 
-/* Hide scrollbar for Chrome/Safari/Opera */
-.sidenav::-webkit-scrollbar {
+/* Scrollable middle section */
+.sidenav-main-content {
+    flex: 1; /* Takes up all available space */
+    overflow-y: auto; /* Allows scrolling if many items */
+    overflow-x: hidden;
+    padding-top: 60px; /* Space for the toggle button */
+}
+
+/* Hide scrollbar for cleaner look */
+.sidenav-main-content::-webkit-scrollbar {
     display: none;
 }
 
 /* Sidebar Toggle Button */
 .sidebar-toggle-button {
-    position: fixed;
+    position: absolute; /* Keep it fixed at the top */
     top: 10px;
-    left: 50%; /* Move to center of screen... */
-    transform: translateX(-50%); /* ...then shift back by half its own width */
-    
-    /* However, this centers it to the WINDOW, not the sidebar. */
-    /* To center it within the 75px sidebar: */
-    left: 37.5px; /* Half of 75px */
+    left: 37.5px;
     transform: translateX(-50%);
-
-    /* Visual Styling */
     background-color: transparent;
     color: var(--text-primary);
     border: none;
-    /* padding: 8px; */
     padding: 12px 15px;
     cursor: pointer;
     display: flex;
@@ -45,20 +43,13 @@
     justify-content: center;
     border-radius: 8px;
     transition: background-color 0.2s;
+    z-index: 1010;
 }
 
 .sidebar-toggle-button i {
     font-size: 24px;
-    display: block;
 }
 
 .sidebar-toggle-button:hover {
     background-color: var(--bg-hover);
-}
-
-/* Responsive adjustments */
-@media screen and (max-height: 450px) {
-    .sidenav {
-        padding-top: 15px;
-    }
 }
