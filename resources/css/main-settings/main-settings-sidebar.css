@@ -1,15 +1,11 @@
 .main-settings {
     width: 100%;
-    /* Remove the huge padding so the button fills the space */
     padding: 0;
-    
-    /* Keep it at the bottom */
-    margin-top: auto;
-    
-    /* Visual separator */
+    flex-shrink: 0; /* Prevents the settings button from squishing */
     border-top: 1px solid var(--bg-hover);
-    padding-top: 8px; /* Space between line and button */
+    padding-top: 8px;
     padding-bottom: 8px;
+    background-color: var(--bg-sidebar); /* Matches sidebar background */
 }
 
 .main-settings-button {
@@ -18,17 +14,11 @@
     margin: 0 auto;
     border-radius: 10px;
     padding: 12px 16px;
-
-    /* Flexbox for aligning icon and text */
     display: flex;
     align-items: center;
     justify-content: flex-start;
-
-    /* Inspiration logic: Prevent text wrapping and clip overflow */
     white-space: nowrap;
     overflow: hidden;
-
-    /* Visual Styling */
     background-color: transparent;
     color: var(--text-primary);
     border: none;
@@ -61,6 +51,7 @@
     margin-left: 10px;
     opacity: 1;
     transition: opacity 0.3s ease;
+    font-size: 16px;
 }
 
 /* --- Collapsed State Styles --- */
