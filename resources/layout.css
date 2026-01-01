@@ -27,8 +27,8 @@
     @import url('css/focus/focus-standard/locked-state-warning.css');
 
     /* FLEXIBLE TIMER */
-    @import url('css/focus/focus-flexible/main.css');
-    @import url('css/focus/focus-flexible/overlay.css');
+    @import url('css/focus/focus-flexible/focus-flexible-layout.css');
+    @import url('css/focus/focus-flexible/range-slider.css');
 
 /* === TIMEFRAMES PAGE === */
 @import url('css/timeframes/today.css');
