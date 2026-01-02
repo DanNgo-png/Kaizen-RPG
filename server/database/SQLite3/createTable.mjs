@@ -28,6 +28,18 @@ const SCHEMAS = {
             value TEXT,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+    `,
+
+    // Stores history of focus sessions
+    'focus_session_log': `
+        CREATE TABLE IF NOT EXISTS focus_sessions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            tag TEXT,
+            focus_seconds INTEGER,
+            break_seconds INTEGER,
+            ratio REAL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
     `
 };
 
