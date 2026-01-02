@@ -1,6 +1,7 @@
 import { MercenaryHandler } from "../handlers/MercenaryHandler.js";
 import { TaskHandler } from "../handlers/TaskHandler.js";
 import { SettingsHandler } from "../handlers/SettingsHandler.js";
+import { FocusHandler } from "../handlers/FocusHandler.js";
 
 export const EventRegistry = {
     init: () => {
@@ -13,11 +14,16 @@ export const EventRegistry = {
         // Tasks
         Neutralino.events.on("receiveTasks", TaskHandler.onReceiveData);
 
-        // Settings (NEW)
+        // Settings
         Neutralino.events.on("receiveSetting", SettingsHandler.onReceiveSetting);
         Neutralino.events.on("settingSaved", SettingsHandler.onSettingSaved);
         Neutralino.events.on("receiveCustomFonts", SettingsHandler.onReceiveCustomFonts); 
         
+        // Focus Sessions
+        Neutralino.events.on("receiveFocusSessions", FocusHandler.onReceiveSessions);
+        Neutralino.events.on("focusSessionSaved", FocusHandler.onSessionSaved);
+        Neutralino.events.on("receiveLifetimeStats", FocusHandler.onReceiveLifetimeStats);
+
         // Add other domain handlers here (e.g., InventoryHandler, QuestHandler)
         // Neutralino.events.on("receiveInventory", InventoryHandler.onUpdate);
 
