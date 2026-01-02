@@ -1,5 +1,6 @@
 import { FlexibleSessionState } from "./FlexibleSessionState.js";
 import { FlexibleTimerUI } from "./FlexibleTimerUI.js";
+import { FocusAPI } from "../../api/FocusAPI.js";
 
 class FocusTimerController {
     constructor() {
@@ -162,21 +163,24 @@ class FocusTimerController {
         const finalFocusSecs = parseToSeconds(focusVal);
         const finalBreakSecs = parseToSeconds(breakVal);
 
-        // In a real app, this sends data to the Backend/Database
-        console.log("💾 Saving Session:", {
+        // --- Prepare Payload ---
+        const payload = {
             tag: this.state.currentTag,
             focusSeconds: finalFocusSecs,
             breakSeconds: finalBreakSecs,
-            focusFormatted: this.ui._formatTime(finalFocusSecs * 1000, false),
-            timestamp: new Date().toISOString()
-        });
+            ratio: this.state.ratio
+        };
 
-        alert(`Session Saved!\nFocus: ${this.ui._formatTime(finalFocusSecs * 1000, false)}`);
+        // --- Send to Backend ---
+        FocusAPI.saveFocusSession(payload);
 
         // Reset
         this.state.reset();
         this.ui.resetUI();
         this.ui.toggleModal('conclusion', false);
+
+        // You might want to remove this alert once you see it working
+        console.log("📤 Sending session to database...", payload);
     }
 
     addCustomTag() {
