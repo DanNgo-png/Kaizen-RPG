@@ -21,18 +21,18 @@
 						<i class="fa-regular fa-clock" style="color: #60a5fa;"></i>
 						<span class="card-title" style="color: #60a5fa;">Today's Focus</span>
 					</div>
-					<div class="card-subtitle">Thursday, December 4</div>
+					<div class="card-subtitle" id="overview-daily-date-subtitle">--</div> 
 
 					<div class="today-stats">
 						<div class="stat-box blue-theme">
 							<i class="fa-regular fa-clock" style="color: #60a5fa;"></i>
 							<span class="label">Focus Time</span>
-							<span class="value">0m</span>
+							<span class="value" id="overview-today-focus">0m</span>
 						</div>
 						<div class="stat-box blue-theme">
 							<i class="fa-solid fa-check-double" style="color: #818cf8;"></i>
 							<span class="label">Sessions</span>
-							<span class="value">0</span>
+							<span class="value" id="overview-today-sessions">0</span>
 						</div>
 					</div>
 				</div>
@@ -42,8 +42,6 @@
 					<div class="analyze-overview-card-header">
 						<i class="fa-solid fa-fire" style="color: #fb923c;"></i>
 						<span class="card-title" style="color: #fb923c;">Streaks</span>
-						<i class="fa-regular fa-circle-question"
-							style="color: var(--text-secondary); font-size: 0.9rem; margin-left: auto; cursor: pointer;"></i>
 					</div>
 
 					<div class="streak-info">
@@ -60,7 +58,7 @@
 						<div class="streak-box">
 							<i class="fa-solid fa-trophy"></i>
 							<span class="label">Best Streak</span>
-							<span class="value">23 days</span>
+							<span class="value">0 days</span>
 						</div>
 					</div>
 				</div>
@@ -159,17 +157,17 @@
 				<div class="lifetime-box">
 					<i class="fa-regular fa-clock"></i>
 					<span class="lifetime-label">Total Focus Time</span>
-					<span class="lifetime-value">55h 12m</span>
+					<span class="lifetime-value" id="lifetime-total-focus">0m</span>
 				</div>
 				<div class="lifetime-box">
 					<i class="fa-solid fa-check-double"></i>
 					<span class="lifetime-label">Total Sessions</span>
-					<span class="lifetime-value">199</span>
+					<span class="lifetime-value" id="lifetime-total-sessions">0</span>
 				</div>
 				<div class="lifetime-box">
 					<i class="fa-regular fa-calendar-check"></i>
 					<span class="lifetime-label">Focus Days</span>
-					<span class="lifetime-value">42</span>
+					<span class="lifetime-value" id="lifetime-focus-days">0</span>
 				</div>
 			</div>
 		</div>
