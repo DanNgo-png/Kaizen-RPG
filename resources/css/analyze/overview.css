@@ -67,7 +67,6 @@
 .card-subtitle {
     color: var(--text-secondary, #9ca3af);
     font-size: 0.9rem;
-    margin-top: -15px;
     margin-bottom: 20px;
 }
 
