@@ -1,0 +1,1 @@
+node check_db.js
