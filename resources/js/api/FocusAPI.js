@@ -18,6 +18,14 @@ export const FocusAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getFocusSessions", { startDate, endDate });
     },
 
+    updateSession: async (id, tag) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "updateFocusSession", { id, tag });
+    },
+
+    deleteSession: async (id) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "deleteFocusSession", { id });
+    },
+
     getLifetimeStats: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getLifetimeStats", null);
     },

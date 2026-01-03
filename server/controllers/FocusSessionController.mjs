@@ -42,6 +42,25 @@ export class FocusSessionController {
             }
         });
 
+        app.events.on("updateFocusSession", (payload) => {
+            try {
+                this.repo.updateSession(payload.id, payload.tag);
+                // Broadcast update so UI refreshes
+                app.events.broadcast("focusSessionUpdated", { success: true });
+            } catch (error) {
+                console.error("❌ Error updating session:", error);
+            }
+        });
+
+        app.events.on("deleteFocusSession", (payload) => {
+            try {
+                this.repo.deleteSession(payload.id);
+                app.events.broadcast("focusSessionDeleted", { success: true });
+            } catch (error) {
+                console.error("❌ Error deleting session:", error);
+            }
+        });
+
         app.events.on("getLifetimeStats", () => {
             try {
                 const stats = this.repo.getLifetimeStats();

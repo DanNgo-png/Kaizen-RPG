@@ -39,6 +39,17 @@ export class FocusSessionRepository {
         return this.statements.insert.run(session);
     }
 
+    deleteSession(id) {
+        const stmt = this.db.prepare('DELETE FROM focus_sessions WHERE id = @id');
+        return stmt.run({ id });
+    }
+
+    updateSession(id, tag) {
+        // Only allowing tag updates for now as per prompt
+        const stmt = this.db.prepare('UPDATE focus_sessions SET tag = @tag WHERE id = @id');
+        return stmt.run({ id, tag });
+    }
+
     getSessionsByRange(startDate, endDate) {
         return this.statements.getByRange.all({ startDate, endDate });
     }
