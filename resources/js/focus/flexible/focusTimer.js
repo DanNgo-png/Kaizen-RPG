@@ -1,3 +1,4 @@
+import { flexManager } from "./FlexibleFocusManager.js";
 import { FlexibleSessionState } from "./FlexibleSessionState.js";
 import { FlexibleTimerUI } from "./FlexibleTimerUI.js";
 import { FocusAPI } from "../../api/FocusAPI.js";
