@@ -1,5 +1,6 @@
 import { TimerUI } from "./TimerUI.js";
 import { TimerConfig } from "./TimerConfig.js";
+import { FocusAPI } from "../../api/FocusAPI.js";
 
 export function initFocusTimer() {
     const ui = new TimerUI();
@@ -9,7 +10,10 @@ export function initFocusTimer() {
     let timeValue = 0; 
     let isPaused = false;
     let currentMode = 'focus'; 
-    let isStopwatch = false;   
+    let isStopwatch = false;
+    
+    // Store duration for the save payload
+    let currentSessionTotalSeconds = 0; 
 
     // --- Core Logic ---
 
@@ -27,6 +31,11 @@ export function initFocusTimer() {
                     ? TimerConfig.getFocusDuration() 
                     : TimerConfig.getBreakDuration();
                 timeValue = minutes * 60;
+                
+                // Track this for saving later
+                if (currentMode === 'focus') {
+                    currentSessionTotalSeconds = minutes * 60;
+                }
             }
         }
     };
@@ -91,6 +100,12 @@ export function initFocusTimer() {
             // Only play sound if NOT skipped (Natural completion)
             if (!skipped) {
                 ui.playAlarm();
+                
+                // --- SAVE LOGIC ---
+                // Only save if it was a Focus session and it wasn't skipped
+                if (currentMode === 'focus') {
+                    saveCompletedSession();
+                }
             }
             
             ui.advanceDots(currentMode);
@@ -99,9 +114,34 @@ export function initFocusTimer() {
                 ? TimerConfig.getFocusDuration() 
                 : TimerConfig.getBreakDuration();
             timeValue = minutes * 60;
+            
+            // Update tracking for the next round
+            if (currentMode === 'focus') {
+                currentSessionTotalSeconds = minutes * 60;
+            }
         }
 
         render();
+    };
+
+    const saveCompletedSession = () => {
+        // Try to find selected tag text, fallback to "Standard"
+        const tagEl = document.querySelector('.focus-dropdown-left span');
+        let tagName = "Standard";
+        if (tagEl) {
+            const text = tagEl.textContent.trim();
+            if (text !== "Add a tag") tagName = text;
+        }
+
+        const payload = {
+            tag: tagName,
+            focusSeconds: currentSessionTotalSeconds,
+            breakSeconds: 0, // Standard timer tracks breaks separately/implicitly
+            ratio: 1.0 
+        };
+
+        console.log("💾 Saving Standard Session:", payload);
+        FocusAPI.saveFocusSession(payload);
     };
 
     const tick = () => {
@@ -113,7 +153,7 @@ export function initFocusTimer() {
                 timeValue--;
                 ui.updateTimeDisplay(timeValue);
             } else {
-                handlePhaseComplete(); // Natural completion (sound plays)
+                handlePhaseComplete(); // Natural completion (sound plays + saves)
             }
         }
     };

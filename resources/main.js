@@ -11,7 +11,7 @@ import { toggleSideBar } from './js/toggleSideBar.js';
 import { loadPage } from './js/router.js';
 import { configureSidebar } from './js/focus/configureSidebar.js';
 import { initTodoList } from './js/plans/todoListManager.js';
-import { initFocusTimer } from './js/focus/standard/FocusTimer.js';
+import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
 import { initOverview } from './js/analyze/OverviewManager.js';
 import { initSidebarTooltips } from './js/sidebarTooltip.js';
