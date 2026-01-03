@@ -3,7 +3,7 @@ import { GameAPI } from "./js/api/GameAPI.js";
 // import { audioManager } from "./js/_global-managers/AudioManager.js";
 
 // GLOBAL SINGLETON
-import { flexManager } from "./js/focus/flexible/FlexibleFocusManager.js"; 
+import { flexManager } from "./js/focus/flexible/FlexibleFocusManager.js";
 
 // UI Routers
 import { handleDropdowns } from './js/dropdown.js';
@@ -13,17 +13,18 @@ import { configureSidebar } from './js/focus/configureSidebar.js';
 import { initTodoList } from './js/plans/todoListManager.js';
 import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
+import { initReviewSessions } from './js/focus/review/ReviewManager.js';
 import { initOverview } from './js/analyze/OverviewManager.js';
 import { initSidebarTooltips } from './js/sidebarTooltip.js';
 import { initHeatmap } from './js/analyze/heat-map.js';
 import { initMenuButtons } from './js/games/playGameManager.js';
-import { initMainSettings } from './js/main-settings/mainSettingsManager.js'; 
-import { SettingsAPI } from './js/api/SettingsAPI.js'; 
+import { initMainSettings } from './js/main-settings/mainSettingsManager.js';
+import { SettingsAPI } from './js/api/SettingsAPI.js';
 
 async function app() {
     try {
         EventRegistry.init();
-        SettingsAPI.getSetting('fontFamily'); 
+        SettingsAPI.getSetting('fontFamily');
         await GameAPI.getMercenaries();
         handleDropdowns()
         initSidebarTooltips()
@@ -77,6 +78,24 @@ async function app() {
             focusFlexibleButton.addEventListener("click", async () => {
                 await loadPage('./pages/focus/focus-flexible.html');
                 initFlexibleFocusTimer();
+            });
+        }
+
+        // "Focus: Review" Button (1/2)
+        document.addEventListener('click', async (event) => {
+            // Check if clicked element is the Log button
+            if (event.target.closest('.log-footer-button')) {
+                await loadPage('./pages/focus/review-sessions.html');
+                initReviewSessions();
+            }
+        });
+
+        // "Focus: Review" Button (2/2)
+        const reviewBtn = document.querySelector(".focus-review-button");
+        if (reviewBtn) {
+            reviewBtn.addEventListener("click", async () => {
+                await loadPage('./pages/focus/review-sessions.html');
+                initReviewSessions();
             });
         }
 
@@ -166,7 +185,7 @@ async function app() {
         if (analyzeYear) {
             analyzeYear.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/year.html');
-                initHeatmap(); 
+                initHeatmap();
             });
         }
 
