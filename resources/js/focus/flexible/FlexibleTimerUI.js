@@ -34,17 +34,88 @@ export class FlexibleTimerUI {
             modals: {
                 exception: document.getElementById('exception-modal'),
                 conclusion: document.getElementById('conclusion-modal'),
-                deleteTag: document.getElementById('delete-tag-modal') // Added
+                deleteTag: document.getElementById('delete-tag-modal')
             }
         };
         
         this.activeMenuListeners = new Map();
     }
 
-    // ... [Previous methods: updateStatsDisplay, updateVisualState, updateSessionStartTime, renderTagList] ...
+    /**
+     * Updates the time numbers and balance status (Banked/Overdrawn).
+     * @param {Object} stats - { focusMs, breakMs, balanceMs }
+     */
+    updateStatsDisplay(stats) {
+        if (!this.dom.displays.focus) return;
+
+        this.dom.displays.focus.textContent = this._formatTime(stats.focusMs);
+        this.dom.displays.break.textContent = this._formatTime(stats.breakMs);
+        
+        const balancePrefix = stats.balanceMs >= 0 ? '+' : '-';
+        this.dom.displays.balance.textContent = balancePrefix + this._formatTime(stats.balanceMs, false);
+
+        if (stats.balanceMs < 0) {
+            this.dom.cards.balance.classList.add('debt');
+            this.dom.cards.balance.classList.remove('surplus');
+            this.dom.displays.msgBalance.textContent = "Overdrawn";
+        } else {
+            this.dom.cards.balance.classList.add('surplus');
+            this.dom.cards.balance.classList.remove('debt');
+            this.dom.displays.msgBalance.textContent = "Banked";
+        }
+    }
+
+    /**
+     * Updates button text and card highlighting based on state.
+     * @param {string} status - 'idle', 'focus', 'break'
+     */
+    updateVisualState(status) {
+        if (!this.dom.cards.focus) return;
+
+        // Reset active classes
+        this.dom.cards.focus.classList.remove('active');
+        this.dom.cards.break.classList.remove('active');
+        this.dom.buttons.main.classList.remove('is-focusing');
+        this.dom.buttons.finish.classList.add('hidden'); // Default hide
+
+        if (status === 'focus') {
+            this.dom.cards.focus.classList.add('active');
+            this.dom.buttons.main.textContent = "Switch to Break";
+            this.dom.buttons.main.classList.add('is-focusing');
+            this.dom.buttons.main.innerHTML = `<i class="fa-solid fa-mug-hot"></i> Take a Break`;
+            this.dom.buttons.finish.classList.remove('hidden');
+        } 
+        else if (status === 'break') {
+            this.dom.cards.break.classList.add('active');
+            this.dom.buttons.main.textContent = "Resume Focus";
+            this.dom.buttons.main.innerHTML = `<i class="fa-solid fa-brain"></i> Resume Focus`;
+            this.dom.buttons.finish.classList.remove('hidden');
+        } 
+        else {
+            // Idle
+            this.dom.buttons.main.textContent = "Start Focus";
+            this.dom.buttons.main.innerHTML = `<i class="fa-solid fa-play"></i> Start Focus`;
+        }
+    }
+
+    /**
+     * Updates the "Session Started: 10:00 AM" text.
+     */
+    updateSessionStartTime(date) {
+        if (!this.dom.displays.sessionStart) return;
+        
+        if (date) {
+            const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            this.dom.displays.sessionStart.textContent = timeStr;
+        } else {
+            this.dom.displays.sessionStart.textContent = "--:--";
+        }
+    }
 
     renderTagList(tags) {
         const list = this.dom.menus.tagList;
+        if (!list) return;
+        
         list.innerHTML = ''; 
 
         // Default "No Tag"
@@ -145,8 +216,6 @@ export class FlexibleTimerUI {
         modal.classList.remove('hidden');
     }
 
-    // ... [Rest of the file: toggleMenu, _setupOutsideClick, populateModal, etc.] ...
-    
     toggleMenu(menuName, show) {
         const menu = this.dom.menus[menuName];
         const trigger = this.dom.buttons[`${menuName}Trigger`];
@@ -189,6 +258,7 @@ export class FlexibleTimerUI {
     }
 
     updateTagListSelection(tagValue) {
+        if(!this.dom.displays.tag) return;
         this.dom.displays.tag.textContent = tagValue;
         const opts = this.dom.menus.tagList.querySelectorAll('.tag-opt');
         opts.forEach(el => {

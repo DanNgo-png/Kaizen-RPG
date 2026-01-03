@@ -1,21 +1,28 @@
 import { flexManager } from "./FlexibleFocusManager.js";
-import { FlexibleSessionState } from "./FlexibleSessionState.js";
 import { FlexibleTimerUI } from "./FlexibleTimerUI.js";
 import { FocusAPI } from "../../api/FocusAPI.js";
 
 class FocusTimerController {
     constructor() {
-        this.state = new FlexibleSessionState({ ratio: 3.0 });
         this.ui = new FlexibleTimerUI();
-        this.timerInterval = null;
 
-        // Management State
+        // --- Local UI State (Management) ---
         this.cachedTags = []; 
         this.editingTagId = null; 
         this.pendingColor = '#10b981'; 
 
+        // 1. Initialize Event Listeners (Buttons, Modals, Menus)
         this.initEventListeners();
 
+        // 2. Initialize Data (Tags)
+        this.initData();
+
+        // 3. Sync UI with current Global State immediately
+        // (This handles the case where you return to the page while a timer is running)
+        this.syncWithGlobalState();
+    }
+
+    initData() {
         // Listen for tag updates from backend
         Neutralino.events.on("receiveTags", (evt) => {
             this.cachedTags = evt.detail;
@@ -27,17 +34,72 @@ class FocusTimerController {
                 this.refreshManageList();
             }
         });
-
-        // Initial Load
+        
+        // Fetch initial list
         FocusAPI.getTags();
     }
 
-    initEventListeners() {
-        // --- Main Timer Controls ---
-        this.ui.dom.buttons.main.addEventListener('click', () => this.handleMainAction());
-        this.ui.dom.buttons.finish.addEventListener('click', () => this.handleFinishAction());
+    /**
+     * Updates the UI based on the Manager's existing state on page load.
+     */
+    syncWithGlobalState() {
+        const stats = flexManager.getStats();
+        
+        // Update Time Displays
+        this.ui.updateStatsDisplay(stats);
+        
+        // Update Visual State (Colors, Icons)
+        this.ui.updateVisualState(stats.status);
+        
+        // Update Dropdown Labels
+        this.ui.dom.displays.ratio.textContent = `${stats.ratio}:1`; // Simplified label update
+        this.ui.updateTagListSelection(stats.tag);
 
-        // --- Ratio Menu ---
+        // Update Ratio Menu Selection Visuals
+        const ratioOpts = this.ui.dom.menus.ratio.querySelectorAll('.ratio-opt');
+        ratioOpts.forEach(opt => {
+            if(parseFloat(opt.dataset.value) === stats.ratio) opt.classList.add('selected');
+            else opt.classList.remove('selected');
+        });
+    }
+
+    initEventListeners() {
+        // --- 1. Global Tick Listener ---
+        // The manager fires this event every second. We update the UI in response.
+        this.boundTickHandler = (e) => this.ui.updateStatsDisplay(e.detail);
+        document.addEventListener('kaizen:flex-tick', this.boundTickHandler);
+
+        // --- 2. Cleanup (MutationObserver) ---
+        // Detect when this page is removed from DOM (navigation) and remove listeners
+        const cleanupObserver = new MutationObserver((mutations) => {
+            if(!document.body.contains(this.ui.dom.displays.focus)) {
+                document.removeEventListener('kaizen:flex-tick', this.boundTickHandler);
+                cleanupObserver.disconnect();
+            }
+        });
+        cleanupObserver.observe(document.body, { childList: true, subtree: true });
+
+        // --- 3. Main Controls ---
+        
+        this.ui.dom.buttons.main.addEventListener('click', () => {
+            const currentStatus = flexManager.getStats().status;
+            if (currentStatus === 'idle' || currentStatus === 'break') {
+                flexManager.switchState('focus');
+                this.ui.updateSessionStartTime(new Date()); 
+            } else {
+                flexManager.switchState('break');
+            }
+            // Update UI immediately for responsiveness
+            this.ui.updateVisualState(flexManager.getStats().status);
+        });
+
+        this.ui.dom.buttons.finish.addEventListener('click', () => {
+            flexManager.stopTicker(); // Pause timer while user reviews
+            this.ui.populateModal('conclusion', flexManager.getStats());
+            this.ui.toggleModal('conclusion', true);
+        });
+
+        // --- 4. Ratio Menu ---
         this.ui.dom.buttons.ratioTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = this.ui.dom.menus.ratio.classList.contains('open');
@@ -50,21 +112,17 @@ class FocusTimerController {
             if (target) {
                 const val = target.dataset.value;
                 const label = target.dataset.label;
-                this.state.setRatio(val);
-                this.ui.dom.displays.ratio.textContent = label;
                 
-                // Update selection visual
+                flexManager.setRatio(val); // Update Global Manager
+                
+                this.ui.dom.displays.ratio.textContent = label;
                 this.ui.dom.menus.ratio.querySelectorAll('.ratio-opt').forEach(o => o.classList.remove('selected'));
                 target.classList.add('selected');
-                
-                // Force UI update immediately to reflect balance change
-                if(this.state.status !== 'idle') this.tick();
-                
                 this.ui.toggleMenu('ratio', false);
             }
         });
 
-        // --- Tag Menu ---
+        // --- 5. Tag Menu ---
         this.ui.dom.buttons.tagTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
             const isOpen = this.ui.dom.menus.tag.classList.contains('open');
@@ -72,24 +130,95 @@ class FocusTimerController {
             if (!isOpen) this.ui._setupOutsideClick('tag');
         });
 
-        // Select Tag from Dropdown
         this.ui.dom.menus.tagList.addEventListener('click', (e) => {
             const target = e.target.closest('.tag-opt');
             if (target) {
                 const tag = target.dataset.value;
-                this.state.setTag(tag);
+                flexManager.setTag(tag); // Update Global Manager
                 this.ui.updateTagListSelection(tag);
                 this.ui.toggleMenu('tag', false);
             }
         });
 
-        // --- MANAGE TAGS MODAL ---
+        // --- 6. Exception Modal (Manual Adjustments) ---
+        const btnException = document.getElementById('btn-log-exception');
+        if (btnException) {
+            btnException.addEventListener('click', () => {
+                // Populate with current live stats
+                this.ui.populateModal('exception', flexManager.getStats());
+                this.ui.toggleModal('exception', true);
+            });
+        }
+
+        document.getElementById('btn-exc-apply').addEventListener('click', () => {
+            const f = parseInt(document.getElementById('exc-focus-input').value) || 0;
+            const b = parseInt(document.getElementById('exc-break-input').value) || 0;
+            
+            // Send adjustments to manager (minutes -> ms)
+            flexManager.adjustTotals(f * 60000, b * 60000);
+            
+            this.ui.toggleModal('exception', false);
+        });
+
+        document.getElementById('btn-exc-cancel').addEventListener('click', () => {
+            this.ui.toggleModal('exception', false);
+        });
+
+        // --- 7. Conclusion Modal ---
+        document.getElementById('btn-conclude-save').addEventListener('click', () => this.handleCommitSession());
+        
+        document.getElementById('btn-conclude-cancel').addEventListener('click', () => {
+            this.ui.toggleModal('conclusion', false);
+            flexManager.startTicker(); // Resume if cancelled
+        });
+
+        // --- 8. Management Logic (Tags / Colors) ---
+        this.setupManagementEvents();
+        
+        // Bind Sliders for Conclusion Modal
+        this._bindSliderInput('conclude-focus-slider', 'conclude-focus-input', '#438e66');
+        this._bindSliderInput('conclude-break-slider', 'conclude-break-input', '#5b85b7');
+    }
+
+    handleCommitSession() {
+        const focusVal = document.getElementById('conclude-focus-input').value;
+        const breakVal = document.getElementById('conclude-break-input').value;
+
+        // Helper to parse "MM:SS" or raw number to seconds
+        const parseToSeconds = (val) => {
+            if(typeof val === 'number') return val;
+            if(val.includes(':')) {
+                const parts = val.split(':').map(Number);
+                let seconds = 0;
+                if(parts.length === 3) seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2]; // HH:MM:SS
+                else if(parts.length === 2) seconds = (parts[0] * 60) + parts[1]; // MM:SS
+                return seconds;
+            }
+            return parseInt(val) || 0;
+        };
+
+        const fSec = parseToSeconds(focusVal);
+        const bSec = parseToSeconds(breakVal);
+
+        // Commit to DB via Manager (handles saving and resetting)
+        flexManager.commitSession(fSec, bSec); 
+
+        this.ui.resetUI();
+        this.ui.toggleModal('conclusion', false);
+    }
+
+    // =========================================================
+    // MANAGEMENT LOGIC (Tags, Colors, Modals)
+    // =========================================================
+
+    setupManagementEvents() {
+        // Open Manage Modal
         const btnManage = document.getElementById('btn-open-manage-tags');
         if(btnManage) {
             btnManage.addEventListener('click', (e) => {
                 e.stopPropagation();
-                this.ui.toggleMenu('tag', false); // Close dropdown
-                this.resetManageForm(); // Start in "Add" mode
+                this.ui.toggleMenu('tag', false);
+                this.resetManageForm();
                 this.refreshManageList();
                 document.getElementById('manage-tags-modal').classList.remove('hidden');
             });
@@ -107,10 +236,8 @@ class FocusTimerController {
             if(!name) return;
 
             if (this.editingTagId) {
-                // Update Existing
                 FocusAPI.updateTag(this.editingTagId, name, this.pendingColor);
             } else {
-                // Create New
                 FocusAPI.saveTag(name, this.pendingColor);
             }
             this.resetManageForm();
@@ -165,42 +292,7 @@ class FocusTimerController {
                 this.pendingColor = this.hexToRgba(hex, opacity);
             }
         });
-
-        // --- Exception Modal ---
-        const btnException = document.getElementById('btn-log-exception');
-        if (btnException) {
-            btnException.addEventListener('click', () => {
-                this.ui.populateModal('exception', this.state.getStats());
-                this.ui.toggleModal('exception', true);
-            });
-        }
-
-        document.getElementById('btn-exc-apply').addEventListener('click', () => {
-            const f = parseInt(document.getElementById('exc-focus-input').value) || 0;
-            const b = parseInt(document.getElementById('exc-break-input').value) || 0;
-            this.state.adjustTotals(f * 60000, b * 60000);
-            this.tick();
-            this.ui.toggleModal('exception', false);
-        });
-
-        document.getElementById('btn-exc-cancel').addEventListener('click', () => {
-            this.ui.toggleModal('exception', false);
-        });
-
-        // --- Conclusion Modal ---
-        document.getElementById('btn-conclude-save').addEventListener('click', () => this.commitSession());
-        
-        document.getElementById('btn-conclude-cancel').addEventListener('click', () => {
-            this.ui.toggleModal('conclusion', false);
-            this.startTicker(); // Resume
-        });
-
-        // Bind Sliders for Conclusion
-        this._bindSliderInput('conclude-focus-slider', 'conclude-focus-input', '#438e66');
-        this._bindSliderInput('conclude-break-slider', 'conclude-break-input', '#5b85b7');
     }
-
-    // --- Manage Tags Logic ---
 
     refreshManageList() {
         this.ui.renderManageList(this.cachedTags, 
@@ -274,84 +366,6 @@ class FocusTimerController {
         
         return result ? `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` : hex;
     }
-
-    // --- Main Actions ---
-
-    handleMainAction() {
-        if (this.state.status === 'idle') {
-            this.state.switchStatus('focus');
-            this.ui.updateSessionStartTime(new Date());
-            this.startTicker();
-        } else if (this.state.status === 'break') {
-            this.state.switchStatus('focus');
-        } else {
-            this.state.switchStatus('break');
-        }
-        
-        this.ui.updateVisualState(this.state.status);
-        this.tick();
-    }
-
-    handleFinishAction() {
-        this.stopTicker();
-        this.state._commitCurrentSegment();
-        this.ui.populateModal('conclusion', this.state.getStats());
-        this.ui.toggleModal('conclusion', true);
-    }
-
-    commitSession() {
-        const focusVal = document.getElementById('conclude-focus-input').value;
-        const breakVal = document.getElementById('conclude-break-input').value;
-
-        const parseToSeconds = (val) => {
-            if(typeof val === 'number') return val;
-            if(val.includes(':')) {
-                const parts = val.split(':').map(Number);
-                let seconds = 0;
-                if(parts.length === 3) seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
-                else if(parts.length === 2) seconds = (parts[0] * 60) + parts[1];
-                return seconds;
-            }
-            return parseInt(val) || 0;
-        };
-
-        const finalFocusSecs = parseToSeconds(focusVal);
-        const finalBreakSecs = parseToSeconds(breakVal);
-
-        const payload = {
-            tag: this.state.currentTag,
-            focusSeconds: finalFocusSecs,
-            breakSeconds: finalBreakSecs,
-            ratio: this.state.ratio
-        };
-
-        FocusAPI.saveFocusSession(payload);
-
-        this.state.reset();
-        this.ui.resetUI();
-        this.ui.toggleModal('conclusion', false);
-    }
-
-    // --- Ticker ---
-
-    startTicker() {
-        if (this.timerInterval) return;
-        this.timerInterval = setInterval(() => this.tick(), 1000);
-    }
-
-    stopTicker() {
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
-        }
-    }
-
-    tick() {
-        const stats = this.state.getStats();
-        this.ui.updateStatsDisplay(stats);
-    }
-
-    // --- Helpers ---
 
     _bindSliderInput(sliderId, inputId, color) {
         const slider = document.getElementById(sliderId);
