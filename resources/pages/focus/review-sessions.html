@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Review Sessions - Kaizen RPG</title>
+</head>
+
+<body>
+  <div class="review-container">
+
+    <!-- Header: Navigation -->
+    <header class="review-header">
+      <div class="header-left">
+        <h2><i class="fa-solid fa-clock-rotate-left"></i> Review Log</h2>
+      </div>
+
+      <div class="date-navigation">
+        <button id="btn-prev-day" class="nav-btn"><i class="fa-solid fa-chevron-left"></i></button>
+
+        <div class="date-display-wrapper">
+          <span id="display-date">Today</span>
+          <span id="display-full-date" class="sub-date">Dec 12, 2025</span>
+        </div>
+
+        <button id="btn-next-day" class="nav-btn" disabled><i class="fa-solid fa-chevron-right"></i></button>
+
+        <!-- Shortcut back to today -->
+        <button id="btn-today-shortcut" class="btn-today hidden">
+          Back to Today
+        </button>
+      </div>
+    </header>
+
+    <!-- Daily Stats Summary -->
+    <div class="review-stats-row">
+      <div class="r-stat-card">
+        <span class="r-label">Total Focus</span>
+        <span class="r-value text-blue" id="stat-total-time">0h 0m</span>
+      </div>
+      <div class="r-stat-card">
+        <span class="r-label">Sessions</span>
+        <span class="r-value" id="stat-count">0</span>
+      </div>
+      <div class="r-stat-card">
+        <span class="r-label">Daily Goal</span>
+        <span class="r-value" id="stat-goal-status">Pending</span>
+      </div>
+    </div>
+
+    <!-- Session List -->
+    <div class="session-list-container" id="session-list">
+      <!-- Sessions injected via JS -->
+    </div>
+
+  </div>
+
+  <!-- Edit Modal -->
+  <div id="modal-edit-session" class="modal-overlay hidden">
+    <div class="review-session-modal-content small-modal">
+      <h3>Edit Session</h3>
+      <p>Update the tag for this session.</p>
+
+      <div class="modal-form-group">
+        <label>Tag</label>
+        <select id="edit-session-tag-select" class="full-width-select">
+          <!-- Tags populated by JS -->
+        </select>
+      </div>
+
+      <div class="modal-actions">
+        <button id="btn-cancel-edit" class="btn-secondary">Cancel</button>
+        <button id="btn-save-edit" class="btn-primary">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="modal-delete-session" class="modal-overlay hidden">
+    <div class="review-session-modal-content small-modal text-center">
+      <div class="warning-icon"><i class="fa-solid fa-trash"></i></div>
+      <h3>Delete Record?</h3>
+      <p>This will remove the session time from your analytics permanently.</p>
+
+      <div class="modal-actions center">
+        <button id="btn-cancel-delete" class="btn-secondary">Keep It</button>
+        <button id="btn-confirm-delete" class="btn-danger">Yes, Delete</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+
+</html>
