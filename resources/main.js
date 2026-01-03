@@ -2,6 +2,9 @@ import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 // import { audioManager } from "./js/_global-managers/AudioManager.js";
 
+// GLOBAL SINGLETON
+import { flexManager } from "./js/focus/flexible/FlexibleFocusManager.js"; 
+
 // UI Routers
 import { handleDropdowns } from './js/dropdown.js';
 import { toggleSideBar } from './js/toggleSideBar.js';
