@@ -1,4 +1,6 @@
 import { FocusAPI } from "../api/FocusAPI.js";
+import { SettingsAPI } from "../api/SettingsAPI.js";
+import { CalendarManager } from "./CalendarManager.js";
 
 /**
  * Initializes the Overview Dashboard logic.
@@ -38,4 +40,8 @@ export function initOverview() {
     // 4. Request Data
     FocusAPI.getFocusSessions(startStr, endStr);
     FocusAPI.getLifetimeStats();
+    SettingsAPI.getSetting('dailyGoal');
+
+    // 5. Initialize Calendar 
+    new CalendarManager(); 
 }

@@ -40,6 +40,12 @@ const SCHEMAS = {
             ratio REAL,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
+
+        CREATE TABLE IF NOT EXISTS tags (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            color TEXT NOT NULL DEFAULT '#6b7280'
+        );
     `
 };
 

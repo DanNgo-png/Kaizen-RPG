@@ -12,11 +12,8 @@ body {
     transition: margin-left 0.5s; /* sidebar open speed */
     padding: 20px;
     left: 75px;
-
-    /* Ensure default page takes up correct width context */
-    /* width: calc(100% - 75px);  */
-    /* Subtract sidebar width to prevent horizontal scroll default */
-    /* box-sizing: border-box;  */
+    right: 0; 
+    box-sizing: border-box; 
 } 
 
 /* --- Special Case: Full Viewport Pages (e.g. Play Menu) --- */

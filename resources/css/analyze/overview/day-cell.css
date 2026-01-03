@@ -1,0 +1,50 @@
+.day-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    background-color: rgba(255, 255, 255, 0.03);
+    cursor: default;
+    transition: background-color 0.2s ease, color 0.2s;
+}
+
+.day-cell.empty {
+    background-color: transparent;
+}
+
+/* --- Dynamic Intensity Levels --- */
+
+/* Level 1: 1m - 59m (Subtle Green) */
+.day-cell.level-1 {
+    background-color: rgba(16, 185, 129, 0.2); 
+    color: #a7f3d0;
+}
+
+/* Level 2: 1h - 2h (Light Green) */
+.day-cell.level-2 {
+    background-color: rgba(16, 185, 129, 0.4); 
+    color: #fff;
+}
+
+/* Level 3: 2h - 4h (Medium Green) */
+.day-cell.level-3 {
+    background-color: rgba(16, 185, 129, 0.7); 
+    color: #fff;
+    font-weight: 600;
+}
+
+/* Level 4: 4h+ (Solid Intense Green) */
+.day-cell.level-4 {
+    background-color: #10b981; 
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); /* Glow effect */
+}
+
+/* Today Highlight (Border only, sits on top of colors) */
+.day-cell.today {
+    border: 1px solid #fff;
+}

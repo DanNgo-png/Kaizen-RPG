@@ -29,6 +29,8 @@
     /* FLEXIBLE TIMER */
     @import url('css/focus/focus-flexible/focus-flexible-layout.css');
     @import url('css/focus/focus-flexible/range-slider.css');
+    @import url('css/focus/focus-flexible/tag-dropdown.css');
+    @import url('css/focus/focus-flexible/delete-tag-overlay.css');
 
 /* === TIMEFRAMES PAGE === */
 @import url('css/timeframes/today.css');
@@ -37,12 +39,19 @@
 @import url('css/timeframes/this-year.css');
 
 /* === ANALYZE PAGE === */
-@import url('css/analyze/custom.css');
-@import url('css/analyze/day.css');
-@import url('css/analyze/month.css');
-@import url('css/analyze/overview.css');
-@import url('css/analyze/week.css');
-@import url('css/analyze/year.css');
+    @import url('css/analyze/custom.css');
+    @import url('css/analyze/day.css');
+    @import url('css/analyze/month.css');
+
+    /* OVERVIEW */
+    @import url('css/analyze/overview.css');
+    @import url('css/analyze/overview/day-cell.css');
+
+    /* WEEK */
+    @import url('css/analyze/week.css');
+
+    /* YEAR */
+    @import url('css/analyze/year.css');
 
 /* === GAME PAGE === */
     /* GAME MODES */
@@ -59,3 +68,4 @@
 @import url('css/main-settings/main-settings-sidebar.css');
 @import url('css/main-settings/main.css');
 @import url('css/main-settings/mods.css');
+@import url('css/main-settings/clear-history-modal-overlay.css');

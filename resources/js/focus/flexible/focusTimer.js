@@ -8,28 +8,40 @@ class FocusTimerController {
         this.ui = new FlexibleTimerUI();
         this.timerInterval = null;
 
+        // Management State
+        this.cachedTags = []; 
+        this.editingTagId = null; 
+        this.pendingColor = '#10b981'; 
+
         this.initEventListeners();
+
+        // Listen for tag updates from backend
+        Neutralino.events.on("receiveTags", (evt) => {
+            this.cachedTags = evt.detail;
+            this.ui.renderTagList(this.cachedTags);
+            
+            // If manage modal is open, refresh that list too
+            const manageModal = document.getElementById('manage-tags-modal');
+            if(manageModal && !manageModal.classList.contains('hidden')) {
+                this.refreshManageList();
+            }
+        });
+
+        // Initial Load
+        FocusAPI.getTags();
     }
 
     initEventListeners() {
-        // --- Main Controls ---
+        // --- Main Timer Controls ---
         this.ui.dom.buttons.main.addEventListener('click', () => this.handleMainAction());
         this.ui.dom.buttons.finish.addEventListener('click', () => this.handleFinishAction());
 
-        // --- Dropdowns (Event Delegation) ---
-        
-        // 1. Ratio Trigger (Fixed Toggle Logic)
+        // --- Ratio Menu ---
         this.ui.dom.buttons.ratioTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            const menu = this.ui.dom.menus.ratio;
-            const isOpen = menu.classList.contains('open');
-
-            if (isOpen) {
-                this.ui.toggleMenu('ratio', false);
-            } else {
-                this.ui.toggleMenu('ratio', true);
-                this._setupOutsideClick('ratio');
-            }
+            const isOpen = this.ui.dom.menus.ratio.classList.contains('open');
+            this.ui.toggleMenu('ratio', !isOpen);
+            if (!isOpen) this.ui._setupOutsideClick('ratio');
         });
 
         this.ui.dom.menus.ratio.addEventListener('click', (e) => {
@@ -51,27 +63,15 @@ class FocusTimerController {
             }
         });
 
-        // 2. Tag Trigger (Fixed Toggle Logic)
+        // --- Tag Menu ---
         this.ui.dom.buttons.tagTrigger.addEventListener('click', (e) => {
             e.stopPropagation();
-            const menu = this.ui.dom.menus.tag;
-            const isOpen = menu.classList.contains('open');
-
-            if (isOpen) {
-                this.ui.toggleMenu('tag', false);
-            } else {
-                this.ui.toggleMenu('tag', true);
-                this._setupOutsideClick('tag');
-            }
+            const isOpen = this.ui.dom.menus.tag.classList.contains('open');
+            this.ui.toggleMenu('tag', !isOpen);
+            if (!isOpen) this.ui._setupOutsideClick('tag');
         });
 
-        // Add Custom Tag
-        this.ui.dom.buttons.addTag.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.addCustomTag();
-        });
-        
-        // Select Tag
+        // Select Tag from Dropdown
         this.ui.dom.menus.tagList.addEventListener('click', (e) => {
             const target = e.target.closest('.tag-opt');
             if (target) {
@@ -79,6 +79,89 @@ class FocusTimerController {
                 this.state.setTag(tag);
                 this.ui.updateTagListSelection(tag);
                 this.ui.toggleMenu('tag', false);
+            }
+        });
+
+        // --- MANAGE TAGS MODAL ---
+        const btnManage = document.getElementById('btn-open-manage-tags');
+        if(btnManage) {
+            btnManage.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.ui.toggleMenu('tag', false); // Close dropdown
+                this.resetManageForm(); // Start in "Add" mode
+                this.refreshManageList();
+                document.getElementById('manage-tags-modal').classList.remove('hidden');
+            });
+        }
+
+        // Close Manage Modal
+        document.getElementById('btn-close-manage-tags').addEventListener('click', () => {
+            document.getElementById('manage-tags-modal').classList.add('hidden');
+        });
+
+        // Submit (Add or Edit)
+        document.getElementById('btn-submit-tag').addEventListener('click', () => {
+            const nameInput = document.getElementById('manage-tag-name');
+            const name = nameInput.value.trim();
+            if(!name) return;
+
+            if (this.editingTagId) {
+                // Update Existing
+                FocusAPI.updateTag(this.editingTagId, name, this.pendingColor);
+            } else {
+                // Create New
+                FocusAPI.saveTag(name, this.pendingColor);
+            }
+            this.resetManageForm();
+        });
+
+        // Cancel Edit Mode
+        document.getElementById('btn-cancel-edit-tag').addEventListener('click', () => {
+            this.resetManageForm();
+        });
+
+        // --- COLOR PICKER ---
+        document.getElementById('btn-open-color-picker').addEventListener('click', () => {
+            this.openColorPicker();
+        });
+
+        document.getElementById('btn-confirm-color').addEventListener('click', () => {
+            this.updateColorPreview(this.pendingColor);
+            document.getElementById('color-picker-overlay').classList.add('hidden');
+        });
+
+        document.getElementById('btn-cancel-color').addEventListener('click', () => {
+            document.getElementById('color-picker-overlay').classList.add('hidden');
+        });
+
+        // Opacity Slider
+        document.getElementById('color-opacity').addEventListener('input', (e) => {
+            const opacity = e.target.value;
+            document.getElementById('opacity-val').textContent = `${opacity}%`;
+            this.updatePendingColorAlpha(opacity);
+        });
+
+        // Color Presets
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('selected'));
+                e.target.classList.add('selected');
+                
+                const hex = e.target.dataset.color;
+                document.getElementById('custom-hex-input').value = hex;
+                
+                const opacity = document.getElementById('color-opacity').value;
+                this.pendingColor = this.hexToRgba(hex, opacity);
+            });
+        });
+
+        // Hex Input
+        document.getElementById('custom-hex-input').addEventListener('input', (e) => {
+            const hex = e.target.value;
+            // Basic hex validation
+            if(/^#[0-9A-F]{6}$/i.test(hex)) {
+                const opacity = document.getElementById('color-opacity').value;
+                this.pendingColor = this.hexToRgba(hex, opacity);
             }
         });
 
@@ -111,13 +194,87 @@ class FocusTimerController {
             this.startTicker(); // Resume
         });
 
-        // BIND SLIDERS: Pass IDs and specific colors
-        // Focus = Green (#438e66), Break = Blue (#5b85b7)
+        // Bind Sliders for Conclusion
         this._bindSliderInput('conclude-focus-slider', 'conclude-focus-input', '#438e66');
         this._bindSliderInput('conclude-break-slider', 'conclude-break-input', '#5b85b7');
     }
 
-    // --- Actions ---
+    // --- Manage Tags Logic ---
+
+    refreshManageList() {
+        this.ui.renderManageList(this.cachedTags, 
+            (tag) => this.loadTagForEditing(tag), // On Select
+            (id) => FocusAPI.deleteTag(id)        // On Delete
+        );
+    }
+
+    loadTagForEditing(tag) {
+        this.editingTagId = tag.id;
+        
+        // Update Form UI
+        document.getElementById('manage-form-title').textContent = "Edit Tag";
+        document.getElementById('btn-submit-tag').textContent = "Submit Edit";
+        document.getElementById('btn-cancel-edit-tag').classList.remove('hidden');
+        document.getElementById('manage-tag-name').value = tag.name;
+        
+        // Setup Color
+        this.pendingColor = tag.color || '#10b981';
+        this.updateColorPreview(this.pendingColor);
+    }
+
+    resetManageForm() {
+        this.editingTagId = null;
+        
+        // Reset Form UI
+        document.getElementById('manage-form-title').textContent = "Add New Tag";
+        document.getElementById('btn-submit-tag').textContent = "Add Tag";
+        document.getElementById('btn-cancel-edit-tag').classList.add('hidden');
+        document.getElementById('manage-tag-name').value = '';
+        
+        // Reset Selection Visual
+        const activeItem = document.querySelector('.manage-tag-item.active');
+        if(activeItem) activeItem.classList.remove('active');
+
+        // Reset Color (Default Green 70%)
+        this.pendingColor = this.hexToRgba('#10b981', 70); 
+        this.updateColorPreview(this.pendingColor);
+    }
+
+    openColorPicker() {
+        const modal = document.getElementById('color-picker-overlay');
+        modal.classList.remove('hidden');
+        
+        // Reset Inputs to default state
+        document.getElementById('color-opacity').value = 70;
+        document.getElementById('opacity-val').textContent = '70%';
+        document.getElementById('custom-hex-input').value = '#10b981';
+    }
+
+    updateColorPreview(colorStr) {
+        document.getElementById('color-preview-dot').style.backgroundColor = colorStr;
+        document.getElementById('color-preview-text').textContent = colorStr;
+    }
+
+    updatePendingColorAlpha(opacity) {
+        let hex = document.getElementById('custom-hex-input').value;
+        if(!/^#[0-9A-F]{6}$/i.test(hex)) hex = '#10b981'; // Fallback
+        this.pendingColor = this.hexToRgba(hex, opacity);
+    }
+
+    hexToRgba(hex, opacity) {
+        // Expand shorthand form (e.g. "03F") to full form (e.g. "0033FF")
+        var shorthandRegex = /^#?([a-f\d])([a-f\d])([a-f\d])$/i;
+        hex = hex.replace(shorthandRegex, function(m, r, g, b) {
+            return r + r + g + g + b + b;
+        });
+
+        var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        const alpha = opacity / 100;
+        
+        return result ? `rgba(${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}, ${alpha})` : hex;
+    }
+
+    // --- Main Actions ---
 
     handleMainAction() {
         if (this.state.status === 'idle') {
@@ -136,34 +293,30 @@ class FocusTimerController {
 
     handleFinishAction() {
         this.stopTicker();
-        this.state._commitCurrentSegment(); // Ensure logic is up to date
+        this.state._commitCurrentSegment();
         this.ui.populateModal('conclusion', this.state.getStats());
         this.ui.toggleModal('conclusion', true);
     }
 
     commitSession() {
-        // Read final values from inputs (parsing MM:SS or raw seconds)
         const focusVal = document.getElementById('conclude-focus-input').value;
         const breakVal = document.getElementById('conclude-break-input').value;
 
-        // Helper to convert string input to Seconds
         const parseToSeconds = (val) => {
             if(typeof val === 'number') return val;
             if(val.includes(':')) {
                 const parts = val.split(':').map(Number);
                 let seconds = 0;
-                if(parts.length === 3) seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2]; // HH:MM:SS
-                else if(parts.length === 2) seconds = (parts[0] * 60) + parts[1]; // MM:SS
+                if(parts.length === 3) seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
+                else if(parts.length === 2) seconds = (parts[0] * 60) + parts[1];
                 return seconds;
             }
-            return parseInt(val) || 0; // Assume seconds if just a number? Or minutes? 
-            // In this specific UI context, the slider drives seconds, so let's treat raw numbers as seconds for consistency with the slider
+            return parseInt(val) || 0;
         };
 
         const finalFocusSecs = parseToSeconds(focusVal);
         const finalBreakSecs = parseToSeconds(breakVal);
 
-        // --- Prepare Payload ---
         const payload = {
             tag: this.state.currentTag,
             focusSeconds: finalFocusSecs,
@@ -171,33 +324,14 @@ class FocusTimerController {
             ratio: this.state.ratio
         };
 
-        // --- Send to Backend ---
         FocusAPI.saveFocusSession(payload);
 
-        // Reset
         this.state.reset();
         this.ui.resetUI();
         this.ui.toggleModal('conclusion', false);
-
-        // You might want to remove this alert once you see it working
-        console.log("📤 Sending session to database...", payload);
     }
 
-    addCustomTag() {
-        const input = this.ui.dom.inputs.newTag;
-        const val = input.value.trim();
-        if (!val) return;
-
-        // Add to DOM
-        const btn = this.ui.addTagOption(val);
-        // Select it immediately
-        this.state.setTag(val);
-        this.ui.updateTagListSelection(val);
-        this.ui.toggleMenu('tag', false);
-        input.value = '';
-    }
-
-    // --- Ticker Loop ---
+    // --- Ticker ---
 
     startTicker() {
         if (this.timerInterval) return;
@@ -218,52 +352,30 @@ class FocusTimerController {
 
     // --- Helpers ---
 
-    _setupOutsideClick(menuName) {
-        const handler = (e) => {
-            const menu = this.ui.dom.menus[menuName];
-            const trigger = this.ui.dom.buttons[`${menuName}Trigger`];
-            
-            // If click is NOT on menu AND NOT on trigger
-            if (menu && !menu.contains(e.target) && !trigger.contains(e.target)) {
-                this.ui.toggleMenu(menuName, false);
-                document.removeEventListener('click', handler);
-            }
-        };
-        // Defer to avoid immediate trigger
-        setTimeout(() => document.addEventListener('click', handler), 0);
-    }
-
-    // Helper to bind Slider (Seconds) <-> Input (MM:SS)
     _bindSliderInput(sliderId, inputId, color) {
         const slider = document.getElementById(sliderId);
         const input = document.getElementById(inputId);
         if(!slider || !input) return;
 
-        // Function to update the background gradient (The "Fill")
         const updateFill = () => {
             const val = parseInt(slider.value) || 0;
             const max = parseInt(slider.max) || 100;
             const percentage = max > 0 ? (val / max) * 100 : 0;
-            
-            // Gradient: Color from 0% to Val%, Grey from Val% to 100%
             slider.style.background = `linear-gradient(to right, ${color} 0%, ${color} ${percentage}%, #333 ${percentage}%, #333 100%)`;
         };
 
-        // 1. Slider Move
         slider.addEventListener('input', (e) => {
             const seconds = parseInt(e.target.value);
             input.value = this.ui._formatTime(seconds * 1000, false);
             updateFill();
         });
 
-        // 2. Input Change
         input.addEventListener('change', (e) => {
             const val = e.target.value;
             let seconds = 0;
 
             if (val.includes(':')) {
-                // Parse MM:SS
-                const parts = val.split(':').reverse(); // [SS, MM, HH]
+                const parts = val.split(':').reverse();
                 seconds += parseInt(parts[0] || 0);
                 seconds += (parseInt(parts[1] || 0) * 60);
                 seconds += (parseInt(parts[2] || 0) * 3600);
@@ -271,11 +383,9 @@ class FocusTimerController {
                 seconds = parseInt(val) || 0;
             }
 
-            // Clamp
             if (seconds > parseInt(slider.max)) seconds = parseInt(slider.max);
             
             slider.value = seconds;
-            // Re-format for consistency
             input.value = this.ui._formatTime(seconds * 1000, false);
             updateFill();
         });

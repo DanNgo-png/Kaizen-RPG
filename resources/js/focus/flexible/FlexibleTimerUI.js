@@ -33,71 +33,120 @@ export class FlexibleTimerUI {
             },
             modals: {
                 exception: document.getElementById('exception-modal'),
-                conclusion: document.getElementById('conclusion-modal')
+                conclusion: document.getElementById('conclusion-modal'),
+                deleteTag: document.getElementById('delete-tag-modal') // Added
             }
         };
+        
+        this.activeMenuListeners = new Map();
+    }
+
+    // ... [Previous methods: updateStatsDisplay, updateVisualState, updateSessionStartTime, renderTagList] ...
+
+    renderTagList(tags) {
+        const list = this.dom.menus.tagList;
+        list.innerHTML = ''; 
+
+        // Default "No Tag"
+        const defBtn = document.createElement('button');
+        defBtn.className = 'selector-opt tag-opt';
+        defBtn.dataset.value = "No Tag";
+        defBtn.innerHTML = `<span class="opt-dot" style="background-color: #6b7280;"></span> No Tag`;
+        list.appendChild(defBtn);
+
+        // Render DB Tags
+        tags.forEach(t => {
+            const btn = document.createElement('button');
+            btn.className = 'selector-opt tag-opt';
+            btn.dataset.value = t.name;
+            const displayColor = t.color || '#6b7280';
+            btn.innerHTML = `<span class="opt-dot" style="background-color: ${displayColor};"></span> ${t.name}`;
+            list.appendChild(btn);
+        });
+    }
+
+    renderManageList(tags, onSelect, onDelete) {
+        const container = document.getElementById('manage-tag-list');
+        if(!container) return;
+        container.innerHTML = '';
+
+        tags.forEach(t => {
+            const el = document.createElement('div');
+            el.className = 'manage-tag-item';
+            el.dataset.id = t.id;
+            
+            const displayColor = t.color || '#6b7280';
+
+            el.innerHTML = `
+                <div class="tag-info">
+                    <span class="opt-dot" style="background-color: ${displayColor}"></span>
+                    <span>${t.name}</span>
+                </div>
+                <button class="btn-delete-tag"><i class="fa-solid fa-trash"></i></button>
+            `;
+
+            // Select Event (Background click)
+            el.addEventListener('click', (e) => {
+                if(!e.target.closest('.btn-delete-tag')) {
+                    container.querySelectorAll('.manage-tag-item').forEach(i => i.classList.remove('active'));
+                    el.classList.add('active');
+                    onSelect(t);
+                }
+            });
+
+            // Delete Event - UPDATED to use custom modal
+            const delBtn = el.querySelector('.btn-delete-tag');
+            delBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.openDeleteTagModal(t, onDelete);
+            });
+
+            container.appendChild(el);
+        });
     }
 
     /**
-     * Main render loop update
+     * Opens the visual delete confirmation modal
      */
-    updateStatsDisplay(stats) {
-        this.dom.displays.focus.textContent = this._formatTime(stats.focusMs);
-        this.dom.displays.break.textContent = this._formatTime(stats.breakMs);
+    openDeleteTagModal(tag, confirmCallback) {
+        const modal = this.dom.modals.deleteTag;
+        const nameDisplay = document.getElementById('del-tag-name-display');
+        const btnConfirm = document.getElementById('btn-confirm-delete-tag');
+        const btnCancel = document.getElementById('btn-cancel-delete-tag');
+
+        if (!modal || !nameDisplay) return;
+
+        // Set Content
+        nameDisplay.textContent = `"${tag.name}"`;
         
-        const prefix = stats.balanceMs >= 0 ? '+' : '-';
-        this.dom.displays.balance.textContent = prefix + this._formatTime(stats.balanceMs, false);
+        // Clone buttons to strip old event listeners (cleanest way without managing named references)
+        const newBtnConfirm = btnConfirm.cloneNode(true);
+        btnConfirm.parentNode.replaceChild(newBtnConfirm, btnConfirm);
+        
+        const newBtnCancel = btnCancel.cloneNode(true);
+        btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
 
-        // Balance State (Colors)
-        if (stats.balanceMs < 0) {
-            this.dom.cards.balance.classList.add('debt');
-            this.dom.cards.balance.classList.remove('surplus');
-            this.dom.displays.msgBalance.textContent = "Overdrawn";
-        } else {
-            this.dom.cards.balance.classList.add('surplus');
-            this.dom.cards.balance.classList.remove('debt');
-            this.dom.displays.msgBalance.textContent = "Banked";
-        }
+        // Bind New Events
+        newBtnConfirm.addEventListener('click', () => {
+            confirmCallback(tag.id);
+            modal.classList.add('hidden');
+        });
+
+        newBtnCancel.addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+
+        // Close on background click
+        modal.onclick = (e) => {
+            if (e.target === modal) modal.classList.add('hidden');
+        };
+
+        // Show
+        modal.classList.remove('hidden');
     }
 
-    updateVisualState(status) {
-        // Card Highlighting
-        this.dom.cards.focus.classList.toggle('active', status === 'focus');
-        this.dom.cards.break.classList.toggle('active', status === 'break');
-
-        // Button State
-        const btn = this.dom.buttons.main;
-        if (status === 'focus') {
-            btn.textContent = "Switch to Break";
-            btn.classList.add('is-focusing');
-            btn.innerHTML = `<i class="fa-solid fa-mug-hot"></i> Take a Break`;
-        } else if (status === 'break') {
-            btn.textContent = "Resume Focus";
-            btn.classList.remove('is-focusing');
-            btn.innerHTML = `<i class="fa-solid fa-brain"></i> Resume Focus`;
-        } else {
-            btn.classList.remove('is-focusing');
-            btn.innerHTML = `<i class="fa-solid fa-play"></i> Start Focus`;
-        }
-
-        // Visibility of Finish button
-        if (status === 'idle') {
-            this.dom.buttons.finish.classList.add('hidden');
-        } else {
-            this.dom.buttons.finish.classList.remove('hidden');
-        }
-    }
-
-    updateSessionStartTime(dateObj) {
-        if (this.dom.displays.sessionStart) {
-            this.dom.displays.sessionStart.textContent = dateObj 
-                ? dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                : "--:--";
-        }
-    }
-
-    // --- Menu Logic ---
-
+    // ... [Rest of the file: toggleMenu, _setupOutsideClick, populateModal, etc.] ...
+    
     toggleMenu(menuName, show) {
         const menu = this.dom.menus[menuName];
         const trigger = this.dom.buttons[`${menuName}Trigger`];
@@ -109,6 +158,33 @@ export class FlexibleTimerUI {
         } else {
             menu.classList.remove('open');
             trigger.classList.remove('active');
+            this._removeOutsideClickListener(menuName);
+        }
+    }
+
+    _setupOutsideClick(menuName) {
+        const menu = this.dom.menus[menuName];
+        const trigger = this.dom.buttons[`${menuName}Trigger`];
+        
+        this._removeOutsideClickListener(menuName);
+
+        const outsideClickListener = (e) => {
+            if (!menu.contains(e.target) && !trigger.contains(e.target)) {
+                this.toggleMenu(menuName, false);
+            }
+        };
+
+        this.activeMenuListeners.set(menuName, outsideClickListener);
+        setTimeout(() => {
+            document.addEventListener('click', outsideClickListener);
+        }, 0);
+    }
+
+    _removeOutsideClickListener(menuName) {
+        if (this.activeMenuListeners.has(menuName)) {
+            const listener = this.activeMenuListeners.get(menuName);
+            document.removeEventListener('click', listener);
+            this.activeMenuListeners.delete(menuName);
         }
     }
 
@@ -120,19 +196,6 @@ export class FlexibleTimerUI {
             else el.classList.remove('selected');
         });
     }
-
-    addTagOption(tagName) {
-        const btn = document.createElement('button');
-        btn.className = 'selector-opt tag-opt';
-        btn.dataset.value = tagName;
-        btn.innerHTML = `<span class="opt-dot color-grey"></span> ${tagName}`;
-        
-        // Insert after the input box
-        this.dom.menus.tagList.insertBefore(btn, this.dom.menus.tagList.children[1]);
-        return btn;
-    }
-
-    // --- Modal Logic ---
 
     toggleModal(name, show) {
         const modal = this.dom.modals[name];
@@ -157,20 +220,15 @@ export class FlexibleTimerUI {
             const rangeF = document.getElementById('conclude-focus-slider');
             const rangeB = document.getElementById('conclude-break-slider');
             
-            // 1. Configure Focus Slider
-            // Ensure max is at least 60 seconds so slider isn't broken on 0
             rangeF.max = fSec > 0 ? fSec : 60; 
-            rangeF.value = fSec; // Default to full right (Total time)
+            rangeF.value = fSec; 
             
-            // 2. Configure Break Slider
             rangeB.max = bSec > 0 ? bSec : 60;
-            rangeB.value = bSec; // Default to full right (Total time)
+            rangeB.value = bSec;
 
-            // 3. Populate Inputs with formatted time (MM:SS)
             inputF.value = this._formatTime(data.focusMs, false);
             inputB.value = this._formatTime(data.breakMs, false);
 
-            // 4. Trigger visual update (Gradient Fill)
             rangeF.dispatchEvent(new Event('input'));
             rangeB.dispatchEvent(new Event('input'));
         }
@@ -184,8 +242,6 @@ export class FlexibleTimerUI {
         this.updateSessionStartTime(null);
         this.updateVisualState('idle');
     }
-
-    // --- Utilities ---
 
     _formatTime(ms, showHours = true) {
         const seconds = Math.floor(Math.abs(ms) / 1000);

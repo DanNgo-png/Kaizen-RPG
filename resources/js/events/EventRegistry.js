@@ -18,11 +18,13 @@ export const EventRegistry = {
         Neutralino.events.on("receiveSetting", SettingsHandler.onReceiveSetting);
         Neutralino.events.on("settingSaved", SettingsHandler.onSettingSaved);
         Neutralino.events.on("receiveCustomFonts", SettingsHandler.onReceiveCustomFonts); 
+        Neutralino.events.on("focusHistoryCleared", SettingsHandler.onFocusHistoryCleared);
         
         // Focus Sessions
         Neutralino.events.on("receiveFocusSessions", FocusHandler.onReceiveSessions);
         Neutralino.events.on("focusSessionSaved", FocusHandler.onSessionSaved);
         Neutralino.events.on("receiveLifetimeStats", FocusHandler.onReceiveLifetimeStats);
+        Neutralino.events.on("receiveCalendarData", FocusHandler.onReceiveCalendarData);
 
         // Add other domain handlers here (e.g., InventoryHandler, QuestHandler)
         // Neutralino.events.on("receiveInventory", InventoryHandler.onUpdate);

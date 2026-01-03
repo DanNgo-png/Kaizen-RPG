@@ -1,11 +1,11 @@
 /* --- Scoped Styles for Overview Dashboard --- */
 .overview-container {
-    max-width: 1200px;
+    /* max-width: 1200px; */
+    max-width: 100%; 
     margin: 0 auto;
     color: var(--text-primary, #fff);
     font-family: var(--font-main, "Segoe UI", sans-serif);
     animation: fadeIn 0.4s ease-out;
-    /* NO NEED padding-top: 230px; */
     padding-bottom: 40px;
 }
 
@@ -26,7 +26,7 @@
     display: grid;
     grid-template-columns: 1fr 1.4fr;
     /* Left col narrower than calendar */
-    gap: 20px;
+    gap: clamp(15px, 2vw, 24px); 
     margin-bottom: 20px;
 }
 
@@ -46,6 +46,92 @@
     display: flex;
     flex-direction: column;
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+/* --- 1. Today's Focus --- */
+.analyze-overview-card.today-focus-container {
+    /* Scale padding between 16px and 24px based on viewport width */
+    padding: clamp(16px, 1.5vw, 24px);
+    /* Ensure height allows flex items to shrink/grow properly */
+    min-height: clamp(180px, 20vh, 220px); 
+    justify-content: center;
+}
+
+/* Scoped child responsiveness */
+.analyze-overview-card.today-focus-container .today-stats {
+    /* Scale gap between the two blue boxes */
+    gap: clamp(8px, 1vw, 15px);
+}
+
+.analyze-overview-card.today-focus-container .stat-box {
+    /* Scale internal padding of the blue boxes */
+    padding: clamp(12px, 1.5vw, 20px) 5px;
+}
+
+.analyze-overview-card.today-focus-container .value {
+    /* Scale the font size of the time/count */
+    font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+}
+
+/* --- 2. Streaks --- */
+.analyze-overview-card.streak-container {
+    padding: clamp(16px, 1.5vw, 24px);
+    min-height: clamp(200px, 25vh, 250px);
+    justify-content: space-between;
+}
+
+/* Scoped child responsiveness */
+.analyze-overview-card.streak-container .streak-boxes {
+    gap: clamp(8px, 1vw, 15px);
+}
+
+.analyze-overview-card.streak-container .streak-box {
+    padding: clamp(12px, 1.5vw, 20px) 5px;
+}
+
+.analyze-overview-card.streak-container .value {
+    font-size: clamp(1.1rem, 1.5vw, 1.4rem);
+}
+
+/* --- 3. Calendar --- */
+.analyze-overview-card.calendar-container {
+    padding: clamp(15px, 2vw, 24px);
+    /* Ensure calendar spans enough height but doesn't overflow viewport easily */
+    min-height: clamp(400px, 50vh, 600px);
+}
+
+/* Scoped child responsiveness */
+.analyze-overview-card.calendar-container .calendar-grid {
+    /* Tighter gap on smaller screens to keep days aligned */
+    gap: clamp(4px, 0.5vw, 8px);
+    margin-bottom: clamp(15px, 2vh, 25px);
+}
+
+.analyze-overview-card.calendar-container .day-cell {
+    font-size: 1rem;
+}
+
+.analyze-overview-card.calendar-container .calendar-stats-row {
+    gap: clamp(8px, 1vw, 15px);
+}
+
+/* --- 4. Lifetime Focus --- */
+.analyze-overview-card.lifetime-view-container {
+    padding: clamp(16px, 2vw, 24px);
+}
+
+/* Scoped child responsiveness */
+.analyze-overview-card.lifetime-view-container .lifetime-row {
+    /* Prevent boxes from touching when sidebar opens */
+    gap: clamp(10px, 1.5vw, 20px);
+}
+
+.analyze-overview-card.lifetime-view-container .lifetime-box {
+    padding: clamp(15px, 2vw, 25px);
+}
+
+.analyze-overview-card.lifetime-view-container .lifetime-value {
+    font-size: clamp(1.2rem, 2vw, 1.5rem);
 }
 
 .analyze-overview-card-header {
@@ -200,48 +286,10 @@
 }
 
 .day-label {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--text-secondary);
     font-weight: 600;
     margin-bottom: 10px;
-}
-
-.day-cell {
-    aspect-ratio: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 6px;
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    background-color: rgba(255, 255, 255, 0.03);
-    cursor: default;
-}
-
-.day-cell.empty {
-    background-color: transparent;
-}
-
-/* Day States */
-.day-cell.focused {
-    background-color: #10b981;
-    /* Green Activity */
-    color: #064e3b;
-    font-weight: 700;
-}
-
-.day-cell.selected {
-    background-color: #d1fae5;
-    /* Light green selection */
-    color: #065f46;
-    font-weight: 700;
-    border: 2px solid #10b981;
-}
-
-.day-cell.today {
-    background-color: transparent;
-    border: 1px solid #4b5563;
-    color: white;
 }
 
 .calendar-stats-row {
@@ -285,6 +333,7 @@
     border-radius: 12px;
     padding: 25px;
     text-align: center;
+    align-items: center;
     display: flex;
     flex-direction: column;
     gap: 10px;

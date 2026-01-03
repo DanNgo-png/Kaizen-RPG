@@ -1,4 +1,5 @@
 import { SettingsAPI } from "../api/SettingsAPI.js";
+import { FocusAPI } from "../api/FocusAPI.js";
 
 // Map dropdown values to actual CSS font stacks
 const FONT_MAP = {
@@ -13,9 +14,20 @@ const FONT_MAP = {
 // Cache for custom fonts list
 let cachedCustomFonts = [];
 
+// Store original HTML to reset modal after success
+let originalModalHTML = "";
+
 export function initMainSettings() {
     const fontSelect = document.getElementById('setting-font-family');
     const openFontsBtn = document.getElementById('btn-open-fonts');
+    const goalInput = document.getElementById('setting-daily-goal');
+    
+    // Select Elements for Clear History
+    const clearFocusBtn = document.getElementById('btn-clear-focus-data');
+    const modal = document.getElementById('modal-clear-history');
+    const modalContent = modal ? modal.querySelector('.clear-history-modal-content') : null;
+    const btnConfirm = document.getElementById('clear-history-btn-confirm-clear');
+    const btnCancel = document.getElementById('clear-history-btn-cancel-clear');
 
     if (fontSelect) {
         // 1. Listen for changes
@@ -37,6 +49,44 @@ export function initMainSettings() {
     if (openFontsBtn) {
         openFontsBtn.addEventListener('click', () => {
             SettingsAPI.openFontsFolder();
+        });
+    }
+
+    // --- Daily Goal Logic ---
+    if (goalInput) {
+        // 1. Load current value
+        SettingsAPI.getSetting('dailyGoal');
+
+        // 2. Save on change
+        goalInput.addEventListener('change', (e) => {
+            let val = parseInt(e.target.value);
+            if (val < 1) val = 1; // Minimum 1 minute
+            SettingsAPI.saveSetting('dailyGoal', val);
+        });
+    }
+
+    // --- Clear Focus History Logic (Modal) ---
+    if (clearFocusBtn && modal && btnConfirm && btnCancel) {
+        
+        // 1. Save original state on first load
+        if (!originalModalHTML && modalContent) {
+            originalModalHTML = modalContent.innerHTML;
+        }
+
+        // 2. Open Modal (Ensure state is clean)
+        clearFocusBtn.addEventListener('click', () => {
+            if (originalModalHTML) modalContent.innerHTML = originalModalHTML; // Reset content
+            // Re-bind buttons after HTML reset because elements were recreated
+            bindModalButtons(modal); 
+            modal.classList.remove('hidden');
+        });
+
+        // Close logic is handled inside bindModalButtons now
+        // Close on clicking background overlay
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
         });
     }
 }
@@ -132,4 +182,59 @@ export function updateFontSelectUI(value) {
     if (fontSelect && value) {
         fontSelect.value = value;
     }
+}
+
+// Helper to update the input UI when data comes back from DB
+export function updateDailyGoalUI(value) {
+    const input = document.getElementById('setting-daily-goal');
+    if (input && value) {
+        input.value = value;
+    }
+}
+
+/**
+ * Helper to re-bind events after innerHTML reset
+ */
+function bindModalButtons(modal) {
+    const btnConfirm = document.getElementById('clear-history-btn-confirm-clear');
+    const btnCancel = document.getElementById('clear-history-btn-cancel-clear');
+
+    if (btnCancel) {
+        btnCancel.onclick = () => modal.classList.add('hidden');
+    }
+
+    if (btnConfirm) {
+        btnConfirm.onclick = () => {
+            // UI Loading State
+            btnConfirm.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Deleting...';
+            btnConfirm.style.opacity = '0.7';
+            btnConfirm.disabled = true;
+            
+            FocusAPI.clearFocusHistory();
+        };
+    }
+}
+
+/**
+ * Called by SettingsHandler on success
+ */
+export function onClearHistorySuccess() {
+    const modal = document.getElementById('modal-clear-history');
+    const content = modal ? modal.querySelector('.clear-history-modal-content') : null;
+
+    if (!content) return;
+
+    // Transition to Success View
+    content.innerHTML = `
+        <div class="clear-history-modal-header-icon text-green" style="background: rgba(74, 222, 128, 0.1);">
+            <i class="fa-solid fa-check"></i>
+        </div>
+        <h3>History Cleared</h3>
+        <p style="text-align: center;">All session data has been successfully wiped.</p>
+    `;
+
+    // Wait 1.5 seconds, then close
+    setTimeout(() => {
+        modal.classList.add('hidden');
+    }, 1500);
 }

@@ -10,7 +10,7 @@ import { configureSidebar } from './js/focus/configureSidebar.js';
 import { initTodoList } from './js/plans/todoListManager.js';
 import { initFocusTimer } from './js/focus/standard/FocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FocusTimer.js';
-import { initOverview } from './js/analyze/overviewManager.js';
+import { initOverview } from './js/analyze/OverviewManager.js';
 import { initSidebarTooltips } from './js/sidebarTooltip.js';
 import { initHeatmap } from './js/analyze/heat-map.js';
 import { initMenuButtons } from './js/games/playGameManager.js';

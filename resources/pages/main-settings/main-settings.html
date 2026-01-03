@@ -8,7 +8,7 @@
 </head>
 
 <body>
-  <div class="main-settings-container">
+  <MAIN_SETTINGS_CONTAINER class="main-settings-container">
     <div class="ms-header">
       <div class="ms-icon-box">
         <i class="fa-solid fa-gear"></i>
@@ -19,7 +19,7 @@
       </div>
     </div>
 
-    <div class="ms-grid">
+    <SETTINGS_GRID class="ms-grid">
 
       <!-- LEFT COLUMN -->
       <div class="ms-column">
@@ -154,7 +154,6 @@
 
       <!-- RIGHT COLUMN -->
       <div class="ms-column">
-
         <!-- Data Management -->
         <div class="ms-card">
           <div class="ms-card-header">
@@ -175,6 +174,22 @@
               <span class="ms-desc">Create a local snapshot of your progress</span>
             </div>
             <button class="ms-btn"><i class="fa-solid fa-download"></i> Backup Now</button>
+          </div>
+
+          <!-- Clear Focus History -->
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label" style="color: #fbbf24;">Clear Analysis Data</span>
+              <span class="ms-desc">Wipe focus sessions, streaks, and calendar history</span>
+            </div>
+            <button id="btn-clear-focus-data" class="ms-btn"
+              style="border: 1px solid rgba(251, 191, 36, 0.5); color: #fbbf24; background: rgba(251, 191, 36, 0.1);">
+              <span class="clear-history-button-text"
+                style="font-size: clamp(0.75rem, 14.4px, 0.95rem); white-space: nowrap;">
+                <i class="fa-solid fa-eraser"></i>
+                Clear History
+              </span>
+            </button>
           </div>
 
           <!-- Reset Option -->
@@ -198,6 +213,23 @@
               style="border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; background: rgba(239, 68, 68, 0.1);">
               <i class="fa-solid fa-skull"></i> Wipe Data
             </button>
+          </div>
+        </div>
+
+        <!-- Productivity Goals -->
+        <div class="ms-card">
+          <div class="ms-card-header">
+            <i class="fa-solid fa-bullseye"></i> Productivity
+          </div>
+
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Daily Focus Goal</span>
+              <span class="ms-desc">Minutes required to maintain streak</span>
+            </div>
+            <!-- Reusing ms-select styles for consistency, adjusted for input -->
+            <input type="text" inputmode="numeric" pattern="\d*" id="setting-daily-goal" class="ms-select"
+              style="width: 80px; padding-right: 10px;" value="15">
           </div>
         </div>
 
@@ -230,15 +262,33 @@
             <button class="ms-btn ms-btn-primary">Check Now</button>
           </div>
         </div>
-
       </div>
-
-    </div>
+    </SETTINGS_GRID>
 
     <div class="about-footer">
       <p>Kaizen RPG &copy; 2025. Built with Neutralinojs.</p>
     </div>
 
+  </MAIN_SETTINGS_CONTAINER>
+
+  <!-- MODAL: Clear History Confirmation -->
+  <div id="modal-clear-history" class="clear-history-modal-overlay hidden">
+    <div class="clear-history-modal-content">
+      <div class="clear-history-modal-header-icon text-red">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+      </div>
+      <h3>Delete All Data?</h3>
+      <p>
+        You are about to wipe <b>all focus sessions, streaks, and analytics history</b>.
+        This action is permanent and cannot be undone.
+      </p>
+      <div class="clear-history-modal-actions">
+        <button id="clear-history-btn-cancel-clear" class="ms-btn">Cancel</button>
+        <button id="clear-history-btn-confirm-clear" class="ms-btn clear-history-btn-danger-solid">
+          <i class="fa-solid fa-trash"></i> Yes, Delete Everything
+        </button>
+      </div>
+    </div>
   </div>
 </body>
 
