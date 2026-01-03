@@ -18,6 +18,7 @@ footer {
     gap: 8px;
     font-size: 0.9rem;
     font-weight: 500;
+    font-family: var(--font-main);
     transition: 0.2s;
     margin-bottom: 20px;
 }
