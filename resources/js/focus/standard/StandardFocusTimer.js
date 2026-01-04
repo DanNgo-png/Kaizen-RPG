@@ -1,238 +1,334 @@
 import { TimerUI } from "./TimerUI.js";
 import { TimerConfig } from "./TimerConfig.js";
-import { FocusAPI } from "../../api/FocusAPI.js";
+import { standardManager } from "./StandardFocusManager.js";
+import { SettingsAPI } from "../../api/SettingsAPI.js";
+import { notifier } from "../../_global-managers/NotificationManager.js";
+
+// TODO OVERLAY
+import { initTodoList, renderTasks } from "../../plans/todoListManager.js";
+import { initKanbanBoard, renderKanbanView } from "../../plans/kanbanManager.js";
 
 export function initFocusTimer() {
     const ui = new TimerUI();
 
-    // --- State ---
-    let timerInterval = null;
-    let timeValue = 0; 
-    let isPaused = false;
-    let currentMode = 'focus'; 
-    let isStopwatch = false;
-    
-    // Store duration for the save payload
-    let currentSessionTotalSeconds = 0; 
+    // --- 1. Sync Logic (Manager -> UI) ---
+    const updateUIFromState = (state) => {
+        ui.updateTimeDisplay(state.time);
+        ui.setModeVisuals(state.mode);
 
-    // --- Core Logic ---
+        const active = state.isRunning || state.isPaused;
+        ui.setControlsState(active, state.isPaused, state.mode, state.isStopwatch);
+        ui.setSidebarLocked(active);
+    };
 
-    const loadStateFromConfig = () => {
-        isStopwatch = TimerConfig.isStopwatchMode();
+    // --- Helper: Sync Dots on Load ---
+    const syncDotsVisuals = (completedSets, currentMode, targetIterations) => {
+        const dotsContainer = document.querySelector('.focus-dots');
+        if (!dotsContainer) return;
 
-        if (isStopwatch) {
-            currentMode = TimerConfig.getStopwatchSubMode();
-            if (!timerInterval && !isPaused) {
-                timeValue = 0;
+        const currentDotCount = dotsContainer.children.length;
+        const targetDotCount = (targetIterations || 1) * 2;
+
+        if (currentDotCount !== targetDotCount) {
+            dotsContainer.innerHTML = '';
+            for (let i = 0; i < targetDotCount; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('focus-dot', 'inactive');
+                dotsContainer.appendChild(dot);
             }
-        } else {
-            if (!timerInterval && !isPaused) {
-                const minutes = currentMode === 'focus' 
-                    ? TimerConfig.getFocusDuration() 
-                    : TimerConfig.getBreakDuration();
-                timeValue = minutes * 60;
-                
-                // Track this for saving later
-                if (currentMode === 'focus') {
-                    currentSessionTotalSeconds = minutes * 60;
+        }
+
+        const dots = document.querySelectorAll('.focus-dot');
+        dots.forEach(d => {
+            d.classList.remove('active', 'break-active', 'inactive');
+            d.classList.add('inactive');
+        });
+
+        let activeIndex = completedSets * 2;
+        if (currentMode === 'break') {
+            activeIndex = (completedSets * 2) + 1;
+        }
+
+        for (let i = 0; i < dots.length; i++) {
+            if (i < activeIndex) {
+                dots[i].classList.add('inactive');
+            } else if (i === activeIndex) {
+                dots[i].classList.remove('inactive');
+                dots[i].classList.add('active');
+                if (currentMode === 'break') {
+                    dots[i].classList.add('break-active');
                 }
             }
         }
     };
 
-    const startTimer = () => {
-        if (!isPaused && !timerInterval) {
-            loadStateFromConfig();
-        }
-        
-        isPaused = false;
-        timerInterval = setInterval(tick, 1000);
-        
-        // LOCK SIDEBAR
-        ui.setSidebarLocked(true);
-        render();
-    };
+    // --- Listen for Mode Changes from Sidebar ---
+    document.addEventListener('kaizen:mode-changed', (e) => {
+        const mode = e.detail; // 'timer' or 'stopwatch'
+        const state = standardManager.getState();
 
-    const pauseTimer = () => {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        isPaused = true;
-        render();
-    };
+        // Only update if idle
+        if (!state.isRunning && !state.isPaused) {
+            const isSw = (mode === 'stopwatch');
 
-    const stopTimer = () => {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        isPaused = false;
-        
-        if (isStopwatch) {
-            timeValue = 0;
-        } else {
-            currentMode = 'focus';
-            const minutes = TimerConfig.getFocusDuration();
-            timeValue = minutes * 60;
-        }
-        
-        // UNLOCK SIDEBAR
-        ui.setSidebarLocked(false);
-        render();
-    };
-
-    const skipPhase = () => {
-        if (isStopwatch) return; 
-        clearInterval(timerInterval);
-        timerInterval = null;
-        isPaused = false;
-        
-        // Pass 'true' to indicate this was skipped manually
-        handlePhaseComplete(true);
-    };
-
-    const handlePhaseComplete = (skipped = false) => {
-        clearInterval(timerInterval);
-        timerInterval = null;
-        isPaused = false;
-
-        // UNLOCK SIDEBAR (Session ended)
-        ui.setSidebarLocked(false);
-
-        if (!isStopwatch) {
-            // Only play sound if NOT skipped (Natural completion)
-            if (!skipped) {
-                ui.playAlarm();
-                
-                // --- SAVE LOGIC ---
-                // Only save if it was a Focus session and it wasn't skipped
-                if (currentMode === 'focus') {
-                    saveCompletedSession();
-                }
+            let subMode = 'focus';
+            if (isSw) {
+                subMode = TimerConfig.getStopwatchSubMode();
             }
-            
-            ui.advanceDots(currentMode);
-            currentMode = (currentMode === 'focus') ? 'break' : 'focus';
-            const minutes = currentMode === 'focus' 
-                ? TimerConfig.getFocusDuration() 
-                : TimerConfig.getBreakDuration();
-            timeValue = minutes * 60;
-            
-            // Update tracking for the next round
-            if (currentMode === 'focus') {
-                currentSessionTotalSeconds = minutes * 60;
-            }
-        }
 
-        render();
-    };
+            // Visual updates
+            ui.setControlsState(false, false, subMode, isSw);
 
-    const saveCompletedSession = () => {
-        // Try to find selected tag text, fallback to "Standard"
-        const tagEl = document.querySelector('.focus-dropdown-left span');
-        let tagName = "Standard";
-        if (tagEl) {
-            const text = tagEl.textContent.trim();
-            if (text !== "Add a tag") tagName = text;
-        }
-
-        const payload = {
-            tag: tagName,
-            focusSeconds: currentSessionTotalSeconds,
-            breakSeconds: 0, // Standard timer tracks breaks separately/implicitly
-            ratio: 1.0 
-        };
-
-        console.log("💾 Saving Standard Session:", payload);
-        FocusAPI.saveFocusSession(payload);
-    };
-
-    const tick = () => {
-        if (isStopwatch) {
-            timeValue++;
-            ui.updateTimeDisplay(timeValue);
-        } else {
-            if (timeValue > 0) {
-                timeValue--;
-                ui.updateTimeDisplay(timeValue);
+            if (isSw) {
+                ui.updateTimeDisplay(0);
+                ui.setModeVisuals(subMode); // Ensure color matches submode
             } else {
-                handlePhaseComplete(); // Natural completion (sound plays + saves)
+                ui.updateTimeDisplay(TimerConfig.getFocusDuration() * 60);
+                ui.setModeVisuals('focus');
             }
         }
+    });
+
+    // --- Listen for Stopwatch Internal Changes (Focus/Break) ---
+    document.addEventListener('kaizen:stopwatch-mode-changed', (e) => {
+        const subMode = e.detail; // 'focus' or 'break'
+        const state = standardManager.getState();
+
+        // Only update visually if we are currently IN stopwatch mode and IDLE
+        const isCurrentlyStopwatch = TimerConfig.isStopwatchMode();
+
+        if (!state.isRunning && !state.isPaused && isCurrentlyStopwatch) {
+            ui.setModeVisuals(subMode);
+            // Re-trigger controls state to update button text ("Start Break" vs "Start Focus") if needed,
+            // though stopwatch usually says "Start Stopwatch", color is the main thing here.
+            ui.setControlsState(false, false, subMode, true);
+        }
+    });
+
+    // --- 2. Initial Load ---
+    const initialState = standardManager.getState();
+
+    if (!initialState.isRunning && !initialState.isPaused) {
+        // IDLE: Load defaults from Sidebar
+        const isSw = TimerConfig.isStopwatchMode();
+        let mode = 'focus';
+
+        let duration = 0;
+        if (isSw) {
+            mode = TimerConfig.getStopwatchSubMode();
+            duration = 0;
+        } else {
+            duration = TimerConfig.getFocusDuration() * 60;
+        }
+
+        ui.setModeVisuals(mode);
+        ui.updateTimeDisplay(duration);
+        ui.setControlsState(false, false, mode, isSw);
+        SettingsAPI.getSetting('standardFocusIterations');
+    } else {
+        // ACTIVE: Sync with running manager
+        updateUIFromState(initialState);
+        syncDotsVisuals(initialState.completedSets, initialState.mode, initialState.targetIterations);
+    }
+
+    // --- Listen for Settings Update ---
+    document.addEventListener('kaizen:iterations-updated', (e) => {
+        const newVal = e.detail;
+        const currentState = standardManager.getState();
+        if (!currentState.isRunning && !currentState.isPaused) {
+            syncDotsVisuals(0, 'focus', newVal);
+        }
+    });
+
+    // --- 3. Event Listeners ---
+    const btnMain = document.getElementById('main-action-btn');
+    if (btnMain) {
+        btnMain.onclick = () => {
+            const state = standardManager.getState();
+
+            if (state.isRunning) {
+                standardManager.pause();
+            } else if (state.isPaused) {
+                standardManager.resume();
+            } else {
+                // FIX: Added check for 'long-break' so it resumes the pending long break instead of starting a new focus session
+                const isBreakPending = state.mode === 'break' || state.mode === 'long-break';
+                const isNextFocusPending = state.mode === 'focus' && state.completedSets > 0;
+
+                // Resume existing flow only if NOT in stopwatch mode (Stopwatch is always manual start/stop)
+                if (!TimerConfig.isStopwatchMode() && (isBreakPending || isNextFocusPending)) {
+                    standardManager.resume();
+                } else {
+                    // --- START NEW SESSION ---
+                    const isSw = TimerConfig.isStopwatchMode();
+
+                    const focusMins = TimerConfig.getFocusDuration();
+                    const breakMins = TimerConfig.getBreakDuration();
+                    const iterVal = parseInt(document.getElementById('iter-val').value) || 1;
+
+                    const lbToggle = document.getElementById('long-break-toggle');
+                    const lbEnabled = lbToggle ? lbToggle.checked : false;
+                    const lbMins = parseInt(document.getElementById('lb-dur-val').value) || 15;
+                    const lbInterval = parseInt(document.getElementById('lb-int-val').value) || 4;
+
+                    const tagEl = document.querySelector('.focus-dropdown-left span');
+                    const tagName = (tagEl && tagEl.textContent.trim() !== "Add a tag")
+                        ? tagEl.textContent.trim()
+                        : "Standard";
+
+                    const startMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
+
+                    standardManager.startSession({
+                        isStopwatch: isSw,
+                        mode: startMode,
+                        focusMinutes: focusMins,
+                        breakMinutes: breakMins,
+                        iterations: iterVal,
+                        longBreakEnabled: lbEnabled,
+                        longBreakMinutes: lbMins,
+                        longBreakInterval: lbInterval,
+                        tag: tagName
+                    });
+                }
+            }
+        };
+    }
+
+    const btnStop = document.getElementById('stop-btn');
+    if (btnStop) {
+        btnStop.onclick = () => {
+            standardManager.stop();
+            // Reset UI
+            const isSw = TimerConfig.isStopwatchMode();
+
+            // If in stopwatch mode, use the selected sub-mode (focus/break) color
+            const resetMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
+
+            ui.setModeVisuals(resetMode);
+
+            if (isSw) {
+                ui.updateTimeDisplay(0);
+            } else {
+                ui.updateTimeDisplay(TimerConfig.getFocusDuration() * 60);
+            }
+
+            ui.setControlsState(false, false, resetMode, isSw);
+            ui.setSidebarLocked(false);
+
+            const savedIter = parseInt(document.getElementById('iter-val').value) || 1;
+            syncDotsVisuals(0, 'focus', savedIter);
+        };
+    }
+
+    const btnSkip = document.getElementById('skip-break-btn');
+    if (btnSkip) {
+        btnSkip.onclick = () => standardManager.skipPhase();
+    }
+
+    const unlockLink = document.getElementById('unlock-end-session');
+    if (unlockLink) {
+        unlockLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            standardManager.stop();
+        });
+    }
+
+    // --- 4. Subscriptions ---
+    const tickHandler = (e) => {
+        updateUIFromState(e.detail);
     };
 
-    const render = () => {
-        ui.setModeVisuals(currentMode);
-        ui.setControlsState(!!timerInterval, isPaused, currentMode, isStopwatch);
-        ui.updateTimeDisplay(timeValue);
+    const phaseHandler = (e) => {
+        ui.advanceDots(e.detail.completedMode);
     };
 
-    // --- Listeners ---
+    const completionHandler = () => {
+        notifier.show(
+            "Session Complete!",
+            "Great work! You've finished your target iterations.",
+            "fa-solid fa-trophy"
+        );
 
-    const bindConfigEvents = () => {
-        const typeButtons = document.querySelectorAll('.type-btn');
-        typeButtons.forEach(btn => {
+        ui.setModeVisuals('focus');
+        ui.updateTimeDisplay(TimerConfig.getFocusDuration() * 60);
+        ui.setControlsState(false, false, 'focus', false);
+        ui.setSidebarLocked(false);
+
+        const currentIter = parseInt(document.getElementById('iter-val').value) || 1;
+        syncDotsVisuals(0, 'focus', currentIter);
+    };
+
+    standardManager.eventBus.addEventListener('tick', tickHandler);
+    standardManager.eventBus.addEventListener('phase-completed', phaseHandler);
+    standardManager.eventBus.addEventListener('session-completed', completionHandler);
+
+    const cleanupObserver = new MutationObserver((mutations) => {
+        if (!document.body.contains(document.getElementById('timer-circle'))) {
+            standardManager.eventBus.removeEventListener('tick', tickHandler);
+            standardManager.eventBus.removeEventListener('phase-completed', phaseHandler);
+            standardManager.eventBus.removeEventListener('session-completed', completionHandler);
+            cleanupObserver.disconnect();
+        }
+    });
+    cleanupObserver.observe(document.body, { childList: true, subtree: true });
+
+    // --- 5. TODO MODAL LOGIC (New) ---
+    const btnTodoModal = document.getElementById('btn-open-todo-modal'); // Updated ID in HTML
+    const modalOverlay = document.getElementById('todo-overlay');
+    const btnCloseModal = document.getElementById('btn-close-todo-modal');
+    const tabButtons = document.querySelectorAll('.modal-tab-btn');
+    const tabContents = document.querySelectorAll('.tab-content');
+
+    // Function to handle data when it comes in from server
+    const handleTaskData = (e) => {
+        // This listener receives data whenever GameAPI.getTasks() is called
+        const tasks = e.detail;
+
+        // Update Todo List View
+        if (typeof renderTasks === 'function') renderTasks(tasks);
+
+        // Update Kanban View
+        if (typeof renderKanbanView === 'function') renderKanbanView(tasks);
+    };
+
+    if (btnTodoModal && modalOverlay) {
+        // OPEN
+        btnTodoModal.addEventListener('click', () => {
+            modalOverlay.classList.remove('hidden');
+
+            // Initialize Managers (Attach listeners)
+            initTodoList();
+            initKanbanBoard();
+
+            // Subscribe to live data updates
+            Neutralino.events.on('receiveTasks', handleTaskData);
+        });
+
+        // CLOSE
+        btnCloseModal.addEventListener('click', () => {
+            modalOverlay.classList.add('hidden');
+            // Optional: Unsubscribe to save memory, though Neutralino handles listeners well
+            // Neutralino.events.off('receiveTasks', handleTaskData);
+        });
+
+        modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
+        });
+
+        // TABS
+        tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                setTimeout(() => {
-                    stopTimer(); 
-                    loadStateFromConfig();
-                    render();
-                }, 50);
+                // 1. Buttons State
+                tabButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                // 2. Content State
+                const targetId = btn.getAttribute('data-tab');
+                tabContents.forEach(content => {
+                    if (content.id === targetId) content.classList.add('active');
+                    else content.classList.remove('active');
+                });
             });
         });
-
-        const swButtons = document.querySelectorAll('.sw-btn');
-        swButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                setTimeout(() => {
-                    if (TimerConfig.isStopwatchMode()) {
-                        currentMode = TimerConfig.getStopwatchSubMode();
-                        render();
-                    }
-                }, 50);
-            });
-        });
-        
-        const inputs = document.querySelectorAll('.stepper-input');
-        inputs.forEach(input => {
-            input.addEventListener('change', () => {
-               if (!timerInterval && !isStopwatch) {
-                   loadStateFromConfig();
-                   render();
-               }
-            });
-        });
-        
-        const unlockLink = document.getElementById('unlock-end-session');
-        if (unlockLink) {
-            unlockLink.addEventListener('click', (e) => {
-                e.preventDefault();
-                stopTimer();
-            });
-        }
-    };
-
-    const bindControlEvents = () => {
-        const mainBtn = document.getElementById('main-action-btn');
-        const stopBtn = document.getElementById('stop-btn');
-        const skipBtn = document.getElementById('skip-break-btn');
-
-        if (mainBtn) {
-            mainBtn.onclick = () => {
-                if (timerInterval) pauseTimer();
-                else startTimer();
-            };
-        }
-
-        if (stopBtn) {
-            stopBtn.onclick = stopTimer;
-        }
-
-        if (skipBtn) {
-            skipBtn.onclick = skipPhase;
-        }
-    };
-
-    // --- Initialization ---
-    bindControlEvents();
-    bindConfigEvents();
-    loadStateFromConfig();
-    render();
+    }
 }
