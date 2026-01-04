@@ -20,6 +20,15 @@ export class AppSettingsRepository {
     }
 
     setSetting(key, value) {
-        return this.statements.set.run({ key, value });
+        let safeValue = value;
+
+        // SQLite binding fix: Convert unsupported types
+        if (typeof value === 'boolean') {
+            safeValue = value.toString(); // "true" or "false"
+        } else if (typeof value === 'object' && value !== null) {
+            safeValue = JSON.stringify(value);
+        }
+
+        return this.statements.set.run({ key, value: safeValue });
     }
 }

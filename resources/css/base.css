@@ -41,7 +41,7 @@ body {
     overflow-x: hidden;
 }
 
-/* --- Special Layout: Centered Content View (e.g. Focus Timer) --- */
+/* --- Special Case: Centered Content View (e.g. Focus Timer) --- */
 #default-page.centered-content-view {
     /* 1. Fill the available horizontal space to the right of sidebar */
     right: 0; 

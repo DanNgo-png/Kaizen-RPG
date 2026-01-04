@@ -17,7 +17,7 @@
 
         <!-- Ratio Selector -->
         <div class="selector-wrapper">
-          <button id="ratio-trigger" class="selector-trigger">
+          <button id="ratio-trigger" class="selector-trigger flexible-focus-timer">
             <div style="display: flex; align-items: center; gap: 8px;">
               <i class="fa-solid fa-scale-balanced"></i>
               <span id="ratio-display">3:1 Standard</span>
@@ -46,26 +46,14 @@
 
         <!-- Tag Selector -->
         <div class="selector-wrapper">
-          <button id="tag-trigger" class="selector-trigger">
+          <!-- Tag Menu HTML removed; TagUIManager.js will inject it here -->
+          <button id="tag-trigger" class="selector-trigger flexible-focus-timer">
             <div style="display: flex; align-items: center; gap: 8px;">
               <i class="fa-solid fa-tag"></i>
               <span id="tag-display">No Tag</span>
             </div>
             <i class="fa-solid fa-chevron-down chevron"></i>
           </button>
-
-          <div id="tag-menu" class="selector-menu">
-            <!-- List Container -->
-            <div id="tag-list">
-              <!-- Populated by JS -->
-            </div>
-            <!-- Manage Button (Replaces Input) -->
-            <div class="menu-footer-action">
-              <button id="btn-open-manage-tags" class="btn-block-text">
-                <i class="fa-solid fa-gear"></i> Manage Tags
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>
@@ -118,85 +106,7 @@
   </div>
 
   <!-- ================= MODALS ================= -->
-
-  <!-- 1. Manage Tags Modal -->
-  <div id="manage-tags-modal" class="modal-overlay hidden">
-    <div class="focus-flexible-modal-content large-modal">
-      <div class="modal-header">
-        <h3>Manage Tags</h3>
-        <button id="btn-close-manage-tags" class="btn-icon-sm"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-
-      <div class="manage-layout">
-        <!-- Left: Current Tags -->
-        <div class="manage-sidebar">
-          <h4 class="section-title current-tags">Current Tags</h4>
-          <div id="manage-tag-list" class="manage-list-container">
-            <!-- Populated by JS -->
-          </div>
-        </div>
-
-        <!-- Right: Add / Edit Form -->
-        <div class="manage-form-area">
-          <h4 id="manage-form-title" class="section-title add-new-tag">Add New Tag</h4>
-
-          <div class="form-group">
-            <label>Tag Name</label>
-            <input type="text" id="manage-tag-name" placeholder="e.g. Deep Work">
-          </div>
-
-          <div class="form-group">
-            <label>Color</label>
-            <button id="btn-open-color-picker" class="color-preview-btn">
-              <span id="color-preview-dot" class="preview-dot"></span>
-              <span id="color-preview-text">#10b981</span>
-            </button>
-          </div>
-
-          <div class="form-actions">
-            <button id="btn-cancel-edit-tag" class="btn-flex-secondary hidden">Cancel</button>
-            <button id="btn-submit-tag" class="btn-flex-primary">Add Tag</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- 2. Color Picker Overlay (Nested Modal) -->
-  <div id="color-picker-overlay" class="modal-overlay hidden nested-overlay">
-    <div class="focus-flexible-modal-content compact-modal">
-      <h3>Pick Color</h3>
-
-      <!-- Presets -->
-      <div class="color-presets">
-        <div class="color-swatch" data-color="#3b82f6" style="background: #3b82f6;"></div>
-        <div class="color-swatch" data-color="#10b981" style="background: #10b981;"></div>
-        <div class="color-swatch" data-color="#f59e0b" style="background: #f59e0b;"></div>
-        <div class="color-swatch" data-color="#ef4444" style="background: #ef4444;"></div>
-        <div class="color-swatch" data-color="#a855f7" style="background: #a855f7;"></div>
-        <div class="color-swatch" data-color="#ec4899" style="background: #ec4899;"></div>
-        <div class="color-swatch" data-color="#6366f1" style="background: #6366f1;"></div>
-        <div class="color-swatch" data-color="#6b7280" style="background: #6b7280;"></div>
-      </div>
-
-      <!-- Opacity Slider -->
-      <div class="input-row">
-        <label>Opacity: <span id="opacity-val">70%</span></label>
-        <input type="range" id="color-opacity" min="10" max="100" value="70">
-      </div>
-
-      <!-- Custom Hex -->
-      <div class="input-row">
-        <label>Hex Code</label>
-        <input type="text" id="custom-hex-input" placeholder="#FFFFFF">
-      </div>
-
-      <div class="modal-actions">
-        <button id="btn-cancel-color" class="btn-flex-secondary">Cancel</button>
-        <button id="btn-confirm-color" class="btn-flex-primary">Select</button>
-      </div>
-    </div>
-  </div>
+  <!-- Note: Tag Management Modals removed; TagUIManager injects shared modals automatically -->
 
   <!-- Exception Modal (Mid-Session) -->
   <div id="exception-modal" class="modal-overlay hidden">
@@ -242,13 +152,11 @@
       <div class="input-row">
         <label>Total Focus (Time)</label>
         <input type="text" id="conclude-focus-input" placeholder="MM:SS">
-        <input type="range" id="conclude-focus-slider" min="0" step="1">
       </div>
 
       <div class="input-row">
         <label>Total Break (Time)</label>
         <input type="text" id="conclude-break-input" placeholder="MM:SS">
-        <input type="range" id="conclude-break-slider" min="0" step="1">
       </div>
 
       <div class="modal-actions">
@@ -258,21 +166,6 @@
     </div>
   </div>
 
-  <!-- Delete Tag Confirmation Modal -->
-  <div id="delete-tag-modal" class="modal-overlay hidden">
-    <div class="modal-content" style="text-align: center;">
-      <div class="modal-header-icon">
-        <i class="fa-solid fa-triangle-exclamation"></i>
-      </div>
-      <h3>Delete Tag?</h3>
-      <p>Are you sure you want to delete <b id="del-tag-name-display" style="color: #fff;"></b>?<br>This action cannot be undone.</p>
-      
-      <div class="modal-actions" style="justify-content: center;">
-        <button id="btn-cancel-delete-tag" class="btn-flex-secondary">Cancel</button>
-        <button id="btn-confirm-delete-tag" class="btn-flex-primary btn-flex-danger">Delete</button>
-      </div>
-    </div>
-  </div>
 </body>
 
 </html>

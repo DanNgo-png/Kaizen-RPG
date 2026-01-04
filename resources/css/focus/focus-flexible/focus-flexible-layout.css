@@ -48,12 +48,12 @@
 }
 
 /* --- SELECTOR STYLES --- */
-.selector-wrapper {
+/* .selector-wrapper {
     position: relative;
     display: inline-block;
-}
+} */
 
-.selector-trigger {
+/* .selector-trigger {
     background-color: var(--bg-hover);
     border: 1px solid rgba(255, 255, 255, 0.1);
     color: var(--text-white);
@@ -69,17 +69,17 @@
     gap: 10px;
     min-width: 160px;
     justify-content: space-between;
-}
+} */
 
-.selector-trigger:hover {
+/* .selector-trigger:hover {
     border-color: var(--accent-green-bright);
     background-color: #3D3D3D;
-}
+} */
 
-.selector-trigger.active {
+/* .selector-trigger.active {
     border-color: var(--accent-active-text);
     background-color: #3D3D3D;
-}
+} */
 
 .selector-trigger i.chevron {
     font-size: 0.8rem;
@@ -91,7 +91,7 @@
     transform: rotate(180deg);
 }
 
-.selector-menu {
+/* .selector-menu {
     position: absolute;
     top: calc(100% + 10px);
     left: 50%;
@@ -107,16 +107,16 @@
     visibility: hidden;
     transition: all 0.2s cubic-bezier(0.165, 0.84, 0.44, 1);
     pointer-events: none;
-}
+} */
 
-.selector-menu.open {
+/* .selector-menu.open {
     opacity: 1;
     visibility: visible;
     transform: translateX(-50%) translateY(0);
     pointer-events: auto;
-}
+} */
 
-.selector-opt {
+/* .selector-opt {
     display: flex;
     align-items: center;
     width: 100%;
@@ -131,22 +131,22 @@
     transition: background-color 0.1s;
     text-align: left;
     gap: 10px;
-}
+} */
 
 .selector-opt:last-child {
     border-bottom: none;
 }
 
-.selector-opt:hover {
+/* .selector-opt:hover {
     background-color: rgba(255, 255, 255, 0.05);
     color: var(--text-white);
-}
+} */
 
-.selector-opt.selected {
+/* .selector-opt.selected {
     background-color: rgba(67, 142, 102, 0.15);
     color: var(--accent-green-bright);
     font-weight: 600;
-}
+} */
 
 .opt-bold {
     font-weight: 700;
@@ -200,12 +200,12 @@
     background: var(--accent-green-bright);
 }
 
-.opt-dot {
+/* .opt-dot {
     width: 8px;
     height: 8px;
     border-radius: 50%;
     display: inline-block;
-}
+} */
 
 .color-blue {
     background-color: #3b82f6;
@@ -333,6 +333,7 @@
     border-radius: 30px;
     font-size: 1.1rem;
     font-weight: 600;
+    font-family: var(--font-main);
     cursor: pointer;
     transition: 0.2s;
     display: flex;

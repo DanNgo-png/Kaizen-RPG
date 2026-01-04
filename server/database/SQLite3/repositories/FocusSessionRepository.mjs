@@ -21,9 +21,10 @@ export class FocusSessionRepository {
                     COUNT(DISTINCT date(created_at, 'localtime')) as total_days
                 FROM focus_sessions
             `),
-            getAllDates: this.db.prepare(`
-                SELECT DISTINCT date(created_at, 'localtime') as session_date 
+            getDailyTotals: this.db.prepare(`
+                SELECT date(created_at, 'localtime') as session_date, SUM(focus_seconds) as total_seconds
                 FROM focus_sessions 
+                GROUP BY session_date
                 ORDER BY session_date DESC
             `),
             deleteAll: this.db.prepare(`DELETE FROM focus_sessions`),
@@ -74,28 +75,37 @@ export class FocusSessionRepository {
         return this.statements.getLifetimeStats.get();
     }
 
-    getStreakStats() {
-        const rows = this.statements.getAllDates.all();
+    getStreakStats(minSeconds = 0) {
+        // 1. Get aggregated daily totals
+        const rows = this.statements.getDailyTotals.all();
         
         if (!rows || rows.length === 0) {
             return { currentStreak: 0, bestStreak: 0 };
         }
 
-        const dates = rows.map(r => r.session_date); // ['2025-12-06', '2025-12-05', ...]
+        // 2. Filter for qualified days
+        // Only days meeting the goal count towards the streak chain
+        const dates = rows
+            .filter(r => r.total_seconds >= minSeconds)
+            .map(r => r.session_date); // ['2025-12-06', '2025-12-05', ...]
+
+        if (dates.length === 0) {
+            return { currentStreak: 0, bestStreak: 0 };
+        }
         
-        // 1. Calculate Current Streak
+        // 3. Calculate Current Streak
         let currentStreak = 0;
         
         // Get Today's and Yesterday's dates in YYYY-MM-DD (Local Time)
+        // Note: 'en-CA' is reliable for YYYY-MM-DD format
         const now = new Date();
-        const today = now.toLocaleDateString('en-CA'); // en-CA gives YYYY-MM-DD
+        const today = now.toLocaleDateString('en-CA'); 
         
         const yDate = new Date(now);
         yDate.setDate(yDate.getDate() - 1);
         const yesterday = yDate.toLocaleDateString('en-CA');
 
-        // Check if the most recent entry is today or yesterday
-        // If the latest entry is older than yesterday, current streak is 0.
+        // Check if the most recent QUALIFIED entry is today or yesterday
         if (dates[0] === today || dates[0] === yesterday) {
             currentStreak = 1;
             
@@ -104,7 +114,7 @@ export class FocusSessionRepository {
                 const d1 = new Date(dates[i]);
                 const d2 = new Date(dates[i+1]);
                 
-                // Difference in time
+                // Difference in time (ms) -> Days
                 const diffTime = Math.abs(d1 - d2);
                 const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
 
@@ -116,11 +126,9 @@ export class FocusSessionRepository {
             }
         }
 
-        // 2. Calculate Best Streak
-        let bestStreak = dates.length > 0 ? 1 : 0;
+        // 4. Calculate Best Streak
+        let bestStreak = 1;
         let tempStreak = 1;
-
-        if (dates.length > 0) bestStreak = 1;
 
         for (let i = 0; i < dates.length - 1; i++) {
             const d1 = new Date(dates[i]);

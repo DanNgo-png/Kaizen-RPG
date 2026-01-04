@@ -25,7 +25,8 @@
     "debug.log",
     "window.*",
     "events.*",
-    "extensions.*"
+    "extensions.*",
+    "computer.getDisplays"
   ],
   "globalVariables": {
     "TEST1": "Hello",
@@ -76,8 +77,7 @@
       "height": 500,
       "args": "--user-agent=\"Neutralinojs chrome mode\"",
       "nativeBlockList": [
-        "filesystem.*",
-        "os.*"
+        "filesystem.*"
       ]
     }
   },

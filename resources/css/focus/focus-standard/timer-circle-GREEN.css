@@ -1,4 +1,4 @@
-.timer-wrapper {
+.timer-wrapper { /* GREEN */
     width: 360px;
     height: 360px;
     background-color: var(--circle-bg);
@@ -8,6 +8,7 @@
     justify-content: center;
     align-items: center;
     margin-bottom: 50px;
+    border: 1px solid transparent;
 }
 
 .focus-text {
@@ -23,4 +24,9 @@
     font-size: 52.5px;
     font-weight: 700;
     line-height: 1;
+}
+
+/* Layout fix for Stopwatch mode when dots are hidden */
+.timer-wrapper.stopwatch-layout-fix {
+    margin-top: 50px;
 }

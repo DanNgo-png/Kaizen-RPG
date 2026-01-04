@@ -1,5 +1,4 @@
 /**
- * TimerConfig.js
  * Responsible for reading configuration values and modes from the settings sidebar.
  */
 export const TimerConfig = {
@@ -8,7 +7,7 @@ export const TimerConfig = {
      */
     getValue(elementId, defaultValue) {
         const input = document.getElementById(elementId);
-        return input ? (parseInt(input.value) || defaultValue) : defaultValue;
+        return input ? (parseFloat(input.value) || defaultValue) : defaultValue;
     },
 
     /**

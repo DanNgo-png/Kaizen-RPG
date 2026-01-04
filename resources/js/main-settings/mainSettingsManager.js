@@ -21,7 +21,8 @@ export function initMainSettings() {
     const fontSelect = document.getElementById('setting-font-family');
     const openFontsBtn = document.getElementById('btn-open-fonts');
     const goalInput = document.getElementById('setting-daily-goal');
-    
+    const muteToggle = document.getElementById('setting-mute-audio');
+
     // Select Elements for Clear History
     const clearFocusBtn = document.getElementById('btn-clear-focus-data');
     const modal = document.getElementById('modal-clear-history');
@@ -62,6 +63,28 @@ export function initMainSettings() {
             let val = parseInt(e.target.value);
             if (val < 1) val = 1; // Minimum 1 minute
             SettingsAPI.saveSetting('dailyGoal', val);
+        });
+    }
+
+    // --- Mute Settings Logic ---
+    if (muteToggle) {
+        // 1. Listen for DB updates to set initial state
+        const handleMuteUpdate = (e) => {
+            const { key, value } = e.detail;
+            if (key === 'focusTimerMuted') {
+                muteToggle.checked = (value === true || value === 'true');
+            }
+        };
+        
+        document.removeEventListener('kaizen:setting-update', handleMuteUpdate);
+        document.addEventListener('kaizen:setting-update', handleMuteUpdate);
+
+        // 2. Fetch current state
+        SettingsAPI.getSetting('focusTimerMuted');
+
+        // 3. Save on change
+        muteToggle.addEventListener('change', (e) => {
+            SettingsAPI.saveSetting('focusTimerMuted', e.target.checked);
         });
     }
 

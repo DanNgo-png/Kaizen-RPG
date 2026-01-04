@@ -20,17 +20,20 @@
 
     <!-- Dropdown (Add a tag) -->
     <header>
-      <div class="focus-dropdown-container">
-        <div class="focus-dropdown">
-          <div class="focus-dropdown-left">
-            <i class="fa-solid fa-tag"></i>
-            <span>Add a tag</span>
-          </div>
-          <i class="fa-solid fa-chevron-down"></i>
+      <div class="focus-dropdown-container" style="display: flex; justify-content: center;">
+        <div class="selector-wrapper">
+          <button id="tag-trigger" class="selector-trigger standard-focus-timer">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <i class="fa-solid fa-tag"></i>
+              <span id="tag-display">Add a tag</span>
+            </div>
+            <i class="fa-solid fa-chevron-down chevron"></i>
+          </button>
+          <!-- The menu div and modals are now injected by JS -->
         </div>
       </div>
     </header>
-    
+
     <!-- Pagination Dots -->
     <div class="focus-dots">
       <div class="focus-dot active"></div>
@@ -56,7 +59,7 @@
       </button>
 
       <!-- 3. Volume (Always visible) -->
-      <button class="button-icon">
+      <button id="btn-volume-toggle" class="button-icon">
         <i class="fa-solid fa-volume-high"></i>
       </button>
 
@@ -193,7 +196,8 @@
       <button class="configure-footer-button" id="configure-footer-button"><i
           class="fa-solid fa-gear"></i>Configure</button>
       <button class="log-footer-button"><i class="fa-regular fa-pen-to-square"></i> Log</button>
-      <button class="todo-footer-button" id="btn-open-todo-modal"><i class="fa-regular fa-square-check"></i> Todo</button>
+      <button class="todo-footer-button" id="btn-open-todo-modal"><i class="fa-regular fa-square-check"></i>
+        Todo</button>
     </footer>
   </div>
 

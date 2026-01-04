@@ -1,6 +1,5 @@
 /**
  * TimerUI.js
- * Responsible for all visual updates: Time display, Buttons, Dots, Audio, and Sidebar State.
  */
 export class TimerUI {
     constructor() {
@@ -13,20 +12,17 @@ export class TimerUI {
             mainBtnIcon: document.querySelector('#main-action-btn i'),
             stopBtn: document.getElementById('stop-btn'),
             skipBtn: document.getElementById('skip-break-btn'),
-            dots: document.querySelectorAll('.dot'),
-            // Sidebar elements
+            volBtn: document.getElementById('btn-volume-toggle'),
+            volIcon: document.querySelector('#btn-volume-toggle i'),
+            dots: document.querySelectorAll('.focus-dot'),
+            dotsContainer: document.querySelector('.focus-dots'),
             sidebar: document.getElementById('configure-sidebar'),
             warningBanner: document.getElementById('settings-locked-warning')
         };
 
-        // Initialize Audio (Path is relative to index.html)
         this.alarmSound = new Audio('audio/bell-sound.mp3');
     }
 
-    /**
-     * Toggles the "Locked" state of the sidebar.
-     * @param {boolean} isLocked 
-     */
     setSidebarLocked(isLocked) {
         if (!this.elements.sidebar || !this.elements.warningBanner) return;
 
@@ -39,21 +35,27 @@ export class TimerUI {
         }
     }
 
-    /**
-     * Plays the completion sound.
-     */
     playAlarm() {
         try {
-            this.alarmSound.currentTime = 0; // Reset to start
+            this.alarmSound.currentTime = 0;
             this.alarmSound.play();
         } catch (error) {
             console.warn("Could not play alarm sound:", error);
         }
     }
 
-    /**
-     * Formats seconds into MM:SS (or HH:MM:SS if needed).
-     */
+    updateVolumeIcon(isMuted) {
+        if (!this.elements.volIcon) return;
+        
+        if (isMuted) {
+            this.elements.volIcon.className = "fa-solid fa-volume-xmark";
+            this.elements.volBtn.style.opacity = "0.6";
+        } else {
+            this.elements.volIcon.className = "fa-solid fa-volume-high";
+            this.elements.volBtn.style.opacity = "1";
+        }
+    }
+
     formatTime(seconds) {
         const absSeconds = Math.abs(seconds);
         const h = Math.floor(absSeconds / 3600);
@@ -73,12 +75,22 @@ export class TimerUI {
     }
 
     setModeVisuals(mode) {
+        // Clear all mode classes first
+        this.elements.circle.classList.remove('break-mode', 'long-break-mode'); 
+        this.elements.mainBtn.classList.remove('break-mode-btn', 'long-break-mode-btn');
+
         if (mode === 'focus') {
-            this.elements.circle.classList.remove('break-mode'); 
             this.elements.label.textContent = "Focus";
-            this.elements.mainBtn.classList.remove('break-mode-btn');
             this.elements.skipBtn.classList.add('hidden');
-        } else {
+        } 
+        else if (mode === 'long-break') {
+            this.elements.circle.classList.add('long-break-mode');
+            this.elements.label.textContent = "Long Break";
+            this.elements.mainBtn.classList.add('long-break-mode-btn');
+            this.elements.skipBtn.classList.remove('hidden');
+        }
+        else {
+            // Standard Break
             this.elements.circle.classList.add('break-mode'); 
             this.elements.label.textContent = "Break";
             this.elements.mainBtn.classList.add('break-mode-btn');
@@ -86,15 +98,26 @@ export class TimerUI {
         }
     }
 
-    /**
-     * Toggles button visibility and text based on state.
-     */
     setControlsState(isRunning, isPaused, mode, isStopwatch) {
+        if (this.elements.dotsContainer) {
+            if (isStopwatch) {
+                this.elements.dotsContainer.classList.add('hidden');
+                if (this.elements.circle) {
+                    this.elements.circle.classList.add('stopwatch-layout-fix');
+                }
+            } else {
+                this.elements.dotsContainer.classList.remove('hidden');
+                if (this.elements.circle) {
+                    this.elements.circle.classList.remove('stopwatch-layout-fix');
+                }
+            }
+        }
+
         if (isRunning || isPaused) {
             this.elements.stopBtn.classList.remove('hidden');
             
-            // In stopwatch mode, skip button doesn't make sense
-            if (mode === 'break' && !isStopwatch) {
+            // Skip button: Show for break OR long-break
+            if ((mode === 'break' || mode === 'long-break') && !isStopwatch) {
                 this.elements.skipBtn.classList.remove('hidden');
             } else {
                 this.elements.skipBtn.classList.add('hidden');
@@ -108,14 +131,11 @@ export class TimerUI {
                 this.elements.mainBtnIcon.className = "fa-solid fa-pause";
             }
         } else {
-            // Stopped State (Waiting to Start)
-            
-            // FIX: If we are in Break mode (standard timer), show Stop and Skip buttons
-            if (mode === 'break' && !isStopwatch) {
+            // Stopped State
+            if ((mode === 'break' || mode === 'long-break') && !isStopwatch) {
                 this.elements.stopBtn.classList.remove('hidden');
                 this.elements.skipBtn.classList.remove('hidden');
             } else {
-                // Otherwise (Focus mode or Stopwatch), clean up buttons
                 this.elements.stopBtn.classList.add('hidden');
                 this.elements.skipBtn.classList.add('hidden');
             }
@@ -125,30 +145,38 @@ export class TimerUI {
             if (isStopwatch) {
                 this.elements.mainBtnText.textContent = "Start Stopwatch";
             } else {
-                this.elements.mainBtnText.textContent = mode === 'focus' ? "Start Focus Session" : "Start Break";
+                // Update text based on mode
+                let startText = "Start Focus Session";
+                if (mode === 'break') startText = "Start Break";
+                if (mode === 'long-break') startText = "Start Long Break";
+                
+                this.elements.mainBtnText.textContent = startText;
             }
         }
     }
 
     advanceDots(completedMode) {
-        const dots = this.elements.dots;
+        const dots = document.querySelectorAll('.focus-dot');
         for (let i = 0; i < dots.length; i++) {
             const dot = dots[i];
             const isGreen = dot.classList.contains('active') && !dot.classList.contains('break-active');
-            const isBlue = dot.classList.contains('active') && dot.classList.contains('break-active');
-
+            
+            // Logic to move from Focus -> Break
             if (completedMode === 'focus' && isGreen) {
                 dot.classList.remove('active');
                 dot.classList.add('inactive');
+                
                 if (i + 1 < dots.length) {
                     dots[i + 1].classList.remove('inactive');
                     dots[i + 1].classList.add('active', 'break-active');
                 }
                 break;
             } 
-            else if (completedMode === 'break' && isBlue) {
+            // Logic to move from Break -> Focus
+            else if ((completedMode === 'break' || completedMode === 'long-break') && dot.classList.contains('break-active')) {
                 dot.classList.remove('active', 'break-active');
                 dot.classList.add('inactive');
+                
                 if (i + 1 < dots.length) {
                     dots[i + 1].classList.remove('inactive');
                     dots[i + 1].classList.add('active');

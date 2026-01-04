@@ -1,0 +1,43 @@
+/* --- Break Mode Styles (Standard Blue) --- */
+.timer-wrapper.break-mode {
+    background-color: #1e3a8a;
+    border-color: #1d4ed8;
+}
+
+.timer-wrapper.break-mode .focus-text {
+    color: #93c5fd;
+}
+
+.timer-wrapper.break-mode .timer-count {
+    color: #bfdbfe;
+}
+
+/* --- Long Break Mode Styles (Periwinkle) --- */
+.timer-wrapper.long-break-mode {
+    background-color: var(--periwinkle-bg);
+    border-color: var(--accent-periwinkle);
+    box-shadow: 0 0 30px rgba(99, 102, 241, 0.2); /* Subtle glow */
+}
+
+.timer-wrapper.long-break-mode .focus-text {
+    color: var(--accent-periwinkle);
+}
+
+.timer-wrapper.long-break-mode .timer-count {
+    color: var(--periwinkle-text);
+}
+
+/* Button variants */
+.start-focus-button.break-mode-btn {
+    background-color: var(--accent-blue, #2563eb);
+}
+.start-focus-button.break-mode-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.start-focus-button.long-break-mode-btn {
+    background-color: var(--accent-periwinkle);
+}
+.start-focus-button.long-break-mode-btn:hover {
+    background-color: var(--accent-periwinkle-dark);
+}

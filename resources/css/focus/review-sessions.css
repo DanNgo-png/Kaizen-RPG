@@ -290,12 +290,6 @@
     width: 100%;
 }
 
-.modal-form-group label {
-    color: var(--text-secondary);
-    font-size: 0.9rem;
-    font-weight: 600;
-}
-
 .text-center { text-align: center; }
 
 .warning-icon {

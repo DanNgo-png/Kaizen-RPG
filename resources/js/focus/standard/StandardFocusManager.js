@@ -1,0 +1,279 @@
+import { FocusAPI } from "../../api/FocusAPI.js";
+
+class StandardFocusManager {
+    constructor() {
+        if (StandardFocusManager.instance) {
+            return StandardFocusManager.instance;
+        }
+        StandardFocusManager.instance = this;
+
+        // --- State ---
+        this.intervalId = null;
+        this.isRunning = false;
+        this.isPaused = false;
+        
+        this.mode = 'focus'; // 'focus' | 'break' | 'long-break'
+        this.isStopwatch = false;
+        
+        // Time tracking
+        this.secondsRemaining = 0;  
+        this.secondsElapsed = 0;    
+        this.currentTag = "Standard"; 
+
+        this.completedSets = 0; 
+        this.targetIterations = 1;
+
+        // Audio State
+        this.isMuted = false;
+
+        this.sessionConfig = {
+            focusDuration: 25 * 60,
+            breakDuration: 5 * 60,
+            longBreakDuration: 15 * 60,
+            longBreakInterval: 4,
+            longBreakEnabled: false,
+            tag: "Standard"
+        };
+
+        this.alarmSound = new Audio('audio/bell-sound.mp3');
+        this.eventBus = new EventTarget();
+    }
+
+    startSession(config) {
+        if (this.isPaused && this.secondsRemaining > 0) {
+            this.resume();
+            return;
+        }
+
+        // 1. Store Configuration
+        this.isStopwatch = config.isStopwatch;
+        this.mode = config.mode || 'focus';
+        this.currentTag = config.tag || "Standard";
+        this.completedSets = 0; 
+        this.targetIterations = config.iterations || 1;
+        
+        this.sessionConfig = {
+            focusDuration: (config.focusMinutes || 25) * 60,
+            breakDuration: (config.breakMinutes || 5) * 60,
+            longBreakDuration: (config.longBreakMinutes || 15) * 60,
+            longBreakInterval: config.longBreakInterval || 4,
+            longBreakEnabled: config.longBreakEnabled || false,
+            tag: this.currentTag
+        };
+
+        // 2. Set Initial Time
+        if (this.isStopwatch) {
+            this.secondsElapsed = 0;
+        } else {
+            this._setTimeForCurrentMode();
+        }
+
+        // 3. Start
+        this.isRunning = true;
+        this.isPaused = false;
+        this.lastTickTime = Date.now();
+        
+        this.startTicker();
+        this._emitUpdate();
+    }
+
+    pause() {
+        this.isPaused = true;
+        this.isRunning = false;
+        this.stopTicker();
+        this._emitUpdate();
+    }
+
+    resume() {
+        this.isPaused = false;
+        this.isRunning = true;
+        this.lastTickTime = Date.now();
+        this.startTicker();
+        this._emitUpdate();
+    }
+
+    stop() {
+        const wasStopwatch = this.isStopwatch;
+        const elapsed = this.secondsElapsed;
+        const currentMode = this.mode;
+        const currentTag = this.currentTag;
+
+        this.isRunning = false;
+        this.isPaused = false;
+        this.stopTicker();
+        
+        if (wasStopwatch && elapsed > 5) { 
+             if (currentMode === 'focus') {
+                const payload = {
+                    tag: currentTag,
+                    focusSeconds: elapsed, 
+                    breakSeconds: 0,
+                    ratio: 1.0 
+                };
+                FocusAPI.saveFocusSession(payload);
+            }
+        }
+
+        // Reset defaults
+        this.mode = 'focus';
+        this.completedSets = 0;
+        this.secondsRemaining = this.sessionConfig.focusDuration; 
+        this.secondsElapsed = 0;
+        
+        this._emitUpdate();
+    }
+
+    skipPhase() {
+        this.completePhase(true); 
+    }
+
+    startTicker() {
+        if (this.intervalId) clearInterval(this.intervalId);
+        this.intervalId = setInterval(() => {
+            const now = Date.now();
+            const deltaSeconds = Math.round((now - this.lastTickTime) / 1000);
+            if (deltaSeconds >= 1) {
+                this.tick(deltaSeconds);
+                this.lastTickTime = now;
+            }
+        }, 1000);
+    }
+
+    stopTicker() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+    }
+
+    tick(delta) {
+        if (this.isStopwatch) {
+            this.secondsElapsed += delta;
+        } else {
+            this.secondsRemaining -= delta;
+            
+            if (this.secondsRemaining <= 0) {
+                this.secondsRemaining = 0;
+                this.completePhase();
+            }
+        }
+        this._emitUpdate();
+    }
+
+    completePhase(skipped = false) {
+        this.stopTicker();
+        this.isRunning = false;
+        this.isPaused = false;
+
+        // 1. Audio & Save
+        if (!skipped && !this.isStopwatch) {
+            this.playAlarm();
+            
+            if (this.mode === 'focus') {
+                const payload = {
+                    tag: this.currentTag,
+                    focusSeconds: this.sessionConfig.focusDuration, 
+                    breakSeconds: 0,
+                    ratio: 1.0
+                };
+                FocusAPI.saveFocusSession(payload);
+            }
+        }
+
+        // 2. Logic: Handle Mode Switching
+        const previousMode = this.mode;
+
+        if (previousMode === 'focus') {
+            this.completedSets++;
+
+            // Check Long Break Condition
+            const isLongBreak = this.sessionConfig.longBreakEnabled && 
+                                (this.completedSets % this.sessionConfig.longBreakInterval === 0);
+            
+            if (isLongBreak) {
+                this.mode = 'long-break';
+                this.secondsRemaining = this.sessionConfig.longBreakDuration;
+            } else {
+                this.mode = 'break';
+                this.secondsRemaining = this.sessionConfig.breakDuration;
+            }
+
+        } else {
+            if (this.completedSets >= this.targetIterations) {
+                this.stop(); 
+                this.eventBus.dispatchEvent(new CustomEvent('session-completed'));
+                return;
+            }
+
+            this.mode = 'focus';
+            this.secondsRemaining = this.sessionConfig.focusDuration;
+        }
+
+        this.eventBus.dispatchEvent(new CustomEvent('phase-completed', { 
+            detail: { 
+                completedMode: previousMode, 
+                nextMode: this.mode,
+                completedSets: this.completedSets
+            } 
+        }));
+
+        this._emitUpdate();
+    }
+
+    _setTimeForCurrentMode() {
+        if (this.mode === 'focus') {
+            this.secondsRemaining = this.sessionConfig.focusDuration;
+        } else if (this.mode === 'long-break') {
+            this.secondsRemaining = this.sessionConfig.longBreakDuration;
+        } else {
+            this.secondsRemaining = this.sessionConfig.breakDuration;
+        }
+    }
+
+    playAlarm() {
+        if (this.isMuted) return;
+        
+        try {
+            this.alarmSound.currentTime = 0;
+            this.alarmSound.play();
+        } catch (e) {
+            console.error("Audio playback failed", e);
+        }
+    }
+
+    setMute(muted) {
+        this.isMuted = muted;
+    }
+
+    _emitUpdate() {
+        const displayTime = this.isStopwatch ? this.secondsElapsed : this.secondsRemaining;
+        
+        this.eventBus.dispatchEvent(new CustomEvent('tick', {
+            detail: {
+                time: displayTime,
+                isRunning: this.isRunning,
+                isPaused: this.isPaused,
+                mode: this.mode,
+                isStopwatch: this.isStopwatch,
+                completedSets: this.completedSets,
+                targetIterations: this.targetIterations
+            }
+        }));
+    }
+
+    getState() {
+        const displayTime = this.isStopwatch ? this.secondsElapsed : this.secondsRemaining;
+        return {
+            isRunning: this.isRunning,
+            isPaused: this.isPaused,
+            time: displayTime,
+            mode: this.mode,
+            isStopwatch: this.isStopwatch,
+            tag: this.currentTag,
+            completedSets: this.completedSets,
+            targetIterations: this.targetIterations
+        };
+    }
+}
+
+export const standardManager = new StandardFocusManager();

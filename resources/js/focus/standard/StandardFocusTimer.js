@@ -3,6 +3,7 @@ import { TimerConfig } from "./TimerConfig.js";
 import { standardManager } from "./StandardFocusManager.js";
 import { SettingsAPI } from "../../api/SettingsAPI.js";
 import { notifier } from "../../_global-managers/NotificationManager.js";
+import { TagUIManager } from "../../components/TagUIManager.js";
 
 // TODO OVERLAY
 import { initTodoList, renderTasks } from "../../plans/todoListManager.js";
@@ -10,6 +11,14 @@ import { initKanbanBoard, renderKanbanView } from "../../plans/kanbanManager.js"
 
 export function initFocusTimer() {
     const ui = new TimerUI();
+    const tagManager = new TagUIManager({
+        triggerId: 'tag-trigger',
+        displayId: 'tag-display',
+        initialTag: "Add a tag",
+        onTagSelected: (tagName) => {
+            console.log("Tag changed to:", tagName); 
+        }
+    });
 
     // --- 1. Sync Logic (Manager -> UI) ---
     const updateUIFromState = (state) => {
@@ -29,6 +38,7 @@ export function initFocusTimer() {
         const currentDotCount = dotsContainer.children.length;
         const targetDotCount = (targetIterations || 1) * 2;
 
+        // Rebuild dots if count mismatch (e.g. settings changed)
         if (currentDotCount !== targetDotCount) {
             dotsContainer.innerHTML = '';
             for (let i = 0; i < targetDotCount; i++) {
@@ -44,9 +54,16 @@ export function initFocusTimer() {
             d.classList.add('inactive');
         });
 
+        // --- FIX: Correct Index Math ---
+        // completedSets is incremented immediately after a focus session.
+        // Example: Finish Focus 1 -> completedSets = 1, mode = 'break'.
+        // We want Index 1 (2nd dot). 
+        // Formula: (1 * 2) - 1 = 1.
+        
         let activeIndex = completedSets * 2;
-        if (currentMode === 'break') {
-            activeIndex = (completedSets * 2) + 1;
+        
+        if (currentMode === 'break' || currentMode === 'long-break') {
+            activeIndex = (completedSets * 2) - 1;
         }
 
         for (let i = 0; i < dots.length; i++) {
@@ -55,7 +72,9 @@ export function initFocusTimer() {
             } else if (i === activeIndex) {
                 dots[i].classList.remove('inactive');
                 dots[i].classList.add('active');
-                if (currentMode === 'break') {
+                
+                // --- FIX: Apply blue style for both break types ---
+                if (currentMode === 'break' || currentMode === 'long-break') {
                     dots[i].classList.add('break-active');
                 }
             }
@@ -108,8 +127,14 @@ export function initFocusTimer() {
     // --- 2. Initial Load ---
     const initialState = standardManager.getState();
 
-    if (!initialState.isRunning && !initialState.isPaused) {
-        // IDLE: Load defaults from Sidebar
+    // Check if session is truly active OR "Pending" (e.g., waiting to start Break)
+    // If completedSets > 0, we are in the middle of a flow (Intermission).
+    // If mode != 'focus', we are likely in a Break or Long Break.
+    const isSessionActive = initialState.isRunning || initialState.isPaused;
+    const isSessionPending = initialState.mode !== 'focus' || initialState.completedSets > 0;
+
+    if (!isSessionActive && !isSessionPending) {
+        // IDLE (True Reset): Load defaults from Sidebar
         const isSw = TimerConfig.isStopwatchMode();
         let mode = 'focus';
 
@@ -126,7 +151,7 @@ export function initFocusTimer() {
         ui.setControlsState(false, false, mode, isSw);
         SettingsAPI.getSetting('standardFocusIterations');
     } else {
-        // ACTIVE: Sync with running manager
+        // ACTIVE or INTERMISSION: Sync with running manager
         updateUIFromState(initialState);
         syncDotsVisuals(initialState.completedSets, initialState.mode, initialState.targetIterations);
     }
@@ -139,6 +164,46 @@ export function initFocusTimer() {
             syncDotsVisuals(0, 'focus', newVal);
         }
     });
+
+    // ========== START: Audio Mute Logic ==========
+    // 1. Helper to sync UI and Manager
+    const applyMuteState = (isMuted) => {
+        standardManager.setMute(isMuted);
+        ui.updateVolumeIcon(isMuted);
+    };
+
+    // 2. Listen for Database Load (StandardFocusTimer specific listener)
+    const muteSettingHandler = (e) => {
+        const { key, value } = e.detail;
+        if (key === 'focusTimerMuted') {
+            // Handle SQLite behavior where booleans might be returned as 1, "1", or "true"
+            const isMuted = (value === true || value === 'true' || value === 1 || value === '1');
+            applyMuteState(isMuted);
+        }
+    };
+    
+    // Bind listener
+    document.addEventListener('kaizen:setting-update', muteSettingHandler);
+
+    // 3. Initial Fetch
+    // Apply current memory state immediately (fixes flicker on nav back)
+    applyMuteState(standardManager.isMuted);
+    // Request DB source of truth (fixes restart persistence)
+    SettingsAPI.getSetting('focusTimerMuted');
+
+    // 4. Button Click Listener
+    if (ui.elements.volBtn) {
+        ui.elements.volBtn.onclick = () => {
+            const newState = !standardManager.isMuted;
+            
+            // Save to DB
+            SettingsAPI.saveSetting('focusTimerMuted', newState);
+            
+            // Apply locally immediately for responsiveness
+            applyMuteState(newState);
+        };
+    }
+    // ========== END: Audio Mute Logic ==========
 
     // --- 3. Event Listeners ---
     const btnMain = document.getElementById('main-action-btn');
@@ -161,7 +226,6 @@ export function initFocusTimer() {
                 } else {
                     // --- START NEW SESSION ---
                     const isSw = TimerConfig.isStopwatchMode();
-
                     const focusMins = TimerConfig.getFocusDuration();
                     const breakMins = TimerConfig.getBreakDuration();
                     const iterVal = parseInt(document.getElementById('iter-val').value) || 1;
@@ -171,10 +235,10 @@ export function initFocusTimer() {
                     const lbMins = parseInt(document.getElementById('lb-dur-val').value) || 15;
                     const lbInterval = parseInt(document.getElementById('lb-int-val').value) || 4;
 
-                    const tagEl = document.querySelector('.focus-dropdown-left span');
-                    const tagName = (tagEl && tagEl.textContent.trim() !== "Add a tag")
-                        ? tagEl.textContent.trim()
-                        : "Standard";
+                    let tagName = tagManager.currentTag;
+                    if (tagName === "Add a tag") {
+                        tagName = "Standard";
+                    }
 
                     const startMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
 
@@ -267,6 +331,8 @@ export function initFocusTimer() {
             standardManager.eventBus.removeEventListener('tick', tickHandler);
             standardManager.eventBus.removeEventListener('phase-completed', phaseHandler);
             standardManager.eventBus.removeEventListener('session-completed', completionHandler);
+            // Clean up global settings listener too
+            document.removeEventListener('kaizen:setting-update', muteSettingHandler);
             cleanupObserver.disconnect();
         }
     });

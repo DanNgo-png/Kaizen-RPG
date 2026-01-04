@@ -2,8 +2,14 @@ import { GameAPI } from "../api/GameAPI.js";
 
 // State to track current filter
 let currentFilter = 'all';
+let isInitialized = false;
 
 export function initTodoList() {
+    if (isInitialized) {
+        GameAPI.getTasks();
+        return;
+    }
+
     const input = document.getElementById('new-task-input');
     const priorityInput = document.getElementById('priority-input');
     const addBtn = document.getElementById('add-task-btn');
@@ -56,6 +62,8 @@ export function initTodoList() {
             GameAPI.getTasks();
         });
     });
+    
+    isInitialized = true; // Mark as done
 
     // --- 3. Initial Load ---
     GameAPI.getTasks();

@@ -1,0 +1,96 @@
+/* resources/css/components/tag-component.css */
+
+/* --- SELECTOR DROPDOWN --- */
+.selector-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.selector-trigger {
+    padding: 10px 16px 10px 16px;
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    justify-content: space-between;
+}
+
+.selector-trigger.standard-focus-timer {
+    background-color: transparent;
+    border: 1px solid #374151;
+    border-radius: 6px;
+    color: #d1d5db;
+    min-width: 250px;
+}
+
+.selector-trigger.flexible-focus-timer {
+    background-color: var(--bg-hover, #3D3D3D);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    color: var(--text-primary, #ffffff);
+    min-width: 160px;
+}
+
+.selector-trigger:hover {
+    border-color: var(--accent-green, #059669);
+}
+
+.selector-trigger.active {
+    border-color: var(--accent-active-text, #8EC5FF);
+}
+
+.selector-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    width: 300px;
+    background-color: #252525;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    overflow: hidden;
+    z-index: 100;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s;
+    pointer-events: none;
+    text-align: left;
+}
+
+.selector-menu.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+    pointer-events: auto;
+}
+
+.selector-opt {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 20px;
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    color: #888;
+    font-family: var(--font-main);
+    font-size: 0.9rem;
+    cursor: pointer;
+    text-align: left;
+    gap: 10px;
+}
+
+.selector-opt:hover { background-color: rgba(255,255,255,0.05); color: white; }
+.selector-opt.selected { background-color: rgba(67, 142, 102, 0.15); color: var(--accent-green); font-weight: 600; }
+
+.opt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+
+/* --- MANAGE BUTTON --- */
+.menu-footer-action { border-top: 1px solid rgba(255,255,255,0.1); }
+.btn-block-text { width: 100%; background: transparent; border: none; color: #888; padding: 12px; text-align: left; cursor: pointer; transition: 0.2s; }
+.btn-block-text:hover { background-color: var(--bg-hover); color: white; }

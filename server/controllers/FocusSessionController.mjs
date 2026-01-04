@@ -1,8 +1,10 @@
 import { FocusSessionRepository } from "../database/SQLite3/repositories/FocusSessionRepository.mjs";
+import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 
 export class FocusSessionController {
     constructor() {
         this.repo = new FocusSessionRepository();
+        this.settingsRepo = new AppSettingsRepository();
     }
 
     register(app) {
@@ -63,29 +65,17 @@ export class FocusSessionController {
 
         app.events.on("getLifetimeStats", () => {
             try {
-                const stats = this.repo.getLifetimeStats();
-                // SQLite returns null for SUM if no rows exist
-                const payload = {
-                    total_focus: stats.total_focus || 0,
-                    total_sessions: stats.total_sessions || 0,
-                    total_days: stats.total_days || 0
-                };
-                app.events.broadcast("receiveLifetimeStats", payload);
-            } catch (error) {
-                console.error("❌ Error fetching lifetime stats:", error);
-                app.events.broadcast("receiveLifetimeStats", { total_focus: 0, total_sessions: 0, total_days: 0 });
-            }
-        });
-
-        app.events.on("getLifetimeStats", () => {
-            try {
                 // 1. Get Basic Stats
                 const stats = this.repo.getLifetimeStats();
                 
-                // 2. Get Streak Stats
-                const streaks = this.repo.getStreakStats();
+                // 2. Fetch Goal for Streak Calculation
+                const dailyGoalMin = this.settingsRepo.getSetting('dailyGoal');
+                const minSeconds = dailyGoalMin ? (parseInt(dailyGoalMin) * 60) : 900; // Default 15m if not set
 
-                // 3. Combine Payloads
+                // 3. Get Streak Stats (passing threshold)
+                const streaks = this.repo.getStreakStats(minSeconds);
+
+                // 4. Combine Payloads
                 const payload = {
                     total_focus: stats.total_focus || 0,
                     total_sessions: stats.total_sessions || 0,
@@ -101,8 +91,8 @@ export class FocusSessionController {
                     total_focus: 0, 
                     total_sessions: 0, 
                     total_days: 0,
-                    current_streak: 0,
-                    best_streak: 0
+                    currentStreak: 0,
+                    bestStreak: 0
                 });
             }
         });

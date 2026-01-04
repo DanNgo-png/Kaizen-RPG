@@ -1,3 +1,7 @@
+/* === GLOBAL COMPONENTS === */
+@import url('css/toast.css');
+@import url('css/components/tag-component.css');
+
 /* === MAIN PAGE === */
 @import url('css/variables.css');
 @import url('css/base.css');
@@ -22,6 +26,8 @@
     @import url('css/focus/focus-standard/focus-standard-layout.css');
     @import url('css/focus/focus-standard/focus-stat-icons.css');
     @import url('css/focus/focus-standard/timer-circle-GREEN.css');
+    @import url('css/focus/focus-standard/timer-circle-BLUE.css');
+    @import url('css/focus/focus-standard/todo-overlay.css');
 
     /* STANDARD TIMER: CONFIGURE SIDE BAR */
     @import url('css/focus/focus-standard/focus-sidebar-layout.css');
@@ -30,7 +36,6 @@
 
     /* FLEXIBLE TIMER */
     @import url('css/focus/focus-flexible/focus-flexible-layout.css');
-    @import url('css/focus/focus-flexible/range-slider.css');
     @import url('css/focus/focus-flexible/tag-dropdown.css');
     @import url('css/focus/focus-flexible/delete-tag-overlay.css');
 

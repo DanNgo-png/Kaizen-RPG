@@ -1,0 +1,105 @@
+/* --- Toast Notification Container --- */
+.toast-container-layer {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 9999; /* Always on top */
+    pointer-events: none; /* Let clicks pass through gaps */
+}
+
+/* --- The Toast Card --- */
+.kaizen-toast {
+    background: rgba(31, 41, 55, 0.95); /* Dark Surface */
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left: 4px solid var(--accent-green); /* Default Success Color */
+    padding: 16px 20px;
+    border-radius: 8px;
+    min-width: 300px;
+    max-width: 400px;
+    color: #fff;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+    font-family: var(--font-main);
+    pointer-events: auto; /* Re-enable clicks */
+    
+    /* Flex Layout */
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+
+    /* Animation Entry */
+    animation: slideInRight 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    opacity: 0;
+    transform: translateX(100%);
+}
+
+/* --- Content Styling --- */
+.toast-icon {
+    font-size: 1.2rem;
+    color: var(--accent-green);
+    margin-top: 2px;
+}
+
+.toast-content {
+    flex: 1;
+}
+
+.toast-title {
+    display: block;
+    font-weight: 700;
+    font-size: 0.95rem;
+    /* margin-bottom: 4px; */
+}
+
+.toast-message {
+    display: block;
+    font-size: 0.85rem;
+    color: #d1d5db; /* Gray-300 */
+    line-height: 1.4;
+}
+
+/* --- Close Button --- */
+.toast-close {
+    background: transparent;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 1rem;
+    transition: color 0.2s;
+}
+
+.toast-close:hover {
+    color: #fff;
+}
+
+/* --- Exit Animation Class --- */
+.kaizen-toast.closing {
+    animation: fadeOutDown 0.4s ease-in forwards;
+}
+
+/* --- Keyframes --- */
+@keyframes slideInRight {
+    0% {
+        opacity: 0;
+        transform: translateX(50px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOutDown {
+    0% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}

@@ -26,12 +26,32 @@ export const SettingsHandler = {
             // 2. Update Focus Logic state
             FocusHandler.updateDailyGoal(value);
         }
+
+        // Handle Iterations Setting
+        if (key === 'standardFocusIterations') {
+            const val = parseInt(value);
+            if (!isNaN(val)) {
+                // 1. Update Input Field
+                const iterInput = document.getElementById('iter-val');
+                if (iterInput) iterInput.value = val;
+
+                // 2. Dispatch event for Timer UI to rebuild dots
+                document.dispatchEvent(new CustomEvent('kaizen:iterations-updated', { detail: val }));
+            }
+        }
+
+        // Broadcast generic event for other components (like Focus Timer) to pick up
+        const updateEvent = new CustomEvent('kaizen:setting-update', { detail: { key, value } });
+        document.dispatchEvent(updateEvent);
     },
 
     onSettingSaved: (event) => {
         const { key, value } = event.detail;
         console.log(`✅ Setting saved: ${key} = ${value}`);
 
+        const updateEvent = new CustomEvent('kaizen:setting-update', { detail: { key, value } });
+        document.dispatchEvent(updateEvent);
+        
         if (key === 'dailyGoal') {
             FocusHandler.updateDailyGoal(value);
         }

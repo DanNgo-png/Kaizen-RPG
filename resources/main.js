@@ -2,9 +2,6 @@ import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 // import { audioManager } from "./js/_global-managers/AudioManager.js";
 
-// GLOBAL SINGLETON
-import { flexManager } from "./js/focus/flexible/FlexibleFocusManager.js";
-
 // UI Routers
 import { handleDropdowns } from './js/dropdown.js';
 import { toggleSideBar } from './js/toggleSideBar.js';
@@ -14,6 +11,7 @@ import { initTodoList } from './js/plans/todoListManager.js';
 import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
 import { initReviewSessions } from './js/focus/review/ReviewManager.js';
+import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
 import { initOverview } from './js/analyze/OverviewManager.js';
 import { initSidebarTooltips } from './js/sidebarTooltip.js';
 import { initHeatmap } from './js/analyze/heat-map.js';
@@ -104,7 +102,7 @@ async function app() {
         if (focusSettingsButton) {
             focusSettingsButton.addEventListener("click", async () => {
                 await loadPage('./pages/focus/focus-settings.html');
-                // placeholder(); 
+                initFocusSettings(); 
             });
         }
 

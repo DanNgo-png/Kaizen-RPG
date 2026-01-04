@@ -27,6 +27,11 @@
     --stat-fire: #f59e0b;
     --stat-blue: #3b82f6;
     --stat-check: #10b981;
+        /* Long Break Theme (Periwinkle) */
+        --accent-periwinkle: #6366f1;
+        --accent-periwinkle-dark: #4338ca;
+        --periwinkle-bg: #312e81;
+        --periwinkle-text: #c7d2fe;
         /* CONFIGURE SIDE BAR */
 
     /* FOCUS FLEXIBLE PAGE */

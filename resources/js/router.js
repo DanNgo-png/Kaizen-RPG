@@ -5,17 +5,17 @@
  * Values are functions that run when that page loads.
  */
 const routeMiddleware = {
-    // Case 1: Game Menu (Full screen, covers sidebar)
-    'play-game.html': {
-        onEnter: (container) => container.classList.add('full-viewport-view'),
-        onLeave: (container) => container.classList.remove('full-viewport-view')
-    },
+    // [NOT NEEDED ANYMORE] Case 1: Game Menu (Full screen, covers sidebar)
+    // 'play-game.html': {
+    //     onEnter: (container) => container.classList.add('full-viewport-view'),
+    //     onLeave: (container) => container.classList.remove('full-viewport-view')
+    // },
     
-    // Case 2: Focus Timer (Centered relative to available space, respects sidebar)
-    'focus-standard.html': {
-        onEnter: (container) => container.classList.add('centered-content-view'),
-        onLeave: (container) => container.classList.remove('centered-content-view')
-    }
+    // [NOT NEEDED ANYMORE] Case 2: Focus Timer (Centered relative to available space, respects sidebar)
+    // 'focus-standard.html': {
+    //     onEnter: (container) => container.classList.add('centered-content-view'),
+    //     onLeave: (container) => container.classList.remove('centered-content-view')
+    // }
 };
 
 /**
