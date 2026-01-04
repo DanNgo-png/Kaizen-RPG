@@ -2,197 +2,299 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Focus - Kaizen RPG</title>
-	
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Focus - Kaizen RPG</title>
+
 </head>
 
 <body>
-	<!-- Top Right Stats -->
-	<div class="stats-container">
-		<div class="stat fire"><i class="fa-solid fa-fire"></i> 0</div>
-		<div class="stat time"><i class="fa-regular fa-clock"></i> 0m</div>
-		<div class="stat done"><i class="fa-regular fa-circle-check"></i> 0</div>
-	</div>
+  <div class="focus-standard-main">
 
-	<div class="focus-standard-main">
-		<!-- Dropdown (Add a tag) -->
-		<header>
-			<div class="focus-dropdown-container">
-				<div class="focus-dropdown">
-					<div class="focus-dropdown-left">
-						<i class="fa-solid fa-tag"></i>
-						<span>Add a tag</span>
-					</div>
-					<i class="fa-solid fa-chevron-down"></i>
-				</div>
-			</div>
-		</header>
-		<!-- Pagination Dots -->
-		<div class="focus-dots">
-			<div class="focus-dot active"></div>
-			<div class="focus-dot inactive"></div>
-		</div>
+    <!-- Top Right Stats -->
+    <div class="stats-container">
+      <div class="stat fire"><i class="fa-solid fa-fire"></i> 0</div>
+      <div class="stat time"><i class="fa-regular fa-clock"></i> 0m</div>
+      <div class="stat done"><i class="fa-regular fa-circle-check"></i> 0</div>
+    </div>
 
-		<!-- Timer Circle -->
-		<div id="timer-circle" class="timer-wrapper">
-			<span id="timer-label" class="focus-text">Focus</span>
-			<span class="timer-count">05:00</span>
-		</div>
+    <!-- Dropdown (Add a tag) -->
+    <header>
+      <div class="focus-dropdown-container">
+        <div class="focus-dropdown">
+          <div class="focus-dropdown-left">
+            <i class="fa-solid fa-tag"></i>
+            <span>Add a tag</span>
+          </div>
+          <i class="fa-solid fa-chevron-down"></i>
+        </div>
+      </div>
+    </header>
+    
+    <!-- Pagination Dots -->
+    <div class="focus-dots">
+      <div class="focus-dot active"></div>
+      <div class="focus-dot inactive"></div>
+    </div>
 
-		<!-- Controls -->
-		<div class="actions">
-			<!-- 1. Main Action Button (Start / Pause / Resume) -->
-			<button id="main-action-btn" class="start-focus-button">
-      	<i class="fa-solid fa-play"></i> <span id="main-btn-text">Start Focus Session</span>
+    <!-- Timer Circle -->
+    <div id="timer-circle" class="timer-wrapper">
+      <span id="timer-label" class="focus-text">Focus</span>
+      <span class="timer-count">05:00</span>
+    </div>
+
+    <!-- Controls -->
+    <div class="actions">
+      <!-- 1. Main Action Button (Start / Pause / Resume) -->
+      <button id="main-action-btn" class="start-focus-button">
+        <i class="fa-solid fa-play"></i> <span id="main-btn-text">Start Focus Session</span>
       </button>
 
-			<!-- 2. Secondary Button (Skip Break) - Hidden by default -->
-			<button id="skip-break-btn" class="secondary-button hidden">
-				<i class="fa-solid fa-forward-step"></i> Skip Break
-			</button>
+      <!-- 2. Secondary Button (Skip Break) - Hidden by default -->
+      <button id="skip-break-btn" class="secondary-button hidden">
+        <i class="fa-solid fa-forward-step"></i> Skip Break
+      </button>
 
-			<!-- 3. Volume (Always visible) -->
-			<button class="button-icon">
-				<i class="fa-solid fa-volume-high"></i>
-			</button>
+      <!-- 3. Volume (Always visible) -->
+      <button class="button-icon">
+        <i class="fa-solid fa-volume-high"></i>
+      </button>
 
-			<!-- 4. Stop Button - Hidden by default -->
-			<button id="stop-btn" class="button-icon hidden">
-				<i class="fa-regular fa-circle-stop"></i>
-			</button>
-		</div>
+      <!-- 4. Stop Button - Hidden by default -->
+      <button id="stop-btn" class="button-icon hidden">
+        <i class="fa-regular fa-circle-stop"></i>
+      </button>
+    </div>
 
-		<footer>
-			<!-- Sidebar content goes here -->
-			<div id="configure-sidebar">
-				<!-- Header -->
-				<div class="header">
-					<h1>Focus Settings</h1>
-					<button class="close-btn">&times;</button>
-				</div>
+    <footer>
+      <!-- Sidebar content goes here -->
+      <div id="configure-sidebar">
+        <!-- Header -->
+        <div class="header">
+          <h1>Focus Settings</h1>
+          <button class="close-btn">&times;</button>
+        </div>
 
-        <!-- NEW: Locked Warning Banner -->
-				<div id="settings-locked-warning" class="locked-warning hidden">
-					<i class="fa-solid fa-triangle-exclamation"></i>
-					<div class="warning-text">
-						Settings are locked during an active session. To unlock, either finish the current session or <a href="#" id="unlock-end-session">end it</a>.
-					</div>
-				</div>
+        <!-- Locked Warning Banner -->
+        <div id="settings-locked-warning" class="locked-warning hidden">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div class="warning-text">
+            Settings are locked during an active session. To unlock, either finish the current session or <a href="#"
+              id="unlock-end-session">end it</a>.
+          </div>
+        </div>
 
-				<!-- Timer Type Selector -->
-				<div class="timer-type-label">Timer Type</div>
-				<div class="type-selector" id="type-selector-container">
-					<div class="selector-glider"></div>
-					<button id="btn-mode-timer" class="type-btn active">Timer</button>
-					<button id="btn-mode-stopwatch" class="type-btn">Stopwatch</button>
-				</div>
+        <!-- Timer Type Selector -->
+        <div class="timer-type-label">Timer Type</div>
+        <div class="type-selector" id="type-selector-container">
+          <div class="selector-glider"></div>
+          <button id="btn-mode-timer" class="type-btn active">Timer</button>
+          <button id="btn-mode-stopwatch" class="type-btn">Stopwatch</button>
+        </div>
 
-				<!-- 2. WRAP EXISTING CARDS in this new div -->
-				<div id="timer-settings-container">
-					<!-- Focus Duration Card -->
-					<div class="card border-green">
-						<div class="row">
-							<span class="label">Focus Duration</span>
-							<div class="stepper">
-								<button id="focus-minus">-</button>
-								<input type="number" id="focus-val" class="stepper-input" value="5">
-								<button id="focus-plus">+</button>
-							</div>
-						</div>
-					</div>
+        <!-- 2. WRAP EXISTING CARDS in this new div -->
+        <div id="timer-settings-container">
+          <!-- Focus Duration Card -->
+          <div class="card border-green">
+            <div class="row">
+              <span class="label">Focus Duration</span>
+              <div class="stepper">
+                <button id="focus-minus">-</button>
+                <input type="number" id="focus-val" class="stepper-input" value="5" step="0.1">
+                <button id="focus-plus">+</button>
+              </div>
+            </div>
+          </div>
 
-					<!-- Break Duration Card -->
-					<div class="card border-blue">
-						<div class="row">
-							<span class="label">Break Duration</span>
-							<div class="stepper">
-								<button id="break-minus">-</button>
-								<input type="number" id="break-val" class="stepper-input" value="5">
-								<button id="break-plus">+</button>
-							</div>
-						</div>
-					</div>
+          <!-- Break Duration Card -->
+          <div class="card border-blue">
+            <div class="row">
+              <span class="label">Break Duration</span>
+              <div class="stepper">
+                <button id="break-minus">-</button>
+                <input type="number" id="break-val" class="stepper-input" value="5" step="0.1">
+                <button id="break-plus">+</button>
+              </div>
+            </div>
+          </div>
 
-					<!-- Iterations Card -->
-					<div class="card border-purple">
-						<div class="row">
-							<span class="label">Iterations</span>
-							<div class="stepper">
-								<button id="iter-minus">-</button>
-								<input type="number" id="iter-val" class="stepper-input" value="1">
-								<button id="iter-plus">+</button>
-							</div>
-						</div>
-					</div>
+          <!-- Iterations Card -->
+          <div class="card border-purple">
+            <div class="row">
+              <span class="label">Iterations</span>
+              <div class="stepper">
+                <button id="iter-minus">-</button>
+                <input type="number" id="iter-val" class="stepper-input" value="1">
+                <button id="iter-plus">+</button>
+              </div>
+            </div>
+          </div>
 
-					<!-- Long Break Card -->
-					<div class="card border-periwinkle">
-						<div class="row">
-							<div class="text-group">
-								<span class="label">Long Break</span>
-								<div id="long-break-subtext" class="subtext">Extended breaks every 4 iterations</div>
-							</div>
-							<label class="switch"> <!-- Toggle Switch -->
-								<input type="checkbox" id="long-break-toggle">
-								<span class="slider round"></span>
-							</label>
-						</div>
+          <!-- Long Break Card -->
+          <div class="card border-periwinkle">
+            <div class="row">
+              <div class="text-group">
+                <span class="label">Long Break</span>
+                <div id="long-break-subtext" class="subtext">Extended breaks every 4 iterations</div>
+              </div>
+              <label class="switch"> <!-- Toggle Switch -->
+                <input type="checkbox" id="long-break-toggle">
+                <span class="slider round"></span>
+              </label>
+            </div>
 
-						<!-- Hidden Options Container (with Animation) -->
-						<div class="hidden-options" id="long-break-options">
-							<div class="hidden-inner">
-								<div class="row mt-20">
-									<span class="label">Duration</span>
-									<div class="stepper">
-										<button id="lb-dur-minus">-</button>
-										<input type="number" id="lb-dur-val" class="stepper-input" value="25">
-										<button id="lb-dur-plus">+</button>
-									</div>
-								</div>
-								<div class="row mt-20">
-									<span class="label">Interval</span>
-									<div class="stepper">
-										<button id="lb-int-minus">-</button>
-										<input type="number" id="lb-int-val" class="stepper-input" value="4">
-										<button id="lb-int-plus">+</button>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+            <!-- Hidden Options Container (with Animation) -->
+            <div class="hidden-options" id="long-break-options">
+              <div class="hidden-inner">
+                <div class="row mt-20">
+                  <span class="label">Duration</span>
+                  <div class="stepper">
+                    <button id="lb-dur-minus">-</button>
+                    <input type="number" id="lb-dur-val" class="stepper-input" value="25" step="0.1">
+                    <button id="lb-dur-plus">+</button>
+                  </div>
+                </div>
+                <div class="row mt-20">
+                  <span class="label">Interval</span>
+                  <div class="stepper">
+                    <button id="lb-int-minus">-</button>
+                    <input type="number" id="lb-int-val" class="stepper-input" value="4">
+                    <button id="lb-int-plus">+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-				<!-- 3. Stopwatch UI -->
-				<div id="stopwatch-settings-container" style="display: none;">
-					<div class="card stopwatch-card">
-						<div class="stopwatch-header">Stopwatch Mode</div>
+        <!-- 3. Stopwatch UI -->
+        <div id="stopwatch-settings-container" style="display: none;">
+          <div class="card stopwatch-card">
+            <div class="stopwatch-header">Stopwatch Mode</div>
 
-						<div class="stopwatch-buttons">
-							<button class="sw-btn sw-focus active">Focus</button>
-							<button class="sw-btn sw-break">Break</button>
-						</div>
+            <div class="stopwatch-buttons">
+              <button class="sw-btn sw-focus active">Focus</button>
+              <button class="sw-btn sw-break">Break</button>
+            </div>
 
-						<div class="stopwatch-desc">
-							Stopwatch will count up from zero in your selected mode
-						</div>
-					</div>
-				</div>
+            <div class="stopwatch-desc">
+              Stopwatch will count up from zero in your selected mode
+            </div>
+          </div>
+        </div>
 
-				<!-- Footer Summary -->
-				<div class="footer-card">
-					<div class="footer-text">Total Time: <b id="summary-total">0 min</b></div>
-					<div class="footer-text">Session Ends: <b id="summary-end">--:--</b></div>
-				</div>
-			</div>
+        <!-- Footer Summary -->
+        <div class="footer-card">
+          <div class="footer-text">Total Time: <b id="summary-total">0 min</b></div>
+          <div class="footer-text">Session Ends: <b id="summary-end">--:--</b></div>
+        </div>
+      </div>
 
-			<button class="configure-footer-button" id="configure-footer-button"><i
-					class="fa-solid fa-gear"></i>Configure</button>
-			<button class="log-footer-button"><i class="fa-regular fa-pen-to-square"></i> Log</button>
-			<button class="todo-footer-button"><i class="fa-regular fa-square-check"></i> Todo</button>
-		</footer>
-	</div>
+      <button class="configure-footer-button" id="configure-footer-button"><i
+          class="fa-solid fa-gear"></i>Configure</button>
+      <button class="log-footer-button"><i class="fa-regular fa-pen-to-square"></i> Log</button>
+      <button class="todo-footer-button" id="btn-open-todo-modal"><i class="fa-regular fa-square-check"></i> Todo</button>
+    </footer>
+  </div>
+
+  <!-- ================= TODO / KANBAN MODAL ================= -->
+  <div id="todo-overlay" class="todo-modal-overlay hidden">
+    <div class="todo-modal-content">
+
+      <!-- Modal Header -->
+      <div class="todo-modal-header">
+        <div class="modal-tabs">
+          <button class="modal-tab-btn active" data-tab="todo-tab">
+            <i class="fa-solid fa-list-check"></i> Todo List
+          </button>
+          <button class="modal-tab-btn" data-tab="kanban-tab">
+            <i class="fa-solid fa-table-columns"></i> Kanban
+          </button>
+        </div>
+        <button id="btn-close-todo-modal" class="modal-close-btn">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="todo-modal-body">
+
+        <!-- TAB 1: TODO LIST (Structure from todo-lists.html) -->
+        <div id="todo-tab" class="tab-content active">
+          <div class="todo-container">
+            <header class="todo-header">
+              <h2>Goals</h2>
+              <div class="tabs">
+                <button class="tab-btn active" data-filter="all">All <span class="count-badge">0</span></button>
+                <button class="tab-btn" data-filter="pending">Pending</button>
+                <button class="tab-btn" data-filter="completed">Done</button>
+              </div>
+            </header>
+
+            <div class="input-group">
+              <input type="text" id="new-task-input" class="todo-input" placeholder="Add a new task...">
+              <select id="priority-input" class="priority-select">
+                <option value="p1">P1 (High)</option>
+                <option value="p2">P2 (Med)</option>
+                <option value="p3">P3 (Low)</option>
+                <option value="p4" selected>P4 (None)</option>
+              </select>
+              <button id="add-task-btn" class="btn-add">Add</button>
+            </div>
+
+            <div class="task-list" id="todo-list-container">
+              <!-- Tasks injected here -->
+            </div>
+
+            <button id="clear-completed-btn" class="btn-clear" style="margin-top: 10px;">
+              <i class="fa-solid fa-broom"></i> Clear Completed
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB 2: KANBAN BOARD (Structure from kanban-board.html) -->
+        <div id="kanban-tab" class="tab-content">
+          <div class="kanban-container">
+            <div class="board-scroll-container" id="kanban-board-container">
+
+              <!-- Column: To Do -->
+              <div class="kanban-column col-todo">
+                <div class="kanban-column-header">
+                  <span class="column-title">To Do <span class="column-count" id="kanban-count-todo">0</span></span>
+                </div>
+                <div class="task-container" id="kanban-col-todo">
+                  <!-- Injected -->
+                </div>
+              </div>
+
+              <!-- Column: In Progress (Mock logic: P1/P2 tasks) -->
+              <div class="kanban-column col-progress">
+                <div class="kanban-column-header">
+                  <span class="column-title">High Priority <span class="column-count"
+                      id="kanban-count-progress">0</span></span>
+                </div>
+                <div class="task-container" id="kanban-col-progress">
+                  <!-- Injected -->
+                </div>
+              </div>
+
+              <!-- Column: Done -->
+              <div class="kanban-column col-done">
+                <div class="kanban-column-header">
+                  <span class="column-title">Done <span class="column-count" id="kanban-count-done">0</span></span>
+                </div>
+                <div class="task-container" id="kanban-col-done">
+                  <!-- Injected -->
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
