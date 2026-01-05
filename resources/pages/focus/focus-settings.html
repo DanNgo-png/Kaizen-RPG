@@ -223,16 +223,23 @@
       box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
     }
 
+    /* Utility: Hide Number Spinners (Webkit/Chrome/Safari) */
+    .no-spin::-webkit-outer-spin-button,
+    .no-spin::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+
     /* Save Button Area - Sticky Bottom or Inline */
-    .save-area {
+    /* .save-area {
       display: flex;
       justify-content: flex-end;
       margin-top: 24px;
       padding-top: 20px;
       border-top: 1px solid var(--bg-hover);
-    }
+    } */
 
-    .save-settings-button {
+    /* .save-settings-button {
       background-color: var(--accent-green, #059669);
       color: white;
       border: none;
@@ -247,12 +254,29 @@
       align-items: center;
       gap: 8px;
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    } */
+
+    .save-settings-button {
+      background-color: var(--bg-hover, #374151);
+      border: 1px solid transparent;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-weight: 500;
+      transition: 0.2s;
+      font-size: 0.9rem;
     }
 
     .save-settings-button:hover {
+      background-color: #4b5563;
+    }
+
+    /* .save-settings-button:hover {
       background-color: var(--accent-green-hover, #047857);
       transform: translateY(-1px);
-    }
+    } */
   </style>
 </head>
 
@@ -377,22 +401,30 @@
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Alarm Sound</span>
-              <span class="setting-desc">Audio cue on timer finish</span>
+              <span class="setting-desc">Add audio files to resources/audio/alarm/custom</span>
             </div>
-            <select id="setting-alarm-sound" class="setting-select">
-              <option value="bell">Bell</option>
-              <option value="chime">Chime</option>
-              <option value="elevator">Elevator</option>
-              <option value="moktak">Moktak</option>
-              <option value="none">None</option>
-            </select>
+            <div style="display: flex; gap: 10px;">
+              <button id="btn-open-audio-folder" class="save-settings-button">
+                <i class="fa-regular fa-folder-open"></i>
+              </button>
+
+              <!-- Updated Select (Options will be injected by JS) -->
+              <select id="setting-alarm-sound" class="setting-select" style="min-width: 120px;">
+                <option value="bell">Bell</option>
+                <!-- JS will populate custom files here -->
+              </select>
+            </div>
           </div>
 
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Volume</span>
             </div>
-            <input type="range" class="range-slider" min="0" max="100" value="70">
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <input type="range" id="setting-volume-slider" class="range-slider" min="0" max="100">
+              <input type="number" id="setting-volume-input" class="setting-input no-spin" 
+                     min="0" max="100" style="width: 50px;">
+            </div>
           </div>
 
           <div class="setting-row">
@@ -401,7 +433,7 @@
               <span class="setting-desc">Show OS popup</span>
             </div>
             <label class="switch">
-              <input type="checkbox" checked>
+              <input type="checkbox" id="setting-os-notification" checked>>
               <span class="slider round"></span>
             </label>
           </div>
@@ -410,13 +442,6 @@
       </div> <!-- End Right Column -->
 
     </div> <!-- End Grid -->
-
-    <!-- Save Button -->
-    <div class="save-area">
-      <button class="save-settings-button">
-        <i class="fa-regular fa-floppy-disk"></i> Save Settings
-      </button>
-    </div>
   </div>
 </body>
 
