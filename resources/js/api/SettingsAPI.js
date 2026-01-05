@@ -16,5 +16,13 @@ export const SettingsAPI = {
 
     openFontsFolder: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "openFontsFolder", null);
+    },
+
+    getCustomSounds: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getCustomSounds", null);
+    },
+
+    openSoundsFolder: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "openSoundsFolder", null);
     }
 };
