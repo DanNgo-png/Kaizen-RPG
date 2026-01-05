@@ -3,8 +3,20 @@ export class NotificationManager {
         if (NotificationManager.instance) return NotificationManager.instance;
         NotificationManager.instance = this;
 
-        // Create container if it doesn't exist
+        this.enabled = true; // Default to true until DB loads
         this._createContainer();
+        this.init();
+    }
+
+    // Listen for setting updates
+    init() {
+        document.addEventListener('kaizen:setting-update', (e) => {
+            const { key, value } = e.detail;
+            if (key === 'enableOSNotifications') {
+                // SQLite returns 'true'/'false' strings or booleans, handle both
+                this.enabled = (value === true || value === 'true');
+            }
+        });
     }
 
     _createContainer() {
@@ -26,19 +38,17 @@ export class NotificationManager {
      * @param {string} iconClass - FontAwesome class (e.g., 'fa-solid fa-check')
      */
     show(title, message, iconClass = 'fa-solid fa-check') {
-        // 1. Trigger Native OS Notification (Global Visibility)
-        try {
-            Neutralino.os.showNotification(title, message, 'INFO');
-        } catch (e) {
-            console.warn("System notification failed:", e);
+        // 1. Trigger Native OS Notification (If enabled)
+        if (this.enabled) {
+            try {
+                Neutralino.os.showNotification(title, message, 'INFO');
+            } catch (e) {
+                console.warn("System notification failed:", e);
+            }
         }
 
         // 2. OPTIONAL: Trigger In-App HTML Toast
         // this._createToastElement(title, message, iconClass);
-        
-        // 3. Play Sound (Optional, reusing your audio manager concept if desired)
-        // const audio = new Audio('resources/audio/bell-sound.mp3');
-        // audio.play().catch(() => {});
     }
 
     _createToastElement(title, message, iconClass) {
