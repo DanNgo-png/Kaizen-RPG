@@ -21,3 +21,6 @@ temp_example
 backup_files
 *.db-shm
 *.db-wal
+resources/audio/alarm/custom/*.mp3
+resources/audio/alarm/custom/*.wav
+resources/audio/alarm/custom/*.ogg
