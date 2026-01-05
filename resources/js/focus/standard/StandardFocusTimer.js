@@ -11,13 +11,76 @@ import { initKanbanBoard, renderKanbanView } from "../../plans/kanbanManager.js"
 
 export function initFocusTimer() {
     const ui = new TimerUI();
+    
+    // 1. Get the current state (which holds the persisted tag from Singleton)
+    const currentState = standardManager.getState();
+
     const tagManager = new TagUIManager({
         triggerId: 'tag-trigger',
         displayId: 'tag-display',
-        initialTag: "Add a tag",
+        
+        // 2. Initialize with stored tag, default to "Standard" if null
+        initialTag: currentState.tag || "Standard", 
+        defaultTag: "Standard",
+        
         onTagSelected: (tagName) => {
             console.log("Tag changed to:", tagName); 
+            // 3. Update the manager immediately when user picks a tag
+            standardManager.setTag(tagName);
         }
+    });
+
+    // Map DB keys to Sidebar Input IDs
+    const defaultsMap = {
+        'timerFocusDuration': 'focus-val',
+        'timerShortBreak':    'break-val',
+        'standardFocusIterations': 'iter-val',
+        'timerLongBreak':     'lb-dur-val',
+        'timerLongBreakInt':  'lb-int-val'
+    };
+
+    const autoStartMap = {
+        'timerAutoStartFocus': 'focus',
+        'timerAutoStartBreak': 'break'
+    };
+
+    // 2. Listen for setting data
+    const handleDefaultsLoad = (e) => {
+        const { key, value } = e.detail;
+        
+        // If the key is one of our timer defaults
+        if (defaultsMap[key]) {
+            const inputId = defaultsMap[key];
+            const inputEl = document.getElementById(inputId);
+            
+            // Only update if input exists and user hasn't manually interacted (optional safeguard)
+            // For now, we simply overwrite on load to ensure preferences apply.
+            if (inputEl) {
+                inputEl.value = value;
+                
+                // If we updated Focus Duration, we might need to update the big timer display
+                // ONLY if the timer isn't currently running.
+                const state = standardManager.getState();
+                if (key === 'timerFocusDuration' && !state.isRunning && !state.isPaused && state.mode === 'focus') {
+                    ui.updateTimeDisplay(value * 60);
+                }
+            }
+        }
+
+        // Auto-Start Logic (Internal State)
+        if (autoStartMap[key]) {
+            // value comes as 1/0 or true/false, standardManager needs boolean
+            const isEnabled = (value === true || value === 'true' || value === 1 || value === '1');
+            standardManager.setAutoStart(autoStartMap[key], isEnabled);
+        }
+    };
+
+    document.addEventListener('kaizen:setting-update', handleDefaultsLoad);
+
+    // 3. Request the settings immediately
+    const allKeys = [...Object.keys(defaultsMap), ...Object.keys(autoStartMap)];
+    allKeys.forEach(dbKey => {
+        SettingsAPI.getSetting(dbKey);
     });
 
     // --- 1. Sync Logic (Manager -> UI) ---
@@ -38,7 +101,6 @@ export function initFocusTimer() {
         const currentDotCount = dotsContainer.children.length;
         const targetDotCount = (targetIterations || 1) * 2;
 
-        // Rebuild dots if count mismatch (e.g. settings changed)
         if (currentDotCount !== targetDotCount) {
             dotsContainer.innerHTML = '';
             for (let i = 0; i < targetDotCount; i++) {
@@ -54,12 +116,6 @@ export function initFocusTimer() {
             d.classList.add('inactive');
         });
 
-        // --- FIX: Correct Index Math ---
-        // completedSets is incremented immediately after a focus session.
-        // Example: Finish Focus 1 -> completedSets = 1, mode = 'break'.
-        // We want Index 1 (2nd dot). 
-        // Formula: (1 * 2) - 1 = 1.
-        
         let activeIndex = completedSets * 2;
         
         if (currentMode === 'break' || currentMode === 'long-break') {
@@ -73,7 +129,6 @@ export function initFocusTimer() {
                 dots[i].classList.remove('inactive');
                 dots[i].classList.add('active');
                 
-                // --- FIX: Apply blue style for both break types ---
                 if (currentMode === 'break' || currentMode === 'long-break') {
                     dots[i].classList.add('break-active');
                 }
@@ -83,10 +138,9 @@ export function initFocusTimer() {
 
     // --- Listen for Mode Changes from Sidebar ---
     document.addEventListener('kaizen:mode-changed', (e) => {
-        const mode = e.detail; // 'timer' or 'stopwatch'
+        const mode = e.detail; 
         const state = standardManager.getState();
 
-        // Only update if idle
         if (!state.isRunning && !state.isPaused) {
             const isSw = (mode === 'stopwatch');
 
@@ -95,12 +149,11 @@ export function initFocusTimer() {
                 subMode = TimerConfig.getStopwatchSubMode();
             }
 
-            // Visual updates
             ui.setControlsState(false, false, subMode, isSw);
 
             if (isSw) {
                 ui.updateTimeDisplay(0);
-                ui.setModeVisuals(subMode); // Ensure color matches submode
+                ui.setModeVisuals(subMode);
             } else {
                 ui.updateTimeDisplay(TimerConfig.getFocusDuration() * 60);
                 ui.setModeVisuals('focus');
@@ -108,33 +161,24 @@ export function initFocusTimer() {
         }
     });
 
-    // --- Listen for Stopwatch Internal Changes (Focus/Break) ---
     document.addEventListener('kaizen:stopwatch-mode-changed', (e) => {
-        const subMode = e.detail; // 'focus' or 'break'
+        const subMode = e.detail;
         const state = standardManager.getState();
-
-        // Only update visually if we are currently IN stopwatch mode and IDLE
         const isCurrentlyStopwatch = TimerConfig.isStopwatchMode();
 
         if (!state.isRunning && !state.isPaused && isCurrentlyStopwatch) {
             ui.setModeVisuals(subMode);
-            // Re-trigger controls state to update button text ("Start Break" vs "Start Focus") if needed,
-            // though stopwatch usually says "Start Stopwatch", color is the main thing here.
             ui.setControlsState(false, false, subMode, true);
         }
     });
 
     // --- 2. Initial Load ---
     const initialState = standardManager.getState();
-
-    // Check if session is truly active OR "Pending" (e.g., waiting to start Break)
-    // If completedSets > 0, we are in the middle of a flow (Intermission).
-    // If mode != 'focus', we are likely in a Break or Long Break.
     const isSessionActive = initialState.isRunning || initialState.isPaused;
     const isSessionPending = initialState.mode !== 'focus' || initialState.completedSets > 0;
 
     if (!isSessionActive && !isSessionPending) {
-        // IDLE (True Reset): Load defaults from Sidebar
+        // IDLE
         const isSw = TimerConfig.isStopwatchMode();
         let mode = 'focus';
 
@@ -151,12 +195,11 @@ export function initFocusTimer() {
         ui.setControlsState(false, false, mode, isSw);
         SettingsAPI.getSetting('standardFocusIterations');
     } else {
-        // ACTIVE or INTERMISSION: Sync with running manager
+        // ACTIVE
         updateUIFromState(initialState);
         syncDotsVisuals(initialState.completedSets, initialState.mode, initialState.targetIterations);
     }
 
-    // --- Listen for Settings Update ---
     document.addEventListener('kaizen:iterations-updated', (e) => {
         const newVal = e.detail;
         const currentState = standardManager.getState();
@@ -166,40 +209,27 @@ export function initFocusTimer() {
     });
 
     // ========== START: Audio Mute Logic ==========
-    // 1. Helper to sync UI and Manager
     const applyMuteState = (isMuted) => {
         standardManager.setMute(isMuted);
         ui.updateVolumeIcon(isMuted);
     };
 
-    // 2. Listen for Database Load (StandardFocusTimer specific listener)
     const muteSettingHandler = (e) => {
         const { key, value } = e.detail;
         if (key === 'focusTimerMuted') {
-            // Handle SQLite behavior where booleans might be returned as 1, "1", or "true"
             const isMuted = (value === true || value === 'true' || value === 1 || value === '1');
             applyMuteState(isMuted);
         }
     };
     
-    // Bind listener
     document.addEventListener('kaizen:setting-update', muteSettingHandler);
-
-    // 3. Initial Fetch
-    // Apply current memory state immediately (fixes flicker on nav back)
     applyMuteState(standardManager.isMuted);
-    // Request DB source of truth (fixes restart persistence)
     SettingsAPI.getSetting('focusTimerMuted');
 
-    // 4. Button Click Listener
     if (ui.elements.volBtn) {
         ui.elements.volBtn.onclick = () => {
             const newState = !standardManager.isMuted;
-            
-            // Save to DB
             SettingsAPI.saveSetting('focusTimerMuted', newState);
-            
-            // Apply locally immediately for responsiveness
             applyMuteState(newState);
         };
     }
@@ -216,11 +246,9 @@ export function initFocusTimer() {
             } else if (state.isPaused) {
                 standardManager.resume();
             } else {
-                // FIX: Added check for 'long-break' so it resumes the pending long break instead of starting a new focus session
                 const isBreakPending = state.mode === 'break' || state.mode === 'long-break';
                 const isNextFocusPending = state.mode === 'focus' && state.completedSets > 0;
 
-                // Resume existing flow only if NOT in stopwatch mode (Stopwatch is always manual start/stop)
                 if (!TimerConfig.isStopwatchMode() && (isBreakPending || isNextFocusPending)) {
                     standardManager.resume();
                 } else {
@@ -235,10 +263,8 @@ export function initFocusTimer() {
                     const lbMins = parseInt(document.getElementById('lb-dur-val').value) || 15;
                     const lbInterval = parseInt(document.getElementById('lb-int-val').value) || 4;
 
+                    // Use the tag from UI manager (which is synced with Manager)
                     let tagName = tagManager.currentTag;
-                    if (tagName === "Add a tag") {
-                        tagName = "Standard";
-                    }
 
                     const startMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
 
@@ -262,10 +288,7 @@ export function initFocusTimer() {
     if (btnStop) {
         btnStop.onclick = () => {
             standardManager.stop();
-            // Reset UI
             const isSw = TimerConfig.isStopwatchMode();
-
-            // If in stopwatch mode, use the selected sub-mode (focus/break) color
             const resetMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
 
             ui.setModeVisuals(resetMode);
@@ -331,7 +354,6 @@ export function initFocusTimer() {
             standardManager.eventBus.removeEventListener('tick', tickHandler);
             standardManager.eventBus.removeEventListener('phase-completed', phaseHandler);
             standardManager.eventBus.removeEventListener('session-completed', completionHandler);
-            // Clean up global settings listener too
             document.removeEventListener('kaizen:setting-update', muteSettingHandler);
             cleanupObserver.disconnect();
         }
@@ -339,56 +361,38 @@ export function initFocusTimer() {
     cleanupObserver.observe(document.body, { childList: true, subtree: true });
 
     // --- 5. TODO MODAL LOGIC (New) ---
-    const btnTodoModal = document.getElementById('btn-open-todo-modal'); // Updated ID in HTML
+    const btnTodoModal = document.getElementById('btn-open-todo-modal'); 
     const modalOverlay = document.getElementById('todo-overlay');
     const btnCloseModal = document.getElementById('btn-close-todo-modal');
     const tabButtons = document.querySelectorAll('.modal-tab-btn');
     const tabContents = document.querySelectorAll('.tab-content');
 
-    // Function to handle data when it comes in from server
     const handleTaskData = (e) => {
-        // This listener receives data whenever GameAPI.getTasks() is called
         const tasks = e.detail;
-
-        // Update Todo List View
         if (typeof renderTasks === 'function') renderTasks(tasks);
-
-        // Update Kanban View
         if (typeof renderKanbanView === 'function') renderKanbanView(tasks);
     };
 
     if (btnTodoModal && modalOverlay) {
-        // OPEN
         btnTodoModal.addEventListener('click', () => {
             modalOverlay.classList.remove('hidden');
-
-            // Initialize Managers (Attach listeners)
             initTodoList();
             initKanbanBoard();
-
-            // Subscribe to live data updates
             Neutralino.events.on('receiveTasks', handleTaskData);
         });
 
-        // CLOSE
         btnCloseModal.addEventListener('click', () => {
             modalOverlay.classList.add('hidden');
-            // Optional: Unsubscribe to save memory, though Neutralino handles listeners well
-            // Neutralino.events.off('receiveTasks', handleTaskData);
         });
 
         modalOverlay.addEventListener('click', (e) => {
             if (e.target === modalOverlay) modalOverlay.classList.add('hidden');
         });
 
-        // TABS
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => {
-                // 1. Buttons State
                 tabButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-
-                // 2. Content State
                 const targetId = btn.getAttribute('data-tab');
                 tabContents.forEach(content => {
                     if (content.id === targetId) content.classList.add('active');

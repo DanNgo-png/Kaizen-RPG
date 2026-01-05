@@ -1,5 +1,3 @@
-/* resources/css/components/tag-component.css */
-
 /* --- SELECTOR DROPDOWN --- */
 .selector-wrapper {
     position: relative;
@@ -85,12 +83,51 @@
     gap: 10px;
 }
 
-.selector-opt:hover { background-color: rgba(255,255,255,0.05); color: white; }
-.selector-opt.selected { background-color: rgba(67, 142, 102, 0.15); color: var(--accent-green); font-weight: 600; }
+.selector-opt:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+}
 
-.opt-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.selector-opt.selected {
+    background-color: rgba(67, 142, 102, 0.15);
+    color: var(--accent-green);
+    font-weight: 600;
+}
+
+.opt-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
 
 /* --- MANAGE BUTTON --- */
-.menu-footer-action { border-top: 1px solid rgba(255,255,255,0.1); }
-.btn-block-text { width: 100%; background: transparent; border: none; color: #888; padding: 12px; text-align: left; cursor: pointer; transition: 0.2s; }
-.btn-block-text:hover { background-color: var(--bg-hover); color: white; }
+.menu-footer-action {
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.btn-block-text {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #888;
+    padding: 12px;
+    text-align: left;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-block-text:hover {
+    background-color: var(--bg-hover);
+    color: white;
+}
+
+/* Danger Variant for Clear Button */
+.btn-block-text.danger:hover {
+    color: #ef4444; /* Red */
+    background-color: rgba(239, 68, 68, 0.1);
+}
+
+.hidden {
+    display: none !important;
+}

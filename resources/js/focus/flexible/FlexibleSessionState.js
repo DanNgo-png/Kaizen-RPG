@@ -8,7 +8,7 @@ export class FlexibleSessionState {
         this.accumulatedBreak = 0;
         this.startTime = null;
         
-        this.currentTag = "No Tag";
+        this.currentTag = "Flexible";
     }
 
     /**

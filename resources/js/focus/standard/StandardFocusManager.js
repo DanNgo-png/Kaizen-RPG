@@ -12,19 +12,20 @@ class StandardFocusManager {
         this.isRunning = false;
         this.isPaused = false;
         
-        this.mode = 'focus'; // 'focus' | 'break' | 'long-break'
+        this.mode = 'focus'; 
         this.isStopwatch = false;
         
         // Time tracking
         this.secondsRemaining = 0;  
         this.secondsElapsed = 0;    
-        this.currentTag = "Standard"; 
+        this.currentTag = "Standard"; // Persists in singleton
 
         this.completedSets = 0; 
         this.targetIterations = 1;
 
-        // Audio State
-        this.isMuted = false;
+        // --- Auto-Start Flags ---
+        this.autoStartFocus = false;
+        this.autoStartBreak = false;
 
         this.sessionConfig = {
             focusDuration: 25 * 60,
@@ -35,8 +36,23 @@ class StandardFocusManager {
             tag: "Standard"
         };
 
+        // Audio State
+        this.isMuted = false;
         this.alarmSound = new Audio('audio/bell-sound.mp3');
+
         this.eventBus = new EventTarget();
+    }
+
+    // --- Setter for Auto-Start Settings ---
+    setAutoStart(type, isEnabled) {
+        if (type === 'focus') this.autoStartFocus = isEnabled;
+        if (type === 'break') this.autoStartBreak = isEnabled;
+    }
+
+    // --- Allow updating tag while Idle ---
+    setTag(tagName) {
+        this.currentTag = tagName;
+        this.sessionConfig.tag = tagName;
     }
 
     startSession(config) {
@@ -114,7 +130,7 @@ class StandardFocusManager {
             }
         }
 
-        // Reset defaults
+        // Reset defaults (Tag is purposely NOT reset here to keep it sticky)
         this.mode = 'focus';
         this.completedSets = 0;
         this.secondsRemaining = this.sessionConfig.focusDuration; 
@@ -208,7 +224,7 @@ class StandardFocusManager {
             this.mode = 'focus';
             this.secondsRemaining = this.sessionConfig.focusDuration;
         }
-
+        
         this.eventBus.dispatchEvent(new CustomEvent('phase-completed', { 
             detail: { 
                 completedMode: previousMode, 
@@ -216,6 +232,24 @@ class StandardFocusManager {
                 completedSets: this.completedSets
             } 
         }));
+
+        // --- Auto-Start Logic ---
+        const nextMode = this.mode;
+        const shouldAutoStart = 
+            (nextMode === 'focus' && this.autoStartFocus) || 
+            ((nextMode === 'break' || nextMode === 'long-break') && this.autoStartBreak);
+
+        if (shouldAutoStart && !this.isStopwatch) {
+            this.isRunning = true;
+            this.isPaused = false;
+            this.lastTickTime = Date.now();
+            this.startTicker();
+        } else {
+            // Default behavior: Stop and wait for user
+            this.isRunning = false;
+            this.isPaused = false;
+            this.stopTicker();
+        }
 
         this._emitUpdate();
     }
@@ -256,7 +290,8 @@ class StandardFocusManager {
                 mode: this.mode,
                 isStopwatch: this.isStopwatch,
                 completedSets: this.completedSets,
-                targetIterations: this.targetIterations
+                targetIterations: this.targetIterations,
+                tag: this.currentTag // Added for completeness
             }
         }));
     }

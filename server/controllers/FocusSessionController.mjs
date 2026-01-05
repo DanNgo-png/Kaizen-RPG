@@ -12,7 +12,7 @@ export class FocusSessionController {
             try {
                 // payload: { tag, focusSeconds, breakSeconds, ratio }
                 const result = this.repo.addSession({
-                    tag: payload.tag || "No Tag",
+                    tag: payload.tag || "Standard",
                     focus_seconds: payload.focusSeconds,
                     break_seconds: payload.breakSeconds,
                     ratio: payload.ratio

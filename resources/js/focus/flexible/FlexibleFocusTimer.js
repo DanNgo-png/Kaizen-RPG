@@ -10,7 +10,8 @@ class FocusTimerController {
         this.tagManager = new TagUIManager({
             triggerId: 'tag-trigger',
             displayId: 'tag-display',
-            initialTag: flexManager.getStats().tag,
+            initialTag: flexManager.getStats().tag, 
+            defaultTag: "Flexible", 
             onTagSelected: (tagName) => {
                 flexManager.setTag(tagName);
             }

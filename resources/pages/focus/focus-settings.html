@@ -280,7 +280,7 @@
               <span class="setting-label">Focus Duration</span>
               <span class="setting-desc">Minutes per session</span>
             </div>
-            <input type="number" class="setting-input" value="25">
+            <input type="number" id="setting-timer-focus" class="setting-input" value="25">
           </div>
 
           <!-- Short Break -->
@@ -289,7 +289,16 @@
               <span class="setting-label">Short Break Duration</span>
               <span class="setting-desc">Minutes for standard breaks</span>
             </div>
-            <input type="number" class="setting-input" value="5">
+            <input type="number" id="setting-timer-sb" class="setting-input" value="5">
+          </div>
+
+          <!-- Iterations -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Default Iterations</span>
+              <span class="setting-desc">Sets per session (Dots)</span>
+            </div>
+            <input type="number" id="setting-timer-iterations" class="setting-input" value="1">
           </div>
 
           <!-- Long Break -->
@@ -298,7 +307,7 @@
               <span class="setting-label">Long Break Duration</span>
               <span class="setting-desc">Minutes for extended breaks</span>
             </div>
-            <input type="number" class="setting-input" value="15">
+            <input type="number" id="setting-timer-lb" class="setting-input" value="15">
           </div>
 
           <!-- Interval -->
@@ -307,7 +316,7 @@
               <span class="setting-label">Long Break Interval</span>
               <span class="setting-desc">Sessions before a long break</span>
             </div>
-            <input type="number" class="setting-input" value="4">
+            <input type="number" id="setting-timer-interval" class="setting-input" value="4">
           </div>
         </div>
 
@@ -322,24 +331,26 @@
             <i class="fa-solid fa-robot"></i> Automation
           </div>
 
+          <!-- Auto-start Breaks -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Auto-start Breaks</span>
               <span class="setting-desc">Timer starts when focus ends</span>
             </div>
             <label class="switch">
-              <input type="checkbox" checked>
+              <input type="checkbox" id="setting-auto-break">
               <span class="slider round"></span>
             </label>
           </div>
 
+          <!-- Auto-start Focus -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Auto-start Focus</span>
               <span class="setting-desc">Timer starts when break ends</span>
             </div>
             <label class="switch">
-              <input type="checkbox">
+              <input type="checkbox" id="setting-auto-focus">
               <span class="slider round"></span>
             </label>
           </div>
