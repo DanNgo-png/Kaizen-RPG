@@ -1,4 +1,5 @@
 import { FocusAPI } from "../../api/FocusAPI.js";
+import { audioManager } from "../../_global-managers/AudioManager.js";
 
 class StandardFocusManager {
     constructor() {
@@ -18,7 +19,7 @@ class StandardFocusManager {
         // Time tracking
         this.secondsRemaining = 0;  
         this.secondsElapsed = 0;    
-        this.currentTag = "Standard"; // Persists in singleton
+        this.currentTag = "Standard"; 
 
         this.completedSets = 0; 
         this.targetIterations = 1;
@@ -36,11 +37,19 @@ class StandardFocusManager {
             tag: "Standard"
         };
 
-        // Audio State
-        this.isMuted = false;
-        this.alarmSound = new Audio('audio/bell-sound.mp3');
+        // Audio Key Storage (Facade)
+        this.currentSoundKey = 'bell'; 
 
         this.eventBus = new EventTarget();
+    }
+
+    /**
+     * Facade Getter:
+     * Allows StandardFocusTimer.js to read `standardManager.isMuted` 
+     * without knowing about audioManager directly.
+     */
+    get isMuted() {
+        return audioManager.isMuted;
     }
 
     // --- Setter for Auto-Start Settings ---
@@ -118,6 +127,9 @@ class StandardFocusManager {
         this.isPaused = false;
         this.stopTicker();
         
+        // Stop audio if user manually stops session
+        audioManager.stopCurrent();
+
         if (wasStopwatch && elapsed > 5) { 
              if (currentMode === 'focus') {
                 const payload = {
@@ -130,7 +142,7 @@ class StandardFocusManager {
             }
         }
 
-        // Reset defaults (Tag is purposely NOT reset here to keep it sticky)
+        // Reset defaults
         this.mode = 'focus';
         this.completedSets = 0;
         this.secondsRemaining = this.sessionConfig.focusDuration; 
@@ -245,7 +257,6 @@ class StandardFocusManager {
             this.lastTickTime = Date.now();
             this.startTicker();
         } else {
-            // Default behavior: Stop and wait for user
             this.isRunning = false;
             this.isPaused = false;
             this.stopTicker();
@@ -264,19 +275,16 @@ class StandardFocusManager {
         }
     }
 
+    setAlarmSound(soundKey) {
+        this.currentSoundKey = soundKey;
+    }
+
     playAlarm() {
-        if (this.isMuted) return;
-        
-        try {
-            this.alarmSound.currentTime = 0;
-            this.alarmSound.play();
-        } catch (e) {
-            console.error("Audio playback failed", e);
-        }
+        audioManager.play('alarm', this.currentSoundKey);
     }
 
     setMute(muted) {
-        this.isMuted = muted;
+        audioManager.setMute(muted);
     }
 
     _emitUpdate() {
@@ -291,7 +299,7 @@ class StandardFocusManager {
                 isStopwatch: this.isStopwatch,
                 completedSets: this.completedSets,
                 targetIterations: this.targetIterations,
-                tag: this.currentTag // Added for completeness
+                tag: this.currentTag
             }
         }));
     }

@@ -1,111 +1,150 @@
-/**
- * AudioManager.js
- * Implements the Singleton pattern to handle global audio effects.
- * 
- * Responsibilities:
- * 1. Preload and cache audio assets.
- * 2. Play sounds with support for overlapping playback (rapid clicks).
- * 3. centrally listen for UI interactions to trigger sounds.
- */
+import { ALARM_SOUNDS } from "./audio/alarm_sounds.js";
+import { GENERAL_BUTTON_SOUNDS } from "./audio/general_button_sounds.js";
 
 export class AudioManager {
     constructor() {
-        // Ensure only one instance exists
-        if (AudioManager.instance) {
-            return AudioManager.instance;
-        }
+        if (AudioManager.instance) return AudioManager.instance;
         AudioManager.instance = this;
 
-        // Configuration
-        this.basePath = 'audio/';
-        this.defaultVolume = 0.5;
-
-        // Sound Registry
-        this.sounds = {
-            // Maps a logical key to the filename
-            'defaultButton': 'default-button-sound.mp3',
+        // Combine resources
+        this.library = {
+            alarm: ALARM_SOUNDS,
+            button: GENERAL_BUTTON_SOUNDS
         };
 
-        // Cache for Audio objects
-        this.cache = new Map();
+        // State
+        this.activeAudio = null; // Track currently playing sound (for stopping)
+        this.isMuted = false;
+        this.volume = 1.0;
 
-        this._init();
+        this.init();
     }
 
-    /**
-     * Initialize the manager: Preload sounds and attach listeners.
-     */
-    _init() {
-        this._preloadSounds();
-        this._attachGlobalListeners();
-    }
-
-    /**
-     * Preloads all defined sounds into memory.
-     */
-    _preloadSounds() {
-        Object.entries(this.sounds).forEach(([key, filename]) => {
-            const audio = new Audio(`${this.basePath}${filename}`);
-            audio.preload = 'auto';
-            this.cache.set(key, audio);
+    init() {
+        // Listen for global settings updates (e.g., from Settings Page)
+        document.addEventListener('kaizen:setting-update', (e) => {
+            const { key, value } = e.detail;
+            
+            if (key === 'focusTimerMuted') {
+                this.setMute(value === true || value === 'true');
+            }
+            // Future: Handle 'masterVolume' setting here
         });
     }
 
     /**
-     * Plays a sound by key.
-     * Uses cloneNode() to allow the same sound to overlap (e.g., rapid button clicks).
-     * @param {string} key - The key of the sound to play.
+     * Resolves the correct relative path for the audio file based on the current page.
+     * This fixes the issue where index.html needs "audio/..." but subpages need "../../audio/..."
+     * 
+     * @param {string} rawPath - Path from the config files (e.g. "../../audio/bell.mp3")
+     * @returns {string} - Context-aware path
      */
-    play(key) {
-        const audioTemplate = this.cache.get(key);
+    _resolvePath(rawPath) {
+        if (!rawPath) return null;
 
-        if (audioTemplate) {
-            // Clone the node to allow independent playback instances
-            // This prevents a rapid second click from cutting off the first click's tail
-            const soundInstance = audioTemplate.cloneNode();
-            soundInstance.volume = this.defaultVolume;
-            
-            // Play and catch any autoplay policy errors
-            soundInstance.play().catch(error => {
-                console.warn(`AudioManager: Failed to play '${key}'`, error);
-            });
-        } else {
-            console.warn(`AudioManager: Sound key '${key}' not found in registry.`);
+        // Detect if we are deep in the directory structure (e.g., pages/focus/focus-standard.html)
+        const isNestedPage = window.location.pathname.includes('/pages/');
+
+        // If the configured path assumes a nested structure (starts with ../)
+        if (rawPath.startsWith('../')) {
+            if (isNestedPage) {
+                return rawPath; // Keep as is
+            } else {
+                // We are likely at root (index.html), strip the directory traversal
+                return rawPath.replace(/\.\.\//g, '');
+            }
+        } 
+        
+        // If the configured path assumes root (starts with audio/)
+        else {
+            if (isNestedPage) {
+                // Prepend traversal
+                return `../../${rawPath}`;
+            } else {
+                return rawPath; // Keep as is
+            }
         }
     }
 
     /**
-     * Sets up global event delegation.
-     * Detects clicks within specific zones (like Focus Flexible) to trigger audio.
+     * Play a sound by category and key.
+     * @param {string} category - 'alarm' or 'button'
+     * @param {string} key - e.g., 'bell', 'click'
      */
-    _attachGlobalListeners() {
-        document.addEventListener('click', (event) => {
-            this._handleFocusFlexibleClicks(event);
-        });
+    play(category, key) {
+        if (this.isMuted) return;
+
+        const collection = this.library[category];
+        
+        if (!collection) {
+            console.warn(`AudioManager: Category '${category}' not found.`);
+            return;
+        }
+
+        // Handle "none" selection
+        if (key === 'none' || !key) return;
+
+        const rawSrc = collection[key];
+        if (!rawSrc) {
+            console.warn(`AudioManager: Sound key '${key}' not found in '${category}'.`);
+            return;
+        }
+
+        const src = this._resolvePath(rawSrc);
+
+        try {
+            // Stop overlapping alarms, allow overlapping button sounds
+            if (category === 'alarm') {
+                this.stopCurrent();
+            }
+
+            const audio = new Audio(src);
+            audio.volume = this.volume;
+
+            if (category === 'alarm') {
+                this.activeAudio = audio;
+            }
+
+            const playPromise = audio.play();
+            
+            // Handle browser autoplay policies
+            if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                    console.warn("AudioManager: Playback failed (autoplay policy?):", error);
+                });
+            }
+
+        } catch (e) {
+            console.error("AudioManager: Error playing sound:", e);
+        }
     }
 
     /**
-     * Logic specifically for the Focus Flexible section.
-     * @param {Event} event 
+     * Stop the currently playing active audio (usually alarms).
      */
-    _handleFocusFlexibleClicks(event) {
-        // 1. Check if the click happened inside the Flexible Container
-        const container = event.target.closest('.flexible-container');
-        if (!container) return;
+    stopCurrent() {
+        if (this.activeAudio) {
+            this.activeAudio.pause();
+            this.activeAudio.currentTime = 0;
+            this.activeAudio = null;
+        }
+    }
 
-        // 2. Check if the target is an interactive element (Button, Toggle, Option)
-        // We look for <button> tags or specific interactive classes if <div>s are used
-        const target = event.target;
-        const isInteractive = target.closest('button') || 
-                              target.closest('input[type="range"]') ||
-                              target.closest('.switch'); // Toggle switches
+    setMute(shouldMute) {
+        this.isMuted = shouldMute;
+        if (this.isMuted) {
+            this.stopCurrent();
+        }
+    }
 
-        // 3. Play Sound
-        if (isInteractive) {
-            this.play('defaultButton');
+    setVolume(level) {
+        // Clamp between 0 and 1
+        this.volume = Math.max(0, Math.min(1, level));
+        
+        if (this.activeAudio) {
+            this.activeAudio.volume = this.volume;
         }
     }
 }
 
-// Export a ready-to-use singleton instance
 export const audioManager = new AudioManager();

@@ -1,6 +1,3 @@
-/**
- * TimerUI.js
- */
 export class TimerUI {
     constructor() {
         this.elements = {
@@ -19,8 +16,6 @@ export class TimerUI {
             sidebar: document.getElementById('configure-sidebar'),
             warningBanner: document.getElementById('settings-locked-warning')
         };
-
-        this.alarmSound = new Audio('audio/bell-sound.mp3');
     }
 
     setSidebarLocked(isLocked) {

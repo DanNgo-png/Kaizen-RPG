@@ -11,7 +11,8 @@ export function initFocusSettings() {
         { id: 'setting-timer-lb',        key: 'timerLongBreak',        type: 'number' },
         { id: 'setting-timer-interval',  key: 'timerLongBreakInt',     type: 'number' },
         { id: 'setting-auto-break',      key: 'timerAutoStartBreak',   type: 'toggle' },
-        { id: 'setting-auto-focus',      key: 'timerAutoStartFocus',   type: 'toggle' }
+        { id: 'setting-auto-focus',      key: 'timerAutoStartFocus',   type: 'toggle' },
+        { id: 'setting-alarm-sound',     key: 'timerAlarmSound',       type: 'string' }
     ];
 
     // 1. Generic Handler for DB Updates (Load Initial Data)
