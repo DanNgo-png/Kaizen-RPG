@@ -43,6 +43,8 @@ export const FocusHandler = {
 
         const elFocusTime = document.getElementById('overview-today-focus');
         const elSessionCount = document.getElementById('overview-today-sessions');
+        const elTimerTime = document.getElementById('focus-stat-time');
+        const elTimerSessions = document.getElementById('focus-stat-sessions');
 
         // If elements don't exist, we might not be on the Overview page, but we still update cache
         
@@ -52,10 +54,10 @@ export const FocusHandler = {
             totalSeconds += (s.focus_seconds || 0);
         });
 
-        // 2. Update Cache
+        // Update Cache
         cachedTotalSeconds = totalSeconds;
 
-        // 3. Format Time (Xh Ym)
+        // 2. Format Time (Xh Ym)
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
         
@@ -66,11 +68,15 @@ export const FocusHandler = {
         // Fallback for 0
         if (totalSeconds === 0) timeString = "0m";
 
-        // 4. Update Stats DOM if present
+        // 3. Update Stats DOM if present
         if (elFocusTime && elSessionCount) {
             elFocusTime.textContent = timeString;
             elSessionCount.textContent = sessions.length.toString();
         }
+
+        // 4. Update Focus Timer DOM (if present)
+        if (elTimerTime) elTimerTime.textContent = timeString;
+        if (elTimerSessions) elTimerSessions.textContent = sessions.length.toString();
 
         // 5. Render Streak Message
         renderStreakMessage();
@@ -115,6 +121,9 @@ export const FocusHandler = {
         const elCurrentStreak = document.getElementById('overview-current-streak');
         const elBestStreak = document.getElementById('overview-best-streak');
 
+        // Stats Container
+        const elTimerStreak = document.getElementById('focus-stat-streak');
+
         // Update Lifetime Stats
         // Only update if elements exist (we are on the correct page)
         if (elFocus && elSessions && elDays) {
@@ -136,6 +145,12 @@ export const FocusHandler = {
 
             elCurrentStreak.textContent = `${current} days`;
             elBestStreak.textContent = `${best} days`;
+        }
+
+        // Update Focus Timer Streak
+        if (elTimerStreak) {
+            const current = stats.currentStreak !== undefined ? stats.currentStreak : 0;
+            elTimerStreak.textContent = current;
         }
     },
 

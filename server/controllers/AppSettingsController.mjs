@@ -4,6 +4,7 @@ import { spawn } from 'child_process';
 import { AppSettingsRepository } from '../database/SQLite3/repositories/settings/AppSettingsRepository.mjs';
 
 const FONTS_DIR = 'resources/assets/fonts';
+const CUSTOM_AUDIO_DIR = 'resources/audio/alarm/custom'; 
 
 export class AppSettingsController {
     constructor() {
@@ -105,6 +106,51 @@ export class AppSettingsController {
 
             } catch (error) {
                 console.error("❌ Error handling openFontsFolder:", error);
+            }
+        });
+
+        // Scan for audio files
+        app.events.on("getCustomSounds", () => {
+            try {
+                if (!fs.existsSync(CUSTOM_AUDIO_DIR)) {
+                    fs.mkdirSync(CUSTOM_AUDIO_DIR, { recursive: true });
+                }
+
+                const files = fs.readdirSync(CUSTOM_AUDIO_DIR);
+                const sounds = files.filter(file => {
+                    const ext = path.extname(file).toLowerCase();
+                    return ['.mp3', '.wav', '.ogg'].includes(ext);
+                });
+
+                app.events.broadcast("receiveCustomSounds", sounds);
+            } catch (error) {
+                console.error("❌ Error scanning sounds:", error);
+                app.events.broadcast("receiveCustomSounds", []);
+            }
+        });
+
+        // Open Audio Folder
+        app.events.on("openSoundsFolder", () => {
+            try {
+                if (!fs.existsSync(CUSTOM_AUDIO_DIR)) {
+                    fs.mkdirSync(CUSTOM_AUDIO_DIR, { recursive: true });
+                }
+
+                const absolutePath = path.resolve(CUSTOM_AUDIO_DIR);
+                let command;
+                let file_directory = [absolutePath];
+
+                switch (process.platform) {
+                    case 'win32': command = 'explorer'; break;
+                    case 'darwin': command = 'open'; break;
+                    default:      command = 'xdg-open'; break;
+                }
+
+                const child = spawn(command, file_directory, { detached: true, stdio: 'ignore' });
+                child.unref();
+
+            } catch (error) {
+                console.error("❌ Error opening sounds folder:", error);
             }
         });
     }

@@ -13,9 +13,17 @@
 
     <!-- Top Right Stats -->
     <div class="stats-container">
-      <div class="stat fire"><i class="fa-solid fa-fire"></i> 0</div>
-      <div class="stat time"><i class="fa-regular fa-clock"></i> 0m</div>
-      <div class="stat done"><i class="fa-regular fa-circle-check"></i> 0</div>
+      <div class="stat fire" title="Current Streak">
+        <i class="fa-solid fa-fire"></i> <span id="focus-stat-streak">0</span>
+      </div>
+
+      <div class="stat time" title="Today's Focus Time">
+        <i class="fa-regular fa-clock"></i> <span id="focus-stat-time">0m</span>
+      </div>
+
+      <div class="stat done" title="Today's Sessions">
+        <i class="fa-regular fa-circle-check"></i> <span id="focus-stat-sessions">0</span>
+      </div>
     </div>
 
     <!-- Dropdown (Add a tag) -->

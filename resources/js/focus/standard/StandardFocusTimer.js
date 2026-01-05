@@ -4,6 +4,7 @@ import { standardManager } from "./StandardFocusManager.js";
 import { SettingsAPI } from "../../api/SettingsAPI.js";
 import { notifier } from "../../_global-managers/NotificationManager.js";
 import { TagUIManager } from "../../components/TagUIManager.js";
+import { FocusAPI } from "../../api/FocusAPI.js";
 
 // TODO OVERLAY
 import { initTodoList, renderTasks } from "../../plans/todoListManager.js";
@@ -24,6 +25,17 @@ export function initFocusTimer() {
             standardManager.setTag(tagName);
         }
     });
+
+    // Refresh stats when a session is successfully saved
+    const handleSessionSaved = (e) => {
+        if (e.detail.success) {
+            refreshDailyStats();
+        }
+    };
+    // Remove old listener to prevent duplicates (cleanup)
+    Neutralino.events.off('focusSessionSaved', handleSessionSaved);
+    Neutralino.events.on('focusSessionSaved', handleSessionSaved);
+    refreshDailyStats();
 
     // --- HELPER: Sync Dots Visuals ---
     const syncDotsVisuals = (completedSets, currentMode, targetIterations) => {
@@ -182,7 +194,8 @@ export function initFocusTimer() {
     const allKeys = [
         'timerFocusDuration', 'timerShortBreak', 'standardFocusIterations', 
         'timerLongBreak', 'timerLongBreakInt', 'timerAutoStartFocus', 
-        'timerAutoStartBreak', 'timerAlarmSound', 'focusTimerMuted'
+        'timerAutoStartBreak', 'timerAlarmSound', 'focusTimerMuted',
+        'focusTimerVolume', 'enableOSNotifications'
     ];
     allKeys.forEach(key => SettingsAPI.getSetting(key));
 
@@ -382,4 +395,20 @@ export function initFocusTimer() {
             });
         });
     }
+}
+
+function refreshDailyStats() {
+    // 1. Get Today's Date Range in UTC (matching DB format)
+    const now = new Date();
+    const startOfDay = new Date(now);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(now);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const toSQL = (d) => d.toISOString().replace('T', ' ').split('.')[0];
+
+    // 2. Request Data
+    FocusAPI.getFocusSessions(toSQL(startOfDay), toSQL(endOfDay));
+    FocusAPI.getLifetimeStats(); // Fetches streak
 }
