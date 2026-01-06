@@ -59,13 +59,35 @@ export class TagModals {
         // Safety check if elements exist
         if (!this.dom.manage) return;
 
+        // Close via 'X' button
         this.dom.closeManage.addEventListener('click', () => this.closeManage());
+
+        // Close via Outside Click (Overlay)
+        this.dom.manage.addEventListener('click', (e) => {
+            // Only close if the user clicked the overlay div directly, 
+            // not the content card inside it.
+            if (e.target === this.dom.manage) {
+                this.closeManage();
+            }
+        });
+
         this.dom.btnSubmit.addEventListener('click', () => this._handleSubmit());
         this.dom.btnCancelEdit.addEventListener('click', () => this._resetForm());
         this.dom.btnColorTrigger.addEventListener('click', () => {
             if(this.colorPicker) this.colorPicker.open(this.pendingColor);
         });
+        
+        // Delete Modal Events
         this.dom.deleteCancel.addEventListener('click', () => this.dom.modalDelete.classList.add('hidden'));
+        
+        // Optional: Close Delete Modal via Outside Click as well
+        if (this.dom.modalDelete) {
+            this.dom.modalDelete.addEventListener('click', (e) => {
+                if (e.target === this.dom.modalDelete) {
+                    this.dom.modalDelete.classList.add('hidden');
+                }
+            });
+        }
     }
 
     openManage() {
