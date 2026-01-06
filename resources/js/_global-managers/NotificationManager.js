@@ -8,13 +8,15 @@ export class NotificationManager {
         this.init();
     }
 
-    // Listen for setting updates
     init() {
         document.addEventListener('kaizen:setting-update', (e) => {
             const { key, value } = e.detail;
             if (key === 'enableOSNotifications') {
-                // SQLite returns 'true'/'false' strings or booleans, handle both
-                this.enabled = (value === true || value === 'true');
+                if (value === null || value === undefined) {
+                    this.enabled = true;
+                } else {
+                    this.enabled = (value === true || value === 'true');
+                }
             }
         });
     }
