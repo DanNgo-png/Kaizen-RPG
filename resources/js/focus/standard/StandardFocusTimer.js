@@ -2,9 +2,9 @@ import { TimerUI } from "./TimerUI.js";
 import { TimerConfig } from "./TimerConfig.js";
 import { standardManager } from "./StandardFocusManager.js";
 import { SettingsAPI } from "../../api/SettingsAPI.js";
-import { notifier } from "../../_global-managers/NotificationManager.js";
 import { TagUIManager } from "../../components/TagUIManager.js";
 import { FocusAPI } from "../../api/FocusAPI.js";
+import { setSidebarLocked } from "../configureSidebar.js";
 
 // TODO OVERLAY
 import { initTodoList, renderTasks } from "../../plans/todoListManager.js";
@@ -216,7 +216,7 @@ export function initFocusTimer() {
         ui.setModeVisuals(state.mode);
         const active = state.isRunning || state.isPaused;
         ui.setControlsState(active, state.isPaused, state.mode, state.isStopwatch);
-        ui.setSidebarLocked(active);
+        setSidebarLocked(active); 
     };
 
     const isSessionActive = currentState.isRunning || currentState.isPaused;
@@ -248,11 +248,10 @@ export function initFocusTimer() {
     const phaseHandler = (e) => ui.advanceDots(e.detail.completedMode);
     
     const completionHandler = () => {
-        notifier.show("Session Complete!", "Great work! You've finished your target iterations.", "fa-solid fa-trophy");
         ui.setModeVisuals('focus');
         ui.updateTimeDisplay(TimerConfig.getFocusDuration() * 60);
         ui.setControlsState(false, false, 'focus', false);
-        ui.setSidebarLocked(false);
+        setSidebarLocked(false);
         const currentIter = parseInt(document.getElementById('iter-val').value) || 1;
         syncDotsVisuals(0, 'focus', currentIter);
     };
@@ -314,7 +313,7 @@ export function initFocusTimer() {
             ui.setModeVisuals(resetMode);
             ui.updateTimeDisplay(isSw ? 0 : TimerConfig.getFocusDuration() * 60);
             ui.setControlsState(false, false, resetMode, isSw);
-            ui.setSidebarLocked(false);
+            setSidebarLocked(false);
             const savedIter = parseInt(document.getElementById('iter-val').value) || 1;
             syncDotsVisuals(0, 'focus', savedIter);
         };
