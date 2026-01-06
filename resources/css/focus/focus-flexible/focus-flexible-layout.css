@@ -359,6 +359,7 @@
     padding: 15px 25px;
     border-radius: 30px;
     font-size: 1rem;
+    font-family: var(--font-main);
     cursor: pointer;
     transition: 0.2s;
     display: flex;
