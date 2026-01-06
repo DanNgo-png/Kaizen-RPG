@@ -7,13 +7,14 @@ export class FocusSessionRepository {
         this.statements = {
             // Explicitly list columns to ensure mapping is correct
             insert: this.db.prepare(`
-                INSERT INTO focus_sessions (tag, focus_seconds, break_seconds, ratio, created_at) 
-                VALUES (@tag, @focus_seconds, @break_seconds, @ratio, @created_at)
+                INSERT INTO focus_sessions (tag, focus_seconds, break_seconds, ratio, timer_type, created_at) 
+                VALUES (@tag, @focus_seconds, @break_seconds, @ratio, @timer_type, @created_at)
             `),
             
             // ... rest of your statements
             getByRange: this.db.prepare(`
-                SELECT * FROM focus_sessions 
+                SELECT id, tag, focus_seconds, break_seconds, ratio, timer_type, created_at 
+                FROM focus_sessions 
                 WHERE created_at BETWEEN @startDate AND @endDate 
                 ORDER BY created_at DESC
             `),

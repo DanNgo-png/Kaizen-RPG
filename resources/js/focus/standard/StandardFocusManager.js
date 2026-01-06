@@ -19,7 +19,7 @@ class StandardFocusManager {
         // Time tracking
         this.secondsRemaining = 0;  
         this.secondsElapsed = 0;    
-        this.currentTag = "Standard"; 
+        this.currentTag = "No Tag"; 
 
         this.completedSets = 0; 
         this.targetIterations = 1;
@@ -34,7 +34,7 @@ class StandardFocusManager {
             longBreakDuration: 15 * 60,
             longBreakInterval: 4,
             longBreakEnabled: false,
-            tag: "Standard"
+            tag: "No Tag"
         };
 
         // Audio Key Storage (Facade)
@@ -202,7 +202,8 @@ class StandardFocusManager {
                     tag: this.currentTag,
                     focusSeconds: this.sessionConfig.focusDuration, 
                     breakSeconds: 0,
-                    ratio: 1.0
+                    ratio: 1.0,
+                    timer_type: 'standard'
                 };
                 FocusAPI.saveFocusSession(payload);
             }

@@ -5,7 +5,7 @@ import { TagModals } from "./tag_ui/TagModals.js";
 export class TagUIManager {
     constructor({ triggerId, displayId, initialTag, defaultTag, onTagSelected }) {
         // Internal State
-        this.defaultTag = defaultTag || "Standard";
+        this.defaultTag = defaultTag || null;
         this.currentTag = (initialTag === "Add a tag") ? this.defaultTag : (initialTag || this.defaultTag);
         this.onTagSelected = onTagSelected;
 

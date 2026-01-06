@@ -19,8 +19,8 @@ export function initFocusTimer() {
     const tagManager = new TagUIManager({
         triggerId: 'tag-trigger',
         displayId: 'tag-display',
-        initialTag: currentState.tag || "Standard", 
-        defaultTag: "Standard",
+        initialTag: currentState.tag || "No Tag", 
+        defaultTag: "No Tag",
         onTagSelected: (tagName) => {
             standardManager.setTag(tagName);
         }

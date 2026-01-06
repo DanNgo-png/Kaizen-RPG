@@ -18,6 +18,8 @@ let cachedCustomFonts = [];
 let originalModalHTML = "";
 
 export function initMainSettings() {
+    initTabs(); // Initialize Tabs Logic
+
     const fontSelect = document.getElementById('setting-font-family');
     const openFontsBtn = document.getElementById('btn-open-fonts');
     const goalInput = document.getElementById('setting-daily-goal');
@@ -112,6 +114,34 @@ export function initMainSettings() {
             }
         });
     }
+}
+
+/**
+ * Initializes Tab Navigation logic
+ */
+function initTabs() {
+    const navButtons = document.querySelectorAll('.ms-tab-btn');
+    const panels = document.querySelectorAll('.ms-tab-panel');
+
+    if (!navButtons.length || !panels.length) return;
+
+    navButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            // 1. Remove active state from all
+            navButtons.forEach(b => b.classList.remove('active'));
+            panels.forEach(p => p.classList.remove('active'));
+
+            // 2. Activate clicked button
+            btn.classList.add('active');
+
+            // 3. Activate target panel
+            const targetId = btn.getAttribute('data-tab');
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+                targetPanel.classList.add('active');
+            }
+        });
+    });
 }
 
 /**

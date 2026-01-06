@@ -11,7 +11,7 @@ class FocusTimerController {
             triggerId: 'tag-trigger',
             displayId: 'tag-display',
             initialTag: flexManager.getStats().tag, 
-            defaultTag: "Flexible", 
+            defaultTag: "No Tag", 
             onTagSelected: (tagName) => {
                 flexManager.setTag(tagName);
             }

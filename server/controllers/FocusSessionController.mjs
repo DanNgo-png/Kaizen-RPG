@@ -22,18 +22,17 @@ export class FocusSessionController {
             try {
                 const localCreatedAt = getLocalSQLDateTime();
 
-                // payload: { tag, focusSeconds, breakSeconds, ratio }
                 const result = this.repo.addSession({
-                    tag: payload.tag || "Standard",
+                    tag: payload.tag || "No Tag",
                     focus_seconds: payload.focusSeconds,
                     break_seconds: payload.breakSeconds,
                     ratio: payload.ratio,
+                    timer_type: payload.timer_type,
                     created_at: localCreatedAt
                 });
 
                 console.log(`✅ Focus Session Saved (ID: ${result.lastInsertRowid}) at ${localCreatedAt}`);
 
-                // Send confirmation back to UI
                 app.events.broadcast("focusSessionSaved", {
                     success: true,
                     id: result.lastInsertRowid

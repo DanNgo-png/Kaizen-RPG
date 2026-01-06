@@ -71,7 +71,8 @@ class FlexibleFocusManager {
             tag: this.state.currentTag,
             focusSeconds: focusSeconds,
             breakSeconds: breakSeconds,
-            ratio: this.state.ratio
+            ratio: this.state.ratio,
+            timer_type: 'flexible'
         };
 
         FocusAPI.saveFocusSession(payload);

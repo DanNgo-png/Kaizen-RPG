@@ -38,6 +38,7 @@ const SCHEMAS = {
             focus_seconds INTEGER,
             break_seconds INTEGER,
             ratio REAL,
+            timer_type TEXT DEFAULT 'standard',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 

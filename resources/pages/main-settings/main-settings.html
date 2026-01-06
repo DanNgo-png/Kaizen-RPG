@@ -9,27 +9,48 @@
 
 <body>
   <MAIN_SETTINGS_CONTAINER class="main-settings-container">
+
+    <!-- Header -->
     <div class="ms-header">
       <div class="ms-icon-box">
         <i class="fa-solid fa-gear"></i>
       </div>
       <div class="ms-title">
-        <h2>Application Settings</h2>
-        <p>Configure general preferences, appearance, and data management.</p>
+        <h2>Settings</h2>
+        <p>Configure preferences, manage data, and view system info.</p>
       </div>
     </div>
 
-    <SETTINGS_GRID class="ms-grid">
+    <!-- Tab Navigation -->
+    <div class="ms-tabs-nav">
+      <button class="ms-tab-btn active" data-tab="tab-appearance">
+        <i class="fa-solid fa-palette"></i> Appearance
+      </button>
+      <button class="ms-tab-btn" data-tab="tab-system">
+        <i class="fa-solid fa-desktop"></i> System
+      </button>
+      <button class="ms-tab-btn" data-tab="tab-data">
+        <i class="fa-solid fa-database"></i> Data & Storage
+      </button>
+      <button class="ms-tab-btn" data-tab="tab-productivity">
+        <i class="fa-solid fa-bullseye"></i> Productivity
+      </button>
+      <button class="ms-tab-btn" data-tab="tab-about">
+        <i class="fa-solid fa-circle-info"></i> About
+      </button>
+    </div>
 
-      <!-- LEFT COLUMN -->
-      <div class="ms-column">
+    <!-- Content Area -->
+    <div class="ms-content-area">
 
-        <!-- Appearance -->
+      <!-- PANEL 1: APPEARANCE -->
+      <div id="tab-appearance" class="ms-tab-panel active">
         <div class="ms-card">
           <div class="ms-card-header">
-            <i class="fa-solid fa-palette"></i> Appearance
+            Visual Preferences
           </div>
 
+          <!-- Theme -->
           <div class="ms-row">
             <div class="ms-info">
               <span class="ms-label">Theme</span>
@@ -46,7 +67,6 @@
           <div class="ms-row">
             <div class="ms-info">
               <span class="ms-label">Font Family</span>
-              <!-- <span class="ms-desc">Customize the application text style</span> -->
               <span class="ms-desc">Import .ttf files to /resources/assets/fonts/</span>
             </div>
             <div style="display: flex; gap: 10px;">
@@ -57,9 +77,9 @@
                 <optgroup label="Standard">
                   <option value="segoe" selected>Segoe UI (Default)</option>
                   <option value="arial">Arial</option>
-                  <option value="inter">Inter (dont' have it)</option>
+                  <option value="inter">Inter</option>
                   <option value="roboto">Roboto</option>
-                  <option value="system">System Sans-Serif (dont' have it)</option>
+                  <option value="system">System Sans-Serif</option>
                   <option value="mono">Monospace</option>
                 </optgroup>
                 <!-- Custom Group will be injected by JS -->
@@ -67,6 +87,7 @@
             </div>
           </div>
 
+          <!-- Sidebar -->
           <div class="ms-row">
             <div class="ms-info">
               <span class="ms-label">Sidebar Behavior</span>
@@ -78,11 +99,13 @@
             </label>
           </div>
         </div>
+      </div>
 
-        <!-- System -->
+      <!-- PANEL 2: SYSTEM -->
+      <div id="tab-system" class="ms-tab-panel">
         <div class="ms-card">
           <div class="ms-card-header">
-            <i class="fa-solid fa-desktop"></i> System
+            Application Behavior
           </div>
 
           <div class="ms-row">
@@ -96,7 +119,6 @@
             </label>
           </div>
 
-          <!-- Enable Custom Startup Page -->
           <div class="ms-row">
             <div class="ms-info">
               <span class="ms-label">Custom Startup Page</span>
@@ -108,7 +130,6 @@
             </label>
           </div>
 
-          <!-- Startup Page Selector -->
           <div class="ms-row">
             <div class="ms-info">
               <span class="ms-label">Startup View</span>
@@ -135,15 +156,13 @@
             </label>
           </div>
         </div>
-
       </div>
 
-      <!-- RIGHT COLUMN -->
-      <div class="ms-column">
-        <!-- Data Management -->
+      <!-- PANEL 3: DATA & STORAGE -->
+      <div id="tab-data" class="ms-tab-panel">
         <div class="ms-card">
           <div class="ms-card-header">
-            <i class="fa-solid fa-database"></i> Data & Storage
+            File Management
           </div>
 
           <!-- Data Location -->
@@ -163,6 +182,15 @@
             </div>
             <button class="ms-btn"><i class="fa-solid fa-download"></i> Backup Now</button>
           </div>
+        </div>
+
+        <br>
+
+        <!-- Danger Zone -->
+        <div class="ms-card" style="border-color: rgba(239, 68, 68, 0.3);">
+          <div class="ms-card-header" style="color: #f87171; background-color: rgba(239, 68, 68, 0.05);">
+            <i class="fa-solid fa-triangle-exclamation"></i> Danger Zone
+          </div>
 
           <!-- Clear Focus History -->
           <div class="ms-row">
@@ -172,19 +200,15 @@
             </div>
             <button id="btn-clear-focus-data" class="ms-btn"
               style="border: 1px solid rgba(251, 191, 36, 0.5); color: #fbbf24; background: rgba(251, 191, 36, 0.1);">
-              <span class="clear-history-button-text"
-                style="font-size: clamp(0.75rem, 14.4px, 0.95rem); white-space: nowrap;">
-                <i class="fa-solid fa-eraser"></i>
-                Clear History
-              </span>
+              <i class="fa-solid fa-eraser"></i> Clear History
             </button>
           </div>
 
           <!-- Reset to Defaults -->
           <div class="ms-row">
             <div class="ms-info">
-              <span class="ms-label" style="color: #f87171;">Reset to Defaults</span>
-              <span class="ms-desc">Restore original application configuration</span>
+              <span class="ms-label" style="color: #f87171;">Reset Config</span>
+              <span class="ms-desc">Restore original application settings</span>
             </div>
             <button class="ms-btn"
               style="border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; background: rgba(239, 68, 68, 0.1);">
@@ -195,8 +219,8 @@
           <!-- Reset Game Data -->
           <div class="ms-row">
             <div class="ms-info">
-              <span class="ms-label" style="color: #f87171;">Reset Game Data</span>
-              <span class="ms-desc">Permanently delete all save files and progress</span>
+              <span class="ms-label" style="color: #f87171;">Wipe Game Data</span>
+              <span class="ms-desc">Permanently delete all RPG progress</span>
             </div>
             <button id="btn-reset-game-data" class="ms-btn"
               style="border: 1px solid rgba(239, 68, 68, 0.5); color: #f87171; background: rgba(239, 68, 68, 0.1);">
@@ -204,11 +228,13 @@
             </button>
           </div>
         </div>
+      </div>
 
-        <!-- Productivity Goals -->
+      <!-- PANEL 4: PRODUCTIVITY -->
+      <div id="tab-productivity" class="ms-tab-panel">
         <div class="ms-card">
           <div class="ms-card-header">
-            <i class="fa-solid fa-bullseye"></i> Productivity
+            Focus Configuration
           </div>
 
           <div class="ms-row">
@@ -216,16 +242,28 @@
               <span class="ms-label">Daily Focus Goal</span>
               <span class="ms-desc">Minutes required to maintain streak</span>
             </div>
-            <!-- Reusing ms-select styles for consistency, adjusted for input -->
             <input type="text" inputmode="numeric" pattern="\d*" id="setting-daily-goal" class="ms-select"
-              style="width: 80px; padding-right: 10px;" value="15">
+              style="width: 80px; padding-right: 10px; text-align: center;" value="15">
+          </div>
+
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Mute Sounds</span>
+              <span class="ms-desc">Silence all timer alerts</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="setting-mute-audio">
+              <span class="slider round"></span>
+            </label>
           </div>
         </div>
+      </div>
 
-        <!-- Updates & About -->
+      <!-- PANEL 5: ABOUT -->
+      <div id="tab-about" class="ms-tab-panel">
         <div class="ms-card">
           <div class="ms-card-header">
-            <i class="fa-solid fa-circle-info"></i> About
+            Software Information
           </div>
 
           <div class="ms-row">
@@ -251,12 +289,13 @@
             <button class="ms-btn ms-btn-primary">Check Now</button>
           </div>
         </div>
-      </div>
-    </SETTINGS_GRID>
 
-    <div class="about-footer">
-      <p>Kaizen RPG &copy; 2025. Built with Neutralinojs.</p>
-    </div>
+        <div class="about-footer">
+          <p>Kaizen RPG &copy; 2025. Built with Neutralinojs.</p>
+        </div>
+      </div>
+
+    </div> <!-- End Content Area -->
 
   </MAIN_SETTINGS_CONTAINER>
 

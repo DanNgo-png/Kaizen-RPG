@@ -1,5 +1,5 @@
 /* --- Scoped Styles for Week Analytics --- */
-.week-container {
+.analyze-week-container {
     max-width: 1200px;
     margin: 0 auto;
     color: var(--text-primary, #fff);
@@ -50,6 +50,7 @@
     color: var(--text-secondary, #9ca3af);
     cursor: pointer;
     font-size: 0.9rem;
+    font-family: var(--font-main);
     transition: color 0.2s;
     display: flex;
     align-items: center;
@@ -94,7 +95,7 @@
 }
 
 /* Card Base */
-.week-card {
+.analyze-week-card {
     background-color: var(--surface-color, #1f2937);
     border: 1px solid var(--bg-hover, #374151);
     border-radius: 12px;

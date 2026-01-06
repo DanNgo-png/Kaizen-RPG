@@ -178,8 +178,17 @@ export class ReviewManager {
             const durationStr = this.formatDuration(session.focus_seconds);
             const tagColor = this.getTagColor(session.tag);
 
+            // Determine Icon based on timer_type
+            let typeIcon = '<i class="fa-regular fa-clock" title="Standard Timer"></i>';
+            if (session.timer_type === 'flexible') {
+                typeIcon = '<i class="fa-solid fa-stopwatch" title="Flexible Timer"></i>';
+            }
+
             el.innerHTML = `
                 <div class="session-left">
+                    <span class="s-type-icon" style="margin-right: 15px; color: #6b7280; font-size: 1.1rem; width: 20px; text-align: center;">
+                        ${typeIcon}
+                    </span>
                     <span class="s-time">${timeStr}</span>
                     <span class="s-duration">${durationStr}</span>
                     <div class="s-tag-badge">
