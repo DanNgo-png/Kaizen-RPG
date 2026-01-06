@@ -1,55 +1,29 @@
 export class TimerUI {
     constructor() {
         this.elements = {
+            // Display
             label: document.getElementById('timer-label'),
             display: document.querySelector('.timer-count'),
             circle: document.getElementById('timer-circle'),
+            
+            // Buttons
             mainBtn: document.getElementById('main-action-btn'),
             mainBtnText: document.getElementById('main-btn-text'),
             mainBtnIcon: document.querySelector('#main-action-btn i'),
             stopBtn: document.getElementById('stop-btn'),
             skipBtn: document.getElementById('skip-break-btn'),
+            
+            // Volume
             volBtn: document.getElementById('btn-volume-toggle'),
             volIcon: document.querySelector('#btn-volume-toggle i'),
-            dots: document.querySelectorAll('.focus-dot'),
+            
+            // Dots
             dotsContainer: document.querySelector('.focus-dots'),
-            sidebar: document.getElementById('configure-sidebar'),
-            warningBanner: document.getElementById('settings-locked-warning')
+            dots: document.querySelectorAll('.focus-dot'),
         };
     }
 
-    setSidebarLocked(isLocked) {
-        if (!this.elements.sidebar || !this.elements.warningBanner) return;
-
-        if (isLocked) {
-            this.elements.sidebar.classList.add('settings-locked');
-            this.elements.warningBanner.classList.remove('hidden');
-        } else {
-            this.elements.sidebar.classList.remove('settings-locked');
-            this.elements.warningBanner.classList.add('hidden');
-        }
-    }
-
-    playAlarm() {
-        try {
-            this.alarmSound.currentTime = 0;
-            this.alarmSound.play();
-        } catch (error) {
-            console.warn("Could not play alarm sound:", error);
-        }
-    }
-
-    updateVolumeIcon(isMuted) {
-        if (!this.elements.volIcon) return;
-        
-        if (isMuted) {
-            this.elements.volIcon.className = "fa-solid fa-volume-xmark";
-            this.elements.volBtn.style.opacity = "0.6";
-        } else {
-            this.elements.volIcon.className = "fa-solid fa-volume-high";
-            this.elements.volBtn.style.opacity = "1";
-        }
-    }
+    // --- VISUALIZATION ONLY ---
 
     formatTime(seconds) {
         const absSeconds = Math.abs(seconds);
@@ -66,6 +40,18 @@ export class TimerUI {
     updateTimeDisplay(seconds) {
         if (this.elements.display) {
             this.elements.display.textContent = this.formatTime(seconds);
+        }
+    }
+
+    updateVolumeIcon(isMuted) {
+        if (!this.elements.volIcon) return;
+        
+        if (isMuted) {
+            this.elements.volIcon.className = "fa-solid fa-volume-xmark";
+            this.elements.volBtn.style.opacity = "0.6";
+        } else {
+            this.elements.volIcon.className = "fa-solid fa-volume-high";
+            this.elements.volBtn.style.opacity = "1";
         }
     }
 
@@ -94,20 +80,18 @@ export class TimerUI {
     }
 
     setControlsState(isRunning, isPaused, mode, isStopwatch) {
+        // 1. Handle Dots Visibility
         if (this.elements.dotsContainer) {
             if (isStopwatch) {
                 this.elements.dotsContainer.classList.add('hidden');
-                if (this.elements.circle) {
-                    this.elements.circle.classList.add('stopwatch-layout-fix');
-                }
+                this.elements.circle.classList.add('stopwatch-layout-fix');
             } else {
                 this.elements.dotsContainer.classList.remove('hidden');
-                if (this.elements.circle) {
-                    this.elements.circle.classList.remove('stopwatch-layout-fix');
-                }
+                this.elements.circle.classList.remove('stopwatch-layout-fix');
             }
         }
 
+        // 2. Handle Button Visibility
         if (isRunning || isPaused) {
             this.elements.stopBtn.classList.remove('hidden');
             
@@ -127,6 +111,7 @@ export class TimerUI {
             }
         } else {
             // Stopped State
+            // Keep buttons visible in break mode for better UX (optional, matches your prev logic)
             if ((mode === 'break' || mode === 'long-break') && !isStopwatch) {
                 this.elements.stopBtn.classList.remove('hidden');
                 this.elements.skipBtn.classList.remove('hidden');
@@ -140,11 +125,9 @@ export class TimerUI {
             if (isStopwatch) {
                 this.elements.mainBtnText.textContent = "Start Stopwatch";
             } else {
-                // Update text based on mode
                 let startText = "Start Focus Session";
                 if (mode === 'break') startText = "Start Break";
                 if (mode === 'long-break') startText = "Start Long Break";
-                
                 this.elements.mainBtnText.textContent = startText;
             }
         }
