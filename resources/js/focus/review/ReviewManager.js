@@ -2,18 +2,22 @@ import { FocusAPI } from "../../api/FocusAPI.js";
 import { SettingsAPI } from "../../api/SettingsAPI.js";
 import { loadPage } from "../../router.js";
 import { initFocusTimer } from "../standard/StandardFocusTimer.js";
+import { initFlexibleFocusTimer } from "../flexible/FlexibleFocusTimer.js";
 
 export class ReviewManager {
     constructor() {
         this.currentDate = new Date();
         this.today = new Date();
         
-        // Remove time component for accurate comparison
+        // Remove time component
         this.today.setHours(0,0,0,0);
         this.currentDate.setHours(0,0,0,0);
 
         this.tags = [];
-        this.currentSessionId = null; // For editing/deleting
+        this.currentSessionId = null;
+        
+        // Default setting (fallback)
+        this.startSessionTarget = 'standard'; 
 
         // Cache DOM
         this.dom = {
@@ -30,6 +34,7 @@ export class ReviewManager {
             // Modals
             modalEdit: document.getElementById('modal-edit-session'),
             modalDelete: document.getElementById('modal-delete-session'),
+            modalChoose: document.getElementById('modal-choose-timer'), // New
             tagSelect: document.getElementById('edit-session-tag-select')
         };
 
@@ -41,8 +46,10 @@ export class ReviewManager {
         this.setupListeners();
         
         // Load initial data
-        FocusAPI.getTags(); // For edit dropdown
-        SettingsAPI.getSetting('dailyGoal'); // For reflection
+        FocusAPI.getTags(); 
+        SettingsAPI.getSetting('dailyGoal'); 
+        SettingsAPI.getSetting('reviewStartSessionTarget'); // Request setting
+        
         this.loadDate(this.currentDate);
     }
 
@@ -61,6 +68,23 @@ export class ReviewManager {
         // Edit Modal Actions
         document.getElementById('btn-cancel-edit').addEventListener('click', () => this.toggleModal('edit', false));
         document.getElementById('btn-save-edit').addEventListener('click', () => this.executeEdit());
+
+        // Choose Timer Modal Actions
+        if (this.dom.modalChoose) {
+            document.getElementById('btn-cancel-choose').addEventListener('click', () => this.toggleModal('choose', false));
+            
+            document.getElementById('btn-choose-standard').addEventListener('click', async () => {
+                this.toggleModal('choose', false);
+                await loadPage('./pages/focus/focus-standard.html');
+                initFocusTimer();
+            });
+
+            document.getElementById('btn-choose-flexible').addEventListener('click', async () => {
+                this.toggleModal('choose', false);
+                await loadPage('./pages/focus/focus-flexible.html');
+                initFlexibleFocusTimer();
+            });
+        }
     }
 
     setupListeners() {
@@ -73,6 +97,13 @@ export class ReviewManager {
             this.populateTagSelect();
         });
 
+        // Setting Received
+        document.addEventListener('kaizen:setting-update', (e) => {
+            if (e.detail.key === 'reviewStartSessionTarget') {
+                this.startSessionTarget = e.detail.value || 'standard';
+            }
+        });
+
         // Operation Confirmations -> Reload Data
         Neutralino.events.on('focusSessionUpdated', () => this.loadDate(this.currentDate));
         Neutralino.events.on('focusSessionDeleted', () => {
@@ -81,35 +112,27 @@ export class ReviewManager {
         });
     }
 
+    // ... existing date change methods ...
     changeDate(delta) {
         this.currentDate.setDate(this.currentDate.getDate() + delta);
         this.loadDate(this.currentDate);
     }
 
     loadDate(date) {
-        // UI Updates
         this.updateHeaderUI(date);
-
-        // Fetch Data (Convert to UTC String Range)
         const start = new Date(date);
         start.setHours(0,0,0,0);
-        
         const end = new Date(date);
         end.setHours(23,59,59,999);
-
-        // Format: YYYY-MM-DD HH:MM:SS
         const toSQL = (d) => d.toISOString().replace('T', ' ').split('.')[0];
-        
         FocusAPI.getFocusSessions(toSQL(start), toSQL(end));
     }
 
     updateHeaderUI(date) {
         const isToday = date.getTime() === this.today.getTime();
-        
         this.dom.dateDisplay.textContent = isToday ? "Today" : date.toLocaleDateString('en-US', { weekday: 'long' });
         this.dom.fullDate.textContent = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-        
-        this.dom.btnNext.disabled = isToday; // Can't go into future
+        this.dom.btnNext.disabled = isToday; 
         this.dom.btnToday.classList.toggle('hidden', isToday);
     }
 
@@ -135,9 +158,6 @@ export class ReviewManager {
             const el = document.createElement('div');
             el.className = 'session-card';
             
-            // Format Time (UTC -> Local)
-            // SQL date is UTC string "YYYY-MM-DD HH:MM:SS"
-            // We append 'Z' to force JS to parse it as UTC, then converting to local string
             const utcString = session.created_at.replace(' ', 'T') + 'Z';
             const dateObj = new Date(utcString);
             const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -160,7 +180,6 @@ export class ReviewManager {
                 </div>
             `;
 
-            // Bind Actions
             el.querySelector('.edit').addEventListener('click', () => this.openEditModal(session));
             el.querySelector('.delete').addEventListener('click', () => this.openDeleteModal(session));
 
@@ -179,12 +198,25 @@ export class ReviewManager {
         `;
 
         div.querySelector('.btn-start-focus').addEventListener('click', async () => {
-            // Navigate to Focus Standard
-            await loadPage('./pages/focus/focus-standard.html');
-            initFocusTimer();
+            this.handleStartSessionClick();
         });
 
         this.dom.list.appendChild(div);
+    }
+
+    async handleStartSessionClick() {
+        const target = this.startSessionTarget;
+
+        if (target === 'ask') {
+            this.toggleModal('choose', true);
+        } else if (target === 'flexible') {
+            await loadPage('./pages/focus/focus-flexible.html');
+            initFlexibleFocusTimer();
+        } else {
+            // Default to Standard
+            await loadPage('./pages/focus/focus-standard.html');
+            initFocusTimer();
+        }
     }
 
     // --- Actions ---
@@ -217,14 +249,16 @@ export class ReviewManager {
     // --- Helpers ---
 
     toggleModal(type, show) {
-        const modal = type === 'edit' ? this.dom.modalEdit : this.dom.modalDelete;
-        modal.classList.toggle('hidden', !show);
+        let modal;
+        if (type === 'edit') modal = this.dom.modalEdit;
+        else if (type === 'delete') modal = this.dom.modalDelete;
+        else if (type === 'choose') modal = this.dom.modalChoose;
+
+        if (modal) modal.classList.toggle('hidden', !show);
     }
 
     populateTagSelect() {
         this.dom.tagSelect.innerHTML = '';
-        
-        // Add "Standard" / "No Tag" if not in list
         const stdOpt = document.createElement('option');
         stdOpt.value = 'Standard';
         stdOpt.textContent = 'Standard';
@@ -241,7 +275,7 @@ export class ReviewManager {
 
     getTagColor(tagName) {
         const tag = this.tags.find(t => t.name === tagName);
-        return tag ? tag.color : '#6b7280'; // Default gray
+        return tag ? tag.color : '#6b7280'; 
     }
 
     formatDuration(seconds) {
@@ -252,17 +286,6 @@ export class ReviewManager {
     }
 
     checkGoal(totalSecs) {
-        // This relies on the FocusHandler updating the cached goal from SettingsHandler
-        // For now, we will fetch it manually via API, but since that's async,
-        // we'll just check specific styling. 
-        // Ideally, we pass the goal into the class or read from a global store.
-        
-        // Simplified Logic: 
-        // We trigger the SettingsAPI to get the goal, the response goes to SettingsHandler.
-        // We'll trust the visual feedback in Overview for the strict check.
-        // Here we just display "Completed" if > 0 for UX, or implement a full listener if needed.
-        
-        // Visual polish only for this snippet
         const mins = Math.floor(totalSecs / 60);
         if (mins > 0) {
             this.dom.statGoal.textContent = `${mins}m Recorded`;
