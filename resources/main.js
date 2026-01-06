@@ -1,31 +1,40 @@
 import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
-// import { audioManager } from "./js/_global-managers/AudioManager.js";
+import { SettingsAPI } from './js/api/SettingsAPI.js';
 
-// UI Routers
-import { handleDropdowns } from './js/dropdown.js';
-import { toggleSideBar } from './js/toggleSideBar.js';
-import { loadPage } from './js/router.js';
-import { configureSidebar } from './js/focus/configureSidebar.js';
+// PLAN PAGE
 import { initTodoList } from './js/plans/todoListManager.js';
+
+// FOCUS PAGE
+import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js'; 
+import { configureSidebar } from './js/focus/configureSidebar.js';
 import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
 import { initReviewSessions } from './js/focus/review/ReviewManager.js';
 import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
+
+// ANALYZE PAGE
 import { initOverview } from './js/analyze/OverviewManager.js';
-import { initSidebarTooltips } from './js/sidebarTooltip.js';
 import { initHeatmap } from './js/analyze/heat-map.js';
+
+// GAME PAGE
 import { initMenuButtons } from './js/games/playGameManager.js';
+
+// OTHER
+import { loadPage } from './js/router.js';
+import { toggleSideBar } from './js/toggleSideBar.js';
+import { handleDropdowns } from './js/dropdown.js';
+import { initSidebarTooltips } from './js/sidebarTooltip.js';
 import { initMainSettings } from './js/main-settings/mainSettingsManager.js';
-import { SettingsAPI } from './js/api/SettingsAPI.js';
 
 async function app() {
     try {
         EventRegistry.init();
+        initGlobalFocusListener(); // FOCUS PAGE
         SettingsAPI.getSetting('fontFamily');
         await GameAPI.getMercenaries();
-        handleDropdowns()
-        initSidebarTooltips()
+        handleDropdowns();
+        initSidebarTooltips();
 
         // Sidebar Toggle
         const sidebarToggle = document.getElementById("sidebar-toggle");
