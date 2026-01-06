@@ -266,18 +266,20 @@
 /* Session Blocks */
 .day-session-block {
     position: absolute;
-    bottom: 26px;
-    /* Sit on top of axis */
+    bottom: 26px; /* Sit on top of axis */
     height: 40px;
-    background-color: #2563eb;
-    /* Blue */
+    background-color: #2563eb; 
     border-radius: 4px;
-    opacity: 0.8;
-    border: 1px solid #60a5fa;
-    /* Positioning would be calculated by JS in real app */
-    right: 0;
-    width: 18%;
-    /* Approx width for 2 hours out of 11 shown */
+    opacity: 0.9;
+    border: 1px solid rgba(255,255,255,0.3);
+    z-index: 10;
+    transition: all 0.2s;
+}
+
+.day-session-block:hover {
+    transform: scaleY(1.1);
+    z-index: 20;
+    opacity: 1;
 }
 
 .day-timeline-legend {
