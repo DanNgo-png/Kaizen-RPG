@@ -4,7 +4,11 @@ export class DayManager {
     constructor() {
         this.currentDate = new Date();
         this.today = new Date();
-        this.tagsMap = new Map(); // Store tag colors: { "Coding": "#blue" }
+        this.tagsMap = new Map(); 
+        
+        // --- NEW: State for filtering ---
+        this.hiddenTags = new Set();
+        this.currentSessions = []; 
 
         // Helper: Convert to Local SQL format YYYY-MM-DD HH:MM:SS
         this.toSQL = (d) => {
@@ -32,54 +36,67 @@ export class DayManager {
 
         // Bind listener for data
         this.handleData = (e) => {
-            // Only process if the Day page is actually active
             if (document.getElementById('day-header-date')) {
-                this.render(e.detail || []);
+                // --- NEW: Store data for re-rendering during toggle ---
+                this.currentSessions = e.detail || [];
+                this.render(this.currentSessions);
             }
         };
 
         this.handleTags = (e) => {
             const tags = e.detail || [];
             tags.forEach(t => this.tagsMap.set(t.name, t.color));
-            // Reload current view to apply colors if data arrived late
             this.loadDate(this.currentDate);
         };
 
         this.init();
     }
 
+    _getDisplayTag(session) {
+        if (session.tag === "Standard" || session.tag === "Flexible") {
+            return "No Tag";
+        }
+        return session.tag;
+    }
+
+    toggleTag(tagName) {
+        if (this.hiddenTags.has(tagName)) {
+            this.hiddenTags.delete(tagName);
+        } else {
+            this.hiddenTags.add(tagName);
+        }
+        // Re-render using cached data
+        this.render(this.currentSessions); 
+    }
+
     init() {
         if (!this.dom.headerDate) return;
 
-        // 1. Event Listeners
         this.dom.btnPrev.addEventListener('click', () => this.changeDate(-1));
         this.dom.btnNext.addEventListener('click', () => this.changeDate(1));
         
         this.dom.inputDate.addEventListener('change', (e) => {
-            const parts = e.target.value.split('-'); // YYYY-MM-DD
+            const parts = e.target.value.split('-'); 
             if (parts.length === 3) {
-                // Create date in local time
                 this.currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
                 this.loadDate(this.currentDate);
             }
         });
 
-        // 2. Bind Data Events
-        // Use a unique named function or check specific event dispatching if shared
-        // For simplicity, we reuse the generic receiveFocusSessions but guard via DOM check
         Neutralino.events.off('receiveFocusSessions', this.handleData);
         Neutralino.events.on('receiveFocusSessions', this.handleData);
 
         Neutralino.events.off('receiveTags', this.handleTags);
         Neutralino.events.on('receiveTags', this.handleTags);
 
-        // 3. Initial Load
-        FocusAPI.getTags(); // Fetch colors
+        FocusAPI.getTags(); 
         this.loadDate(this.currentDate);
     }
 
     changeDate(delta) {
         this.currentDate.setDate(this.currentDate.getDate() + delta);
+        // Reset filters when changing days
+        this.hiddenTags.clear();
         this.loadDate(this.currentDate);
     }
 
@@ -99,8 +116,6 @@ export class DayManager {
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         this.dom.headerDate.textContent = date.toLocaleDateString('en-US', options);
         
-        // Update input value (YYYY-MM-DD)
-        // Adjust for timezone offset to ensure the input shows the correct local day
         const offset = date.getTimezoneOffset();
         const local = new Date(date.getTime() - (offset*60*1000));
         this.dom.inputDate.value = local.toISOString().split('T')[0];
@@ -113,6 +128,7 @@ export class DayManager {
     }
 
     renderStats(sessions) {
+        // Stats continue to show TOTALS (ignoring filters) for accuracy
         const totalSeconds = sessions.reduce((sum, s) => sum + s.focus_seconds, 0);
         const count = sessions.length;
 
@@ -129,91 +145,120 @@ export class DayManager {
     renderChart(sessions) {
         if (!this.dom.chartCircle) return;
 
-        // 1. Aggregate Data
+        // 1. Aggregate Data (using Display Tags)
         const distribution = {};
-        let totalTime = 0;
+        let totalTimeAll = 0;
 
         sessions.forEach(s => {
-            if (!distribution[s.tag]) distribution[s.tag] = 0;
-            distribution[s.tag] += s.focus_seconds;
-            totalTime += s.focus_seconds;
+            const tag = this._getDisplayTag(s);
+            if (!distribution[tag]) distribution[tag] = 0;
+            distribution[tag] += s.focus_seconds;
+            totalTimeAll += s.focus_seconds;
         });
 
-        // 2. Sort by time descending
         const sortedTags = Object.keys(distribution).sort((a, b) => distribution[b] - distribution[a]);
 
-        // 3. Build Conic Gradient & Legend
+        // 2. Calculate VISIBLE time for the Chart Gradient
+        let visibleTotalTime = 0;
+        sortedTags.forEach(tag => {
+            if (!this.hiddenTags.has(tag)) {
+                visibleTotalTime += distribution[tag];
+            }
+        });
+
+        // 3. Build Visuals
         let gradientParts = [];
         let currentPct = 0;
         let legendHTML = '';
 
-        if (totalTime === 0) {
-            this.dom.chartCircle.style.background = '#374151'; // Gray empty state
+        if (totalTimeAll === 0) {
+            this.dom.chartCircle.style.background = '#374151'; 
             this.dom.legendContainer.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:10px;">No data recorded</div>';
             return;
         }
 
         sortedTags.forEach(tag => {
             const seconds = distribution[tag];
-            const pct = (seconds / totalTime) * 100;
-            const endPct = currentPct + pct;
+            const isHidden = this.hiddenTags.has(tag);
             
-            // Get Color
+            // Generate Legend Item
             const color = this.tagsMap.get(tag) || this._generateColor(tag);
-
-            // Add to gradient: "color start% end%"
-            gradientParts.push(`${color} ${currentPct}% ${endPct}%`);
             
-            // Add to legend
+            // Visual styles for hidden state
+            const opacity = isHidden ? '0.5' : '1';
+            const textDec = isHidden ? 'line-through' : 'none';
+            const dotColor = isHidden ? '#6b7280' : color; 
+
             const h = Math.floor(seconds / 3600);
             const m = Math.floor((seconds % 3600) / 60);
             const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
+            
+            // Legend % is based on TOTAL time (to keep context), not just visible
+            const pctOfTotal = (seconds / totalTimeAll) * 100;
 
             legendHTML += `
-                <div class="day-legend-row">
-                    <div class="day-legend-dot" style="background-color: ${color};"></div>
-                    <span class="day-legend-name">${tag}</span>
+                <div class="day-legend-row" data-tag="${tag}" style="cursor: pointer; opacity: ${opacity};" title="Toggle visibility">
+                    <div class="day-legend-dot" style="background-color: ${dotColor};"></div>
+                    <span class="day-legend-name" style="text-decoration: ${textDec};">${tag}</span>
                     <span class="day-legend-time">${durStr}</span>
-                    <span class="day-legend-perc">${Math.round(pct)}%</span>
+                    <span class="day-legend-perc">${Math.round(pctOfTotal)}%</span>
                 </div>
             `;
 
-            currentPct = endPct;
+            // Add to Chart Gradient ONLY if visible
+            if (!isHidden && visibleTotalTime > 0) {
+                const pct = (seconds / visibleTotalTime) * 100;
+                const endPct = currentPct + pct;
+                gradientParts.push(`${color} ${currentPct}% ${endPct}%`);
+                currentPct = endPct;
+            }
         });
 
-        // Apply CSS
-        this.dom.chartCircle.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+        // Apply
         this.dom.legendContainer.innerHTML = legendHTML;
+        
+        if (visibleTotalTime > 0) {
+            this.dom.chartCircle.style.background = `conic-gradient(${gradientParts.join(', ')})`;
+        } else {
+            this.dom.chartCircle.style.background = '#374151'; // All hidden or empty
+        }
+
+        // --- NEW: Add Click Listeners to Legend ---
+        this.dom.legendContainer.querySelectorAll('.day-legend-row').forEach(el => {
+            el.addEventListener('click', (e) => {
+                const tag = e.currentTarget.dataset.tag;
+                this.toggleTag(tag);
+            });
+        });
     }
 
     renderTimeline(sessions) {
         if (!this.dom.timelineContainer) return;
 
-        // Remove old blocks (keep axis and ticks)
+        // Clear old blocks
         const oldBlocks = this.dom.timelineContainer.querySelectorAll('.day-session-block');
         oldBlocks.forEach(el => el.remove());
 
-        // Constants
-        const MINUTES_IN_DAY = 1440; // 24 * 60
+        const MINUTES_IN_DAY = 1440; 
 
         sessions.forEach(s => {
+            const displayTag = this._getDisplayTag(s);
+
+            // --- NEW: Filter Logic ---
+            if (this.hiddenTags.has(displayTag)) return; 
+
             // Parse Start Time
-            // Format: "YYYY-MM-DD HH:MM:SS"
-            // We assume sessions belong to the currently viewed day (API ensures this)
-            const dateStr = s.created_at.replace(' ', 'T'); // ISO compliant
+            const dateStr = s.created_at.replace(' ', 'T'); 
             const dateObj = new Date(dateStr);
             
             const startHour = dateObj.getHours();
             const startMin = dateObj.getMinutes();
             const startTotalMins = (startHour * 60) + startMin;
 
-            // Calculate Dimensions
             const durationMins = Math.ceil(s.focus_seconds / 60);
             
             const leftPct = (startTotalMins / MINUTES_IN_DAY) * 100;
             const widthPct = (durationMins / MINUTES_IN_DAY) * 100;
-
-            // Clamp width (min 0.5% so it's visible)
             const finalWidth = Math.max(widthPct, 0.5);
 
             // Create Element
@@ -222,21 +267,19 @@ export class DayManager {
             block.style.left = `${leftPct}%`;
             block.style.width = `${finalWidth}%`;
             
-            // Color based on tag
-            const color = this.tagsMap.get(s.tag) || '#2563eb';
+            const color = this.tagsMap.get(displayTag) || '#2563eb';
             block.style.backgroundColor = color;
-            block.style.boxShadow = `0 0 0 1px ${color}`; // Border effect
+            block.style.boxShadow = `0 0 0 1px ${color}`;
 
             // Tooltip
             const timeLabel = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            block.title = `${s.tag}: ${timeLabel} (${durationMins}m)`;
+            block.title = `${displayTag}: ${timeLabel} (${durationMins}m)`;
 
             this.dom.timelineContainer.appendChild(block);
         });
     }
 
     _generateColor(str) {
-        // Fallback hash color generator for unknown tags
         let hash = 0;
         for (let i = 0; i < str.length; i++) {
             hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -246,7 +289,6 @@ export class DayManager {
     }
 }
 
-// Export initialization function
 export function initDayAnalytics() {
     new DayManager();
 }
