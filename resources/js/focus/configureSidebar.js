@@ -281,3 +281,18 @@ export function configureSidebar() {
         };
     }
 }
+
+export function setSidebarLocked(isLocked) {
+    const sidebar = document.getElementById('configure-sidebar');
+    const warningBanner = document.getElementById('settings-locked-warning');
+
+    if (!sidebar || !warningBanner) return;
+
+    if (isLocked) {
+        sidebar.classList.add('settings-locked');
+        warningBanner.classList.remove('hidden');
+    } else {
+        sidebar.classList.remove('settings-locked');
+        warningBanner.classList.add('hidden');
+    }
+}
