@@ -2,128 +2,115 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Day Analytics - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Day Analytics - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="day-container">
+  <div class="day-container">
 
-		<!-- Header -->
-		<header class="day-header">
-			<h2>Saturday, December 6</h2>
-			<div class="day-date-controls">
-				<button class="day-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
-				<div class="day-picker-wrapper">
-					<input type="date" class="day-date-input" value="2025-12-06">
-				</div>
-				<button class="day-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
-			</div>
-		</header>
+    <!-- Header -->
+    <header class="day-header">
+      <h2 id="day-header-date">Loading...</h2>
+      <div class="day-date-controls">
+        <button id="day-btn-prev" class="day-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <div class="day-picker-wrapper">
+          <input type="date" id="day-date-input" class="day-date-input">
+        </div>
+        <button id="day-btn-next" class="day-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </header>
 
-		<!-- Main Grid -->
-		<div class="day-analytics-grid">
+    <!-- Main Grid -->
+    <div class="day-analytics-grid">
 
-			<!-- LEFT COLUMN (Stats) -->
-			<div class="day-left-column">
+      <!-- LEFT COLUMN (Stats) -->
+      <div class="day-left-column">
 
-				<!-- Focus Time Card -->
-				<div class="day-card">
-					<div class="day-card-title" style="color: #60a5fa;">
-						<i class="fa-regular fa-clock"></i> Focus Time
-					</div>
-					<div class="day-kpi-content">
-						<span class="day-kpi-label">Total Minutes</span>
-						<span class="day-kpi-value">2h 9m</span>
-					</div>
-				</div>
+        <!-- Focus Time Card -->
+        <div class="day-card">
+          <div class="day-card-title" style="color: #60a5fa;">
+            <i class="fa-regular fa-clock"></i> Focus Time
+          </div>
+          <div class="day-kpi-content">
+            <span class="day-kpi-label">Total Minutes</span>
+            <span id="day-stat-total-time" class="day-kpi-value">0m</span>
+          </div>
+        </div>
 
-				<!-- Focus Sessions Card -->
-				<div class="day-card">
-					<div class="day-card-title" style="color: #60a5fa;">
-						<i class="fa-solid fa-chart-column"></i> Focus Sessions
-					</div>
-					<div class="day-kpi-content">
-						<span class="day-kpi-label">Total Sessions</span>
-						<span class="day-kpi-value">3</span>
-					</div>
-				</div>
+        <!-- Focus Sessions Card -->
+        <div class="day-card">
+          <div class="day-card-title" style="color: #60a5fa;">
+            <i class="fa-solid fa-chart-column"></i> Focus Sessions
+          </div>
+          <div class="day-kpi-content">
+            <span class="day-kpi-label">Total Sessions</span>
+            <span id="day-stat-total-sessions" class="day-kpi-value">0</span>
+          </div>
+        </div>
 
-			</div>
+      </div>
 
-			<!-- RIGHT COLUMN (Chart) -->
-			<div class="day-card">
-				<div class="day-card-header">
-					<div class="day-card-title" style="color: #60a5fa;">
-						<i class="fa-solid fa-tag"></i> Focus Time by Tag
-					</div>
-					<div class="day-card-subtitle">See how you spent your focus time across different tags</div>
-				</div>
+      <!-- RIGHT COLUMN (Chart) -->
+      <div class="day-card">
+        <div class="day-card-header">
+          <div class="day-card-title" style="color: #60a5fa;">
+            <i class="fa-solid fa-tag"></i> Focus Time by Tag
+          </div>
+          <div class="day-card-subtitle">See how you spent your focus time across different tags</div>
+        </div>
 
-				<div class="day-chart-flex">
-					<!-- Donut -->
-					<div class="day-donut-chart">
-						<div class="day-donut-hole"></div>
-					</div>
+        <div class="day-chart-flex">
+          <!-- Donut -->
+          <div id="day-donut-chart" class="day-donut-chart">
+            <div class="day-donut-hole"></div>
+          </div>
 
-					<!-- Legend -->
-					<div class="day-chart-legend-container">
-						<div class="day-legend-row">
-							<div class="day-legend-dot"></div>
-							<span class="day-legend-name">College</span>
-							<span class="day-legend-time">2h 9m</span>
-							<span class="day-legend-perc">100%</span>
-						</div>
-					</div>
-				</div>
-			</div>
+          <!-- Legend -->
+          <div id="day-legend-container" class="day-chart-legend-container" style="min-width: 200px;">
+            <!-- Legend items injected by JS -->
+          </div>
+        </div>
+      </div>
 
-		</div>
+    </div>
 
-		<!-- BOTTOM ROW (Timeline) -->
-		<div class="day-card">
-			<div class="day-card-title" style="color: #60a5fa;">
-				<i class="fa-regular fa-calendar-check"></i> Daily Timeline
-			</div>
+    <!-- BOTTOM ROW (Timeline) -->
+    <div class="day-card">
+      <div class="day-card-title" style="color: #60a5fa;">
+        <i class="fa-regular fa-calendar-check"></i> Daily Timeline (24h)
+      </div>
 
-			<div class="day-timeline-container">
-				<!-- Visual Session Block (Static Demo: 10PM - 12PM) -->
-				<!-- Also small block at 3PM and 5PM to match screenshot "blips" -->
-				<div class="day-session-block" style="left: 27%; width: 5px; height: 30px;"></div> <!-- 3pm blip -->
-				<div class="day-session-block" style="left: 45%; width: 5px; height: 30px;"></div> <!-- 5pm blip -->
-				<div class="day-session-block"></div> <!-- The big block at the end -->
+      <div id="day-timeline-tracks" class="day-timeline-container">
+        <!-- Session Blocks injected by JS -->
 
-				<!-- The Axis Line -->
-				<div class="day-timeline-axis"></div>
+        <!-- The Axis Line -->
+        <div class="day-timeline-axis"></div>
 
-				<!-- Ticks -->
-				<div class="day-timeline-ticks">
-					<!-- Generating ticks 1PM to 12PM -->
-					<div class="day-tick"><span class="day-tick-label">1PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">2PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">3PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">4PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">5PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">6PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">7PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">8PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">9PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">10PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">11PM</span></div>
-					<div class="day-tick"><span class="day-tick-label">12PM</span></div>
-				</div>
-			</div>
+        <!-- Ticks (00:00 to 23:00 every 2 hours) -->
+        <div class="day-timeline-ticks">
+          <div class="day-tick"><span class="day-tick-label">12 AM</span></div>
+          <div class="day-tick"><span class="day-tick-label">2 AM</span></div>
+          <div class="day-tick"><span class="day-tick-label">4 AM</span></div>
+          <div class="day-tick"><span class="day-tick-label">6 AM</span></div>
+          <div class="day-tick"><span class="day-tick-label">8 AM</span></div>
+          <div class="day-tick"><span class="day-tick-label">10 AM</span></div>
+          <div class="day-tick"><span class="day-tick-label">12 PM</span></div>
+          <div class="day-tick"><span class="day-tick-label">2 PM</span></div>
+          <div class="day-tick"><span class="day-tick-label">4 PM</span></div>
+          <div class="day-tick"><span class="day-tick-label">6 PM</span></div>
+          <div class="day-tick"><span class="day-tick-label">8 PM</span></div>
+          <div class="day-tick"><span class="day-tick-label">10 PM</span></div>
+        </div>
+      </div>
 
-			<div class="day-timeline-legend">
-				<div style="display: flex; align-items: center; gap: 6px;">
-					<div class="day-legend-marker"></div>
-					<span>College</span>
-				</div>
-			</div>
-		</div>
+      <div class="day-timeline-legend">
+        <span><i class="fa-solid fa-square" style="color: #2563eb;"></i> Focus Session</span>
+      </div>
+    </div>
 
-	</div>
+  </div>
 </body>
 
 </html>
