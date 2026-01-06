@@ -1,14 +1,23 @@
 import { SettingsAPI } from "../api/SettingsAPI.js";
 
 const settingsMap = [
-    { id: 'setting-mute-audio',      key: 'focusTimerMuted',       type: 'toggle' },
+    // Section: TIMER DEFAULTS
     { id: 'setting-timer-focus',     key: 'timerFocusDuration',    type: 'number' },
     { id: 'setting-timer-sb',        key: 'timerShortBreak',       type: 'number' },
     { id: 'setting-timer-iterations', key: 'standardFocusIterations', type: 'number' },
     { id: 'setting-timer-lb',        key: 'timerLongBreak',        type: 'number' },
     { id: 'setting-timer-interval',  key: 'timerLongBreakInt',     type: 'number' },
+
+    // Section: REVIEW LOG 
+    { id: 'setting-review-view',         key: 'reviewDefaultView',        type: 'string' },
+    { id: 'setting-review-start-target', key: 'reviewStartSessionTarget', type: 'string' },
+    
+    // Section: AUTOMATION
     { id: 'setting-auto-break',      key: 'timerAutoStartBreak',   type: 'toggle' },
     { id: 'setting-auto-focus',      key: 'timerAutoStartFocus',   type: 'toggle' },
+
+    // Section: SOUNDS & NOTIFICATIONS
+    { id: 'setting-mute-audio',      key: 'focusTimerMuted',       type: 'toggle' },
     { id: 'setting-alarm-sound',     key: 'timerAlarmSound',       type: 'string' },
     { id: 'setting-volume-slider',   key: 'focusTimerVolume',      type: 'number' },
     { id: 'setting-os-notification', key: 'enableOSNotifications', type: 'toggle' }
