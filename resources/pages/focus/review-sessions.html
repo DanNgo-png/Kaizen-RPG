@@ -89,6 +89,38 @@
     </div>
   </div>
 
+  <!-- Choose Timer Modal -->
+  <CHOOSE_TIMER_MODAL id="modal-choose-timer" class="modal-overlay hidden">
+    <div class="review-session-modal-content text-center" style="width: 450px;">
+      <h3>Start Session</h3>
+      <p style="margin-bottom: 25px;">Which timer would you like to use?</p>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+        <!-- Standard Option -->
+        <button id="btn-choose-standard" class="btn-secondary"
+          style="height: auto; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: var(--stat-blue); font-family: var(--font-main);">
+          <i class="fa-regular fa-clock" style="font-size: 1.5rem; color: var(--stat-blue);"></i>
+          <span style="font-weight: 600; color: #fff;">Standard</span>
+          <span style="font-size: 0.8rem; opacity: 0.7;">Strict 25m intervals</span>
+        </button>
+
+        <!-- Flexible Option -->
+        <button id="btn-choose-flexible" class="btn-secondary"
+          style="height: auto; padding: 20px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 10px; border-color: var(--accent-green); font-family: var(--font-main);">
+          <i class="fa-solid fa-stopwatch" style="font-size: 1.5rem; color: var(--accent-green);"></i>
+          <span style="font-weight: 600; color: #fff;">Flexible</span>
+          <span style="font-size: 0.8rem; opacity: 0.7;">Flow state tracking</span>
+        </button>
+      </div>
+
+      <div class="modal-actions center" style="margin-top: 20px;">
+        <button id="btn-cancel-choose" class="btn-secondary" style="border: none; font-family: var(--font-main);">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </CHOOSE_TIMER_MODAL>
+
 </body>
 
 </html>
