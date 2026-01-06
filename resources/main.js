@@ -15,6 +15,7 @@ import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
 
 // ANALYZE PAGE
 import { initOverview } from './js/analyze/OverviewManager.js';
+import { initDayAnalytics } from './js/analyze/DayManager.js';
 import { initHeatmap } from './js/analyze/heat-map.js';
 
 // GAME PAGE
@@ -165,7 +166,7 @@ async function app() {
         if (analyzeDay) {
             analyzeDay.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/day.html');
-                // placeholder(); 
+                initDayAnalytics();
             });
         }
 
