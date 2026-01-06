@@ -26,6 +26,14 @@ export const FocusAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "deleteFocusSession", { id });
     },
 
+    requestExportHistory: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "requestExportHistory", null);
+    },
+
+    importHistory: async (sessionDataArray) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "importFocusHistory", { data: sessionDataArray });
+    },
+
     getLifetimeStats: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getLifetimeStats", null);
     },

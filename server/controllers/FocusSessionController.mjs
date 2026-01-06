@@ -63,6 +63,48 @@ export class FocusSessionController {
             }
         });
 
+        // EXPORT
+        app.events.on("requestExportHistory", () => {
+            try {
+                const sessions = this.repo.getAllSessions();
+                
+                // Convert to CSV String
+                const header = "tag,focus_seconds,break_seconds,ratio,created_at";
+                const rows = sessions.map(s => {
+                    // Escape commas in tags if necessary
+                    const safeTag = s.tag.includes(',') ? `"${s.tag}"` : s.tag;
+                    return `${safeTag},${s.focus_seconds},${s.break_seconds},${s.ratio},${s.created_at}`;
+                });
+                
+                const csvContent = [header, ...rows].join("\n");
+
+                app.events.broadcast("receiveExportData", { csvContent });
+            } catch (error) {
+                console.error("❌ Error exporting history:", error);
+                app.events.broadcast("exportHistoryFailed", { error: error.message });
+            }
+        });
+
+        // IMPORT
+        app.events.on("importFocusHistory", (payload) => {
+            try {
+                // Payload is an array of objects parsed from CSV by frontend
+                const sessions = payload.data;
+                
+                if (!Array.isArray(sessions) || sessions.length === 0) {
+                    throw new Error("No valid data found to import.");
+                }
+
+                this.repo.importSessionsBulk(sessions);
+                
+                console.log(`✅ Imported ${sessions.length} sessions.`);
+                app.events.broadcast("historyImported", { success: true, count: sessions.length });
+            } catch (error) {
+                console.error("❌ Error importing history:", error);
+                app.events.broadcast("historyImported", { success: false, error: error.message });
+            }
+        });
+
         app.events.on("getLifetimeStats", () => {
             try {
                 // 1. Get Basic Stats

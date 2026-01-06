@@ -31,7 +31,20 @@ export class FocusSessionRepository {
             getAllTags: this.db.prepare('SELECT * FROM tags ORDER BY name ASC'),
             insertTag: this.db.prepare('INSERT OR IGNORE INTO tags (name, color) VALUES (@name, @color)'),
             updateTag: this.db.prepare('UPDATE tags SET name = @name, color = @color WHERE id = @id'),
-            deleteTag: this.db.prepare('DELETE FROM tags WHERE id = @id')
+            deleteTag: this.db.prepare('DELETE FROM tags WHERE id = @id'),
+
+            // For Export
+            getAll: this.db.prepare(`
+                SELECT tag, focus_seconds, break_seconds, ratio, created_at 
+                FROM focus_sessions 
+                ORDER BY created_at DESC
+            `),
+            
+            // For Import (Includes created_at)
+            insertWithDate: this.db.prepare(`
+                INSERT INTO focus_sessions (tag, focus_seconds, break_seconds, ratio, created_at) 
+                VALUES (@tag, @focus_seconds, @break_seconds, @ratio, @created_at)
+            `)
         };
     }
 
@@ -152,5 +165,19 @@ export class FocusSessionRepository {
 
     clearAllSessions() {
         return this.statements.deleteAll.run();
+    }
+
+    getAllSessions() {
+        return this.statements.getAll.all();
+    }
+
+    importSessionsBulk(sessions) {
+        const insert = this.statements.insertWithDate;
+        const importTransaction = this.db.transaction((data) => {
+            for (const row of data) {
+                insert.run(row);
+            }
+        });
+        importTransaction(sessions);
     }
 }

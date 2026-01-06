@@ -350,6 +350,7 @@
             <i class="fa-solid fa-clock-rotate-left"></i> Review Log
           </div>
 
+          <!-- Start Session Action -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Start Session Action</span>
@@ -362,14 +363,20 @@
             </select>
           </div>
 
+          <!-- Export -->
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Export History</span>
-              <span class="setting-desc">Download session data as CSV</span>
+              <span class="setting-label">History Data</span>
+              <span class="setting-desc">Manage your session logs (CSV)</span>
             </div>
-            <button class="save-settings-button">
-              <i class="fa-solid fa-download"></i> Export
-            </button>
+            <div style="display: flex; gap: 10px;">
+              <button id="btn-import-history" class="save-settings-button">
+                <i class="fa-solid fa-file-import"></i> Import
+              </button>
+              <button id="btn-export-history" class="save-settings-button">
+                <i class="fa-solid fa-download"></i> Export
+              </button>
+            </div>
           </div>
         </div>
 
