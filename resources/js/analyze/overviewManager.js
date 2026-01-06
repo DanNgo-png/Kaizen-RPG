@@ -3,9 +3,15 @@ import { SettingsAPI } from "../api/SettingsAPI.js";
 import { CalendarManager } from "./CalendarManager.js";
 
 /**
- * Initializes the Overview Dashboard logic.
- * Calculates today's date range in UTC to match Database storage.
+ * Helper: Converts a Date object to Local SQL String (YYYY-MM-DD HH:MM:SS)
+ * Matches the format we are now storing in the DB.
  */
+const formatToLocalSQL = (dateObj) => {
+    const offsetMs = dateObj.getTimezoneOffset() * 60000;
+    const localDate = new Date(dateObj.getTime() - offsetMs);
+    return localDate.toISOString().replace('T', ' ').split('.')[0];
+};
+
 export function initOverview() {
     console.log("📊 Initializing Analyze: Overview...");
 
@@ -26,16 +32,11 @@ export function initOverview() {
     const endOfDay = new Date(now);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // 3. Convert to UTC Strings for SQLite (YYYY-MM-DD HH:MM:SS)
-    // We use .toISOString() and replace 'T' with ' ' and trim the 'Z' to match SQLite default format
-    const formatToSQL = (dateObj) => {
-        return dateObj.toISOString().replace('T', ' ').split('.')[0];
-    };
+    // 3. Convert to Local SQL Strings
+    const startStr = formatToLocalSQL(startOfDay);
+    const endStr = formatToLocalSQL(endOfDay);
 
-    const startStr = formatToSQL(startOfDay);
-    const endStr = formatToSQL(endOfDay);
-
-    console.log(`📅 Requesting sessions (UTC Range): ${startStr} to ${endStr}`);
+    console.log(`📅 Requesting sessions (Local Range): ${startStr} to ${endStr}`);
 
     // 4. Request Data
     FocusAPI.getFocusSessions(startStr, endStr);

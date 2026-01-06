@@ -1,5 +1,12 @@
 import { FocusAPI } from "../api/FocusAPI.js";
 
+// Helper
+const formatToLocalSQL = (dateObj) => {
+    const offsetMs = dateObj.getTimezoneOffset() * 60000;
+    const localDate = new Date(dateObj.getTime() - offsetMs);
+    return localDate.toISOString().replace('T', ' ').split('.')[0];
+};
+
 export class CalendarManager {
     constructor() {
         this.currentDate = new Date(); // Tracks the currently viewed month
@@ -108,10 +115,7 @@ export class CalendarManager {
         const end = new Date(year, month + 1, 0);
         end.setHours(23,59,59,999);
 
-        // Format to UTC String for SQLite
-        const toSQL = (d) => d.toISOString().replace('T', ' ').split('.')[0];
-
-        FocusAPI.getCalendarData(toSQL(start), toSQL(end));
+        FocusAPI.getCalendarData(formatToLocalSQL(start), formatToLocalSQL(end));
     }
 
     /**
@@ -134,8 +138,8 @@ export class CalendarManager {
         let activeDaysCount = 0;
 
         sessions.forEach(session => {
-            const utcString = session.created_at.replace(' ', 'T') + 'Z';
-            const d = new Date(utcString); 
+            const localString = session.created_at.replace(' ', 'T');
+            const d = new Date(localString); 
             
             const dayNum = d.getDate();
             if (!dayStats[dayNum]) {

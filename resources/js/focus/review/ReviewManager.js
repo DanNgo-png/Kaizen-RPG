@@ -4,6 +4,13 @@ import { loadPage } from "../../router.js";
 import { initFocusTimer } from "../standard/StandardFocusTimer.js";
 import { initFlexibleFocusTimer } from "../flexible/FlexibleFocusTimer.js";
 
+// Helper (Add this at top of file or class)
+const formatToLocalSQL = (dateObj) => {
+    const offsetMs = dateObj.getTimezoneOffset() * 60000;
+    const localDate = new Date(dateObj.getTime() - offsetMs);
+    return localDate.toISOString().replace('T', ' ').split('.')[0];
+};
+
 export class ReviewManager {
     constructor() {
         this.currentDate = new Date();
@@ -120,12 +127,18 @@ export class ReviewManager {
 
     loadDate(date) {
         this.updateHeaderUI(date);
+        
         const start = new Date(date);
         start.setHours(0,0,0,0);
+        
         const end = new Date(date);
         end.setHours(23,59,59,999);
-        const toSQL = (d) => d.toISOString().replace('T', ' ').split('.')[0];
-        FocusAPI.getFocusSessions(toSQL(start), toSQL(end));
+
+        // Use Local SQL format
+        const startStr = formatToLocalSQL(start);
+        const endStr = formatToLocalSQL(end);
+        
+        FocusAPI.getFocusSessions(startStr, endStr);
     }
 
     updateHeaderUI(date) {
@@ -158,8 +171,8 @@ export class ReviewManager {
             const el = document.createElement('div');
             el.className = 'session-card';
             
-            const utcString = session.created_at.replace(' ', 'T') + 'Z';
-            const dateObj = new Date(utcString);
+            const localString = session.created_at.replace(' ', 'T');
+            const dateObj = new Date(localString);
             const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
             const durationStr = this.formatDuration(session.focus_seconds);

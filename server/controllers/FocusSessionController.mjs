@@ -1,6 +1,16 @@
 import { FocusSessionRepository } from "../database/SQLite3/repositories/FocusSessionRepository.mjs";
 import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 
+// Helper: Get Local ISO String (YYYY-MM-DD HH:MM:SS)
+// This respects the computer's timezone setting automatically
+const getLocalSQLDateTime = () => {
+    const now = new Date();
+    // Adjust for timezone offset to keep the local numbers when converting to ISO
+    const offsetMs = now.getTimezoneOffset() * 60000;
+    const localISOTime = new Date(now.getTime() - offsetMs).toISOString().slice(0, 19).replace('T', ' ');
+    return localISOTime;
+};
+
 export class FocusSessionController {
     constructor() {
         this.repo = new FocusSessionRepository();
@@ -10,15 +20,18 @@ export class FocusSessionController {
     register(app) {
         app.events.on("saveFocusSession", (payload) => {
             try {
+                const localCreatedAt = getLocalSQLDateTime();
+
                 // payload: { tag, focusSeconds, breakSeconds, ratio }
                 const result = this.repo.addSession({
                     tag: payload.tag || "Standard",
                     focus_seconds: payload.focusSeconds,
                     break_seconds: payload.breakSeconds,
-                    ratio: payload.ratio
+                    ratio: payload.ratio,
+                    created_at: localCreatedAt
                 });
 
-                console.log(`✅ Focus Session Saved (ID: ${result.lastInsertRowid})`);
+                console.log(`✅ Focus Session Saved (ID: ${result.lastInsertRowid}) at ${localCreatedAt}`);
 
                 // Send confirmation back to UI
                 app.events.broadcast("focusSessionSaved", {
