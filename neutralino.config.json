@@ -26,7 +26,9 @@
     "window.*",
     "events.*",
     "extensions.*",
-    "computer.getDisplays"
+    "computer.getDisplays",
+    "filesystem.writeFile",
+    "filesystem.readFile"
   ],
   "globalVariables": {
     "TEST1": "Hello",
@@ -62,9 +64,7 @@
       "globalVariables": {
         "TEST": "Test value browser"
       },
-      "nativeBlockList": [
-        "filesystem.*"
-      ]
+      "nativeBlockList": []
     },
     "cloud": {
       "url": "/resources/#cloud",
@@ -76,9 +76,7 @@
       "width": 800,
       "height": 500,
       "args": "--user-agent=\"Neutralinojs chrome mode\"",
-      "nativeBlockList": [
-        "filesystem.*"
-      ]
+      "nativeBlockList": []
     }
   },
   "cli": {
