@@ -334,6 +334,7 @@
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
+    font-family: var(--font-main);
 }
 
 .btn-danger:hover { background-color: #dc2626; }
@@ -345,6 +346,7 @@
     padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
+    font-family: var(--font-main);
 }
 
 .btn-secondary:hover { border-color: #fff; color: #fff; }
