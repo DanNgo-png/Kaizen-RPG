@@ -130,13 +130,15 @@ class StandardFocusManager {
         // Stop audio if user manually stops session
         audioManager.stopCurrent();
 
+        // --- FIX: Include timer_type in payload ---
         if (wasStopwatch && elapsed > 5) { 
              if (currentMode === 'focus') {
                 const payload = {
                     tag: currentTag,
                     focusSeconds: elapsed, 
                     breakSeconds: 0,
-                    ratio: 1.0 
+                    ratio: 1.0,
+                    timer_type: 'stopwatch' // Added this field
                 };
                 FocusAPI.saveFocusSession(payload);
             }
