@@ -18,7 +18,7 @@ import { initOverview } from './js/analyze/OverviewManager.js';
 import { initDayAnalytics } from './js/analyze/DayManager.js';
 import { initWeekAnalytics } from './js/analyze/WeekManager.js';
 import { initMonthAnalytics } from './js/analyze/MonthManager.js';
-import { initHeatmap } from './js/analyze/heat-map.js';
+import { initYearAnalytics } from './js/analyze/YearManager.js';
 
 // GAME PAGE
 import { initMenuButtons } from './js/games/playGameManager.js';
@@ -195,7 +195,7 @@ async function app() {
         if (analyzeYear) {
             analyzeYear.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/year.html');
-                initHeatmap();
+                initYearAnalytics();
             });
         }
 
