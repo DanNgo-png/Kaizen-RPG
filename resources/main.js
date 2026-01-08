@@ -16,6 +16,8 @@ import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
 // ANALYZE PAGE
 import { initOverview } from './js/analyze/OverviewManager.js';
 import { initDayAnalytics } from './js/analyze/DayManager.js';
+import { initWeekAnalytics } from './js/analyze/WeekManager.js';
+import { initMonthAnalytics } from './js/analyze/MonthManager.js';
 import { initHeatmap } from './js/analyze/heat-map.js';
 
 // GAME PAGE
@@ -175,7 +177,7 @@ async function app() {
         if (analyzeWeek) {
             analyzeWeek.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/week.html');
-                // placeholder(); 
+                initWeekAnalytics(); 
             });
         }
 
@@ -184,7 +186,7 @@ async function app() {
         if (analyzeMonth) {
             analyzeMonth.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/month.html');
-                // placeholder(); 
+                initMonthAnalytics(); 
             });
         }
 

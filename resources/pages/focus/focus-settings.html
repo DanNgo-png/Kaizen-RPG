@@ -9,7 +9,6 @@
     /* --- Scoped Styles for Focus Settings --- */
     .settings-container {
       max-width: 1200px;
-      /* Increased width */
       margin: 0 auto;
       color: var(--text-primary, #fff);
       font-family: var(--font-main, "Segoe UI", sans-serif);
@@ -33,7 +32,6 @@
     .settings-header {
       display: flex;
       justify-content: space-between;
-      /* align-items: center; */
       margin-bottom: 25px;
       padding-bottom: 15px;
       border-bottom: 1px solid var(--bg-hover, #3D3D3D);
@@ -52,27 +50,22 @@
     .settings-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      /* Two equal columns */
       gap: 24px;
       align-items: start;
-      /* Prevents stretching height */
     }
 
-    /* Responsive: Stack on small screens */
     @media (max-width: 900px) {
       .settings-grid {
         grid-template-columns: 1fr;
       }
     }
 
-    /* Column Wrapper for stacking multiple cards in one column */
     .settings-column {
       display: flex;
       flex-direction: column;
       gap: 24px;
     }
 
-    /* Card Groups */
     .settings-section {
       background-color: var(--surface-color, #1f2937);
       border: 1px solid var(--bg-hover, #374151);
@@ -93,20 +86,43 @@
       gap: 10px;
     }
 
-    /* Individual Rows */
     .setting-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px 20px;
-      /* Slightly tighter padding */
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       min-height: 70px;
-      /* Uniform height look */
+      background-color: var(--surface-color, #1f2937);
+      /* Ensure bg is opaque */
+      position: relative;
+      z-index: 2;
     }
 
     .setting-row:last-child {
       border-bottom: none;
+    }
+
+    /* --- New Animation Class --- */
+    .expandable-row {
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0 !important;
+      padding-bottom: 0 !important;
+      overflow: hidden;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-bottom: none;
+      visibility: hidden;
+      z-index: 1;
+    }
+
+    .expandable-row.expanded {
+      max-height: 100px;
+      /* Arbitrary limit sufficient for content */
+      opacity: 1;
+      padding: 16px 20px !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      visibility: visible;
     }
 
     .setting-info {
@@ -127,7 +143,6 @@
       line-height: 1.3;
     }
 
-    /* Controls */
     .setting-input {
       background-color: var(--bg-body, #111827);
       border: 1px solid var(--bg-hover, #374151);
@@ -156,7 +171,6 @@
       background-size: .65em auto;
     }
 
-    /* Toggle Switch */
     .switch {
       position: relative;
       display: inline-block;
@@ -203,7 +217,6 @@
       transform: translateX(22px);
     }
 
-    /* Range Slider */
     .range-slider {
       width: 140px;
       height: 6px;
@@ -223,38 +236,11 @@
       box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
     }
 
-    /* Utility: Hide Number Spinners (Webkit/Chrome/Safari) */
     .no-spin::-webkit-outer-spin-button,
     .no-spin::-webkit-inner-spin-button {
       -webkit-appearance: none;
       margin: 0;
     }
-
-    /* Save Button Area - Sticky Bottom or Inline */
-    /* .save-area {
-      display: flex;
-      justify-content: flex-end;
-      margin-top: 24px;
-      padding-top: 20px;
-      border-top: 1px solid var(--bg-hover);
-    } */
-
-    /* .save-settings-button {
-      background-color: var(--accent-green, #059669);
-      color: white;
-      border: none;
-      padding: 10px 30px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 0.95rem;
-      font-family: var(--font-main);
-      cursor: pointer;
-      transition: 0.2s;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
-    } */
 
     .save-settings-button {
       background-color: var(--bg-hover, #374151);
@@ -272,17 +258,11 @@
     .save-settings-button:hover {
       background-color: #4b5563;
     }
-
-    /* .save-settings-button:hover {
-      background-color: var(--accent-green-hover, #047857);
-      transform: translateY(-1px);
-    } */
   </style>
 </head>
 
 <body>
   <div class="settings-container">
-    <!-- Header -->
     <header class="settings-header">
       <h2><i class="fa-solid fa-sliders" style="color: var(--stat-blue, #3b82f6);"></i> Focus Settings</h2>
     </header>
@@ -297,8 +277,6 @@
           <div class="section-header">
             <i class="fa-regular fa-clock"></i> Timer Defaults
           </div>
-
-          <!-- Focus -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Focus Duration</span>
@@ -306,8 +284,6 @@
             </div>
             <input type="number" id="setting-timer-focus" class="setting-input" value="25">
           </div>
-
-          <!-- Short Break -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Short Break Duration</span>
@@ -315,8 +291,6 @@
             </div>
             <input type="number" id="setting-timer-sb" class="setting-input" value="5">
           </div>
-
-          <!-- Iterations -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Default Iterations</span>
@@ -324,8 +298,6 @@
             </div>
             <input type="number" id="setting-timer-iterations" class="setting-input" value="1">
           </div>
-
-          <!-- Long Break -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Long Break Duration</span>
@@ -333,8 +305,6 @@
             </div>
             <input type="number" id="setting-timer-lb" class="setting-input" value="15">
           </div>
-
-          <!-- Interval -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Long Break Interval</span>
@@ -349,8 +319,6 @@
           <div class="section-header">
             <i class="fa-solid fa-clock-rotate-left"></i> Review Log
           </div>
-
-          <!-- Start Session Action -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Start Session Action</span>
@@ -362,8 +330,6 @@
               <option value="ask">Always Ask</option>
             </select>
           </div>
-
-          <!-- Export & Import -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">History Data</span>
@@ -380,18 +346,16 @@
           </div>
         </div>
 
-      </div> <!-- End Left Column -->
+      </div>
 
       <!-- RIGHT COLUMN -->
       <div class="settings-column">
 
-        <!-- Section 2: Automation & Behavior -->
+        <!-- Section 2: Automation -->
         <div class="settings-section">
           <div class="section-header">
             <i class="fa-solid fa-robot"></i> Automation
           </div>
-
-          <!-- Auto-start Breaks -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Auto-start Breaks</span>
@@ -402,8 +366,6 @@
               <span class="slider round"></span>
             </label>
           </div>
-
-          <!-- Auto-start Focus -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Auto-start Focus</span>
@@ -443,11 +405,8 @@
               <button id="btn-open-audio-folder" class="save-settings-button">
                 <i class="fa-regular fa-folder-open"></i>
               </button>
-
-              <!-- Updated Select (Options will be injected by JS) -->
               <select id="setting-alarm-sound" class="setting-select" style="min-width: 120px;">
                 <option value="bell">Bell</option>
-                <!-- JS will populate custom files here -->
               </select>
             </div>
           </div>
@@ -463,21 +422,45 @@
             </div>
           </div>
 
+          <!-- RENAMED: Notifications -->
           <div class="setting-row">
             <div class="setting-info">
-              <span class="setting-label">Notifications</span>
-              <span class="setting-desc">Show OS popup</span>
+              <span class="setting-label">Completion Alerts</span>
+              <span class="setting-desc">Show OS popup when timer finishes</span>
             </div>
             <label class="switch">
               <input type="checkbox" id="setting-os-notification" checked>
               <span class="slider round"></span>
             </label>
           </div>
+
+          <!-- NEW: Negative Balance Warning -->
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Negative Balance Warning</span>
+              <span class="setting-desc">Notify when "Flexible" balance is overdrawn</span>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="setting-warn-enabled">
+              <span class="slider round"></span>
+            </label>
+          </div>
+
+          <!-- NEW: Animated Sub-Setting -->
+          <div class="expandable-row" id="container-warn-interval">
+            <div class="setting-row" style="border:none; padding:0; background:transparent;">
+              <div class="setting-info">
+                <span class="setting-label">Warning Interval</span>
+                <span class="setting-desc">Alert every X minutes while overdrawn</span>
+              </div>
+              <input type="number" id="setting-warn-interval" class="setting-input" value="5" min="1">
+            </div>
+          </div>
+
         </div>
 
-      </div> <!-- End Right Column -->
-
-    </div> <!-- End Grid -->
+      </div>
+    </div>
   </div>
 </body>
 

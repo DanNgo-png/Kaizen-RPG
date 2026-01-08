@@ -3,10 +3,9 @@ import { FocusAPI } from "../api/FocusAPI.js";
 export class DayManager {
     constructor() {
         this.currentDate = new Date();
-        this.today = new Date();
         this.tagsMap = new Map(); 
         
-        // --- NEW: State for filtering ---
+        // Filter State
         this.hiddenTags = new Set();
         this.currentSessions = []; 
 
@@ -36,8 +35,8 @@ export class DayManager {
 
         // Bind listener for data
         this.handleData = (e) => {
+            // Safety check: ensure we are on the page
             if (document.getElementById('day-header-date')) {
-                // --- NEW: Store data for re-rendering during toggle ---
                 this.currentSessions = e.detail || [];
                 this.render(this.currentSessions);
             }
@@ -56,7 +55,7 @@ export class DayManager {
         if (session.tag === "Standard" || session.tag === "Flexible") {
             return "No Tag";
         }
-        return session.tag;
+        return session.tag || "No Tag";
     }
 
     toggleTag(tagName) {
@@ -83,8 +82,9 @@ export class DayManager {
             }
         });
 
-        Neutralino.events.off('receiveFocusSessions', this.handleData);
-        Neutralino.events.on('receiveFocusSessions', this.handleData);
+        // CHANGED: Listen for specific day data to avoid pollution
+        Neutralino.events.off('receiveDayData', this.handleData);
+        Neutralino.events.on('receiveDayData', this.handleData);
 
         Neutralino.events.off('receiveTags', this.handleTags);
         Neutralino.events.on('receiveTags', this.handleTags);
@@ -109,7 +109,8 @@ export class DayManager {
         const end = new Date(date);
         end.setHours(23, 59, 59, 999);
 
-        FocusAPI.getFocusSessions(this.toSQL(start), this.toSQL(end));
+        // CHANGED: Request with 'receiveDayData' target event
+        FocusAPI.getFocusSessions(this.toSQL(start), this.toSQL(end), 'receiveDayData');
     }
 
     updateHeader(date) {
@@ -223,7 +224,7 @@ export class DayManager {
             this.dom.chartCircle.style.background = '#374151'; // All hidden or empty
         }
 
-        // --- NEW: Add Click Listeners to Legend ---
+        // Add Click Listeners to Legend
         this.dom.legendContainer.querySelectorAll('.day-legend-row').forEach(el => {
             el.addEventListener('click', (e) => {
                 const tag = e.currentTarget.dataset.tag;
@@ -244,21 +245,26 @@ export class DayManager {
         sessions.forEach(s => {
             const displayTag = this._getDisplayTag(s);
 
-            // --- NEW: Filter Logic ---
+            // Filter Logic
             if (this.hiddenTags.has(displayTag)) return; 
 
-            // Parse Start Time
+            // Parse End Time (created_at is when session finished)
             const dateStr = s.created_at.replace(' ', 'T'); 
-            const dateObj = new Date(dateStr);
+            const endDateObj = new Date(dateStr);
             
-            const startHour = dateObj.getHours();
-            const startMin = dateObj.getMinutes();
+            // Calculate Start Time: EndTime - Duration
+            const durationSeconds = s.focus_seconds || 0;
+            const startDateObj = new Date(endDateObj.getTime() - (durationSeconds * 1000));
+            
+            const startHour = startDateObj.getHours();
+            const startMin = startDateObj.getMinutes();
             const startTotalMins = (startHour * 60) + startMin;
 
-            const durationMins = Math.ceil(s.focus_seconds / 60);
+            const durationMins = Math.ceil(durationSeconds / 60);
             
             const leftPct = (startTotalMins / MINUTES_IN_DAY) * 100;
             const widthPct = (durationMins / MINUTES_IN_DAY) * 100;
+            // Ensure tiny sessions are at least visible (0.5% width)
             const finalWidth = Math.max(widthPct, 0.5);
 
             // Create Element
@@ -272,7 +278,7 @@ export class DayManager {
             block.style.boxShadow = `0 0 0 1px ${color}`;
 
             // Tooltip
-            const timeLabel = dateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            const timeLabel = startDateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
             block.title = `${displayTag}: ${timeLabel} (${durationMins}m)`;
 
             this.dom.timelineContainer.appendChild(block);

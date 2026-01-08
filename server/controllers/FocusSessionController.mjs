@@ -5,10 +5,15 @@ import { AppSettingsRepository } from "../database/SQLite3/repositories/settings
 // This respects the computer's timezone setting automatically
 const getLocalSQLDateTime = () => {
     const now = new Date();
-    // Adjust for timezone offset to keep the local numbers when converting to ISO
-    const offsetMs = now.getTimezoneOffset() * 60000;
-    const localISOTime = new Date(now.getTime() - offsetMs).toISOString().slice(0, 19).replace('T', ' ');
-    return localISOTime;
+    const pad = (n) => n.toString().padStart(2, '0');
+    const year = now.getFullYear();
+    const month = pad(now.getMonth() + 1);
+    const day = pad(now.getDate());
+    const hours = pad(now.getHours());
+    const minutes = pad(now.getMinutes());
+    const seconds = pad(now.getSeconds());
+    
+    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
 export class FocusSessionController {
@@ -43,16 +48,22 @@ export class FocusSessionController {
             }
         });
 
+        // UPDATED: Support custom targetEvent for namespacing
         app.events.on("getFocusSessions", (payload) => {
             try {
-                // payload: { startDate: 'YYYY-MM-DD HH:MM:SS', endDate: '...' }
+                // payload: { startDate: 'YYYY-MM-DD HH:MM:SS', endDate: '...', targetEvent?: string }
                 const sessions = this.repo.getSessionsByRange(payload.startDate, payload.endDate);
                 
+                // Determine which event to broadcast back on
+                // Default to 'receiveFocusSessions' for backward compatibility
+                const responseEvent = payload.targetEvent || "receiveFocusSessions";
+                
                 // Send back to UI
-                app.events.broadcast("receiveFocusSessions", sessions);
+                app.events.broadcast(responseEvent, sessions);
             } catch (error) {
                 console.error("❌ Error fetching sessions:", error);
-                app.events.broadcast("receiveFocusSessions", []);
+                const responseEvent = payload.targetEvent || "receiveFocusSessions";
+                app.events.broadcast(responseEvent, []);
             }
         });
 

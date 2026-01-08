@@ -2,217 +2,124 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Monthly Analytics - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monthly Analytics - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="month-container">
+  <div class="analyze-month-container">
 
-		<!-- Header -->
-		<header class="month-header">
-			<h2>December 2025</h2>
-			<div class="month-date-controls">
-				<button class="month-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
-				<div class="month-picker-wrapper">
-					<!-- input type="month" is supported in modern browsers -->
-					<input type="month" class="month-date-input" value="2025-12">
-				</div>
-				<button class="month-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
-			</div>
-		</header>
+    <!-- Header -->
+    <header class="analyze-month-header">
+      <h2 id="month-header-title">Loading...</h2>
+      <div class="am-date-controls">
+        <button id="month-btn-prev" class="am-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <div class="am-picker-wrapper">
+          <!-- type="month" gives YYYY-MM -->
+          <input type="month" id="month-date-input" class="am-date-input">
+        </div>
+        <button id="month-btn-next" class="am-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+      </div>
+    </header>
 
-		<!-- Top Grid -->
-		<div class="month-analytics-grid">
+    <!-- KPI Grid -->
+    <div class="am-kpi-grid">
+      <!-- Total Time -->
+      <div class="am-kpi-card">
+        <div class="am-kpi-icon blue">
+          <i class="fa-regular fa-clock"></i>
+        </div>
+        <div class="am-kpi-content">
+          <span class="am-kpi-label">Total Focus</span>
+          <span id="month-val-time" class="am-kpi-value">0h 0m</span>
+        </div>
+      </div>
 
-			<!-- Summary Card -->
-			<div class="month-card month-summary-card">
-				<div class="month-summary-title">Monthly Summary</div>
+      <!-- Sessions -->
+      <div class="am-kpi-card">
+        <div class="am-kpi-icon purple">
+          <i class="fa-solid fa-layer-group"></i>
+        </div>
+        <div class="am-kpi-content">
+          <span class="am-kpi-label">Sessions</span>
+          <span id="month-val-sessions" class="am-kpi-value">0</span>
+        </div>
+      </div>
 
-				<div class="month-kpi-group">
-					<span class="month-kpi-label">Total Focus</span>
-					<span class="month-kpi-value">45h 12m</span>
-					<span class="month-kpi-sub">Avg 1.5h / day</span>
-				</div>
+      <!-- Active Days -->
+      <div class="am-kpi-card">
+        <div class="am-kpi-icon green">
+          <i class="fa-regular fa-calendar-check"></i>
+        </div>
+        <div class="am-kpi-content">
+          <span class="am-kpi-label">Active Days</span>
+          <span id="month-val-days" class="am-kpi-value">0 / 0</span>
+        </div>
+      </div>
 
-				<div class="month-kpi-group">
-					<span class="month-kpi-label">Sessions</span>
-					<span class="month-kpi-value">98</span>
-				</div>
+      <!-- Daily Average -->
+      <div class="am-kpi-card">
+        <div class="am-kpi-icon orange">
+          <i class="fa-solid fa-chart-line"></i>
+        </div>
+        <div class="am-kpi-content">
+          <span class="am-kpi-label">Daily Avg</span>
+          <span id="month-val-avg" class="am-kpi-value">0m</span>
+        </div>
+      </div>
+    </div>
 
-				<div class="month-kpi-group">
-					<span class="month-kpi-label">Most Active Day</span>
-					<span class="month-kpi-value" style="font-size: 1.5rem;">Dec 14</span>
-				</div>
-			</div>
+    <!-- Main Content Layout -->
+    <div class="am-content-grid">
 
-			<!-- Donut Chart Card -->
-			<div class="month-card">
-				<div class="month-donut-wrapper">
-					<div class="month-donut-chart"></div>
+      <!-- Daily Activity Bar Chart -->
+      <div class="analyze-month-card am-chart-card">
+        <div class="am-card-header">
+          <h3><i class="fa-solid fa-chart-simple"></i> Daily Activity</h3>
+        </div>
+        <div class="am-chart-body">
+          <div class="am-y-axis">
+            <span>High</span>
+            <span>Mid</span>
+            <span>Low</span>
+            <span>0m</span>
+          </div>
 
-					<div class="month-legend-col">
-						<div class="month-legend-row">
-							<div class="month-legend-dot month-dot-blue"></div>
-							<span class="month-legend-name">College</span>
-							<span class="month-legend-time">38h 20m</span>
-							<span class="month-legend-perc">85%</span>
-						</div>
-						<div class="month-legend-row">
-							<div class="month-legend-dot month-dot-purple"></div>
-							<span class="month-legend-name">RPG Dev</span>
-							<span class="month-legend-time">6h 52m</span>
-							<span class="month-legend-perc">15%</span>
-						</div>
-					</div>
-				</div>
-			</div>
+          <!-- Horizontal Grid Lines -->
+          <div class="am-grid-lines">
+            <div class="am-line"></div>
+            <div class="am-line"></div>
+            <div class="am-line"></div>
+            <div class="am-line"></div>
+          </div>
 
-		</div>
+          <!-- Bars Container -->
+          <div id="month-bars-container" class="am-bars-wrapper">
+            <!-- JS injects .am-bar-group here -->
+          </div>
+        </div>
+      </div>
 
-		<!-- Bottom Bar Chart Card -->
-		<div class="month-card">
-			<div class="month-summary-title" style="border:none; text-align: left; margin-bottom: 0;">Daily Trend</div>
+      <!-- Tag Distribution -->
+      <div class="analyze-month-card am-donut-card">
+        <div class="am-card-header">
+          <h3><i class="fa-solid fa-tag"></i> Top Tags</h3>
+        </div>
+        <div class="am-donut-layout">
+          <div id="month-donut-chart" class="am-donut-chart">
+            <!-- CSS Conic Gradient applied here -->
+            <div class="am-donut-hole"></div>
+          </div>
+          <div id="month-legend-container" class="am-legend-list">
+            <!-- Legend items injected here -->
+          </div>
+        </div>
+      </div>
 
-			<div class="month-chart-container">
-				<!-- Y-Axis Labels -->
-				<div class="month-y-axis">
-					<span>4h</span>
-					<span>3h</span>
-					<span>2h</span>
-					<span>1h</span>
-					<span>0h</span>
-				</div>
+    </div>
 
-				<!-- Horizontal Grid Lines -->
-				<div class="month-grid-line" style="top: 10px;"></div>
-				<div class="month-grid-line" style="top: 25%;"></div>
-				<div class="month-grid-line" style="top: 50%;"></div>
-				<div class="month-grid-line" style="top: 75%;"></div>
-				<div class="month-grid-line" style="bottom: 30px;"></div>
-
-				<!-- Bars (31 Days) -->
-				<div class="month-bars-wrapper">
-
-					<!-- Simulating a month of data -->
-					<!-- We use CSS variables or inline styles for height % based on 4h max -->
-
-					<!-- Week 1 -->
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 10%;" data-value="24m"></div>
-						<div class="month-x-label">1</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 5%;" data-value="12m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 40%;" data-value="1h 36m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 20%;" data-value="48m"></div>
-						<div class="month-x-label">5</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 60%;" data-value="2h 24m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 10%;" data-value="24m"></div>
-					</div>
-
-					<!-- Week 2 -->
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 80%;" data-value="3h 12m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 50%;" data-value="2h"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 30%;" data-value="1h 12m"></div>
-						<div class="month-x-label">10</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 45%;" data-value="1h 48m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 90%;" data-value="3h 36m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 100%;" data-value="4h"></div>
-					</div>
-
-					<!-- Week 3 -->
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 20%;" data-value="48m"></div>
-						<div class="month-x-label">15</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 10%;" data-value="24m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 5%;" data-value="12m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 60%;" data-value="2h 24m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 70%;" data-value="2h 48m"></div>
-						<div class="month-x-label">20</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 15%;" data-value="36m"></div>
-					</div>
-
-					<!-- Week 4 -->
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 35%;" data-value="1h 24m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 40%;" data-value="1h 36m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 25%;" data-value="1h"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 55%;" data-value="2h 12m"></div>
-						<div class="month-x-label">25</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 85%;" data-value="3h 24m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar weekend" style="height: 40%;" data-value="1h 36m"></div>
-					</div>
-
-					<!-- Week 5 -->
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 20%;" data-value="48m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 10%;" data-value="24m"></div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 0%; background: #374151;" data-value="0m"></div>
-						<div class="month-x-label">30</div>
-					</div>
-					<div class="month-bar-group">
-						<div class="month-bar" style="height: 50%;" data-value="2h"></div>
-					</div>
-
-				</div>
-			</div>
-		</div>
-
-	</div>
+  </div>
 </body>
 
 </html>

@@ -21,7 +21,7 @@
 }
 
 /* Header */
-.week-header {
+.analyze-week-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -30,7 +30,7 @@
     flex-shrink: 0;
 }
 
-.week-header h2 {
+.analyze-week-header h2 {
     font-size: 24px;
     font-weight: 700;
     margin: 0;

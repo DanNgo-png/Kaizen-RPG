@@ -1,6 +1,6 @@
 /* --- Scoped Styles for Month Analytics --- */
-.month-container {
-    max-width: 1200px;
+.analyze-month-container {
+    max-width: 1400px;
     margin: 0 auto;
     color: var(--text-primary, #fff);
     font-family: var(--font-main, "Segoe UI", sans-serif);
@@ -10,58 +10,52 @@
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-/* Header */
-.month-header {
+/* --- Header --- */
+.analyze-month-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
     margin-bottom: 30px;
-    min-height: 40px;
-    flex-shrink: 0;
+    padding: 0 5px;
 }
 
-.month-header h2 {
+.analyze-month-header h2 {
     font-size: 24px;
     font-weight: 700;
     margin: 0;
     letter-spacing: 0.5px;
     color: #fff;
+    text-transform: capitalize;
 }
 
-.month-date-controls {
+.am-date-controls {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.month-nav-btn {
+.am-nav-btn {
     background: transparent;
     border: none;
     color: var(--text-secondary, #9ca3af);
     cursor: pointer;
     font-size: 0.9rem;
+    font-family: var(--font-main);
     transition: color 0.2s;
     display: flex;
     align-items: center;
-    gap: 5px;
+    gap: 6px;
 }
 
-.month-nav-btn:hover {
+.am-nav-btn:hover {
     color: #fff;
 }
 
-.month-picker-wrapper {
-    position: relative;
+.am-picker-wrapper {
     background-color: var(--surface-color, #1f2937);
     border: 1px solid var(--bg-hover, #374151);
     border-radius: 6px;
@@ -70,7 +64,7 @@
     align-items: center;
 }
 
-.month-date-input {
+.am-date-input {
     background: transparent;
     border: none;
     color: #fff;
@@ -80,273 +74,316 @@
     cursor: pointer;
 }
 
-.month-date-input::-webkit-calendar-picker-indicator {
+.am-date-input::-webkit-calendar-picker-indicator {
     filter: invert(1);
     cursor: pointer;
 }
 
-/* --- Top Section Grid --- */
-.month-analytics-grid {
+/* --- KPI Grid --- */
+.am-kpi-grid {
     display: grid;
-    grid-template-columns: 1fr 2fr;
-    gap: 24px;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
     margin-bottom: 24px;
 }
 
-/* Card Base */
-.month-card {
+.am-kpi-card {
     background-color: var(--surface-color, #1f2937);
     border: 1px solid var(--bg-hover, #374151);
     border-radius: 12px;
-    padding: 30px;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-    position: relative;
-}
-
-/* Left Card: Summary */
-.month-summary-card {
+    padding: 20px;
     display: flex;
-    flex-direction: column;
-    justify-content: center;
     align-items: center;
-    text-align: center;
-    gap: 25px;
+    gap: 15px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
 }
 
-.month-summary-title {
-    font-size: 1.1rem;
-    font-weight: 700;
-    color: #fff;
-    padding-bottom: 10px;
-    border-bottom: 2px solid var(--bg-hover, #374151);
-    width: 100%;
-    margin-bottom: 5px;
+.am-kpi-card:hover {
+    transform: translateY(-2px);
+    border-color: #4b5563;
 }
 
-.month-kpi-group {
+.am-kpi-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.am-kpi-icon.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.am-kpi-icon.purple { background: rgba(168, 85, 247, 0.15); color: #a855f7; }
+.am-kpi-icon.green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.am-kpi-icon.orange { background: rgba(249, 115, 22, 0.15); color: #fb923c; }
+
+.am-kpi-content {
     display: flex;
     flex-direction: column;
-    gap: 5px;
 }
 
-.month-kpi-label {
-    color: var(--text-secondary, #9ca3af);
-    font-size: 0.95rem;
+.am-kpi-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    margin-bottom: 2px;
     font-weight: 600;
 }
 
-.month-kpi-value {
-    font-size: 2.2rem;
+.am-kpi-value {
+    font-size: 1.25rem;
     font-weight: 700;
     color: #fff;
     line-height: 1.1;
 }
 
-.month-kpi-sub {
-    font-size: 0.85rem;
-    color: var(--text-secondary, #9ca3af);
-    opacity: 0.8;
+/* --- Content Grid --- */
+.am-content-grid {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 24px;
+    height: 400px;
 }
 
-/* Right Card: Donut Chart */
-.month-donut-wrapper {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 60px;
-    height: 100%;
-}
-
-.month-donut-chart {
-    width: 180px;
-    height: 180px;
-    border-radius: 50%;
-    /* 85% Blue, 15% Purple */
-    background: conic-gradient(#8b5cf6 0% 15%, #2563eb 15% 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-}
-
-.month-donut-chart::after {
-    content: "";
-    position: absolute;
-    width: 90px;
-    height: 90px;
+.analyze-month-card {
     background-color: var(--surface-color, #1f2937);
-    border-radius: 50%;
-}
-
-.month-legend-col {
+    border: 1px solid var(--bg-hover, #374151);
+    border-radius: 12px;
     display: flex;
     flex-direction: column;
-    gap: 15px;
-}
-
-.month-legend-row {
-    display: grid;
-    grid-template-columns: 20px 100px 80px 50px;
-    align-items: center;
-    padding-bottom: 5px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.month-legend-dot {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-}
-
-.month-dot-blue {
-    background-color: #2563eb;
-}
-
-.month-dot-purple {
-    background-color: #8b5cf6;
-}
-
-.month-legend-name {
-    font-weight: 600;
-    font-size: 0.95rem;
-}
-
-.month-legend-time {
-    color: var(--text-secondary);
-    font-size: 0.95rem;
-    text-align: right;
-}
-
-.month-legend-perc {
-    font-weight: 700;
-    font-size: 0.95rem;
-    text-align: right;
-}
-
-/* --- Bottom Section: Monthly Trend Chart --- */
-.month-chart-container {
-    height: 280px;
+    padding: 20px;
+    overflow: hidden;
     position: relative;
-    margin-top: 20px;
-    padding-left: 40px;
-    /* Allow horizontal scroll if needed on small screens, but hide on large */
-    overflow-x: auto;
 }
 
-.month-chart-container::-webkit-scrollbar {
-    height: 6px;
+.am-card-header h3 {
+    margin: 0 0 20px 0;
+    font-size: 1.1rem;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
 }
 
-.month-chart-container::-webkit-scrollbar-thumb {
-    background-color: var(--bg-hover);
-    border-radius: 3px;
+/* --- Bar Chart Section --- */
+.am-chart-body {
+    flex: 1;
+    position: relative;
+    padding-left: 40px; /* Axis space */
+    padding-bottom: 25px; /* Label space */
+    display: flex;
+    align-items: flex-end;
 }
 
-/* Y-Axis Labels */
-.month-y-axis {
+.am-y-axis {
     position: absolute;
     left: 0;
     top: 0;
-    bottom: 40px;
-    /* Account for X labels */
+    bottom: 25px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    color: #6b7280;
     font-size: 0.75rem;
+    color: var(--text-secondary);
 }
 
-/* Grid Lines */
-.month-grid-line {
+.am-grid-lines {
     position: absolute;
     left: 40px;
     right: 0;
-    height: 1px;
-    background-color: rgba(255, 255, 255, 0.05);
+    top: 0;
+    bottom: 25px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     pointer-events: none;
+    z-index: 0;
 }
 
-/* Bars Wrapper */
-.month-bars-wrapper {
+.am-line {
+    width: 100%;
+    height: 1px;
+    background-color: rgba(255,255,255,0.05);
+}
+
+.am-bars-wrapper {
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
+    width: 100%;
     height: 100%;
-    padding-bottom: 30px;
-    /* Space for X-axis labels */
-    padding-top: 10px;
-    padding-right: 10px;
-    min-width: 100%;
-    /* Ensure it fills space */
+    z-index: 1;
 }
 
-.month-bar-group {
+/* Individual Bar Items (Injected by JS) */
+.am-bar-group {
+    flex: 1;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    flex: 1;
-    /* Distribute space evenly */
-    position: relative;
-    height: 100%;
     justify-content: flex-end;
-    min-width: 20px;
-    /* Minimum width per day */
-}
-
-.month-bar {
-    width: 12px;
-    /* Thinner bars for month view */
-    background-color: #2563eb;
-    border-radius: 2px 2px 0 0;
-    transition: height 0.5s ease-out, background-color 0.2s;
+    align-items: center;
+    margin: 0 2px;
     position: relative;
-    min-height: 1px;
 }
 
-.month-bar:hover {
-    background-color: #60a5fa;
-    /* Lighter blue on hover */
+.am-bar-group:hover {
+    z-index: 50; 
 }
 
-/* Bar Tooltip (Simple CSS hover) */
-.month-bar:hover::after {
-    content: attr(data-value);
+.am-bar {
+    width: 100%;
+    min-width: 6px;
+    border-radius: 2px 2px 0 0;
+    /* Transition on height and filter for hover effect */
+    transition: height 0.4s ease-out, filter 0.2s;
+    background-color: #3b82f6; /* Default fallback */
+    opacity: 0.9; /* Slight transparency to allow highlight on hover */
+}
+
+.am-bar:hover {
+    opacity: 1;
+    /* Use brightness instead of background-color to support gradients */
+    filter: brightness(1.3);
+}
+
+/* Bar Tooltip */
+.am-bar:hover::after {
+    content: attr(data-bar-label); /* Custom attribute to avoid conflict */
     position: absolute;
     bottom: 100%;
     left: 50%;
     transform: translateX(-50%);
-    background-color: #111827;
-    padding: 4px 8px;
+    background: #000;
+    color: #fff;
+    padding: 6px 10px;
     border-radius: 4px;
     font-size: 0.75rem;
     white-space: nowrap;
-    margin-bottom: 5px;
-    border: 1px solid #374151;
+    margin-bottom: 6px;
+    pointer-events: none;
     z-index: 10;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    border: 1px solid #333;
 }
 
-.month-x-label {
-    margin-top: 8px;
-    text-align: center;
-    color: #6b7280;
-    font-size: 0.7rem;
+.am-x-label {
     position: absolute;
-    bottom: 0;
+    bottom: -25px;
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+}
+
+/* Adaptive Labels: Show label every 5th day to avoid clutter */
+.am-bar-group:not(:nth-child(5n):not(:first-child):not(:last-child)) .am-x-label {
+    display: none;
+}
+/* Always show first and last */
+.am-bar-group:first-child .am-x-label,
+.am-bar-group:last-child .am-x-label {
+    display: block !important;
+}
+
+/* --- Donut Chart Section --- */
+.am-donut-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+
+.am-donut-chart {
+    width: 160px;
+    height: 160px;
+    border-radius: 50%;
+    background: #374151; /* Default/Empty state */
+    position: relative;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+    transition: background 0.5s ease;
+}
+
+.am-donut-hole {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 80px;
+    height: 80px;
+    background-color: var(--surface-color, #1f2937);
+    border-radius: 50%;
+}
+
+.am-legend-list {
     width: 100%;
+    overflow-y: auto;
+    padding-right: 5px;
+    max-height: 200px;
 }
 
-/* Highlight specific bars (e.g. weekends or milestones) if needed */
-.month-bar.weekend {
-    opacity: 0.6;
+/* Legend Scrollbar */
+.am-legend-list::-webkit-scrollbar {
+    width: 4px;
+}
+.am-legend-list::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 2px;
 }
 
-@media (max-width: 900px) {
-    .month-analytics-grid {
-        grid-template-columns: 1fr;
+/* Legend Items (Injected by JS) */
+.am-legend-item {
+    display: flex;
+    align-items: center;
+    padding: 10px 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.2s, opacity 0.2s;
+    border-radius: 6px;
+}
+
+.am-legend-item:hover {
+    background-color: rgba(255,255,255,0.03);
+}
+
+.am-legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+
+.am-legend-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #e5e7eb;
+}
+
+.am-legend-val {
+    font-weight: 700;
+    color: #fff;
+    font-size: 0.85rem;
+}
+
+/* Responsive */
+@media (max-width: 1000px) {
+    .am-kpi-grid {
+        grid-template-columns: 1fr 1fr;
     }
-
-    .month-donut-wrapper {
-        flex-direction: column;
-        gap: 30px;
+    .am-content-grid {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    .am-chart-card {
+        height: 350px;
+    }
+    .am-donut-card {
+        height: auto;
+        min-height: 300px;
     }
 }

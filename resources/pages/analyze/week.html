@@ -11,14 +11,16 @@
   <div class="analyze-week-container">
 
     <!-- Header -->
-    <header class="week-header">
-      <h2>Week of Dec 1 - Dec 7, 2025</h2>
+    <header class="analyze-week-header">
+      <!-- Added ID for dynamic date text -->
+      <h2 id="week-header-range">Loading...</h2>
       <div class="week-date-controls">
-        <button class="week-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <!-- Added IDs for buttons/input -->
+        <button id="week-btn-prev" class="week-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
         <div class="week-picker-wrapper">
-          <input type="date" class="week-date-input" value="2025-12-01">
+          <input type="date" id="week-date-input" class="week-date-input">
         </div>
-        <button class="week-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
+        <button id="week-btn-next" class="week-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </header>
 
@@ -30,32 +32,29 @@
         <div class="week-summary-title">Weekly Summary</div>
 
         <div class="week-kpi-group">
-          <span class="week-kpi-label">Focus Time</span>
-          <span class="week-kpi-value">2h 42m</span>
-          <span class="week-kpi-sub">Previous week: 5h 53m</span>
+          <span class="week-kpi-label">Total Focus Time</span>
+          <!-- Added ID -->
+          <span id="week-stat-total-time" class="week-kpi-value">0m</span>
         </div>
 
         <div class="week-kpi-group">
-          <span class="week-kpi-label">Sessions</span>
-          <span class="week-kpi-value">8</span>
+          <span class="week-kpi-label">Total Sessions</span>
+          <!-- Added ID -->
+          <span id="week-stat-total-sessions" class="week-kpi-value">0</span>
         </div>
       </div>
 
       <!-- Donut Chart Card -->
       <div class="analyze-week-card">
         <div class="week-donut-wrapper">
-          <div class="week-donut-chart">
-            <!-- Simulated Segment line -->
-            <div class="week-segment-line"></div>
+          <!-- Added ID, Removed inner .week-segment-line div -->
+          <div id="week-donut-chart" class="week-donut-chart">
+            <!-- Inner hole is handled by CSS ::after or background, no extra div needed here for the line -->
           </div>
 
-          <div class="week-chart-legend-container">
-            <div class="week-legend-row">
-              <div class="week-legend-dot"></div>
-              <span class="week-legend-name">College</span>
-              <span class="week-legend-time">2h 42m</span>
-              <span class="week-legend-perc">100%</span>
-            </div>
+          <!-- Added ID -->
+          <div id="week-legend-container" class="week-chart-legend-container" style="flex:1;">
+            <!-- JS will inject rows here -->
           </div>
         </div>
       </div>
@@ -66,105 +65,20 @@
     <div class="analyze-week-card">
 
       <div class="week-chart-container">
-        <!-- Y-Axis Labels -->
         <div class="week-y-axis">
-          <span>4h</span>
-          <span>2h</span>
+          <span>Max</span>
+          <span>Avg</span>
           <span>0m</span>
         </div>
 
         <!-- Horizontal Grid Lines -->
         <div class="week-grid-line" style="top: 0;"></div>
-        <div class="week-grid-line" style="top: 50%; transform: translateY(-20px);"></div> <!-- Approx 2h mark -->
+        <div class="week-grid-line" style="top: 50%;"></div>
         <div class="week-grid-line" style="bottom: 40px;"></div>
 
-        <!-- Bars -->
-        <div class="week-bars-wrapper">
-
-          <!-- Mon: 24m (10%) -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 10%;">
-              <span class="week-bar-value">24m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Mon</span>
-              <span class="day-date">Dec 1</span>
-            </div>
-          </div>
-
-          <!-- Tue: 0m -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 1px; background-color: #374151;">
-              <span class="week-bar-value">0m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Tue</span>
-              <span class="day-date">Dec 2</span>
-            </div>
-          </div>
-
-          <!-- Wed: 0m -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 1px; background-color: #374151;">
-              <span class="week-bar-value">0m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Wed</span>
-              <span class="day-date">Dec 3</span>
-            </div>
-          </div>
-
-          <!-- Thu: 5m (2%) -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 2%;">
-              <span class="week-bar-value">5m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Thu</span>
-              <span class="day-date">Dec 4</span>
-            </div>
-          </div>
-
-          <!-- Fri: 0m -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 1px; background-color: #374151;">
-              <span class="week-bar-value">0m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Fri</span>
-              <span class="day-date">Dec 5</span>
-            </div>
-          </div>
-
-          <!-- Sat: 2h 13m (55%) -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 55%;">
-              <span class="week-bar-value">2h 13m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Sat</span>
-              <span class="day-date">Dec 6</span>
-            </div>
-          </div>
-
-          <!-- Sun: 0m -->
-          <div class="week-bar-group">
-            <div class="week-bar" style="height: 1px; background-color: #374151;">
-              <span class="week-bar-value">0m</span>
-            </div>
-            <div class="week-x-label">
-              <span class="day-name">Sun</span>
-              <span class="day-date">Dec 7</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      <div class="week-chart-legend-bottom">
-        <div style="display: flex; align-items: center; gap: 6px; margin-top: 20px;">
-          <div style="width: 10px; height: 10px; border-radius: 50%; background-color: #2563eb;"></div>
-          <span>College</span>
+        <!-- Bars Container (Added ID) -->
+        <div id="week-bars-container" class="week-bars-wrapper">
+           <!-- JS will inject .week-bar-group elements here -->
         </div>
       </div>
 

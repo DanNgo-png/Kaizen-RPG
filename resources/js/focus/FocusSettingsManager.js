@@ -22,7 +22,11 @@ const settingsMap = [
     { id: 'setting-mute-audio',      key: 'focusTimerMuted',       type: 'toggle' },
     { id: 'setting-alarm-sound',     key: 'timerAlarmSound',       type: 'string' },
     { id: 'setting-volume-slider',   key: 'focusTimerVolume',      type: 'number' },
-    { id: 'setting-os-notification', key: 'enableOSNotifications', type: 'toggle' }
+    { id: 'setting-os-notification', key: 'enableOSNotifications', type: 'toggle' },
+
+    // Negative Balance Warnings
+    { id: 'setting-warn-enabled',    key: 'flexibleWarnEnabled',   type: 'toggle' },
+    { id: 'setting-warn-interval',   key: 'flexibleWarnInterval',  type: 'number' }
 ];
 
 const STANDARD_SOUNDS = ['bell', 'chime', 'elevator', 'moktak', 'none'];
@@ -35,6 +39,17 @@ const handleSettingUpdate = (e) => {
         const inputEl = document.getElementById('setting-volume-input');
         if (inputEl) inputEl.value = value;
     }
+
+    // Handle Expandable UI for Warning Setting
+    if (key === 'flexibleWarnEnabled') {
+        const isEnabled = (value === true || value === 'true' || value === 1 || value === '1');
+        const container = document.getElementById('container-warn-interval');
+        if (container) {
+            if (isEnabled) container.classList.add('expanded');
+            else container.classList.remove('expanded');
+        }
+    }
+
     const config = settingsMap.find(s => s.key === key);
     if (!config) return;
     const el = document.getElementById(config.id);

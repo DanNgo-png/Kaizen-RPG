@@ -4,11 +4,10 @@ import { loadPage } from "../../router.js";
 import { initFocusTimer } from "../standard/StandardFocusTimer.js";
 import { initFlexibleFocusTimer } from "../flexible/FlexibleFocusTimer.js";
 
-// Helper (Add this at top of file or class)
-const formatToLocalSQL = (dateObj) => {
-    const offsetMs = dateObj.getTimezoneOffset() * 60000;
-    const localDate = new Date(dateObj.getTime() - offsetMs);
-    return localDate.toISOString().replace('T', ' ').split('.')[0];
+// Helper: robustly format Local Date to SQL String (YYYY-MM-DD HH:MM:SS)
+const formatToLocalSQL = (d) => {
+    const pad = (n) => n.toString().padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
 };
 
 export class ReviewManager {
@@ -16,7 +15,7 @@ export class ReviewManager {
         this.currentDate = new Date();
         this.today = new Date();
         
-        // Remove time component
+        // Remove time component to lock to Midnight Local Time
         this.today.setHours(0,0,0,0);
         this.currentDate.setHours(0,0,0,0);
 
@@ -41,7 +40,7 @@ export class ReviewManager {
             // Modals
             modalEdit: document.getElementById('modal-edit-session'),
             modalDelete: document.getElementById('modal-delete-session'),
-            modalChoose: document.getElementById('modal-choose-timer'), // New
+            modalChoose: document.getElementById('modal-choose-timer'), 
             tagSelect: document.getElementById('edit-session-tag-select')
         };
 
@@ -69,12 +68,18 @@ export class ReviewManager {
         });
 
         // Delete Modal Actions
-        document.getElementById('btn-cancel-delete').addEventListener('click', () => this.toggleModal('delete', false));
-        document.getElementById('btn-confirm-delete').addEventListener('click', () => this.executeDelete());
+        const btnCancelDelete = document.getElementById('btn-cancel-delete');
+        if (btnCancelDelete) btnCancelDelete.addEventListener('click', () => this.toggleModal('delete', false));
+        
+        const btnConfirmDelete = document.getElementById('btn-confirm-delete');
+        if (btnConfirmDelete) btnConfirmDelete.addEventListener('click', () => this.executeDelete());
 
         // Edit Modal Actions
-        document.getElementById('btn-cancel-edit').addEventListener('click', () => this.toggleModal('edit', false));
-        document.getElementById('btn-save-edit').addEventListener('click', () => this.executeEdit());
+        const btnCancelEdit = document.getElementById('btn-cancel-edit');
+        if (btnCancelEdit) btnCancelEdit.addEventListener('click', () => this.toggleModal('edit', false));
+        
+        const btnSaveEdit = document.getElementById('btn-save-edit');
+        if (btnSaveEdit) btnSaveEdit.addEventListener('click', () => this.executeEdit());
 
         // Choose Timer Modal Actions
         if (this.dom.modalChoose) {
@@ -95,8 +100,8 @@ export class ReviewManager {
     }
 
     setupListeners() {
-        // Data Received
-        Neutralino.events.on('receiveFocusSessions', (e) => this.renderList(e.detail));
+        // CHANGED: Listen to specific event for Review Page to avoid data pollution
+        Neutralino.events.on('receiveReviewData', (e) => this.renderList(e.detail));
         
         // Tags Received
         Neutralino.events.on('receiveTags', (e) => {
@@ -119,7 +124,6 @@ export class ReviewManager {
         });
     }
 
-    // ... existing date change methods ...
     changeDate(delta) {
         this.currentDate.setDate(this.currentDate.getDate() + delta);
         this.loadDate(this.currentDate);
@@ -128,17 +132,20 @@ export class ReviewManager {
     loadDate(date) {
         this.updateHeaderUI(date);
         
+        // Explicitly set start to 00:00:00.000
         const start = new Date(date);
         start.setHours(0,0,0,0);
         
+        // Explicitly set end to 23:59:59.999
         const end = new Date(date);
         end.setHours(23,59,59,999);
 
-        // Use Local SQL format
+        // Use the new robust formatter
         const startStr = formatToLocalSQL(start);
         const endStr = formatToLocalSQL(end);
         
-        FocusAPI.getFocusSessions(startStr, endStr);
+        // CHANGED: Pass 3rd arg 'receiveReviewData' for namespacing
+        FocusAPI.getFocusSessions(startStr, endStr, 'receiveReviewData');
     }
 
     updateHeaderUI(date) {
@@ -150,6 +157,7 @@ export class ReviewManager {
     }
 
     renderList(sessions) {
+        if (!this.dom.list) return;
         this.dom.list.innerHTML = '';
         
         // Calc Stats
@@ -157,8 +165,8 @@ export class ReviewManager {
         sessions.forEach(s => totalSecs += s.focus_seconds);
         
         // Update Stats UI
-        this.dom.statCount.textContent = sessions.length;
-        this.dom.statTime.textContent = this.formatDuration(totalSecs);
+        if (this.dom.statCount) this.dom.statCount.textContent = sessions.length;
+        if (this.dom.statTime) this.dom.statTime.textContent = this.formatDuration(totalSecs);
         this.checkGoal(totalSecs);
 
         if (sessions.length === 0) {
@@ -171,6 +179,7 @@ export class ReviewManager {
             const el = document.createElement('div');
             el.className = 'session-card';
             
+            // Handle date parsing safely
             const localString = session.created_at.replace(' ', 'T');
             const dateObj = new Date(localString);
             const timeStr = dateObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -182,6 +191,8 @@ export class ReviewManager {
             let typeIcon = '<i class="fa-regular fa-clock" title="Standard Timer"></i>';
             if (session.timer_type === 'flexible') {
                 typeIcon = '<i class="fa-solid fa-stopwatch" title="Flexible Timer"></i>';
+            } else if (session.timer_type === 'stopwatch') {
+                typeIcon = '<i class="fa-solid fa-hourglass-half" title="Stopwatch"></i>';
             }
 
             el.innerHTML = `

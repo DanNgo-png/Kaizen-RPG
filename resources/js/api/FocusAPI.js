@@ -13,9 +13,14 @@ export const FocusAPI = {
      * Request sessions within a specific date range
      * @param {string} startDate - YYYY-MM-DD HH:MM:SS
      * @param {string} endDate - YYYY-MM-DD HH:MM:SS
+     * @param {string} [targetEvent] - Optional: Custom event name to receive data on
      */
-    getFocusSessions: async (startDate, endDate) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "getFocusSessions", { startDate, endDate });
+    getFocusSessions: async (startDate, endDate, targetEvent) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getFocusSessions", { 
+            startDate, 
+            endDate,
+            targetEvent 
+        });
     },
 
     updateSession: async (id, tag) => {
