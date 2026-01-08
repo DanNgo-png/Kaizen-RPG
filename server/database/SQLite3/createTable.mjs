@@ -49,38 +49,29 @@ const SCHEMAS = {
         );
     `,
 
-    // --- NEW: Stores Strategic Planning (Years, Quarters, OKRs) ---
+    // Timeframe Data (Strategic Planning & Daily Schedule)
     'timeframe_data': `
-        -- 1. Pillars (e.g., Health, Wealth, Career) - Seen in 'this-year.html'
-        CREATE TABLE IF NOT EXISTS pillars (
+        -- Goals 
+        CREATE TABLE IF NOT EXISTS goals (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             title TEXT NOT NULL,
-            description TEXT,
-            icon TEXT DEFAULT 'fa-solid fa-mountain',
-            color_class TEXT DEFAULT 'p-blue', -- CSS class reference
+            type TEXT DEFAULT 'day', -- 'day', 'week', 'quarter', 'year'
+            timeframe_key TEXT,      -- '2025-12-25', '2025-W52', '2025'
+            status TEXT DEFAULT 'active',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
 
-        -- 2. Goals / Objectives (e.g., "Launch MVP") - Seen in 'this-quarter.html'
-        CREATE TABLE IF NOT EXISTS goals (
+        -- Daily Schedule Entries
+        -- This maps a Task from the backlog to a specific day/time
+        CREATE TABLE IF NOT EXISTS daily_plan_entries (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            pillar_id INTEGER,
-            title TEXT NOT NULL,
-            type TEXT DEFAULT 'quarter', -- 'year', 'quarter', 'week', 'day'
-            timeframe_key TEXT,          -- e.g., '2025', '2025-Q1', '2025-W52'
-            status TEXT DEFAULT 'track', -- 'track', 'risk', 'done', 'fail'
-            progress INTEGER DEFAULT 0,  -- 0 to 100
+            task_id INTEGER NOT NULL,   -- Logically links to user_tasks.id
+            date_key TEXT NOT NULL,     -- 'YYYY-MM-DD'
+            start_time TEXT,            -- '09:00', '14:30' (24h format)
+            duration INTEGER DEFAULT 30, -- Minutes
+            notes TEXT,                 -- specific notes for today
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY(pillar_id) REFERENCES pillars(id) ON DELETE SET NULL
-        );
-
-        -- 3. Key Results (e.g., "Complete Core UI") - The checklist inside a Goal
-        CREATE TABLE IF NOT EXISTS key_results (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            goal_id INTEGER NOT NULL,
-            content TEXT NOT NULL,
-            completed INTEGER DEFAULT 0,
-            FOREIGN KEY(goal_id) REFERENCES goals(id) ON DELETE CASCADE
+            UNIQUE(task_id, date_key)   -- A task can only be scheduled once per day
         );
     `
 };

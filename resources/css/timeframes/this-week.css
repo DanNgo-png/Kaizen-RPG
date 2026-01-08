@@ -237,10 +237,6 @@
     z-index: 10;
 }
 
-.week-card:active {
-    cursor: grabbing;
-}
-
 /* Priority Indicators */
 .week-card.p-high {
     border-left: 3px solid #ef4444;
@@ -331,4 +327,59 @@
     background: transparent;
     border: 2px dashed var(--text-secondary);
     opacity: 0.5;
+}
+
+/* --- DYNAMIC & DRAG AND DROP STYLES --- */
+.week-card.is-dragging {
+    opacity: 0.4;
+    background: repeating-linear-gradient(
+        45deg,
+        var(--bg-sidebar-inner),
+        var(--bg-sidebar-inner) 10px,
+        var(--bg-hover) 10px,
+        var(--bg-hover) 20px
+    );
+    border: 1px dashed var(--text-secondary);
+    box-shadow: none;
+}
+
+/* Drop Zone: Hover State */
+.day-column.drag-over, 
+.weekly-pool.drag-over {
+    background-color: rgba(16, 185, 129, 0.05); /* Subtle Green Tint */
+    box-shadow: inset 0 0 0 2px var(--accent-green);
+    transition: all 0.2s ease;
+}
+
+/* Add a visual hint to the header when hovering a column */
+.day-column.drag-over .timeframe-day-header {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #fff;
+}
+
+/* Empty State visual for days */
+.day-tasks:empty::after {
+    content: 'Drop here';
+    display: block;
+    text-align: center;
+    color: rgba(255, 255, 255, 0.1);
+    margin-top: 20px;
+    font-size: 0.8rem;
+    font-style: italic;
+    pointer-events: none;
+}
+
+/* Animation for adding new item to DOM */
+@keyframes popIn {
+    0% { opacity: 0; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+.week-card.animate-enter {
+    animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Grab cursors */
+.week-card:active {
+    cursor: grabbing;
 }

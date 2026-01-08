@@ -2,172 +2,64 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>This Year - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>This Year - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="year-container">
-		<!-- Header -->
-		<header class="timeframe-year-header">
-			<div class="header-main">
-				<div class="year-title-group">
-					<h2><i class="fa-solid fa-calendar-check"></i> 2025</h2>
-					<span class="year-theme">"The Year of the Architect"</span>
-				</div>
-				<div class="year-stats">
-					<div class="y-stat">
-						<span class="ys-label">Days Gone</span>
-						<span class="ys-val">356 / 365</span>
-					</div>
-					<div class="y-stat">
-						<span class="ys-label">Goals Met</span>
-						<span class="ys-val text-green">12 / 15</span>
-					</div>
-				</div>
-			</div>
+  <div class="year-container">
+    <header class="timeframe-year-header">
+      <!-- ... existing header content ... -->
+      <div class="header-main">
+        <div class="year-title-group">
+          <h2><i class="fa-solid fa-calendar-check"></i> <span id="year-title-text">2025</span></h2>
+          <span class="year-theme" id="year-theme-text">"The Year of the Architect"</span>
+        </div>
+        <!-- ... stats ... -->
+      </div>
+      <!-- ... progress ... -->
+    </header>
 
-			<!-- Year Progress Bar -->
-			<div class="year-progress-track">
-				<div class="year-progress-fill" style="width: 97%;"></div>
-			</div>
-		</header>
+    <div class="year-layout">
+      <!-- Left: Pillars -->
+      <div class="year-sidebar">
+        <div class="sidebar-header" style="display:flex; justify-content:space-between; align-items:center;">
+          <h3><i class="fa-solid fa-mountain"></i> Pillars</h3>
+          <button id="btn-add-pillar" style="background:transparent; border:none; color:#9ca3af; cursor:pointer;"><i
+              class="fa-solid fa-plus"></i></button>
+        </div>
+        <p style="font-size:0.85rem; color:#6b7280; margin-bottom:15px;">Your non-negotiable standards.</p>
 
-		<!-- Layout -->
-		<div class="year-layout">
+        <div class="pillars-list" id="year-pillars-list"></div>
+      </div>
 
-			<!-- Left: Pillars / North Stars -->
-			<div class="year-sidebar">
-				<div class="sidebar-header">
-					<h3><i class="fa-solid fa-mountain"></i> Pillars</h3>
-					<p>Your non-negotiable standards.</p>
-				</div>
+      <!-- Right: Quarters -->
+      <div class="quarters-grid" id="year-quarters-grid"></div>
+    </div>
+  </div>
 
-				<div class="pillars-list">
-					<div class="pillar-card">
-						<div class="pillar-icon p-blue"><i class="fa-solid fa-laptop-code"></i></div>
-						<div class="pillar-content">
-							<h4>Career Growth</h4>
-							<span>Senior Dev Promotion</span>
-						</div>
-					</div>
-
-					<div class="pillar-card">
-						<div class="pillar-icon p-green"><i class="fa-solid fa-heart-pulse"></i></div>
-						<div class="pillar-content">
-							<h4>Vitality</h4>
-							<span>Run a Marathon</span>
-						</div>
-					</div>
-
-					<div class="pillar-card">
-						<div class="pillar-icon p-gold"><i class="fa-solid fa-sack-dollar"></i></div>
-						<div class="pillar-content">
-							<h4>Wealth</h4>
-							<span>Save $20k</span>
-						</div>
-					</div>
-				</div>
-
-				<div class="year-quote">
-					"We tend to overestimate what we can do in a day, and underestimate what we can do in a year."
-				</div>
-			</div>
-
-			<!-- Right: The 4 Quarters -->
-			<div class="quarters-grid">
-
-				<!-- Q1: Concluded -->
-				<div class="quarter-card past">
-					<div class="qc-header">
-						<span class="qc-title">Q1: Foundation</span>
-						<span class="qc-status"><i class="fa-solid fa-check"></i> Done</span>
-					</div>
-					<div class="qc-goals">
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Complete Python Bootcamp</span>
-						</div>
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Launch Portfolio Site</span>
-						</div>
-						<div class="qc-goal fail">
-							<i class="fa-solid fa-xmark"></i>
-							<span>Read 5 Books (3/5)</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Q2: Concluded -->
-				<div class="quarter-card past">
-					<div class="qc-header">
-						<span class="qc-title">Q2: Acceleration</span>
-						<span class="qc-status"><i class="fa-solid fa-check"></i> Done</span>
-					</div>
-					<div class="qc-goals">
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Secure Freelance Contract</span>
-						</div>
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Start Gym Routine</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Q3: Concluded -->
-				<div class="quarter-card past">
-					<div class="qc-header">
-						<span class="qc-title">Q3: Expansion</span>
-						<span class="qc-status"><i class="fa-solid fa-check"></i> Done</span>
-					</div>
-					<div class="qc-goals">
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Travel to Japan</span>
-						</div>
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Hit 10k Savings</span>
-						</div>
-					</div>
-				</div>
-
-				<!-- Q4: Current -->
-				<div class="quarter-card current">
-					<div class="qc-header">
-						<span class="qc-title">Q4: Completion</span>
-						<span class="qc-status status-live">Active</span>
-					</div>
-					<div class="qc-date">Oct 1 - Dec 31</div>
-
-					<div class="qc-goals">
-						<div class="qc-goal done">
-							<i class="fa-regular fa-square-check"></i>
-							<span>Release Kaizen RPG Alpha</span>
-						</div>
-						<div class="qc-goal active">
-							<i class="fa-regular fa-square"></i>
-							<span>Plan 2026 Roadmap</span>
-						</div>
-						<div class="qc-goal active">
-							<i class="fa-regular fa-square"></i>
-							<span>Review Annual Finances</span>
-						</div>
-					</div>
-
-					<div class="qc-footer">
-						<button class="btn-open-quarter">View Q4 Board <i class="fa-solid fa-arrow-right"></i></button>
-					</div>
-				</div>
-
-			</div>
-
-		</div>
-	</div>
+  <!-- ADD PILLAR MODAL -->
+  <div id="modal-add-pillar" class="modal-overlay hidden"
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:flex; align-items:center; justify-content:center;">
+    <div class="focus-flexible-modal-content"
+      style="background:#1f2937; padding:30px; border-radius:12px; width:400px; border:1px solid #374151;">
+      <h3>Add Pillar</h3>
+      <div class="input-row" style="margin-top:20px;">
+        <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Pillar Name</label>
+        <input type="text" id="input-pillar-title"
+          style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px;"
+          placeholder="e.g. Health, Wealth, Craft">
+      </div>
+      <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="btn-cancel-pillar" class="btn-flex-secondary"
+          style="background:transparent; border:1px solid #4b5563; color:#ccc; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
+        <button id="btn-save-pillar" class="btn-flex-primary"
+          style="background:#8b5cf6; border:none; color:white; padding:8px 16px; border-radius:6px; cursor:pointer;">Add
+          Pillar</button>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>

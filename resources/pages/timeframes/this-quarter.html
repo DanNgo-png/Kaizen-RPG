@@ -2,189 +2,70 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>This Quarter - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>This Quarter - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="quarter-container">
+  <div class="quarter-container">
+    <!-- Header -->
+    <header class="quarter-header">
+      <div class="header-left">
+        <h2>
+          <i class="fa-solid fa-chart-pie"></i> <span id="quarter-title">Loading...</span>
+          <span class="quarter-date-range" id="quarter-date-range">...</span>
+        </h2>
+        <div class="quarter-progress-wrapper">
+          <div class="qp-label"><span>Quarter Progress</span><span id="qp-progress-text">0%</span></div>
+          <div class="qp-track">
+            <div id="qp-progress-fill" class="qp-fill" style="width: 0%;"></div>
+          </div>
+        </div>
+      </div>
+      <div class="header-right" style="display: flex; gap: 10px;">
+        <!-- Nav Controls -->
+        <button id="btn-prev-q" class="btn-icon-sm"><i class="fa-solid fa-chevron-left"></i></button>
+        <button id="btn-next-q" class="btn-icon-sm"><i class="fa-solid fa-chevron-right"></i></button>
+      </div>
+    </header>
 
-		<!-- Header -->
-	<header class="quarter-header">
-		<div class="header-left">
-			<h2>
-				<i class="fa-solid fa-chart-pie"></i> Q4 2025
-				<span class="quarter-date-range">Oct 1 - Dec 31</span>
-			</h2>
-			<div class="quarter-progress-wrapper">
-				<div class="qp-label">
-					<span>Quarter Progress</span>
-					<span>88%</span>
-				</div>
-				<div class="qp-track">
-					<div class="qp-fill" style="width: 88%;"></div>
-				</div>
-			</div>
-		</div>
+    <div class="quarter-layout">
+      <!-- Left: Goals Panel -->
+      <div class="quarter-goals-panel">
+        <div class="panel-header">
+          <h3><i class="fa-solid fa-crosshairs"></i> Objectives</h3>
+          <button class="btn-icon-sm" id="btn-add-goal"><i class="fa-solid fa-plus"></i></button>
+        </div>
+        <div id="quarter-goals-list" class="goals-list"></div>
+      </div>
 
-		<div class="header-right">
-			<button class="btn-strategic-review">
-				<i class="fa-solid fa-chess"></i> Strategic Review
-			</button>
-		</div>
-	</header>
+      <!-- Right: Board -->
+      <div id="quarter-board-scroll" class="quarter-board"></div>
+    </div>
+  </div>
 
-	<!-- Main Layout -->
-	<div class="quarter-layout">
-
-		<!-- Left: Quarterly Goals (OKRs) -->
-		<div class="quarter-goals-panel">
-			<div class="panel-header">
-				<h3><i class="fa-solid fa-crosshairs"></i> Objectives (OKRs)</h3>
-				<button class="btn-icon-sm"><i class="fa-solid fa-plus"></i></button>
-			</div>
-
-			<div class="goals-list">
-				<!-- Goal 1 -->
-				<div class="goal-card">
-					<div class="goal-header">
-						<span class="goal-title">Launch MVP to Beta Users</span>
-						<span class="goal-status status-track">On Track</span>
-					</div>
-					<div class="key-results">
-						<div class="kr-item">
-							<i class="fa-regular fa-circle-check"></i>
-							<span>Complete Core UI</span>
-						</div>
-						<div class="kr-item">
-							<i class="fa-regular fa-circle"></i>
-							<span>Onboard 50 users</span>
-						</div>
-					</div>
-					<div class="goal-progress-mini">
-						<div class="gpm-fill" style="width: 70%;"></div>
-					</div>
-				</div>
-
-				<!-- Goal 2 -->
-				<div class="goal-card">
-					<div class="goal-header">
-						<span class="goal-title">Improve Physical Health</span>
-						<span class="goal-status status-risk">At Risk</span>
-					</div>
-					<div class="key-results">
-						<div class="kr-item">
-							<i class="fa-regular fa-circle-check"></i>
-							<span>Gym 3x/week avg</span>
-						</div>
-					</div>
-					<div class="goal-progress-mini">
-						<div class="gpm-fill risk" style="width: 40%;"></div>
-					</div>
-				</div>
-			</div>
-		</div>
-
-		<!-- Right: 13-Week Board -->
-		<div class="quarter-board">
-			
-			<!-- Month 1 -->
-			<div class="month-column">
-				<div class="month-header">
-					<span class="month-name">October</span>
-					<span class="month-progress">Done</span>
-				</div>
-				<div class="weeks-list">
-					<div class="week-block past">
-						<span class="wb-label">Week 40</span>
-						<span class="wb-theme">Planning & Setup</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 41</span>
-						<span class="wb-theme">Database Design</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 42</span>
-						<span class="wb-theme">Backend API</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 43</span>
-						<span class="wb-theme">Auth System</span>
-						<div class="wb-milestone" title="Milestone Reached"><i class="fa-solid fa-diamond"></i></div>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 44</span>
-						<span class="wb-theme">Frontend Init</span>
-					</div>
-				</div>
-			</div>
-
-			<!-- Month 2 -->
-			<div class="month-column">
-				<div class="month-header">
-					<span class="month-name">November</span>
-					<span class="month-progress">Done</span>
-				</div>
-				<div class="weeks-list">
-					<div class="week-block past">
-						<span class="wb-label">Week 45</span>
-						<span class="wb-theme">Dashboard UI</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 46</span>
-						<span class="wb-theme">Focus Timer Logic</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 47</span>
-						<span class="wb-theme">Data Persistence</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 48</span>
-						<span class="wb-theme">Settings Page</span>
-					</div>
-				</div>
-			</div>
-
-			<!-- Month 3 -->
-			<div class="month-column">
-				<div class="month-header">
-					<span class="month-name">December</span>
-					<span class="month-progress active">Current</span>
-				</div>
-				<div class="weeks-list">
-					<div class="week-block past">
-						<span class="wb-label">Week 49</span>
-						<span class="wb-theme">Kanban Feature</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 50</span>
-						<span class="wb-theme">Refactoring</span>
-					</div>
-					<div class="week-block past">
-						<span class="wb-label">Week 51</span>
-						<span class="wb-theme">Testing & Bugfix</span>
-					</div>
-					
-					<!-- Current Week -->
-					<div class="week-block current">
-						<div class="wb-header">
-							<span class="wb-label">Week 52</span>
-							<span class="wb-badge">Now</span>
-						</div>
-						<span class="wb-theme">Release Prep & Polish</span>
-						<div class="wb-focus-items">
-							<span><i class="fa-solid fa-caret-right"></i> Finalize HTML/CSS</span>
-							<span><i class="fa-solid fa-caret-right"></i> Documentation</span>
-						</div>
-					</div>
-
-				</div>
-			</div>
-
-		</div>
-
-	</div>
-</div>
+  <!-- ADD GOAL MODAL -->
+  <div id="modal-add-goal" class="modal-overlay hidden"
+    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:flex; align-items:center; justify-content:center;">
+    <div class="focus-flexible-modal-content"
+      style="background:#1f2937; padding:30px; border-radius:12px; width:400px; border:1px solid #374151;">
+      <h3>Add Objective</h3>
+      <div class="input-row" style="margin-top:20px;">
+        <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Goal Title</label>
+        <input type="text" id="input-goal-title"
+          style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px;"
+          placeholder="e.g. Launch MVP">
+      </div>
+      <div class="modal-actions" style="margin-top:20px; display:flex; justify-content:flex-end; gap:10px;">
+        <button id="btn-cancel-goal" class="btn-flex-secondary"
+          style="background:transparent; border:1px solid #4b5563; color:#ccc; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
+        <button id="btn-save-goal" class="btn-flex-primary"
+          style="background:#3b82f6; border:none; color:white; padding:8px 16px; border-radius:6px; cursor:pointer;">Add
+          Goal</button>
+      </div>
+    </div>
+  </div>
 </body>
+
 </html>

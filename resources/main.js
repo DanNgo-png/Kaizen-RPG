@@ -13,6 +13,12 @@ import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.j
 import { initReviewSessions } from './js/focus/review/ReviewManager.js';
 import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
 
+// TIMEFRAMES
+import { initTodayView } from './js/timeframes/TodayManager.js';
+import { initWeekPlan } from './js/timeframes/WeekPlanManager.js';
+import { initQuarterView } from './js/timeframes/QuarterPlanManager.js';
+import { initYearPlan } from './js/timeframes/YearPlanManager.js';
+
 // ANALYZE PAGE
 import { initOverview } from './js/analyze/OverviewManager.js';
 import { initDayAnalytics } from './js/analyze/DayManager.js';
@@ -124,7 +130,7 @@ async function app() {
         if (todayTimeframeButton) {
             todayTimeframeButton.addEventListener("click", async () => {
                 await loadPage('./pages/timeframes/today.html');
-                // placeholder(); 
+                initTodayView(); 
             });
         }
 
@@ -133,7 +139,7 @@ async function app() {
         if (weekTimeframeButton) {
             weekTimeframeButton.addEventListener("click", async () => {
                 await loadPage('./pages/timeframes/this-week.html');
-                // placeholder(); 
+                initWeekPlan();
             });
         }
 
@@ -142,7 +148,7 @@ async function app() {
         if (quarterTimeframeButton) {
             quarterTimeframeButton.addEventListener("click", async () => {
                 await loadPage('./pages/timeframes/this-quarter.html');
-                // placeholder(); 
+                initQuarterView();
             });
         }
 
@@ -151,7 +157,7 @@ async function app() {
         if (yearTimeframeButton) {
             yearTimeframeButton.addEventListener("click", async () => {
                 await loadPage('./pages/timeframes/this-year.html');
-                // placeholder(); 
+                initYearPlan();
             });
         }
 
