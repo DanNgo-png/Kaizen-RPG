@@ -3,6 +3,15 @@ import { FocusAPI } from "../api/FocusAPI.js";
 export class DayManager {
     constructor() {
         this.currentDate = new Date();
+        
+        // --- NAV CHECK ---
+        const jumpDate = localStorage.getItem('kaizen_jump_date');
+        if (jumpDate) {
+            const parts = jumpDate.split('-');
+            this.currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            localStorage.removeItem('kaizen_jump_date');
+        }
+
         this.tagsMap = new Map(); 
         
         // Filter State
