@@ -19,7 +19,6 @@
     flex: 1; /* Takes up all available space */
     overflow-y: auto; /* Allows scrolling if many items */
     overflow-x: hidden;
-    padding-top: 60px; /* Space for the toggle button */
 }
 
 /* Hide scrollbar for cleaner look */
@@ -29,21 +28,33 @@
 
 /* Sidebar Toggle Button */
 .sidebar-toggle-button {
-    position: absolute; /* Keep it fixed at the top */
-    top: 10px;
-    left: 37.5px;
-    transform: translateX(-50%);
-    background-color: transparent;
-    color: var(--text-primary);
-    border: none;
-    padding: 12px 15px;
-    cursor: pointer;
+    position: relative; /* Keep this from the previous fix */
+    
+    /* 1. Define a fixed, smaller size for the button */
+    width: 40px;
+    height: 40px;
+    
+    /* 2. Center it within the 75px icon column */
+    /* (75px sidebar - 40px button) / 2 = 17.5px margin */
+    margin: 10px 0 10px 17.5px;
+    
+    /* 3. Remove padding so the size is exact */
+    padding: 0;
+    
+    /* 4. Ensure the icon stays centered inside the smaller button */
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
+    
+    /* Existing styles... */
+    background-color: transparent;
+    color: var(--text-primary);
+    border: none;
+    cursor: pointer;
+    border-radius: 8px; /* Keeps the hover square-ish with rounded corners */
     transition: background-color 0.2s;
     z-index: 1010;
+    flex-shrink: 0;
 }
 
 .sidebar-toggle-button i {
