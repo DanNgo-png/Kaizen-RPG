@@ -1,3 +1,5 @@
+--- START OF FILE year.css ---
+
 /* --- Scoped Styles for Year Page --- */
 .year-container {
     max-width: 1200px;
@@ -5,20 +7,12 @@
     color: var(--text-primary, #fff);
     font-family: var(--font-main, "Segoe UI", sans-serif);
     animation: fadeIn 0.4s ease-out;
-    /* Adjust based on navbar height if needed */
     padding-bottom: 40px;
 }
 
 @keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(-10px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* Header */
@@ -54,9 +48,7 @@
     transition: 0.2s;
 }
 
-.year-btn:hover {
-    color: #fff;
-}
+.year-btn:hover { color: #fff; }
 
 .current-year {
     font-weight: 700;
@@ -73,9 +65,7 @@
 }
 
 @media (max-width: 900px) {
-    .top-row {
-        grid-template-columns: 1fr;
-    }
+    .top-row { grid-template-columns: 1fr; }
 }
 
 /* Cards */
@@ -87,7 +77,7 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-/* Stats Grid (Left Card) */
+/* Stats Grid */
 .stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -130,81 +120,25 @@
     line-height: 1;
 }
 
-/* Icon & Text Colors */
-.icon-blue {
-    background-color: rgba(59, 130, 246, 0.15);
-    color: #60a5fa;
-}
+/* Colors */
+.icon-blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+.text-blue { color: #60a5fa; }
+.icon-purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+.text-purple { color: #a78bfa; }
+.icon-green { background: rgba(16, 185, 129, 0.15); color: #34d399; }
+.text-green { color: #34d399; }
+.icon-periwinkle { background: rgba(99, 102, 241, 0.15); color: #818cf8; }
+.text-periwinkle { color: #818cf8; }
+.icon-yellow { background: rgba(245, 158, 11, 0.15); color: #fbbf24; }
+.text-yellow { color: #fbbf24; }
+.icon-orange { background: rgba(234, 88, 12, 0.15); color: #fb923c; }
+.text-orange { color: #fb923c; }
+.icon-red { background: rgba(239, 68, 68, 0.15); color: #f87171; }
+.text-red { color: #f87171; }
+.icon-pink { background: rgba(236, 72, 153, 0.15); color: #f472b6; }
+.text-pink { color: #f472b6; }
 
-.text-blue {
-    color: #60a5fa;
-}
-
-.icon-purple {
-    background-color: rgba(139, 92, 246, 0.15);
-    color: #a78bfa;
-}
-
-.text-purple {
-    color: #a78bfa;
-}
-
-.icon-green {
-    background-color: rgba(16, 185, 129, 0.15);
-    color: #34d399;
-}
-
-.text-green {
-    color: #34d399;
-}
-
-.icon-periwinkle {
-    background-color: rgba(99, 102, 241, 0.15);
-    color: #818cf8;
-}
-
-.text-periwinkle {
-    color: #818cf8;
-}
-
-.icon-yellow {
-    background-color: rgba(245, 158, 11, 0.15);
-    color: #fbbf24;
-}
-
-.text-yellow {
-    color: #fbbf24;
-}
-
-.icon-orange {
-    background-color: rgba(234, 88, 12, 0.15);
-    color: #fb923c;
-}
-
-.text-orange {
-    color: #fb923c;
-}
-
-.icon-red {
-    background-color: rgba(239, 68, 68, 0.15);
-    color: #f87171;
-}
-
-.text-red {
-    color: #f87171;
-}
-
-.icon-pink {
-    background-color: rgba(236, 72, 153, 0.15);
-    color: #f472b6;
-}
-
-.text-pink {
-    color: #f472b6;
-}
-
-
-/* Chart Layout (Right Card) */
+/* Chart Layout */
 .chart-container {
     display: flex;
     align-items: center;
@@ -213,14 +147,11 @@
     height: 100%;
 }
 
-/* Donut Chart via CSS Conic Gradient */
 .donut-chart {
     width: 180px;
     height: 180px;
     border-radius: 50%;
-    /* 82% Blue, 18% Purple (approx) */
-    background: conic-gradient(#8b5cf6 0% 18%,
-            #2563eb 18% 100%);
+    background: #374151; /* Default empty */
     position: relative;
     display: flex;
     align-items: center;
@@ -238,6 +169,8 @@
     display: flex;
     flex-direction: column;
     gap: 15px;
+    max-height: 200px;
+    overflow-y: auto;
 }
 
 .legend-item {
@@ -253,108 +186,212 @@
     border-radius: 50%;
 }
 
-.dot-blue {
-    background-color: #2563eb;
+.legend-name { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;}
+.legend-val { color: var(--text-secondary, #9ca3af); text-align: right; }
+.legend-perc { font-weight: 700; color: #fff; text-align: right; }
+
+/* --- Heatmap Container --- */
+.heatmap-wrapper {
+    overflow-x: auto;
+    padding-bottom: 20px;
+    padding-top: 10px;
+    display: flex;
 }
 
-.dot-purple {
-    background-color: #8b5cf6;
-}
-
-.legend-name {
-    font-weight: 600;
-    color: #fff;
-}
-
-.legend-val {
-    color: var(--text-secondary, #9ca3af);
-    text-align: right;
-}
-
-.legend-perc {
-    font-weight: 700;
-    color: #fff;
-    text-align: right;
-}
-
-
-/* Bottom Heatmap */
+/* The row holding all month blocks */
 .heatmap-container {
     display: flex;
-    justify-content: space-between;
-    overflow-x: auto;
-    gap: 10px;
-    padding-bottom: 10px;
-    /* Scrollbar space */
+    gap: 16px; /* Space between month blocks */
+    min-width: max-content; /* Ensures horizontal scrolling if needed */
+    padding: 0 10px;
+    margin: 0 auto; /* Center the container horizontally */
 }
 
-/* Scrollbar styling */
-.heatmap-container::-webkit-scrollbar {
-    height: 8px;
-}
-
-.heatmap-container::-webkit-scrollbar-thumb {
-    background: #374151;
-    border-radius: 4px;
-}
-
-.heatmap-container::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.month-group {
+/* Individual Month Column */
+.month-block {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+/* The Grid for a Single Month (7 rows, auto columns) */
+.month-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 10px); /* 7 days of the week vertical */
+    grid-auto-flow: column; /* Fills vertically, adds columns as needed */
+    grid-auto-columns: 10px;
+    gap: 3px;
+}
+
+/* 53 Columns (Weeks) x 7 Rows (Days) */
+.heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 12px); /* 7 Days vertically */
+    grid-auto-flow: column; /* Fill columns first (weeks) */
+    grid-auto-columns: 12px;
+    gap: 4px;
+    height: 110px; /* 7 * 12 + 6 * 4 gap */
+}
+
+/* Individual Day Cell */
+.heat-cell {
+    width: 10px;
+    height: 10px;
+    border-radius: 2px;
+    background-color: #374151; /* Default/Empty */
+    cursor: pointer;
+}
+
+/* Padding cells for alignment (invisible) */
+.heat-cell.empty {
+    background-color: transparent;
+    pointer-events: none;
+}
+
+.heat-cell:not(.empty):hover {
+    transform: scale(1.4);
+    z-index: 50;
+    border: 1px solid #fff;
+    box-shadow: 0 0 5px rgba(0,0,0,0.5);
+}
+
+.heat-cell:hover {
+    border: 1px solid #fff;
+    transform: scale(1.2);
+    z-index: 10;
+}
+
+/* Intensity Levels */
+.heat-cell.l0 { background-color: #374151; }
+.heat-cell.l1 { background-color: #064e3b; } /* < 30m */
+.heat-cell.l2 { background-color: #10b981; } /* < 2h */
+.heat-cell.l3 { background-color: #34d399; } /* < 4h */
+.heat-cell.l4 { background-color: #d1fae5; } /* > 4h */
+
+/* Month Labels (Bottom) */
+.month-meta {
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.month-name {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #e5e7eb;
+}
+
+.month-total {
+    font-size: 0.7rem;
+    color: #9ca3af;
+    font-family: monospace;
+}
+
+/* --- Dynamic Tooltip --- */
+.heatmap-tooltip {
+    position: absolute;
+    background-color: rgba(20, 20, 25, 0.98);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--bg-hover);
+    padding: 16px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    pointer-events: none;
+    z-index: 2000; /* Increased to allow it to go over sidebars/modals */
+    min-width: 220px;
+    color: #fff;
+    transition: opacity 0.1s, visibility 0.1s;
+    font-family: var(--font-main);
+    line-height: 1.4;
+    visibility: visible;
+}
+
+.heatmap-tooltip.hidden {
+    opacity: 0;
+    visibility: hidden;
+}
+
+/* Header & Summary */
+.ht-header {
+    margin-bottom: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+    padding-bottom: 8px;
+}
+
+.ht-date {
+    font-weight: 700;
+    color: #fff;
+    display: block;
+    font-size: 0.95rem;
+}
+
+.ht-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+.ht-total-time {
+    font-weight: 700;
+    color: var(--accent-active-text, #8EC5FF);
+}
+
+.ht-session-count {
+    color: var(--text-secondary, #9ca3af);
+    font-size: 0.85rem;
+}
+
+/* Tag List Container */
+.ht-tags {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    border-top: 1px dashed rgba(255,255,255,0.1);
+}
+
+/* Individual Tag Row */
+.ht-tag-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.85rem;
+}
+
+.ht-row-left {
+    display: flex;
     align-items: center;
     gap: 8px;
 }
 
-.dots-grid {
-    display: grid;
-    grid-template-rows: repeat(7, 1fr);
-    /* 7 days vertical */
-    grid-auto-flow: column;
-    /* Fill columns first */
-    gap: 4px;
+.ht-tag-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
 }
 
-.dot {
-    width: 10px;
-    height: 10px;
-    background-color: #374151;
-    /* Inactive grey */
-    border-radius: 2px;
+.ht-tag-name {
+    color: #e5e7eb;
 }
 
-/* Activity Levels */
-.dot.l1 {
-    background-color: #064e3b;
+.ht-row-right {
+    display: flex;
+    gap: 8px;
+    font-family: monospace; /* Aligns numbers better */
 }
 
-/* Darkest Green */
-.dot.l2 {
-    background-color: #10b981;
+.ht-val-time {
+    color: #9ca3af;
 }
 
-/* Mid Green */
-.dot.l3 {
-    background-color: #34d399;
-}
-
-/* Bright Green */
-.dot.l4 {
-    background-color: #d1fae5;
-}
-
-/* White-ish Green */
-
-.month-label {
-    font-size: 11px;
-    color: var(--text-secondary, #9ca3af);
-    margin-top: 5px;
-}
-
-.month-total {
-    font-size: 10px;
-    color: #6b7280;
+.ht-val-pct {
+    color: #fff;
+    font-weight: 700;
+    min-width: 35px;
+    text-align: right;
 }
