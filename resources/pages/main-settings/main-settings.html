@@ -121,17 +121,6 @@
 
           <div class="ms-row">
             <div class="ms-info">
-              <span class="ms-label">Custom Startup Page</span>
-              <span class="ms-desc">Load a specific view on launch</span>
-            </div>
-            <label class="switch">
-              <input type="checkbox">
-              <span class="slider round"></span>
-            </label>
-          </div>
-
-          <div class="ms-row">
-            <div class="ms-info">
               <span class="ms-label">Startup View</span>
               <span class="ms-desc">Select default screen</span>
             </div>
@@ -142,6 +131,19 @@
               <option value="kanban">Kanban Board</option>
               <option value="game">Game Menu</option>
               <option value="empire">Empire Builder</option>
+            </select>
+          </div>
+
+          <div class="ms-row">
+            <div class="ms-info">
+              <span class="ms-label">Heatmap Click Action</span>
+              <span class="ms-desc">Navigation when clicking a Year/Month day</span>
+            </div>
+            <select id="setting-heatmap-click" class="ms-select">
+              <option value="review">Go to Review Log</option>
+              <option value="analyze_day">Go to Day Analytics</option>
+              <option value="ask">Always Ask</option>
+              <option value="none">Disable Navigation</option>
             </select>
           </div>
 
