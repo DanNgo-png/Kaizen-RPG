@@ -47,6 +47,41 @@ const SCHEMAS = {
             name TEXT UNIQUE NOT NULL,
             color TEXT NOT NULL DEFAULT '#6b7280'
         );
+    `,
+
+    // --- NEW: Stores Strategic Planning (Years, Quarters, OKRs) ---
+    'timeframe_data': `
+        -- 1. Pillars (e.g., Health, Wealth, Career) - Seen in 'this-year.html'
+        CREATE TABLE IF NOT EXISTS pillars (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            description TEXT,
+            icon TEXT DEFAULT 'fa-solid fa-mountain',
+            color_class TEXT DEFAULT 'p-blue', -- CSS class reference
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 2. Goals / Objectives (e.g., "Launch MVP") - Seen in 'this-quarter.html'
+        CREATE TABLE IF NOT EXISTS goals (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            pillar_id INTEGER,
+            title TEXT NOT NULL,
+            type TEXT DEFAULT 'quarter', -- 'year', 'quarter', 'week', 'day'
+            timeframe_key TEXT,          -- e.g., '2025', '2025-Q1', '2025-W52'
+            status TEXT DEFAULT 'track', -- 'track', 'risk', 'done', 'fail'
+            progress INTEGER DEFAULT 0,  -- 0 to 100
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(pillar_id) REFERENCES pillars(id) ON DELETE SET NULL
+        );
+
+        -- 3. Key Results (e.g., "Complete Core UI") - The checklist inside a Goal
+        CREATE TABLE IF NOT EXISTS key_results (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            goal_id INTEGER NOT NULL,
+            content TEXT NOT NULL,
+            completed INTEGER DEFAULT 0,
+            FOREIGN KEY(goal_id) REFERENCES goals(id) ON DELETE CASCADE
+        );
     `
 };
 
