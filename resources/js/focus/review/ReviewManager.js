@@ -15,9 +15,20 @@ export class ReviewManager {
         this.currentDate = new Date();
         this.today = new Date();
         
-        // Remove time component to lock to Midnight Local Time
+        // Remove time component
         this.today.setHours(0,0,0,0);
         this.currentDate.setHours(0,0,0,0);
+
+        // --- NAV CHECK: Check for Jump Date ---
+        const jumpDate = localStorage.getItem('kaizen_jump_date');
+        if (jumpDate) {
+            // "YYYY-MM-DD"
+            const parts = jumpDate.split('-');
+            // Note: Month is 0-indexed in JS Date constructor
+            this.currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
+            this.currentDate.setHours(0,0,0,0);
+            localStorage.removeItem('kaizen_jump_date'); // Consume it
+        }
 
         this.tags = [];
         this.currentSessionId = null;

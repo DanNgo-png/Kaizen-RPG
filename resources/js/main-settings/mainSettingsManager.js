@@ -24,6 +24,7 @@ export function initMainSettings() {
     const openFontsBtn = document.getElementById('btn-open-fonts');
     const goalInput = document.getElementById('setting-daily-goal');
     const muteToggle = document.getElementById('setting-mute-audio');
+    const heatmapSelect = document.getElementById('setting-heatmap-click');
 
     // Select Elements for Clear History
     const clearFocusBtn = document.getElementById('btn-clear-focus-data');
@@ -55,6 +56,28 @@ export function initMainSettings() {
         });
     }
 
+    // --- Heatmap Navigation Logic ---
+    if (heatmapSelect) {
+        // Load initial
+        SettingsAPI.getSetting('heatmapClickAction');
+
+        // Save on change
+        heatmapSelect.addEventListener('change', (e) => {
+            SettingsAPI.saveSetting('heatmapClickAction', e.target.value);
+        });
+
+        // Listen for value from DB
+        const handleHeatmapUpdate = (e) => {
+            const { key, value } = e.detail;
+            if (key === 'heatmapClickAction') {
+                // Default to 'review' if empty
+                heatmapSelect.value = value || 'review'; 
+            }
+        };
+        document.removeEventListener('kaizen:setting-update', handleHeatmapUpdate);
+        document.addEventListener('kaizen:setting-update', handleHeatmapUpdate);
+    }
+
     // --- Daily Goal Logic ---
     if (goalInput) {
         // 1. Load current value
@@ -78,7 +101,8 @@ export function initMainSettings() {
             }
         };
         
-        document.removeEventListener('kaizen:setting-update', handleMuteUpdate);
+        // Remove duplicate listeners if any (generic safe practice)
+        // document.removeEventListener('kaizen:setting-update', handleMuteUpdate);
         document.addEventListener('kaizen:setting-update', handleMuteUpdate);
 
         // 2. Fetch current state
