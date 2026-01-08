@@ -19,6 +19,7 @@ import { initDayAnalytics } from './js/analyze/DayManager.js';
 import { initWeekAnalytics } from './js/analyze/WeekManager.js';
 import { initMonthAnalytics } from './js/analyze/MonthManager.js';
 import { initYearAnalytics } from './js/analyze/YearManager.js';
+import { initCustomAnalytics } from './js/analyze/CustomAnalyticsManager.js';
 
 // GAME PAGE
 import { initMenuButtons } from './js/games/playGameManager.js';
@@ -204,7 +205,7 @@ async function app() {
         if (analyzeCustom) {
             analyzeCustom.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/custom.html');
-                // placeholder(); 
+                initCustomAnalytics();
             });
         }
 

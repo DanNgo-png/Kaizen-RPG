@@ -2,135 +2,107 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Custom Analytics - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Custom Analytics - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="custom-container">
+  <div class="custom-container">
 
-		<!-- Header -->
-		<header class="custom-header">
-			<h2><i class="fa-solid fa-filter" style="color: #a78bfa;"></i> Custom Analytics</h2>
+    <!-- Header -->
+    <header class="custom-header">
+      <h2><i class="fa-solid fa-filter" style="color: #a78bfa;"></i> Custom Analytics</h2>
 
-			<div class="range-controls">
-				<span class="range-label">From:</span>
-				<div class="date-input-wrapper">
-					<input type="date" class="date-input" value="2025-11-01">
-				</div>
+      <div class="range-controls">
+        <span class="range-label">From:</span>
+        <div class="date-input-wrapper">
+          <input type="date" id="custom-date-start" class="date-input">
+        </div>
 
-				<span class="range-label">To:</span>
-				<div class="date-input-wrapper">
-					<input type="date" class="date-input" value="2025-11-15">
-				</div>
+        <span class="range-label">To:</span>
+        <div class="date-input-wrapper">
+          <input type="date" id="custom-date-end" class="date-input">
+        </div>
 
-				<button class="btn-apply">Apply</button>
-			</div>
-		</header>
+        <button id="btn-apply-custom" class="btn-apply">Apply</button>
+      </div>
+    </header>
 
-		<!-- KPI Grid -->
-		<div class="analytics-grid">
+    <!-- KPI Grid -->
+    <div class="analytics-grid">
 
-			<!-- KPI 1 -->
-			<div class="a-card kpi-card">
-				<div class="kpi-icon icon-blue"><i class="fa-regular fa-clock"></i></div>
-				<span class="kpi-title">Total Focus</span>
-				<span class="kpi-val">28h 15m</span>
-				<span class="kpi-meta">Avg 1h 53m / day</span>
-			</div>
+      <!-- KPI 1 -->
+      <div class="a-card kpi-card">
+        <div class="kpi-icon icon-blue"><i class="fa-regular fa-clock"></i></div>
+        <span class="kpi-title">Total Focus</span>
+        <span id="custom-kpi-time" class="kpi-val">0h 0m</span>
+        <span id="custom-kpi-avg" class="kpi-meta">Avg 0m / day</span>
+      </div>
 
-			<!-- KPI 2 -->
-			<div class="a-card kpi-card">
-				<div class="kpi-icon icon-purple"><i class="fa-solid fa-layer-group"></i></div>
-				<span class="kpi-title">Total Sessions</span>
-				<span class="kpi-val">42</span>
-				<span class="kpi-meta">Avg 2.8 sessions / day</span>
-			</div>
+      <!-- KPI 2 -->
+      <div class="a-card kpi-card">
+        <div class="kpi-icon icon-purple"><i class="fa-solid fa-layer-group"></i></div>
+        <span class="kpi-title">Total Sessions</span>
+        <span id="custom-kpi-sessions" class="kpi-val">0</span>
+        <span id="custom-kpi-ratio" class="kpi-meta">--</span>
+      </div>
 
-			<!-- KPI 3 -->
-			<div class="a-card kpi-card">
-				<div class="kpi-icon icon-green"><i class="fa-regular fa-calendar-check"></i></div>
-				<span class="kpi-title">Days Active</span>
-				<span class="kpi-val">12 / 15</span>
-				<span class="kpi-meta">80% consistency</span>
-			</div>
+      <!-- KPI 3 -->
+      <div class="a-card kpi-card">
+        <div class="kpi-icon icon-green"><i class="fa-regular fa-calendar-check"></i></div>
+        <span class="kpi-title">Days Active</span>
+        <span id="custom-kpi-days" class="kpi-val">0 / 0</span>
+        <span id="custom-kpi-consistency" class="kpi-meta">0% consistency</span>
+      </div>
 
-		</div>
+    </div>
 
-		<!-- Distribution & Trend -->
-		<div class="distribution-grid">
+    <!-- Distribution & Trend -->
+    <div class="distribution-grid">
 
-			<!-- Trend Chart -->
-			<div class="a-card">
-				<div class="chart-header">
-					<div class="chart-title">Focus Trend</div>
-				</div>
+      <!-- Trend Chart -->
+      <div class="a-card">
+        <div class="chart-header">
+          <div class="chart-title">Focus Trend</div>
+        </div>
 
-				<div class="trend-container">
-					<div class="y-axis">
-						<span>4h</span><span>3h</span><span>2h</span><span>1h</span><span>0h</span>
-					</div>
-					<div class="grid-lines">
-						<div class="line"></div>
-						<div class="line"></div>
-						<div class="line"></div>
-						<div class="line"></div>
-						<div class="line"></div>
-					</div>
+        <div class="trend-container">
+          <div id="custom-y-axis" class="y-axis">
+            <span>Max</span><span>Avg</span><span>0h</span>
+          </div>
+          <div class="grid-lines">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
 
-					<!-- Mock Bars for 15 days -->
-					<div class="bar" style="height: 40%;" data-val="1h 36m"></div>
-					<div class="bar" style="height: 60%;" data-val="2h 24m"></div>
-					<div class="bar" style="height: 20%;" data-val="48m"></div>
-					<div class="bar" style="height: 80%;" data-val="3h 12m"></div>
-					<div class="bar" style="height: 0%;" data-val="0m"></div>
-					<div class="bar" style="height: 50%;" data-val="2h"></div>
-					<div class="bar" style="height: 90%;" data-val="3h 36m"></div>
-					<div class="bar" style="height: 30%;" data-val="1h 12m"></div>
-					<div class="bar" style="height: 45%;" data-val="1h 48m"></div>
-					<div class="bar" style="height: 55%;" data-val="2h 12m"></div>
-					<div class="bar" style="height: 10%;" data-val="24m"></div>
-					<div class="bar" style="height: 0%;" data-val="0m"></div>
-					<div class="bar" style="height: 70%;" data-val="2h 48m"></div>
-					<div class="bar" style="height: 65%;" data-val="2h 36m"></div>
-					<div class="bar" style="height: 25%;" data-val="1h"></div>
-				</div>
-			</div>
+          <!-- JS Injects Bars Here -->
+          <div id="custom-trend-bars"
+            style="display: flex; align-items: flex-end; justify-content: space-between; flex: 1; height: 100%; gap: 2px;">
+            <!-- Dynamic Content -->
+          </div>
+        </div>
+      </div>
 
-			<!-- Tag Breakdown -->
-			<div class="a-card">
-				<div class="chart-header">
-					<div class="chart-title">Tag Distribution</div>
-				</div>
+      <!-- Tag Breakdown -->
+      <div class="a-card">
+        <div class="chart-header">
+          <div class="chart-title">Tag Distribution</div>
+        </div>
 
-				<div class="donut-container">
-					<!-- Donut -->
-					<div class="donut-chart"></div>
-				</div>
+        <div class="donut-container">
+          <div id="custom-donut-chart" class="donut-chart"></div>
+        </div>
 
-				<div class="legend" style="margin-top: 20px;">
-					<div class="analyze-custom-legend-item">
-						<div class="dot l-blue"></div>
-						<span>College</span>
-						<span class="l-val">60%</span>
-					</div>
-					<div class="analyze-custom-legend-item">
-						<div class="dot l-purple"></div>
-						<span>RPG Dev</span>
-						<span class="l-val">30%</span>
-					</div>
-					<div class="analyze-custom-legend-item">
-						<div class="dot l-green"></div>
-						<span>Reading</span>
-						<span class="l-val">10%</span>
-					</div>
-				</div>
-			</div>
+        <div id="custom-legend" class="legend" style="margin-top: 20px;">
+          <!-- Dynamic Content -->
+        </div>
+      </div>
 
-		</div>
+    </div>
 
-	</div>
+  </div>
 </body>
 
 </html>

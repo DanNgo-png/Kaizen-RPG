@@ -175,6 +175,8 @@
     grid-template-columns: 2fr 1fr;
     gap: 24px;
     margin-bottom: 24px;
+    /* CHANGED: Align items to start so the Trend chart doesn't stretch emptily when Legend grows */
+    align-items: start; 
 }
 
 .chart-header {
@@ -194,7 +196,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    /* REMOVED: height: 100% to avoid layout fighting */
+    margin-bottom: 20px;
     gap: 40px;
 }
 
@@ -202,10 +205,8 @@
     width: 160px;
     height: 160px;
     border-radius: 50%;
-    /* 60% Blue, 30% Purple, 10% Green */
-    background: conic-gradient(#2563eb 0% 60%,
-            #8b5cf6 60% 90%,
-            #10b981 90% 100%);
+    /* Default Grey */
+    background: #374151;
     position: relative;
 }
 
@@ -232,24 +233,18 @@
     align-items: center;
     gap: 10px;
     font-size: 0.9rem;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+}
+
+.analyze-custom-legend-item:last-child {
+    border-bottom: none;
 }
 
 .dot {
     width: 10px;
     height: 10px;
     border-radius: 50%;
-}
-
-.l-blue {
-    background: #2563eb;
-}
-
-.l-purple {
-    background: #8b5cf6;
-}
-
-.l-green {
-    background: #10b981;
 }
 
 .l-val {
@@ -265,10 +260,10 @@
     margin-top: 20px;
     display: flex;
     align-items: flex-end;
-    justify-content: space-between;
-    padding-left: 30px;
-    /* Space for Y Axis */
-    gap: 2%;
+    /* CHANGED: Use flex space-between for dynamic bars */
+    justify-content: space-between; 
+    padding-left: 30px; /* Space for Y Axis */
+    gap: 1px; /* Tighter gap for many bars */
 }
 
 .y-axis {
@@ -304,16 +299,19 @@
 
 /* Bars */
 .bar {
-    flex: 1;
+    /* Width is handled by flexbox in JS inline style */
+    flex: 1; 
     background-color: #3b82f6;
     border-radius: 2px 2px 0 0;
-    min-width: 8px;
+    min-width: 4px; 
     position: relative;
-    transition: height 0.3s;
+    transition: height 0.3s, background-color 0.2s;
 }
 
 .bar:hover {
-    background-color: #60a5fa;
+    /* Use brightness filter for hover on gradients */
+    filter: brightness(1.2);
+    z-index: 10;
 }
 
 .bar:hover::after {
@@ -328,6 +326,7 @@
     border-radius: 4px;
     margin-bottom: 4px;
     white-space: nowrap;
+    border: 1px solid #333;
 }
 
 @media (max-width: 900px) {
