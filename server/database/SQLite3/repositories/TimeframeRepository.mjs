@@ -76,6 +76,12 @@ export class TimeframeRepository {
                 SELECT * FROM goals 
                 WHERE timeframe_key LIKE @yearPattern
                 ORDER BY created_at ASC
+            `),
+
+            updateStartTime: this.db.prepare(`
+                UPDATE daily_plan_entries 
+                SET start_time = @start_time 
+                WHERE id = @id
             `)
         };
     }
@@ -131,5 +137,9 @@ export class TimeframeRepository {
         // We reuse the generic query logic or specific statement
         // For simplicity using raw prepare here or the statement defined above
         return this.db.prepare("SELECT * FROM goals WHERE type = ? AND timeframe_key = ?").all(type, key);
+    }
+
+    updateEntryTime(id, startTime) {
+        return this.statements.updateStartTime.run({ id: id, start_time: startTime });
     }
 }

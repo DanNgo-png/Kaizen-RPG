@@ -65,6 +65,42 @@ export class TimeframeController {
         // Delete & Toggle
         app.events.on("deleteTimeframeGoal", (payload) => this._handleGoalUpdate(app, payload, 'delete'));
         app.events.on("toggleTimeframeGoal", (payload) => this._handleGoalUpdate(app, payload, 'toggle'));
+
+        // NEW: Handle Batch Updates (Moving existing tasks)
+        app.events.on("batchUpdateSchedule", (payload) => {
+            try {
+                const updates = payload.updates || [];
+                // Process all updates in a loop (SQLite is fast enough for this scale)
+                updates.forEach(u => {
+                    this.timeframeRepo.updateEntryTime(u.scheduleId, u.startTime);
+                });
+                // Refresh UI
+                this._refreshToday(app, payload.dateKey);
+            } catch (error) {
+                console.error("❌ Error in batch update:", error);
+            }
+        });
+
+        // NEW: Schedule Task + Cascade (Pool to Timeline)
+        app.events.on("scheduleTaskWithCascade", (payload) => {
+            try {
+                const { newTask, cascadingUpdates } = payload;
+                
+                // 1. Create the new task
+                this.timeframeRepo.addToDay(newTask.taskId, newTask.dateKey, newTask.startTime);
+
+                // 2. Process cascading moves for existing tasks
+                if (cascadingUpdates && cascadingUpdates.length > 0) {
+                    cascadingUpdates.forEach(u => {
+                        this.timeframeRepo.updateEntryTime(u.scheduleId, u.startTime);
+                    });
+                }
+
+                this._refreshToday(app, newTask.dateKey);
+            } catch (error) {
+                console.error("❌ Error in schedule cascade:", error);
+            }
+        });
     }
 
     // --- Handlers & Helpers ---
