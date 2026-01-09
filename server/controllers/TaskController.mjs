@@ -32,6 +32,11 @@ export class TaskController {
             this.handleSafeDBAction(() => this.repo.clearCompleted());
             this.broadcastTasks(app);
         });
+
+        app.events.on("updateTaskDescription", (payload) => {
+            this.handleSafeDBAction(() => this.repo.updateTaskDescription(payload.id, payload.description));
+            this.broadcastTasks(app);
+        });
     }
 
     /**
