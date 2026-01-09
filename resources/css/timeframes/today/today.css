@@ -439,34 +439,3 @@
     border: 2px dashed #4b5563;
     opacity: 0.7;
 }
-
-/* Current Time Indicator */
-.current-time-line {
-    position: absolute;
-    left: 50px;
-    right: 0;
-    height: 2px;
-    background-color: #ef4444;
-    z-index: 20;
-    pointer-events: none;
-}
-
-.current-time-line::before {
-    content: '';
-    position: absolute;
-    left: -5px;
-    top: -4px;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background-color: #ef4444;
-}
-
-.time-now {
-    position: absolute;
-    left: -55px;
-    top: -8px;
-    font-size: 0.75rem;
-    color: #ef4444;
-    font-weight: 700;
-}
