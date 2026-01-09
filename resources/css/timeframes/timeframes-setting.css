@@ -1,0 +1,215 @@
+/* --- Timeframes Settings Styles (Namespace: tfs-) --- */
+.tfs-container {
+    max-width: 1200px;
+    margin: 0 auto; /* Centered */
+    padding-bottom: 40px;
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Header - Matched to Focus Settings Style */
+.tfs-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--bg-hover, #3D3D3D);
+}
+
+.tfs-header h2 {
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+/* Grid Layout */
+.tfs-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .tfs-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.tfs-column {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+/* Card Styling */
+.tfs-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.tfs-card-header {
+    padding: 12px 20px;
+    background-color: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid var(--bg-hover);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Setting Row */
+.tfs-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    min-height: 70px;
+    background-color: var(--surface-color);
+}
+
+.tfs-row:last-child {
+    border-bottom: none;
+}
+
+.tfs-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-right: 15px;
+}
+
+.tfs-label {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: #e5e7eb;
+}
+
+.tfs-desc {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    line-height: 1.3;
+}
+
+/* Controls */
+.tfs-select {
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    color: #fff;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    outline: none;
+    min-width: 100px;
+    font-family: var(--font-main);
+}
+
+.tfs-select:focus {
+    border-color: var(--accent-green);
+}
+
+/* Toggle Switch */
+.tfs-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.tfs-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.tfs-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #374151;
+    transition: .4s;
+    border-radius: 34px;
+}
+
+.tfs-slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked + .tfs-slider {
+    background-color: var(--accent-green);
+}
+
+input:checked + .tfs-slider:before {
+    transform: translateX(22px);
+}
+
+/* Buttons */
+.tfs-btn {
+    background-color: var(--bg-hover);
+    border: 1px solid transparent;
+    color: #fff;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 500;
+    transition: 0.2s;
+    font-family: var(--font-main);
+}
+
+.tfs-btn:hover {
+    background-color: #4b5563;
+}
+
+/* Danger Zone */
+.tfs-danger-zone {
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.tfs-danger-zone .tfs-card-header {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+}
+
+.tfs-text-red {
+    color: #f87171;
+}
+
+.tfs-btn-danger {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    border: 1px solid rgba(239, 68, 68, 0.5);
+}
+
+.tfs-btn-danger:hover {
+    background-color: #dc2626;
+    color: white;
+    border-color: #dc2626;
+}
