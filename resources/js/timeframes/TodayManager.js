@@ -14,7 +14,7 @@ export class TodayManager {
         this.timelineManager = new TimelineManager(this.dateKey);
 
         // State for settings
-        this.timelineSettings = { start: 9, end: 17 };
+        this.timelineSettings = { start: 9, end: 17, format: '24h' };
 
         this.init();
     }
@@ -38,6 +38,14 @@ export class TodayManager {
                 this.timelineSettings.end = value;
                 this.timelineManager.updateConfig(this.timelineSettings.start, this.timelineSettings.end);
             }
+            if (key === 'timeFormat') {
+                this.timelineSettings.format = value || '24h';
+                this.timelineManager.updateConfig(
+                    this.timelineSettings.start, 
+                    this.timelineSettings.end,
+                    this.timelineSettings.format
+                );
+            }
         });
 
         // 3. Initial Load Sequence
@@ -46,12 +54,9 @@ export class TodayManager {
     }
 
     loadSettings() {
-        // Request settings (async)
         SettingsAPI.getSetting('timelineStartHour');
         SettingsAPI.getSetting('timelineEndHour');
-        
-        // Note: Timeline will update when the events fire (usually ms later).
-        // Default 9-17 is already set in TimelineManager constructor.
+        SettingsAPI.getSetting('timeFormat');
     }
 
     fetchData() {

@@ -5,7 +5,8 @@ export class TimeframesSetting {
         this.dom = {
             startHour: document.getElementById('tf-start-hour'),
             endHour: document.getElementById('tf-end-hour'),
-            showWeekends: document.getElementById('tf-show-weekends')
+            showWeekends: document.getElementById('tf-show-weekends'),
+            timeFormat: document.getElementById('tf-time-format')
         };
 
         this.init();
@@ -32,6 +33,12 @@ export class TimeframesSetting {
             });
         }
 
+        if (this.dom.timeFormat) {
+            this.dom.timeFormat.addEventListener('change', (e) => {
+                SettingsAPI.saveSetting('timeFormat', e.target.value);
+            });
+        }
+
         // 2. Listen for Data (DB -> UI)
         // We define the handler so we can remove it later if needed (though page navigates away usually)
         const updateHandler = (e) => {
@@ -41,6 +48,9 @@ export class TimeframesSetting {
             if (key === 'timelineShowWeekends' && this.dom.showWeekends) {
                 this.dom.showWeekends.checked = (value === 'true' || value === true);
             }
+            if (key === 'timeFormat' && this.dom.timeFormat) {
+                this.dom.timeFormat.value = value || '24h';
+            }
         };
 
         document.addEventListener('kaizen:setting-update', updateHandler);
@@ -49,6 +59,7 @@ export class TimeframesSetting {
         SettingsAPI.getSetting('timelineStartHour');
         SettingsAPI.getSetting('timelineEndHour');
         SettingsAPI.getSetting('timelineShowWeekends');
+        SettingsAPI.getSetting('timeFormat');
     }
 }
 

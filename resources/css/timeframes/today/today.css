@@ -308,7 +308,6 @@
     padding: 15px;
     border: 1px solid var(--bg-hover);
     height: 600px;
-    /* Fixed height for scroll */
 }
 
 .timeline-container {
@@ -328,13 +327,13 @@
 }
 
 .time-label {
-    width: 50px;
+    width: 65px; 
     font-size: 0.75rem;
     color: var(--text-secondary);
     text-align: right;
     padding-right: 10px;
     transform: translateY(-50%);
-    /* Center label on line */
+    white-space: nowrap; 
 }
 
 .slot-line {
@@ -345,23 +344,51 @@
 
 /* Event Blocks */
 .event-block {
+    box-sizing: border-box; 
+    display: flex;
     position: absolute;
-    left: 60px;
-    /* After label */
+    left: 80px;
     right: 10px;
     background-color: #374151;
     border-radius: 4px;
     padding: 4px 8px;
     font-size: 0.85rem;
-    display: flex;
     flex-direction: column;
     border-left: 3px solid #9ca3af;
     z-index: 10;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-
-    cursor: grab; /* Indicate draggable */
+    cursor: grab;
     overflow: hidden;
     min-height: 15px;
+    justify-content: center;
+    transition: box-shadow 0.2s, z-index 0s; 
+}
+
+.event-block.compact {
+    flex-direction: row;       /* Side-by-side layout */
+    align-items: center;       /* Vertically center items */
+    padding: 0 8px;            /* Reduce vertical padding to 0 */
+    gap: 8px;                  /* Space between Title and Time */
+}
+
+/* Adjust children behavior in compact mode */
+.event-block.compact .event-title {
+    flex: 1;                   /* Title takes remaining space */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 0;          /* Remove any bottom margin if present */
+}
+
+.event-block.compact .event-time {
+    flex-shrink: 0;            /* Ensure time doesn't get squished */
+    font-size: 0.75rem;        /* Keep it readable but small */
+    opacity: 0.8;
+}
+
+.event-block:hover {
+    z-index: 50 !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .event-block:active {
@@ -383,10 +410,10 @@
     bottom: 0;
     left: 0;
     width: 100%;
-    height: 8px;
+    height: 6px; 
     background: transparent;
-    cursor: ns-resize; /* North-South resize cursor */
-    z-index: 15;
+    cursor: ns-resize;
+    z-index: 20; 
     display: flex;
     justify-content: center;
     align-items: center;

@@ -1,0 +1,73 @@
+/* --- Custom Drag Avatar (Follows Mouse) --- */
+#custom-drag-avatar {
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    width: 260px;
+    
+    /* CHANGE: Remove background and border so it is invisible */
+    background-color: transparent; 
+    border: none;
+    padding: 0;
+    
+    display: none;
+    opacity: 0;
+    
+    transform: scale(1); 
+    /* Remove wrapper shadow, the inner card has its own shadow */
+    box-shadow: none; 
+}
+
+#custom-drag-avatar.active {
+    display: block;
+    /* Transparency is handled here */
+    opacity: 0.85; 
+    /* Slight lift effect */
+    transform: scale(1.02); 
+}
+
+/* Ensure internals of avatar look like a card */
+#custom-drag-avatar .day-task-card,
+#custom-drag-avatar .event-block {
+    /* Ensure the dragged item has a background since wrapper is transparent */
+    background-color: var(--surface-color); 
+    box-shadow: 0 10px 20px rgba(0,0,0,0.3); /* Add drop shadow for depth */
+    
+    /* Important: Reset specific timeline styles if present on clone */
+    position: relative !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+}
+
+/* Specific styling for timeline blocks inside avatar to ensure they look good */
+#custom-drag-avatar .event-block {
+    background-color: #374151; /* Dark grey for timeline blocks */
+    border-left: 3px solid #9ca3af;
+    border-radius: 4px;
+    padding: 4px 8px;
+    width: 100%;
+}
+
+/* --- Timeline Ghost Block (Snap Indicator) --- */
+.ghost-snap-indicator {
+    position: absolute;
+    left: 80px; /* Match event-block offset */
+    right: 10px;
+    background-color: rgba(59, 130, 246, 0.15); /* Light Blue Tint */
+    border: 2px dashed #3b82f6;
+    border-radius: 4px;
+    z-index: 5; /* Below real blocks (10), above grid (0) */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #3b82f6;
+    font-size: 0.85rem;
+    font-weight: 700;
+    pointer-events: none;
+    transition: top 0.05s linear; /* Smooth snapping */
+}
+
+.ghost-snap-indicator.hidden {
+    display: none;
+}
