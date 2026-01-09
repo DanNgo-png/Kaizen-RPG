@@ -40,10 +40,20 @@
     @import url('css/focus/focus-flexible/delete-tag-overlay.css');
 
 /* === TIMEFRAMES PAGE === */
-@import url('css/timeframes/today.css');
-@import url('css/timeframes/this-week.css');
-@import url('css/timeframes/this-quarter.css');
-@import url('css/timeframes/this-year.css');
+    /* TODAY */
+    @import url('css/timeframes/today/today.css');
+
+    /* THIS WEEK */
+    @import url('css/timeframes/this-week/this-week.css');
+
+    /* THIS QUARTER */
+    @import url('css/timeframes/this-quarter/this-quarter.css');
+
+    /* THIS YEAR */
+    @import url('css/timeframes/this-year/this-year.css');
+
+    /* SETTINGS */
+    @import url('css/timeframes/timeframes-setting.css');
 
 /* === ANALYZE PAGE === */
     @import url('css/analyze/custom.css');
