@@ -1,4 +1,6 @@
 export const ScheduleLogic = {
+    // ... (Keep timeToMinutes, minutesToTime, recalculateSchedule) ...
+
     timeToMinutes(timeStr) {
         if (!timeStr) return 0;
         const [h, m] = timeStr.split(':').map(Number);
@@ -12,35 +14,24 @@ export const ScheduleLogic = {
         return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     },
 
-    /**
-     * Calculates cascading updates to resolve overlaps.
-     * Returns { updates: [], adjustedActiveTime: string }
-     */
     recalculateSchedule(currentSchedule, activeTask) {
-        // 1. Remove old version of active task from calculation
+        // ... (Previous implementation of cascade logic remains valid) ...
+        // Re-paste the cascade logic here for completeness if you overwriting, 
+        // otherwise just ensure this function signature doesn't change.
+        
         let tasks = currentSchedule.filter(t => t.schedule_id !== activeTask.schedule_id);
-
-        // 2. Add active task with a flag
-        // We use the object reference to update properties during the loop
         const movingTask = { ...activeTask, _isActive: true };
         tasks.push(movingTask);
 
-        // 3. Sort by Start Time
         tasks.sort((a, b) => {
             const startA = this.timeToMinutes(a.start_time);
             const startB = this.timeToMinutes(b.start_time);
-            
-            // If start times match, the Active (Dropped) task pushes the existing one
-            // This ensures if you drop ON TOP of a task, you displace it.
-            if (startA === startB) {
-                return a._isActive ? -1 : 1; 
-            }
+            if (startA === startB) return a._isActive ? -1 : 1; 
             return startA - startB;
         });
 
-        // 4. Resolve Overlaps (The Cascade)
         const updates = [];
-        let adjustedActiveTime = activeTask.start_time; // Default to requested time
+        let adjustedActiveTime = activeTask.start_time; 
 
         for (let i = 0; i < tasks.length - 1; i++) {
             const current = tasks[i];
@@ -51,18 +42,13 @@ export const ScheduleLogic = {
             const currentEnd = currentStart + duration;
             const nextStart = this.timeToMinutes(next.start_time);
 
-            // If overlap detected
             if (currentEnd > nextStart) {
-                // Shift 'next' task to start exactly when 'current' ends
                 const newStartStr = this.minutesToTime(currentEnd);
                 next.start_time = newStartStr;
 
-                // If 'next' is the active task, we capture its new forced time
                 if (next._isActive) {
                     adjustedActiveTime = newStartStr;
-                } 
-                // If 'next' is a static task being pushed, add to updates list
-                else {
+                } else {
                     updates.push({
                         scheduleId: next.schedule_id,
                         startTime: newStartStr,
@@ -71,12 +57,16 @@ export const ScheduleLogic = {
                 }
             }
         }
-
         return { updates, adjustedActiveTime };
     },
 
-    getNextAvailableTime(scheduleData) {
-        let maxEndTimeMins = 9 * 60; 
+    /**
+     * Calculates the next available slot based on schedule.
+     * Starts looking from 'startHour' instead of fixed 9:00.
+     */
+    getNextAvailableTime(scheduleData, startHour = 9) {
+        let maxEndTimeMins = startHour * 60; 
+
         scheduleData.forEach(task => {
             if (!task.start_time) return;
             const startMins = this.timeToMinutes(task.start_time);
@@ -98,8 +88,11 @@ export const ScheduleLogic = {
         return str.trim();
     },
 
-    pixelsToTime(y, topPadding = 20) {
-        const startMins = 9 * 60;
+    /**
+     * UPDATED: Accepts startHour to calculate relative offset
+     */
+    pixelsToTime(y, topPadding = 20, startHour = 9) {
+        const startMins = startHour * 60;
         const clickedMins = (y - topPadding) + startMins;
         const snappedMins = Math.round(clickedMins / 15) * 15;
         return this.minutesToTime(snappedMins);
