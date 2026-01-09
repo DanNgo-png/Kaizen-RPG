@@ -6,15 +6,69 @@ export class TimelineManager {
         this.dateKey = dateKey;
         this.container = document.getElementById('schedule-timeline');
         this.currentScheduleData = [];
+        
+        // Defaults (will be updated by TodayManager)
+        this.config = {
+            startHour: 9,
+            endHour: 17
+        };
+
         this.initDropZone();
+    }
+
+    /**
+     * Sets config and re-renders grid background.
+     */
+    updateConfig(startHour, endHour) {
+        this.config.startHour = parseInt(startHour) || 9;
+        this.config.endHour = parseInt(endHour) || 17;
+        
+        // If end is before start (e.g. night shift crossing midnight), handle simple case or clamp
+        if (this.config.endHour <= this.config.startHour) this.config.endHour = this.config.startHour + 8;
+
+        this._renderGridLines();
+        
+        // Re-render blocks if we have data
+        if (this.currentScheduleData.length > 0) {
+            this.render(this.currentScheduleData);
+        }
+    }
+
+    _renderGridLines() {
+        if (!this.container) return;
+        
+        // Clear existing grid lines but keep blocks? 
+        // Simpler to clear all and let render() put blocks back.
+        this.container.innerHTML = ''; 
+
+        for (let h = this.config.startHour; h <= this.config.endHour; h++) {
+            const slot = document.createElement('div');
+            slot.className = 'time-slot';
+            slot.dataset.time = `${h}:00`;
+            
+            // Format Label (e.g., 9 AM, 1 PM)
+            const label = h >= 12 ? (h === 12 ? '12 PM' : `${h-12} PM`) : `${h} AM`;
+            
+            slot.innerHTML = `
+                <span class="time-label">${label}</span>
+                <div class="slot-line"></div>
+            `;
+            this.container.appendChild(slot);
+        }
     }
 
     render(scheduleTasks) {
         this.currentScheduleData = scheduleTasks || [];
         if (!this.container) return;
 
+        // Remove old blocks only (preserve grid lines)
         const oldBlocks = this.container.querySelectorAll('.event-block');
         oldBlocks.forEach(el => el.remove());
+
+        // Ensure grid exists
+        if (this.container.children.length === 0) {
+            this._renderGridLines();
+        }
 
         scheduleTasks.forEach(task => {
             if (task.start_time) {
@@ -26,9 +80,11 @@ export class TimelineManager {
     _createBlock(task) {
         const [h, m] = task.start_time.split(':').map(Number);
         const taskMins = (h * 60) + m;
-        const startMins = 9 * 60; 
+        const startMins = this.config.startHour * 60; // Use Config
         
-        const topPx = (taskMins - startMins) + 20; 
+        // Calculate Top relative to start hour (60px per hour height)
+        // Note: .time-slot height is 60px in CSS
+        const topPx = (taskMins - startMins) + 10; // +10 for visual padding/centering
         const heightPx = task.duration || 30;
 
         const block = document.createElement('div');
@@ -37,6 +93,7 @@ export class TimelineManager {
         block.style.height = `${heightPx}px`;
         block.draggable = true;
         
+        // ... (Drag listeners same as before) ...
         block.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('application/json', JSON.stringify({
                 type: 'schedule-block',
@@ -46,7 +103,6 @@ export class TimelineManager {
             e.dataTransfer.effectAllowed = "move";
             block.style.opacity = '0.5';
         });
-
         block.addEventListener('dragend', () => block.style.opacity = '1');
 
         const durationStr = ScheduleLogic.formatDuration(heightPx);
@@ -64,25 +120,22 @@ export class TimelineManager {
     }
 
     _setupResizing(block, handle, scheduleId, initialHeight) {
+        // ... (Keep existing resizing logic) ...
         handle.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
+            e.preventDefault(); e.stopPropagation();
             const startY = e.clientY;
-            
             const onMouseMove = (moveEvent) => {
                 const delta = moveEvent.clientY - startY;
                 let newHeight = initialHeight + delta;
                 newHeight = Math.round(newHeight / 15) * 15;
                 if (newHeight < 15) newHeight = 15;
                 block.style.height = `${newHeight}px`;
-                
                 const timeSpan = block.querySelector('.event-time');
                 if(timeSpan) {
                     const text = timeSpan.innerText.split('(')[0].trim();
                     timeSpan.innerText = `${text} (${ScheduleLogic.formatDuration(newHeight)})`;
                 }
             };
-
             const onMouseUp = () => {
                 document.removeEventListener('mousemove', onMouseMove);
                 document.removeEventListener('mouseup', onMouseUp);
@@ -118,8 +171,8 @@ export class TimelineManager {
                 const rect = this.container.getBoundingClientRect();
                 const y = e.clientY - rect.top + this.container.scrollTop;
                 
-                // 1. Calculate proposed time based on mouse position
-                const proposedTimeStr = ScheduleLogic.pixelsToTime(y);
+                // Pass startHour to calculation
+                const proposedTimeStr = ScheduleLogic.pixelsToTime(y, 10, this.config.startHour);
 
                 const activeTask = {
                     schedule_id: payload.scheduleId || null,
@@ -129,28 +182,24 @@ export class TimelineManager {
                     date_key: this.dateKey
                 };
 
-                // 2. Run Logic: Returns updates for others AND safe time for active task
                 const { updates, adjustedActiveTime } = ScheduleLogic.recalculateSchedule(this.currentScheduleData, activeTask);
 
-                // 3. Dispatch Events
                 if (payload.type === 'pool-task') {
                     Neutralino.extensions.dispatch(EXTENSION_ID, "scheduleTaskWithCascade", {
                         newTask: {
                             taskId: payload.taskId,
                             dateKey: this.dateKey,
-                            startTime: adjustedActiveTime // Use safe time
+                            startTime: adjustedActiveTime
                         },
                         cascadingUpdates: updates
                     });
                 } 
                 else if (payload.type === 'schedule-block') {
-                    // Include the moved task in the batch update with its safe time
                     updates.push({
                         scheduleId: payload.scheduleId,
-                        startTime: adjustedActiveTime, // Use safe time
+                        startTime: adjustedActiveTime,
                         dateKey: this.dateKey
                     });
-
                     Neutralino.extensions.dispatch(EXTENSION_ID, "batchUpdateSchedule", {
                         updates: updates,
                         dateKey: this.dateKey
