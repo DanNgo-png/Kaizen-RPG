@@ -9,7 +9,7 @@
 
 <body>
   <div class="tfs-container">
-    
+
     <!-- Header (Matching Focus Settings Style) -->
     <header class="tfs-header">
       <h2><i class="fa-solid fa-sliders" style="color: var(--accent-green);"></i> Schedule Config</h2>
@@ -67,6 +67,17 @@
               <option value="15">15 Min</option>
               <option value="30">30 Min</option>
               <option value="60" selected>1 Hour</option>
+            </select>
+          </div>
+
+          <div class="tfs-row">
+            <div class="tfs-info">
+              <span class="tfs-label">Time Format</span>
+              <span class="tfs-desc">Display hours in 12h (AM/PM) or 24h</span>
+            </div>
+            <select id="tf-time-format" class="tfs-select">
+              <option value="24h" selected>24 Hour (13:00)</option>
+              <option value="12h">12 Hour (1:00 PM)</option>
             </select>
           </div>
         </div>
