@@ -18,6 +18,7 @@ import { initTodayView } from './js/timeframes/TodayManager.js';
 import { initWeekPlan } from './js/timeframes/WeekPlanManager.js';
 import { initQuarterView } from './js/timeframes/QuarterPlanManager.js';
 import { initYearPlan } from './js/timeframes/YearPlanManager.js';
+import { initTimeframeSettings } from './js/timeframes/settings/TimeframesSetting.js';
 
 // ANALYZE PAGE
 import { initOverview } from './js/analyze/OverviewManager.js';
@@ -166,7 +167,7 @@ async function app() {
         if (settingsTimeframeButton) {
             settingsTimeframeButton.addEventListener("click", async () => {
                 await loadPage('./pages/timeframes/timeframes-settings.html');
-                initYearPlan();
+                initTimeframeSettings();
             });
         }
 
