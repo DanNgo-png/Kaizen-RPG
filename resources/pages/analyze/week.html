@@ -4,63 +4,86 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>This Week - Kaizen RPG</title>
-  <!-- Styles are loaded by layout.css in main index, but good to have reference -->
+  <title>Weekly Analytics - Kaizen RPG</title>
 </head>
 
 <body>
-  <div class="week-container">
-    <!-- Header -->
-    <header class="week-header">
-      <div class="week-title">
-        <h2>
-          <i class="fa-solid fa-calendar-week"></i> Weekly Plan
-          <span class="week-date-range">Loading...</span>
-        </h2>
-      </div>
+  <div class="analyze-week-container">
 
-      <div class="week-stats">
-        <div class="w-stat">
-          <span class="w-stat-label">Completion</span>
-          <span class="w-stat-val text-green">0%</span>
+    <!-- Header -->
+    <header class="analyze-week-header">
+      <!-- Added ID for dynamic date text -->
+      <h2 id="week-header-range">Loading...</h2>
+      <div class="week-date-controls">
+        <!-- Added IDs for buttons/input -->
+        <button id="week-btn-prev" class="week-nav-btn"><i class="fa-solid fa-arrow-left"></i> Previous</button>
+        <div class="week-picker-wrapper">
+          <input type="date" id="week-date-input" class="week-date-input">
         </div>
-        <div class="w-stat">
-          <span class="w-stat-label">Scheduled</span>
-          <span class="w-stat-val text-blue">0 Tasks</span>
-        </div>
+        <button id="week-btn-next" class="week-nav-btn">Next <i class="fa-solid fa-arrow-right"></i></button>
       </div>
     </header>
 
-    <!-- Main Split Layout -->
-    <div class="week-layout">
+    <!-- Top Grid -->
+    <div class="week-analytics-grid">
 
-      <!-- Left: Weekly Backlog (The Pool) -->
-      <div class="weekly-pool">
-        <div class="pool-header">
-          <span>Backlog</span>
-          <span class="count-badge">0</span>
+      <!-- Summary Card -->
+      <div class="analyze-week-card week-summary-card">
+        <div class="week-summary-title">Weekly Summary</div>
+
+        <div class="week-kpi-group">
+          <span class="week-kpi-label">Total Focus Time</span>
+          <!-- Added ID -->
+          <span id="week-stat-total-time" class="week-kpi-value">0m</span>
         </div>
 
-        <!-- Add Task Button (Optional placeholder logic) -->
-        <!-- <button class="btn-add-week-task">
-					<i class="fa-solid fa-plus"></i> Add Task
-				</button> -->
-
-        <!-- Dynamic Pool List -->
-        <div class="pool-list">
-          <!-- JS Injects .week-card here -->
-          <div style="text-align: center; color: #666; margin-top: 20px;">Loading tasks...</div>
+        <div class="week-kpi-group">
+          <span class="week-kpi-label">Total Sessions</span>
+          <!-- Added ID -->
+          <span id="week-stat-total-sessions" class="week-kpi-value">0</span>
         </div>
       </div>
 
-      <!-- Right: 7-Day Grid -->
-      <div class="week-grid-wrapper">
-        <div class="week-grid">
-          <!-- JS Injects .day-column here -->
+      <!-- Donut Chart Card -->
+      <div class="analyze-week-card">
+        <div class="week-donut-wrapper">
+          <!-- Added ID, Removed inner .week-segment-line div -->
+          <div id="week-donut-chart" class="week-donut-chart">
+            <!-- Inner hole is handled by CSS ::after or background, no extra div needed here for the line -->
+          </div>
+
+          <!-- Added ID -->
+          <div id="week-legend-container" class="week-chart-legend-container" style="flex:1;">
+            <!-- JS will inject rows here -->
+          </div>
         </div>
       </div>
 
     </div>
+
+    <!-- Bottom Bar Chart Card -->
+    <div class="analyze-week-card">
+
+      <div class="week-chart-container">
+        <div class="week-y-axis">
+          <span>Max</span>
+          <span>Avg</span>
+          <span>0m</span>
+        </div>
+
+        <!-- Horizontal Grid Lines -->
+        <div class="week-grid-line" style="top: 0;"></div>
+        <div class="week-grid-line" style="top: 50%;"></div>
+        <div class="week-grid-line" style="bottom: 40px;"></div>
+
+        <!-- Bars Container (Added ID) -->
+        <div id="week-bars-container" class="week-bars-wrapper">
+           <!-- JS will inject .week-bar-group elements here -->
+        </div>
+      </div>
+
+    </div>
+
   </div>
 </body>
 
