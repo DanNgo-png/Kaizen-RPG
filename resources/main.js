@@ -161,6 +161,15 @@ async function app() {
             });
         }
 
+        // Timeframe: Settings
+        const settingsTimeframeButton = document.querySelector(".timeframe-settings-button");
+        if (settingsTimeframeButton) {
+            settingsTimeframeButton.addEventListener("click", async () => {
+                await loadPage('./pages/timeframes/timeframes-settings.html');
+                initYearPlan();
+            });
+        }
+
         // "Analyze: Overview"
         const analyzeOverview = document.querySelector(".analyze-overview-button");
         if (analyzeOverview) {
