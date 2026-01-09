@@ -1,152 +1,280 @@
 import { GameAPI } from "../api/GameAPI.js";
 
-// State to track current filter
-let currentFilter = 'all';
-let isInitialized = false;
+class TodoListManager {
+    constructor() {
+        this.state = {
+            tasks: [],
+            filter: 'all',
+            sortBy: 'priority',
+            activeTaskId: null // Track which task is currently open
+        };
+        
+        this.dom = {};
+    }
 
-export function initTodoList() {
-    if (isInitialized) {
+    init() {
+        // Cache Main DOM
+        this.dom = {
+            input: document.getElementById('new-task-input'),
+            prioritySelect: document.getElementById('priority-input'),
+            addBtn: document.getElementById('add-task-btn'),
+            clearBtn: document.getElementById('clear-completed-btn'),
+            listContainer: document.getElementById('todo-list-container'),
+            tabs: document.querySelectorAll('.tab-btn'),
+            
+            // Modal DOM
+            modal: document.getElementById('todo-detail-modal'),
+            modalTitle: document.getElementById('modal-task-title'),
+            modalDesc: document.getElementById('modal-task-desc'),
+            btnCloseModal: document.getElementById('btn-close-detail-modal'),
+            btnSaveDesc: document.getElementById('btn-save-description'),
+            saveIndicator: document.getElementById('modal-save-indicator')
+        };
+
+        if (!this.dom.listContainer) return;
+
+        this.bindGlobalEvents();
+        this.bindTabEvents();
+        this.bindModalEvents(); // <--- NEW
+        
         GameAPI.getTasks();
-        return;
     }
 
-    const input = document.getElementById('new-task-input');
-    const priorityInput = document.getElementById('priority-input');
-    const addBtn = document.getElementById('add-task-btn');
-    const tabs = document.querySelectorAll('.tab-btn');
-    const clearBtn = document.getElementById('clear-completed-btn');
-
-    // --- 1. Actions ---
-
-    const handleAddTask = () => {
-        const content = input.value.trim();
-        const priority = priorityInput.value || 'p4';
-
-        if (!content) return;
-
-        GameAPI.addTask({ content, priority });
-        input.value = ''; // Clear input immediately
-    };
-
-    const handleClearCompleted = () => {
-        if (confirm("Remove all completed tasks?")) {
-            GameAPI.clearCompletedTasks();
+    bindGlobalEvents() {
+        // ... (Existing add/enter/clear logic) ...
+        if (this.dom.addBtn) {
+            const newBtn = this.dom.addBtn.cloneNode(true);
+            this.dom.addBtn.parentNode.replaceChild(newBtn, this.dom.addBtn);
+            this.dom.addBtn = newBtn;
+            this.dom.addBtn.addEventListener('click', () => this.createTask());
         }
-    };
 
-    // --- 2. Event Listeners ---
+        if (this.dom.input) {
+            const newInput = this.dom.input.cloneNode(true);
+            this.dom.input.parentNode.replaceChild(newInput, this.dom.input);
+            this.dom.input = newInput;
+            this.dom.input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.createTask();
+            });
+        }
 
-    if (addBtn) addBtn.addEventListener('click', handleAddTask);
+        if (this.dom.clearBtn) {
+            const newBtn = this.dom.clearBtn.cloneNode(true);
+            this.dom.clearBtn.parentNode.replaceChild(newBtn, this.dom.clearBtn);
+            this.dom.clearBtn = newBtn;
+            this.dom.clearBtn.addEventListener('click', () => {
+                if (confirm("Remove all completed tasks?")) {
+                    GameAPI.clearCompletedTasks();
+                }
+            });
+        }
+    }
 
-    if (input) {
-        input.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') handleAddTask();
+    // --- NEW: Modal Events ---
+    bindModalEvents() {
+        if (!this.dom.modal) return;
+
+        // Close Modal
+        this.dom.btnCloseModal.addEventListener('click', () => this.closeModal());
+        
+        // Close on Outside Click
+        this.dom.modal.addEventListener('click', (e) => {
+            if (e.target === this.dom.modal) this.closeModal();
+        });
+
+        // Save Description
+        this.dom.btnSaveDesc.addEventListener('click', () => this.saveDescription());
+    }
+
+    bindTabEvents() {
+        // ... (Existing tab logic) ...
+        this.dom.tabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                this.dom.tabs.forEach(t => t.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                this.state.filter = e.currentTarget.getAttribute('data-filter');
+                this.render();
+            });
         });
     }
 
-    if (clearBtn) {
-        clearBtn.addEventListener('click', handleClearCompleted);
+    // ... (createTask logic remains same) ...
+    createTask() {
+        const content = this.dom.input.value.trim();
+        const priority = this.dom.prioritySelect ? this.dom.prioritySelect.value : 'p4';
+        if (!content) return;
+        GameAPI.addTask({ content, priority });
+        this.dom.input.value = '';
+        this.dom.input.focus();
     }
 
-    // Tab Switching
-    tabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            // UI Update
-            tabs.forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
+    updateTasks(tasks) {
+        this.state.tasks = tasks || [];
+        this.render();
+    }
 
-            // Logic Update
-            currentFilter = tab.getAttribute('data-filter');
+    render() {
+        if (!this.dom.listContainer) {
+            this.dom.listContainer = document.getElementById('todo-list-container');
+            if(!this.dom.listContainer) return;
+        }
 
-            // Refresh Data (Calls renderTasks eventually)
-            GameAPI.getTasks();
+        const filteredTasks = this.filterTasks(this.state.tasks);
+        this.updateCounts();
+
+        this.dom.listContainer.innerHTML = '';
+
+        if (filteredTasks.length === 0) {
+            this.renderEmptyState();
+        } else {
+            filteredTasks.forEach(task => {
+                this.dom.listContainer.appendChild(this.buildTaskElement(task));
+            });
+        }
+    }
+
+    filterTasks(tasks) {
+        // ... (Existing logic) ...
+        return tasks.filter(task => {
+            const isComplete = task.completed === 1;
+            if (this.state.filter === 'pending') return !isComplete;
+            if (this.state.filter === 'completed') return isComplete;
+            return true;
         });
-    });
-    
-    isInitialized = true; // Mark as done
-
-    // --- 3. Initial Load ---
-    GameAPI.getTasks();
-}
-
-export function renderTasks(allTasks) {
-    const list = document.getElementById('todo-list-container');
-    if (!list) return;
-    list.innerHTML = ''; // Clear current list
-    // 1. Filter
-    const visibleTasks = allTasks.filter(task => {
-        const isComplete = task.completed === 1;
-        if (currentFilter === 'pending') return !isComplete;
-        if (currentFilter === 'completed') return isComplete;
-        return true; // 'all'
-    });
-    // 2. Update Counts
-    updateCounts(allTasks);
-    // 3. Empty State
-    if (visibleTasks.length === 0) {
-        renderEmptyState(list);
-        return;
     }
-    // 4. Render Items
-    visibleTasks.forEach(task => {
+
+    buildTaskElement(task) {
         const item = document.createElement('div');
-        // Add priority class (p1, p2...) and completed class
         const priorityClass = task.priority || 'p4';
         const completedClass = task.completed === 1 ? 'completed' : '';
+        
         item.className = `task-item ${priorityClass} ${completedClass}`;
+        item.dataset.id = task.id; 
 
-        // HTML Structure
+        // Add visual cue if description exists
+        const hasDescIcon = task.description ? `<i class="fa-solid fa-align-left" style="font-size:0.8rem; margin-left:8px; opacity:0.5;"></i>` : '';
+
         item.innerHTML = `
             <div class="task-left">
                 <label class="check-container">
                     <input type="checkbox" ${task.completed === 1 ? 'checked' : ''}>
                     <span class="checkmark"></span>
                 </label>
-                <span class="task-text">${task.content}</span>
+                <span class="task-text">${this.escapeHtml(task.content)}</span>
+                ${hasDescIcon}
             </div>
             <button class="btn-delete" title="Delete Task">
                 <i class="fa-solid fa-trash"></i>
             </button>
         `;
 
-        // Checkbox Event
+        // 1. Checkbox click
         const checkbox = item.querySelector('input[type="checkbox"]');
-        checkbox.addEventListener('change', () => {
-            GameAPI.toggleTask(task.id);
+        checkbox.addEventListener('click', (e) => {
+            e.stopPropagation(); // Stop bubbling to item click
         });
+        checkbox.addEventListener('change', () => GameAPI.toggleTask(task.id));
 
-        // Delete Event
+        // 2. Delete click
         const delBtn = item.querySelector('.btn-delete');
         delBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); // Prevent bubbling
-            GameAPI.deleteTask(task.id);
+            e.stopPropagation(); // Stop bubbling to item click
+            if (confirm("Delete this task?")) {
+                GameAPI.deleteTask(task.id);
+            }
         });
 
-        list.appendChild(item);
-    });
+        // 3. Item click (Open Overlay) - Prevent opening if selecting text
+        item.addEventListener('click', (e) => {
+            const selection = window.getSelection();
+            if (selection.toString().length === 0) {
+                this.openModal(task);
+            }
+        });
+
+        return item;
+    }
+
+    // --- Modal Logic ---
+
+    openModal(task) {
+        this.state.activeTaskId = task.id;
+        this.dom.modalTitle.textContent = task.content;
+        this.dom.modalDesc.value = task.description || "";
+        this.dom.saveIndicator.classList.remove('visible');
+        this.dom.modal.classList.remove('hidden');
+    }
+
+    closeModal() {
+        this.dom.modal.classList.add('hidden');
+        this.state.activeTaskId = null;
+    }
+
+    saveDescription() {
+        if (this.state.activeTaskId) {
+            const newDesc = this.dom.modalDesc.value;
+            GameAPI.updateTaskDescription(this.state.activeTaskId, newDesc);
+            
+            // Show "Saved" indicator
+            this.dom.saveIndicator.classList.add('visible');
+            setTimeout(() => {
+                this.dom.saveIndicator.classList.remove('visible');
+                // Optional: Close modal automatically
+                // this.closeModal(); 
+            }, 1500);
+        }
+    }
+
+    // ... (Existing helpers: updateCounts, renderEmptyState, escapeHtml) ...
+    updateCounts() {
+        const total = this.state.tasks.length;
+        const completed = this.state.tasks.filter(t => t.completed === 1).length;
+        const pending = total - completed;
+
+        const tabs = document.querySelectorAll('.tab-btn');
+        tabs.forEach(tab => {
+            const filterType = tab.getAttribute('data-filter');
+            const badge = tab.querySelector('.count-badge');
+            if (badge) {
+                if (filterType === 'all') badge.textContent = total;
+                if (filterType === 'pending') badge.textContent = pending;
+                if (filterType === 'completed') badge.textContent = completed;
+            }
+        });
+    }
+
+    renderEmptyState() {
+        const msgDiv = document.createElement('div');
+        msgDiv.className = 'empty-state';
+        
+        const msgs = {
+            'pending': "No pending tasks! Time to relax? 🌴",
+            'completed': "No completed tasks yet. Get to work! 🚀",
+            'all': "No tasks found. Add one above."
+        };
+
+        msgDiv.textContent = msgs[this.state.filter] || msgs['all'];
+        this.dom.listContainer.appendChild(msgDiv);
+    }
+
+    escapeHtml(text) {
+        if (!text) return text;
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
 }
 
-function updateCounts(tasks) {
-    const total = tasks.length;
-    const completed = tasks.filter(t => t.completed === 1).length;
-    const pending = total - completed;
+// Singleton Instance
+const manager = new TodoListManager();
 
-    const badges = document.querySelectorAll('.tab-btn .count-badge');
-    badges.forEach(badge => {
-        const filter = badge.parentElement.getAttribute('data-filter');
-        if (filter === 'all') badge.textContent = total;
-        if (filter === 'pending') badge.textContent = pending;
-        if (filter === 'completed') badge.textContent = completed;
-    });
+export function initTodoList() {
+    manager.init();
 }
 
-function renderEmptyState(container) {
-    const emptyMsg = document.createElement('div');
-    emptyMsg.className = 'empty-state';
-
-    if (currentFilter === 'pending') emptyMsg.textContent = "No pending tasks! Time to relax?";
-    else if (currentFilter === 'completed') emptyMsg.textContent = "No completed tasks yet.";
-    else emptyMsg.textContent = "No tasks found. Add one above.";
-
-    container.appendChild(emptyMsg);
+export function renderTasks(tasks) {
+    manager.updateTasks(tasks);
 }

@@ -19,6 +19,10 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "clearCompletedTasks", null);
     },
 
+    updateTaskDescription: async (id, description) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "updateTaskDescription", { id, description });
+    },
+
     /**
     * Request the full list of mercenaries from the DB.
     */

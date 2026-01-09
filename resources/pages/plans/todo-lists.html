@@ -2,95 +2,78 @@
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Todo Lists - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo Lists - Kaizen RPG</title>
 </head>
 
 <body>
-	<div class="todo-container">
+  <div class="todo-container">
 
-		<!-- Header -->
-		<header class="todo-header">
-			<h2>
-				<i class="fa-solid fa-list-check" style="color: var(--accent-green, #059669);"></i>
-				Todo Lists
-			</h2>
-			<button class="btn-new-list"><i class="fa-solid fa-plus"></i>
-				New List
-			</button>
-		</header>
+    <!-- Header -->
+    <header class="todo-header">
+      <h2>
+        <i class="fa-solid fa-list-check" style="color: var(--accent-green, #059669);"></i>
+        Todo Lists
+      </h2>
+      <button class="btn-new-list"><i class="fa-solid fa-plus"></i>
+        New List
+      </button>
+    </header>
 
-		<!-- Input Area -->
-		<div class="input-group">
-			<input type="text" id="new-task-input" class="todo-input" placeholder="What needs to be done?">
-			<select id="priority-input" class="priority-select">
-				<option value="p1">Priority 1 (Red)</option>
-				<option value="p2">Priority 2 (Orange)</option>
-				<option value="p3">Priority 3 (Blue)</option>
-				<option value="p4" selected>Priority 4 (Default)</option>
-			</select>
-			<button id="add-task-btn" class="btn-add">Add Task</button>
-		</div>
+    <!-- Input Area -->
+    <div class="input-group">
+      <input type="text" id="new-task-input" class="todo-input" placeholder="What needs to be done?">
+      <select id="priority-input" class="priority-select">
+        <option value="p1">Priority 1 (Red)</option>
+        <option value="p2">Priority 2 (Orange)</option>
+        <option value="p3">Priority 3 (Blue)</option>
+        <option value="p4" selected>Priority 4 (Default)</option>
+      </select>
+      <button id="add-task-btn" class="btn-add">Add Task</button>
+    </div>
 
-		<!-- Filter Tabs -->
-		<div class="tabs">
-			<button class="tab-btn active" data-filter="all">All Tasks <span class="count-badge">0</span></button>
-			<button class="tab-btn" data-filter="pending">Pending <span class="count-badge">0</span></button>
-			<button class="tab-btn" data-filter="completed">Completed <span class="count-badge">0</span></button>
+    <!-- Filter Tabs -->
+    <div class="tabs">
+      <button class="tab-btn active" data-filter="all">All Tasks <span class="count-badge">0</span></button>
+      <button class="tab-btn" data-filter="pending">Pending <span class="count-badge">0</span></button>
+      <button class="tab-btn" data-filter="completed">Completed <span class="count-badge">0</span></button>
 
-			<button id="clear-completed-btn" class="btn-clear">
-				<i class="fa-solid fa-broom"></i> Clear Completed
-			</button>
-		</div>
+      <button id="clear-completed-btn" class="btn-clear">
+        <i class="fa-solid fa-broom"></i> Clear Completed
+      </button>
+    </div>
 
-		<!-- Task List -->
-		<div class="task-list" id="todo-list-container">
-			<!-- Tasks injected here -->
+    <!-- Task List -->
+    <div class="task-list" id="todo-list-container">
+      <!-- Tasks injected here -->
+    </div>
 
-			<!-- Example Task: Pending -->
-			<!-- <div class="task-item">
-				<div class="task-left">
-					<label class="check-container">
-						<input type="checkbox">
-						<span class="checkmark"></span>
-					</label>
-					<span class="task-text">Complete the Kaizen RPG UI design</span>
-				</div>
-				<button class="btn-delete" title="Delete Task">
-					<i class="fa-solid fa-trash"></i>
-				</button>
-			</div> -->
+    <!-- TASK DETAILS MODAL -->
+    <div id="todo-detail-modal" class="todo-modal-overlay hidden">
+      <div class="todo-modal-card">
+        <div class="modal-header">
+          <h3 id="modal-task-title">Task Title</h3>
+          <button id="btn-close-detail-modal" class="btn-icon">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
 
-			<!-- Example Task: Completed -->
-			<!-- <div class="task-item completed">
-				<div class="task-left">
-					<label class="check-container">
-						<input type="checkbox" checked>
-						<span class="checkmark"></span>
-					</label>
-					<span class="task-text">Setup project file structure</span>
-				</div>
-				<button class="btn-delete" title="Delete Task">
-					<i class="fa-solid fa-trash"></i>
-				</button>
-			</div> -->
+        <div class="modal-body">
+          <label class="detail-label">Description</label>
+          <textarea id="modal-task-desc" class="detail-textarea"
+            placeholder="Add details, subtasks, or notes here..."></textarea>
+        </div>
 
-			<!-- Example Task: Pending -->
-			<!-- <div class="task-item">
-				<div class="task-left">
-					<label class="check-container">
-						<input type="checkbox">
-						<span class="checkmark"></span>
-					</label>
-					<span class="task-text">Review focus timer logic</span>
-				</div>
-				<button class="btn-delete" title="Delete Task">
-					<i class="fa-solid fa-trash"></i>
-				</button>
-			</div> -->
-		</div>
-	</div>
+        <div class="modal-footer">
+          <span id="modal-save-indicator" class="save-indicator"><i class="fa-solid fa-check"></i> Saved</span>
+          <button id="btn-save-description" class="btn-todo-save">
+            <i class="fa-solid fa-floppy-disk"></i> Save Details
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
