@@ -4,6 +4,7 @@ const SCHEMAS = {
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             content TEXT NOT NULL,
+            description TEXT,
             priority TEXT DEFAULT 'p4',
             completed INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
