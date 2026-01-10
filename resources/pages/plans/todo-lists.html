@@ -8,71 +8,88 @@
 </head>
 
 <body>
-  <div class="todo-container">
+  <div class="todo-layout-container">
+    
+    <!-- SIDEBAR: Project Lists -->
+    <aside class="todo-sidebar">
+      <div class="todo-sidebar-header">
+        <h3>Lists</h3>
+        <button id="btn-add-list" class="btn-icon-sm" title="New List"><i class="fa-solid fa-plus"></i></button>
+      </div>
+      <div id="todo-lists-nav" class="lists-nav">
+        <!-- Lists injected via JS -->
+      </div>
+    </aside>
+    
+    <main class="todo-main">
+      <div class="todo-container">
 
-    <!-- Header -->
-    <header class="todo-header">
-      <h2>
-        <i class="fa-solid fa-list-check" style="color: var(--accent-green, #059669);"></i>
-        Todo Lists
-      </h2>
-      <button class="btn-new-list"><i class="fa-solid fa-plus"></i>
-        New List
-      </button>
-    </header>
+        <!-- Header -->
+        <header class="todo-header">
+          <h2 id="active-list-title">
+            <i class="fa-solid fa-inbox"></i> Inbox
+          </h2>
+        </header>
 
-    <!-- Input Area -->
-    <div class="input-group">
-      <input type="text" id="new-task-input" class="todo-input" placeholder="What needs to be done?">
-      <select id="priority-input" class="priority-select">
-        <option value="p1">Priority 1 (Red)</option>
-        <option value="p2">Priority 2 (Orange)</option>
-        <option value="p3">Priority 3 (Blue)</option>
-        <option value="p4" selected>Priority 4 (Default)</option>
-      </select>
-      <button id="add-task-btn" class="btn-add">Add Task</button>
-    </div>
+        <!-- Input Area -->
+        <div class="input-group">
+          <input type="text" id="new-task-input" class="todo-input" placeholder="What needs to be done?">
+          <select id="priority-input" class="priority-select">
+            <option value="p1">Priority 1 (Red)</option>
+            <option value="p2">Priority 2 (Orange)</option>
+            <option value="p3">Priority 3 (Blue)</option>
+            <option value="p4" selected>Priority 4 (Default)</option>
+          </select>
+          <button id="add-task-btn" class="btn-add">Add Task</button>
+        </div>
 
-    <!-- Filter Tabs -->
-    <div class="tabs">
-      <button class="tab-btn active" data-filter="all">All Tasks <span class="count-badge">0</span></button>
-      <button class="tab-btn" data-filter="pending">Pending <span class="count-badge">0</span></button>
-      <button class="tab-btn" data-filter="completed">Completed <span class="count-badge">0</span></button>
+        <!-- Filter Tabs -->
+        <div class="tabs">
+          <button class="tab-btn active" data-filter="all">All Tasks <span class="count-badge">0</span></button>
+          <button class="tab-btn" data-filter="pending">Pending <span class="count-badge">0</span></button>
+          <button class="tab-btn" data-filter="completed">Completed <span class="count-badge">0</span></button>
 
-      <button id="clear-completed-btn" class="btn-clear">
-        <i class="fa-solid fa-broom"></i> Clear Completed
-      </button>
-    </div>
+          <!-- Delete List Button (Only visible for custom lists) -->
+          <button id="btn-delete-list" class="btn-clear hidden"
+            style="margin-right:10px; color:#ef4444; border-color:#ef4444;">
+            <i class="fa-solid fa-trash"></i> Delete List
+          </button>
 
-    <!-- Task List -->
-    <div class="task-list" id="todo-list-container">
-      <!-- Tasks injected here -->
-    </div>
-
-    <!-- TASK DETAILS MODAL -->
-    <div id="todo-detail-modal" class="todo-modal-overlay hidden">
-      <div class="todo-modal-card">
-        <div class="modal-header">
-          <h3 id="modal-task-title">Task Title</h3>
-          <button id="btn-close-detail-modal" class="btn-icon">
-            <i class="fa-solid fa-xmark"></i>
+          <button id="clear-completed-btn" class="btn-clear">
+            <i class="fa-solid fa-broom"></i> Clear Completed
           </button>
         </div>
 
-        <div class="modal-body">
-          <label class="detail-label">Description</label>
-          <textarea id="modal-task-desc" class="detail-textarea"
-            placeholder="Add notes here..."></textarea>
+        <!-- Task List -->
+        <div class="task-list" id="todo-list-container">
+          <!-- Tasks injected here -->
         </div>
 
-        <div class="modal-footer">
-          <span id="modal-save-indicator" class="save-indicator"><i class="fa-solid fa-check"></i> Saved</span>
-          <button id="btn-save-description" class="btn-todo-save">
-            <i class="fa-solid fa-floppy-disk"></i> Save Details
-          </button>
+        <!-- TASK DETAILS MODAL -->
+        <div id="todo-detail-modal" class="todo-modal-overlay hidden">
+          <div class="todo-modal-card">
+            <div class="modal-header">
+              <h3 id="modal-task-title">Task Title</h3>
+              <button id="btn-close-detail-modal" class="btn-icon">
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <div class="modal-body">
+              <label class="detail-label">Description</label>
+              <textarea id="modal-task-desc" class="detail-textarea" placeholder="Add notes here..."></textarea>
+            </div>
+
+            <div class="modal-footer">
+              <span id="modal-save-indicator" class="save-indicator"><i class="fa-solid fa-check"></i> Saved</span>
+              <button id="btn-save-description" class="btn-todo-save">
+                <i class="fa-solid fa-floppy-disk"></i> Save Details
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   </div>
 </body>
 
