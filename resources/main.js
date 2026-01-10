@@ -2,6 +2,8 @@ import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 import { SettingsAPI } from './js/api/SettingsAPI.js';
 
+
+
 // PLAN PAGE
 import { initTodoList } from './js/plans/todoListManager.js';
 
@@ -12,6 +14,9 @@ import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
 import { initReviewSessions } from './js/focus/review/ReviewManager.js';
 import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
+    // MANAGERS (Singleton Instances)
+    import { standardManager } from './js/focus/standard/StandardFocusManager.js';
+    import { flexManager } from './js/focus/flexible/FlexibleFocusManager.js';
 
 // TIMEFRAMES
 import { initTodayView } from './js/timeframes/TodayManager.js';
@@ -41,7 +46,12 @@ import { initMainSettings } from './js/main-settings/mainSettingsManager.js';
 async function app() {
     try {
         EventRegistry.init();
-        initGlobalFocusListener(); // FOCUS PAGE
+
+        // FOCUS PAGE
+        standardManager.initialize();
+        flexManager.initialize(); 
+        initGlobalFocusListener(); 
+        
         SettingsAPI.getSetting('fontFamily');
         await GameAPI.getMercenaries();
         handleDropdowns();
