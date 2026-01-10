@@ -19,25 +19,79 @@ class FlexibleFocusManager {
         // Warning Logic State
         this.warnEnabled = false;
         this.warnIntervalMinutes = 5; 
-        this.lastWarnedMinute = 0; // Tracks the last negative threshold crossed (e.g. 5, 10, 15)
+        this.lastWarnedMinute = 0; 
 
-        this.initSettings();
+        // REMOVED: this.initSettings()
     }
 
-    initSettings() {
+    // --- NEW: Call this from main.js ---
+    initialize() {
         // Listen for updates
         document.addEventListener('kaizen:setting-update', (e) => {
             const { key, value } = e.detail;
+
+            // Warnings
             if (key === 'flexibleWarnEnabled') {
                 this.warnEnabled = (value === true || value === 'true' || value === 1);
             }
             if (key === 'flexibleWarnInterval') {
                 this.warnIntervalMinutes = parseInt(value) || 5;
             }
+
+            // Persistence
+            if (key === 'flexibleTimerState' && value) {
+                try {
+                    const saved = JSON.parse(value);
+                    this.restoreState(saved);
+                } catch (err) {
+                    console.error("Failed to parse Flexible Timer state", err);
+                }
+            }
         });
 
         SettingsAPI.getSetting('flexibleWarnEnabled');
         SettingsAPI.getSetting('flexibleWarnInterval');
+        SettingsAPI.getSetting('flexibleTimerState'); 
+    }
+
+    saveState() {
+        // 1. Pause internal calculation (commit current segment to totals)
+        this.state.switchStatus('idle'); 
+        
+        // 2. Get the snapshot
+        const stats = this.state.getStats();
+
+        // 3. Prepare payload (Only save if there is meaningful data)
+        const hasData = stats.focusMs > 0 || stats.breakMs > 0;
+        
+        const payload = {
+            hasData: hasData,
+            ratio: stats.ratio,
+            focusMs: stats.focusMs,
+            breakMs: stats.breakMs,
+            tag: stats.tag
+        };
+
+        SettingsAPI.saveSetting('flexibleTimerState', JSON.stringify(payload));
+    }
+
+    restoreState(saved) {
+        if (!saved.hasData) return;
+
+        console.log("🔄 Restoring Flexible Timer State:", saved);
+
+        // Apply saved values to State
+        this.state.ratio = saved.ratio || 3.0;
+        this.state.accumulatedFocus = saved.focusMs || 0;
+        this.state.accumulatedBreak = saved.breakMs || 0;
+        this.state.currentTag = saved.tag || "No Tag";
+        
+        // Ensure state is idle/paused
+        this.state.status = 'idle';
+        this.state.startTime = null;
+
+        // Force tick to update UI
+        this.tick(); 
     }
 
     startTicker() {
@@ -53,40 +107,25 @@ class FlexibleFocusManager {
     }
 
     tick() {
-        // Update internal state
         const stats = this.state.getStats();
-        
-        // Check for Negative Balance Warning
         this.checkBalanceWarning(stats.balanceMs);
-
-        // Broadcast event for the UI (if active) to pick up
         const event = new CustomEvent('kaizen:flex-tick', { detail: stats });
         document.dispatchEvent(event);
     }
 
     checkBalanceWarning(balanceMs) {
         if (!this.warnEnabled) return;
-        
-        // Only care if balance is negative
         if (balanceMs >= 0) {
-            this.lastWarnedMinute = 0; // Reset logic if user recovers balance
+            this.lastWarnedMinute = 0; 
             return;
         }
 
         const absSeconds = Math.abs(balanceMs / 1000);
         const absMinutes = Math.floor(absSeconds / 60);
-
-        // Check if we hit a threshold (e.g. 5m, 10m, 15m...)
-        // Logic: If current negative minutes is >= next threshold AND we haven't warned for this specific threshold yet
-        
-        // Calculate the next threshold we expect to hit based on interval
-        // e.g. If lastWarned is 0, next is 5. If lastWarned is 5, next is 10.
         const nextThreshold = this.lastWarnedMinute + this.warnIntervalMinutes;
 
         if (absMinutes >= nextThreshold && absMinutes > 0) {
             this.triggerWarning(absMinutes);
-            // Update tracking to the current interval step
-            // Use math to snap to the interval (e.g. if we check at 5:01, record 5)
             this.lastWarnedMinute = Math.floor(absMinutes / this.warnIntervalMinutes) * this.warnIntervalMinutes;
         }
     }
@@ -94,19 +133,17 @@ class FlexibleFocusManager {
     triggerWarning(minutesOver) {
         const title = "Balance Overdrawn";
         const message = `You are ${minutesOver} minutes into focus debt. Consider focusing to recover.`;
-        
         notifier.show(title, message, "fa-solid fa-triangle-exclamation");
     }
 
     // --- State Proxies ---
     
     switchState(newStatus) {
-        // If starting from idle, start the clock
         if (this.state.status === 'idle' && newStatus !== 'idle') {
             this.startTicker();
         }
         this.state.switchStatus(newStatus);
-        this.tick(); // Force immediate update
+        this.tick(); 
     }
 
     setRatio(val) {
@@ -134,12 +171,12 @@ class FlexibleFocusManager {
 
         FocusAPI.saveFocusSession(payload);
         
-        // Reset Logic
         this.stopTicker();
         this.state.reset();
-        this.lastWarnedMinute = 0; // Reset warning tracker
+        this.lastWarnedMinute = 0; 
         
-        // Emit one last tick to clear UI to 00:00
+        SettingsAPI.saveSetting('flexibleTimerState', JSON.stringify({ hasData: false }));
+
         this.tick();
     }
 

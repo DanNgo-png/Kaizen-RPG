@@ -1,4 +1,5 @@
 import { FocusAPI } from "../../api/FocusAPI.js";
+import { SettingsAPI } from "../../api/SettingsAPI.js";
 import { audioManager } from "../../_global-managers/AudioManager.js";
 
 class StandardFocusManager {
@@ -37,7 +38,6 @@ class StandardFocusManager {
         };
 
         this.currentSoundKey = 'bell'; 
-
         this.eventBus = new EventTarget();
     }
 
@@ -60,6 +60,85 @@ class StandardFocusManager {
     setTag(tagName) {
         this.currentTag = tagName;
         this.sessionConfig.tag = tagName;
+    }
+
+    initialize() {
+        // Listen for the saved state coming from the DB
+        document.addEventListener('kaizen:setting-update', (e) => {
+            if (e.detail.key === 'standardTimerState' && e.detail.value) {
+                try {
+                    const state = JSON.parse(e.detail.value);
+                    this.restoreState(state);
+                } catch (err) {
+                    console.error("Failed to parse saved Standard Timer state", err);
+                }
+            }
+        });
+
+        SettingsAPI.getSetting('standardTimerState');
+    }
+
+    initPersistence() {
+        // Listen for the saved state coming from the DB
+        document.addEventListener('kaizen:setting-update', (e) => {
+            if (e.detail.key === 'standardTimerState' && e.detail.value) {
+                try {
+                    const state = JSON.parse(e.detail.value);
+                    this.restoreState(state);
+                } catch (err) {
+                    console.error("Failed to parse saved Standard Timer state", err);
+                }
+            }
+        });
+
+        SettingsAPI.getSetting('standardTimerState');
+    }
+
+    /**
+     * Serializes current state to a JSON object and saves to DB.
+     * Force-pauses the timer logic for the saved state.
+     */
+    saveState() {
+        // Force pause state for storage
+        const wasRunning = this.isRunning;
+        
+        const state = {
+            mode: this.mode,
+            isStopwatch: this.isStopwatch,
+            secondsRemaining: this.secondsRemaining,
+            secondsElapsed: this.secondsElapsed,
+            currentTag: this.currentTag,
+            completedSets: this.completedSets,
+            targetIterations: this.targetIterations,
+            sessionConfig: this.sessionConfig,
+            // If it was running or paused, we save it as 'paused' so it doesn't auto-run on boot
+            isActiveSession: (wasRunning || this.isPaused)
+        };
+
+        SettingsAPI.saveSetting('standardTimerState', JSON.stringify(state));
+    }
+
+    restoreState(savedState) {
+        // Only restore if there was an active session
+        if (!savedState.isActiveSession) return;
+
+        console.log("🔄 Restoring Standard Timer State:", savedState);
+
+        this.mode = savedState.mode;
+        this.isStopwatch = savedState.isStopwatch;
+        this.secondsRemaining = savedState.secondsRemaining;
+        this.secondsElapsed = savedState.secondsElapsed;
+        this.currentTag = savedState.currentTag;
+        this.completedSets = savedState.completedSets;
+        this.targetIterations = savedState.targetIterations;
+        this.sessionConfig = savedState.sessionConfig || this.sessionConfig;
+
+        // Set to Paused state
+        this.isRunning = false;
+        this.isPaused = true;
+
+        // Emit update so UI refreshes immediately
+        this._emitUpdate();
     }
 
     startSession(config) {
@@ -98,6 +177,7 @@ class StandardFocusManager {
         
         this.startTicker();
         this._emitUpdate();
+        this.saveState(); 
     }
 
     pause() {
@@ -105,6 +185,7 @@ class StandardFocusManager {
         this.isRunning = false;
         this.stopTicker();
         this._emitUpdate();
+        this.saveState();
     }
 
     resume() {
@@ -124,22 +205,17 @@ class StandardFocusManager {
         this.isRunning = false;
         this.isPaused = false;
         this.stopTicker();
-        
-        // Stop audio if user manually stops session
-        audioManager.stopCurrent();
+        audioManager.stopCurrent(); // Stop audio if user manually stops session
 
-        // Include timer_type in payload 
-        if (wasStopwatch && elapsed > 5) { 
-             if (currentMode === 'focus') {
-                const payload = {
-                    tag: currentTag,
-                    focusSeconds: elapsed, 
-                    breakSeconds: 0,
-                    ratio: 1.0,
-                    timer_type: 'stopwatch' 
-                };
-                FocusAPI.saveFocusSession(payload);
-            }
+        if (wasStopwatch && elapsed > 5 && currentMode === 'focus') { 
+            const payload = {
+                tag: currentTag,
+                focusSeconds: elapsed, 
+                breakSeconds: 0,
+                ratio: 1.0,
+                timer_type: 'stopwatch'
+            };
+            FocusAPI.saveFocusSession(payload);
         }
 
         // Reset defaults
@@ -149,6 +225,7 @@ class StandardFocusManager {
         this.secondsElapsed = 0;
         
         this._emitUpdate();
+        SettingsAPI.saveSetting('standardTimerState', JSON.stringify({ isActiveSession: false }));
     }
 
     skipPhase() {
@@ -261,6 +338,7 @@ class StandardFocusManager {
             this.isRunning = false;
             this.isPaused = false;
             this.stopTicker();
+            this.saveState();
         }
 
         this._emitUpdate();
