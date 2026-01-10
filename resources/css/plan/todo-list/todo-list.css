@@ -411,7 +411,7 @@
 .task-item.p4 { border-left: 4px solid transparent; }
 
 /* -------------------------- */
-/* --- Task Details Modal --- */
+/* --- Task Modal Overlay --- */
 /* -------------------------- */
 .todo-modal-overlay {
     position: fixed;
