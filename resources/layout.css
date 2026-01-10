@@ -11,6 +11,7 @@
 /* === PLAN PAGE === */
     /* TODO LIST */
     @import url('css/plan/todo-list/todo-list.css');
+    @import url('css/plan/todo-list/task-modal-overlay.css');
 
     /* KANBAN BOARD */
     @import url('css/plan/kanban-board/kanban-board.css');
