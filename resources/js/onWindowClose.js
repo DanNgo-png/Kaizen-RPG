@@ -1,22 +1,19 @@
 import { standardManager } from "./focus/standard/StandardFocusManager.js";
 import { flexManager } from "./focus/flexible/FlexibleFocusManager.js";
 
+function saveAppState() {
+    console.log("💾 Saving state snapshot...");
+    if (standardManager) { standardManager.saveState(); }
+    if (flexManager) { flexManager.saveState(); }
+}
+
 async function onWindowClose() {
-    console.log("💾 Saving state before exit...");
+    if (standardManager) standardManager.stopTicker();
+    if (flexManager) flexManager.stopTicker();
 
-    // 1. Standard Timer: Pause and Save
-    if (standardManager) {
-        standardManager.stopTicker(); // Stop interval
-        standardManager.saveState();  // Serialize to DB
-    }
+    saveAppState();
 
-    // 2. Flexible Timer: Pause and Save
-    if (flexManager) {
-        flexManager.stopTicker();     // Stop interval
-        flexManager.saveState();      // Serialize to DB
-    }
-
-    // 3. Small delay to ensure Neutralino message dispatch sends before process kill
+    // Small delay to ensure Neutralino message dispatch sends to Node backend before the process is killed.
     await new Promise(r => setTimeout(r, 50));
 
     Neutralino.app.exit();
@@ -24,3 +21,8 @@ async function onWindowClose() {
 
 Neutralino.init();
 Neutralino.events.on("windowClose", onWindowClose);
+
+// Listener for REFRESH (F5 / Cmd+R)
+window.addEventListener("beforeunload", () => {
+    saveAppState();
+});
