@@ -1,7 +1,3 @@
-/**
- * A Singleton class that manages the Flexible Focus state and timer loop.
- * Persists across page navigation.
- */
 import { FlexibleSessionState } from "./FlexibleSessionState.js";
 import { FocusAPI } from "../../api/FocusAPI.js";
 import { SettingsAPI } from "../../api/SettingsAPI.js";
@@ -22,14 +18,14 @@ class FlexibleFocusManager {
 
         // Warning Logic State
         this.warnEnabled = false;
-        this.warnIntervalMinutes = 5; // Default
+        this.warnIntervalMinutes = 5; 
         this.lastWarnedMinute = 0; // Tracks the last negative threshold crossed (e.g. 5, 10, 15)
 
         this.initSettings();
     }
 
     initSettings() {
-        // 1. Listen for updates
+        // Listen for updates
         document.addEventListener('kaizen:setting-update', (e) => {
             const { key, value } = e.detail;
             if (key === 'flexibleWarnEnabled') {
@@ -40,7 +36,6 @@ class FlexibleFocusManager {
             }
         });
 
-        // 2. Fetch initial
         SettingsAPI.getSetting('flexibleWarnEnabled');
         SettingsAPI.getSetting('flexibleWarnInterval');
     }
@@ -58,13 +53,13 @@ class FlexibleFocusManager {
     }
 
     tick() {
-        // 1. Update internal state
+        // Update internal state
         const stats = this.state.getStats();
         
-        // 2. Check for Negative Balance Warning
+        // Check for Negative Balance Warning
         this.checkBalanceWarning(stats.balanceMs);
 
-        // 3. Broadcast event for the UI (if active) to pick up
+        // Broadcast event for the UI (if active) to pick up
         const event = new CustomEvent('kaizen:flex-tick', { detail: stats });
         document.dispatchEvent(event);
     }
@@ -100,7 +95,6 @@ class FlexibleFocusManager {
         const title = "Balance Overdrawn";
         const message = `You are ${minutesOver} minutes into focus debt. Consider focusing to recover.`;
         
-        // Use generic notification manager
         notifier.show(title, message, "fa-solid fa-triangle-exclamation");
     }
 
