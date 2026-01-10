@@ -1,13 +1,26 @@
 const SCHEMAS = {
     // Stores Todo lists and Kanbans
     'user_tasks': `
+        CREATE TABLE IF NOT EXISTS todo_lists (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            icon TEXT DEFAULT 'fa-solid fa-list',
+            is_default INTEGER DEFAULT 0,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- Insert default 'Inbox' if not exists
+        INSERT OR IGNORE INTO todo_lists (id, title, icon, is_default) VALUES (1, 'Inbox', 'fa-solid fa-inbox', 1);
+
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
+            list_id INTEGER DEFAULT 1, -- Link to todo_lists
             content TEXT NOT NULL,
             description TEXT,
             priority TEXT DEFAULT 'p4',
             completed INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(list_id) REFERENCES todo_lists(id) ON DELETE CASCADE
         );
     `,
 
