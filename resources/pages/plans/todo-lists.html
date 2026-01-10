@@ -9,7 +9,7 @@
 
 <body>
   <div class="todo-layout-container">
-    
+
     <!-- SIDEBAR: Project Lists -->
     <aside class="todo-sidebar">
       <div class="todo-sidebar-header">
@@ -20,7 +20,7 @@
         <!-- Lists injected via JS -->
       </div>
     </aside>
-    
+
     <main class="todo-main">
       <div class="todo-container">
 
@@ -76,6 +76,31 @@
             </div>
 
             <div class="modal-body">
+              <!-- Properties Grid -->
+              <div class="modal-properties-grid"
+                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+
+                <!-- Priority Selector -->
+                <div class="prop-group">
+                  <label class="detail-label">Priority</label>
+                  <select id="modal-task-priority" class="modal-select">
+                    <option value="p1">P1 - High (Red)</option>
+                    <option value="p2">P2 - Med (Orange)</option>
+                    <option value="p3">P3 - Low (Blue)</option>
+                    <option value="p4">P4 - None (Grey)</option>
+                  </select>
+                </div>
+
+                <!-- List/Move Selector -->
+                <div class="prop-group">
+                  <label class="detail-label">List</label>
+                  <select id="modal-task-list" class="modal-select">
+                    <!-- Javascript will populate this -->
+                  </select>
+                </div>
+
+              </div>
+
               <label class="detail-label">Description</label>
               <textarea id="modal-task-desc" class="detail-textarea" placeholder="Add notes here..."></textarea>
             </div>

@@ -51,6 +51,18 @@ export class TaskController {
             this.handleSafeDBAction(() => this.repo.updateTaskDescription(payload.id, payload.description));
             this.broadcastTasks(app, payload.listId);
         });
+
+        // Payload: { id, priority, listId } -> listId needed to refresh current view
+        app.events.on("updateTaskPriority", (payload) => {
+            this.handleSafeDBAction(() => this.repo.updateTaskPriority(payload.id, payload.priority));
+            this.broadcastTasks(app, payload.listId);
+        });
+
+        // Payload: { id, newListId, currentListId }
+        app.events.on("moveTask", (payload) => {
+            this.handleSafeDBAction(() => this.repo.moveTask(payload.id, payload.newListId));
+            this.broadcastTasks(app, payload.currentListId);
+        });
     }
 
     /**

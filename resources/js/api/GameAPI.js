@@ -35,6 +35,14 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "updateTaskDescription", { id, description, listId });
     },
 
+    updateTaskPriority: async (id, priority, listId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "updateTaskPriority", { id, priority, listId });
+    },
+
+    moveTask: async (id, newListId, currentListId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "moveTask", { id, newListId, currentListId });
+    },
+
     // --- MERCENARIES ---
     getMercenaries: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getMercenaries", null);

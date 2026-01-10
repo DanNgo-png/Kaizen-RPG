@@ -13,6 +13,8 @@ export class TaskRepository {
             delete: this.db.prepare('DELETE FROM tasks WHERE id = ?'),
             clearCompleted: this.db.prepare('DELETE FROM tasks WHERE completed = 1 AND list_id = @listId'),
             updateDescription: this.db.prepare('UPDATE tasks SET description = @description WHERE id = @id'),
+            updatePriority: this.db.prepare('UPDATE tasks SET priority = @priority WHERE id = @id'),
+            updateList: this.db.prepare('UPDATE tasks SET list_id = @newListId WHERE id = @id'),
 
             // LISTS
             getLists: this.db.prepare('SELECT * FROM todo_lists ORDER BY is_default DESC, id ASC'),
@@ -36,5 +38,9 @@ export class TaskRepository {
     getLists() { return this.statements.getLists.all(); }
     addList(title, icon) { return this.statements.addList.run({ title, icon }); }
     deleteList(id) { return this.statements.deleteList.run(id); }
+
+    // Task Modal Overay
     updateTaskDescription(id, description) { return this.statements.updateDescription.run({ id, description }); }
+    updateTaskPriority(id, priority) { return this.statements.updatePriority.run({ id, priority }); }
+    moveTask(id, newListId) { return this.statements.updateList.run({ id, newListId }); }
 }

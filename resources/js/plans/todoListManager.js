@@ -42,7 +42,9 @@ class TodoListManager {
             modalDesc: document.getElementById('modal-task-desc'),
             btnCloseModal: document.getElementById('btn-close-detail-modal'),
             btnSaveDesc: document.getElementById('btn-save-description'),
-            saveIndicator: document.getElementById('modal-save-indicator')
+            saveIndicator: document.getElementById('modal-save-indicator'),
+            modalPriority: document.getElementById('modal-task-priority'),
+            modalListSelect: document.getElementById('modal-task-list')
         };
 
         if (!this.dom.listContainer) return;
@@ -149,6 +151,34 @@ class TodoListManager {
         // Close via Outside Click
         this.dom.modal.addEventListener('click', (e) => {
             if (e.target === this.dom.modal) this.closeModal();
+        });
+
+        // Handle Priority Change
+        this.dom.modalPriority.addEventListener('change', (e) => {
+            if (this.state.activeTaskId) {
+                GameAPI.updateTaskPriority(
+                    this.state.activeTaskId, 
+                    e.target.value, 
+                    this.state.activeListId // To refresh view
+                );
+                this._flashSaveIndicator();
+            }
+        });
+
+        // Handle List Move
+        this.dom.modalListSelect.addEventListener('change', (e) => {
+            if (this.state.activeTaskId) {
+                const newListId = parseInt(e.target.value);
+                
+                // Confirm move
+                GameAPI.moveTask(
+                    this.state.activeTaskId, 
+                    newListId, 
+                    this.state.activeListId // Current list (to remove task from view)
+                );
+                
+                this.closeModal(); // Close modal because task is gone from current view
+            }
         });
 
         // Save Description
@@ -328,8 +358,38 @@ class TodoListManager {
         this.state.activeTaskId = task.id;
         this.dom.modalTitle.textContent = task.content;
         this.dom.modalDesc.value = task.description || "";
+
+        // 1. Set Priority
+        this.dom.modalPriority.value = task.priority || 'p4';
+
+        // 2. Populate List Select
+        this.populateListSelect(this.state.activeListId);
+
         this.dom.saveIndicator.classList.remove('visible');
         this.dom.modal.classList.remove('hidden');
+    }
+
+    populateListSelect(currentListId) {
+        this.dom.modalListSelect.innerHTML = '';
+        
+        this.state.lists.forEach(list => {
+            const opt = document.createElement('option');
+            opt.value = list.id;
+            opt.textContent = list.title;
+            
+            if (list.id === currentListId) {
+                opt.selected = true;
+            }
+            
+            this.dom.modalListSelect.appendChild(opt);
+        });
+    }
+
+    _flashSaveIndicator() {
+        this.dom.saveIndicator.classList.add('visible');
+        setTimeout(() => {
+            this.dom.saveIndicator.classList.remove('visible');
+        }, 1500);
     }
 
     closeModal() {
