@@ -37,19 +37,22 @@ export class TaskController {
             this.broadcastTasks(app, payload.listId || 1);
         });
 
+        // FIX: Pass payload.listId so the UI refreshes the correct list, not Inbox
         app.events.on("deleteTask", (payload) => {
             this.handleSafeDBAction(() => this.repo.removeTask(payload.id));
-            this.broadcastTasks(app);
+            this.broadcastTasks(app, payload.listId);
         });
 
-        app.events.on("clearCompletedTasks", () => {
-            this.handleSafeDBAction(() => this.repo.clearCompleted());
-            this.broadcastTasks(app);
+        // FIX: Accept payload to get listId, pass it to repo and broadcast
+        app.events.on("clearCompletedTasks", (payload) => {
+            this.handleSafeDBAction(() => this.repo.clearCompleted(payload.listId));
+            this.broadcastTasks(app, payload.listId);
         });
 
+        // FIX: Pass payload.listId to broadcast
         app.events.on("updateTaskDescription", (payload) => {
             this.handleSafeDBAction(() => this.repo.updateTaskDescription(payload.id, payload.description));
-            this.broadcastTasks(app);
+            this.broadcastTasks(app, payload.listId);
         });
     }
 
@@ -58,7 +61,9 @@ export class TaskController {
      */
     broadcastTasks(app, listId) {
         try {
-            const data = this.repo.getTasksByList(listId || 1);
+            // Default to 1 (Inbox) only if listId is strictly missing/undefined
+            const targetList = listId || 1;
+            const data = this.repo.getTasksByList(targetList);
             app.events.broadcast("receiveTasks", data);
         } catch (error) {
             console.error("❌ Failed to broadcast tasks:", error);
