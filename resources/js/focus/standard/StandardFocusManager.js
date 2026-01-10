@@ -8,7 +8,6 @@ class StandardFocusManager {
         }
         StandardFocusManager.instance = this;
 
-        // --- State ---
         this.intervalId = null;
         this.isRunning = false;
         this.isPaused = false;
@@ -24,7 +23,7 @@ class StandardFocusManager {
         this.completedSets = 0; 
         this.targetIterations = 1;
 
-        // --- Auto-Start Flags ---
+        // Auto-Start Flags 
         this.autoStartFocus = false;
         this.autoStartBreak = false;
 
@@ -37,7 +36,6 @@ class StandardFocusManager {
             tag: "No Tag"
         };
 
-        // Audio Key Storage (Facade)
         this.currentSoundKey = 'bell'; 
 
         this.eventBus = new EventTarget();
