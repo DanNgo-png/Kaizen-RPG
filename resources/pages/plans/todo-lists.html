@@ -61,14 +61,16 @@
         </div>
 
         <!-- Task List -->
-        <div class="task-list" id="todo-list-container">
+        <div class="todolist-task-list" id="todo-list-container">
           <!-- Tasks injected here -->
         </div>
 
         <!-- TASK DETAILS MODAL -->
         <div id="todo-detail-modal" class="todo-modal-overlay hidden">
-          <div class="todo-modal-card">
-            <div class="modal-header">
+
+          <!-- 1. THE MAIN CARD -->
+          <div id="todo-modal-card" class="todo-modal-card">
+            <div class="todolist-modal-header">
               <h3 id="modal-task-title">Task Title</h3>
               <button id="btn-close-detail-modal" class="btn-icon">
                 <i class="fa-solid fa-xmark"></i>
@@ -76,29 +78,33 @@
             </div>
 
             <div class="modal-body">
-              <!-- Properties Grid -->
-              <div class="modal-properties-grid"
-                style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-
-                <!-- Priority Selector -->
+              <div class="modal-properties-grid">
+                <!-- Priority -->
                 <div class="prop-group">
-                  <label class="detail-label">Priority</label>
+                  <label class="detail-label"><i class="fa-solid fa-flag"></i> Priority</label>
                   <select id="modal-task-priority" class="modal-select">
-                    <option value="p1">P1 - High (Red)</option>
-                    <option value="p2">P2 - Med (Orange)</option>
-                    <option value="p3">P3 - Low (Blue)</option>
-                    <option value="p4">P4 - None (Grey)</option>
+                    <option value="p1">P1 - High</option>
+                    <option value="p2">P2 - Medium</option>
+                    <option value="p3">P3 - Low</option>
+                    <option value="p4">P4 - None</option>
                   </select>
                 </div>
 
-                <!-- List/Move Selector -->
+                <!-- List -->
                 <div class="prop-group">
-                  <label class="detail-label">List</label>
-                  <select id="modal-task-list" class="modal-select">
-                    <!-- Javascript will populate this -->
-                  </select>
+                  <label class="detail-label"><i class="fa-solid fa-folder"></i> List</label>
+                  <select id="modal-task-list" class="modal-select"></select>
                 </div>
 
+                <!-- Due Date Trigger (Full Width Row) -->
+                <div class="prop-group" style="grid-column: 1 / -1;">
+                  <label class="detail-label"><i class="fa-regular fa-calendar"></i> Due Date</label>
+                  <!-- This button activates the sidecar -->
+                  <button id="btn-trigger-date-sidecar" class="btn-date-trigger">
+                    <span id="btn-date-text">Set Due Date</span>
+                    <i class="fa-solid fa-chevron-right"></i>
+                  </button>
+                </div>
               </div>
 
               <label class="detail-label">Description</label>
@@ -107,14 +113,64 @@
 
             <div class="modal-footer">
               <span id="modal-save-indicator" class="save-indicator"><i class="fa-solid fa-check"></i> Saved</span>
-              <button id="btn-save-description" class="btn-todo-save">
-                <i class="fa-solid fa-floppy-disk"></i> Save Details
-              </button>
             </div>
           </div>
+
+          <!-- 2. THE SIDECAR WIDGET (Initially Hidden) -->
+          <div id="sidecar-date-picker" class="sidecar-container hidden">
+
+            <div class="sidecar-header">
+              <h4>Schedule</h4>
+              <button id="btn-close-sidecar" class="btn-icon-xs"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+
+            <!-- Input Row -->
+            <div class="date-input-row compact">
+              <input type="text" id="task-due-date-input" class="modern-input" placeholder="yyyy-mm-dd">
+            </div>
+
+            <!-- Quick Chips -->
+            <div class="date-shortcuts">
+              <button class="chip-btn" data-action="today">Today</button>
+              <button class="chip-btn" data-action="tomorrow">Tmrw</button>
+              <button class="chip-btn" data-action="weekend">Wknd</button>
+            </div>
+
+            <!-- Mini Calendar -->
+            <div class="mini-calendar">
+              <div class="cal-header">
+                <span id="cal-month-year">Dec 2025</span>
+                <div class="cal-nav">
+                  <button id="cal-prev"><i class="fa-solid fa-chevron-left"></i></button>
+                  <button id="cal-next"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+              </div>
+              <div class="cal-weekdays">
+                <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+              </div>
+              <div id="cal-days-grid" class="cal-days"></div>
+            </div>
+
+            <!-- Repeat Options (Compact footer) -->
+            <div class="sidecar-footer">
+              <button id="btn-toggle-repeat" class="btn-text-subtle">
+                <i class="fa-solid fa-repeat"></i> <span id="repeat-label">No Repeat</span>
+              </button>
+              <!-- Simple Repeat Dropdown inside sidecar -->
+              <div id="repeat-options-overlay" class="repeat-menu sidecar-repeat-menu hidden">
+                <div class="repeat-option" data-val="daily">Daily</div>
+                <div class="repeat-option" data-val="weekly" id="opt-weekly">Weekly</div>
+                <div class="repeat-option" data-val="monthly" id="opt-monthly">Monthly</div>
+                <button id="btn-clear-repeat" class="btn-text-danger hidden">Clear</button>
+              </div>
+            </div>
+
+          </div>
+
         </div>
       </div>
-    </main>
+  </div>
+  </main>
   </div>
 </body>
 
