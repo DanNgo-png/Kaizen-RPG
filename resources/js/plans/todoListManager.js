@@ -19,6 +19,13 @@ class TodoListManager {
     }
 
     init() {
+        if (this.calendarWidget) {
+            if (typeof this.calendarWidget.destroy === 'function') {
+                this.calendarWidget.destroy();
+            }
+            this.calendarWidget = null;
+        }
+        
         // --- 1. Cache DOM Elements ---
         this.dom = {
             // Sidebar Elements

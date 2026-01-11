@@ -7,6 +7,7 @@ export class CalendarWidget {
         this.viewDate = new Date(); // The month currently visible
         this.selectedDate = null;   // The actual due date
         this.repeatRule = null;
+        this._handleDocumentClick = this._handleDocumentClick.bind(this);
 
         this.dom = {
             input: document.getElementById('task-due-date-input'),
@@ -55,21 +56,18 @@ export class CalendarWidget {
         });
 
         // 4. Repeat Menu Toggle
-        this.dom.btnRepeat.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.dom.repeatMenu.classList.toggle('hidden');
-            this.updateRepeatLabels(); // Update "Weekly on Monday", etc.
-        });
+        if (this.dom.btnRepeat) {
+            this.dom.btnRepeat.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if(this.dom.repeatMenu) {
+                    this.dom.repeatMenu.classList.toggle('hidden');
+                    this.updateRepeatLabels();
+                }
+            });
+        }
 
         // Close repeat menu on outside click
-        document.addEventListener('click', (e) => {
-            if (this.dom.repeatMenu && !this.dom.repeatMenu.classList.contains('hidden') && 
-                !this.dom.repeatMenu.contains(e.target) && 
-                e.target !== this.dom.btnRepeat &&
-                !this.dom.btnRepeat.contains(e.target)) {
-                this.dom.repeatMenu.classList.add('hidden');
-            }
-        });
+        document.addEventListener('click', this._handleDocumentClick);
 
         // 5. Repeat Options
         if (this.dom.repeatMenu) {
@@ -86,6 +84,17 @@ export class CalendarWidget {
                 this.setRepeat(null);
                 this.dom.repeatMenu.classList.add('hidden');
             });
+        }
+    }
+
+    // Extracted handler for clean removal
+    _handleDocumentClick(e) {
+        if (this.dom.repeatMenu && !this.dom.repeatMenu.classList.contains('hidden') && 
+            !this.dom.repeatMenu.contains(e.target) && 
+            this.dom.btnRepeat &&
+            e.target !== this.dom.btnRepeat &&
+            !this.dom.btnRepeat.contains(e.target)) {
+            this.dom.repeatMenu.classList.add('hidden');
         }
     }
 
@@ -172,6 +181,12 @@ export class CalendarWidget {
         this.selectDate(d);
     }
 
+    // Cleanup method
+    destroy() {
+        document.removeEventListener('click', this._handleDocumentClick);
+        this.dom = {}; 
+    }
+
     // --- Rendering ---
 
     renderCalendar() {
@@ -182,33 +197,30 @@ export class CalendarWidget {
         
         // Header
         const monthName = this.viewDate.toLocaleString('default', { month: 'long' });
-        this.dom.monthLabel.textContent = `${monthName} ${year}`;
+        if(this.dom.monthLabel) this.dom.monthLabel.textContent = `${monthName} ${year}`;
 
-        // Grid Math
+        // ... existing grid math ...
         const firstDayIndex = new Date(year, month, 1).getDay(); // 0 = Sun
         const daysInMonth = new Date(year, month + 1, 0).getDate();
         
         this.dom.grid.innerHTML = '';
 
-        // Padding
+        // ... existing loop ...
         for (let i = 0; i < firstDayIndex; i++) {
             const el = document.createElement('div');
             el.className = 'cal-day empty';
             this.dom.grid.appendChild(el);
         }
 
-        // Days
         for (let i = 1; i <= daysInMonth; i++) {
             const el = document.createElement('div');
             el.className = 'cal-day';
             el.textContent = i;
 
-            // Check Today
             if (i === this.today.getDate() && month === this.today.getMonth() && year === this.today.getFullYear()) {
                 el.classList.add('today');
             }
 
-            // Check Selected
             if (this.selectedDate && 
                 i === this.selectedDate.getDate() && 
                 month === this.selectedDate.getMonth() && 
