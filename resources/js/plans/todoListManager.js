@@ -1,4 +1,5 @@
 import { GameAPI } from "../api/GameAPI.js";
+import { CalendarWidget } from "../components/CalendarWidget.js";
 
 class TodoListManager {
     constructor() {
@@ -9,10 +10,12 @@ class TodoListManager {
             activeListTitle: 'Inbox',
             activeListIcon: 'fa-solid fa-inbox',
             filter: 'all', // 'all', 'pending', 'completed'
-            activeTaskId: null // For the details modal
+            activeTaskId: null, // For the details modal
+            originalDescription: ""
         };
         
         this.dom = {};
+        this.calendarWidget = null;
     }
 
     init() {
@@ -30,7 +33,7 @@ class TodoListManager {
             prioritySelect: document.getElementById('priority-input'),
             addBtn: document.getElementById('add-task-btn'),
             clearBtn: document.getElementById('clear-completed-btn'),
-            btnDeleteList: document.getElementById('btn-delete-list'), // New button in tabs area
+            btnDeleteList: document.getElementById('btn-delete-list'),
             
             // Containers
             listContainer: document.getElementById('todo-list-container'),
@@ -38,13 +41,19 @@ class TodoListManager {
             
             // Modal Elements
             modal: document.getElementById('todo-detail-modal'),
+            modalCard: document.getElementById('todo-modal-card'), // Needed for sidecar positioning
             modalTitle: document.getElementById('modal-task-title'),
             modalDesc: document.getElementById('modal-task-desc'),
             btnCloseModal: document.getElementById('btn-close-detail-modal'),
-            btnSaveDesc: document.getElementById('btn-save-description'),
             saveIndicator: document.getElementById('modal-save-indicator'),
             modalPriority: document.getElementById('modal-task-priority'),
-            modalListSelect: document.getElementById('modal-task-list')
+            modalListSelect: document.getElementById('modal-task-list'),
+
+            // Sidecar Elements (Date Picker)
+            btnDateTrigger: document.getElementById('btn-trigger-date-sidecar'),
+            btnDateText: document.getElementById('btn-date-text'),
+            sidecar: document.getElementById('sidecar-date-picker'),
+            btnCloseSidecar: document.getElementById('btn-close-sidecar')
         };
 
         if (!this.dom.listContainer) return;
@@ -58,9 +67,6 @@ class TodoListManager {
         // --- 3. Listen for Data ---
         Neutralino.events.off('receiveTodoLists', this._onReceiveLists);
         Neutralino.events.on('receiveTodoLists', (e) => this.renderLists(e.detail));
-
-        // Note: TaskHandler calls renderTasks() externally, but we can also listen directly if needed.
-        // The renderTasks function exported at the bottom handles the data injection into this manager.
 
         // --- 4. Initial Load ---
         GameAPI.getTodoLists();
@@ -78,8 +84,7 @@ class TodoListManager {
             this.dom.addBtn.addEventListener('click', () => this.createTask());
         }
 
-        // Enter Key in Input (FIX: Duplicate Task Issue)
-        // Changed from 'keypress' to 'keydown' with check for !e.repeat
+        // Enter Key in Input
         if (this.dom.input) {
             const newInput = this.dom.input.cloneNode(true);
             this.dom.input.parentNode.replaceChild(newInput, this.dom.input);
@@ -95,7 +100,6 @@ class TodoListManager {
             this.dom.clearBtn.parentNode.replaceChild(newBtn, this.dom.clearBtn);
             this.dom.clearBtn = newBtn;
             this.dom.clearBtn.addEventListener('click', () => {
-                // Double check state before action
                 const hasCompleted = this.state.tasks.some(t => t.completed === 1);
                 if (!hasCompleted) return;
 
@@ -124,7 +128,6 @@ class TodoListManager {
 
                 if (confirm(`Delete list "${this.state.activeListTitle}" and all its tasks? This cannot be undone.`)) {
                     GameAPI.deleteTodoList(this.state.activeListId);
-                    // Revert to Inbox immediately
                     this.switchList(1, 'Inbox', 'fa-solid fa-inbox'); 
                 }
             });
@@ -137,7 +140,7 @@ class TodoListManager {
                 this.dom.tabs.forEach(t => t.classList.remove('active'));
                 e.currentTarget.classList.add('active');
                 this.state.filter = e.currentTarget.getAttribute('data-filter');
-                this.render(); // Re-render current tasks with new filter
+                this.render(); 
             });
         });
     }
@@ -145,12 +148,70 @@ class TodoListManager {
     bindModalEvents() {
         if (!this.dom.modal) return;
 
-        // Close Modal via Button
-        this.dom.btnCloseModal.addEventListener('click', () => this.closeModal());
+        // --- 1. Sidecar Date Picker Initialization ---
+        if (!this.calendarWidget) {
+            this.calendarWidget = new CalendarWidget({
+                onDateSelect: (dateStr) => {
+                    // Update Trigger UI
+                    if(this.dom.btnDateText) this.dom.btnDateText.textContent = dateStr;
+                    this.dom.btnDateTrigger.classList.add('active');
+                    
+                    // Save to Backend immediately
+                    if(this.state.activeTaskId) {
+                        // Assumption: GameAPI has this method. If not, add it to GameAPI.js and TaskController.js
+                        // GameAPI.updateTaskDueDate(this.state.activeTaskId, dateStr); 
+                        console.log(`[Mock Save] Due Date: ${dateStr} for Task ${this.state.activeTaskId}`);
+                    }
+                    
+                    // Optional: Auto-close sidecar on selection
+                    // this.closeSidecar();
+                },
+                onRepeatChange: (rule) => {
+                    if(this.state.activeTaskId) {
+                        console.log(`[Mock Save] Repeat: ${rule} for Task ${this.state.activeTaskId}`);
+                    }
+                }
+            });
+        }
+
+        // --- 2. Sidecar Toggles ---
+        if (this.dom.btnDateTrigger) {
+            this.dom.btnDateTrigger.addEventListener('click', (e) => {
+                e.stopPropagation(); 
+                this.toggleSidecar();
+            });
+        }
+
+        if (this.dom.btnCloseSidecar) {
+            this.dom.btnCloseSidecar.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.closeSidecar();
+            });
+        }
+
+        // Close sidecar if clicking main modal body (but not the trigger)
+        if (this.dom.modalCard) {
+            this.dom.modalCard.addEventListener('click', (e) => {
+                if (this.dom.sidecar.classList.contains('visible') && 
+                    !e.target.closest('#btn-trigger-date-sidecar')) {
+                    this.closeSidecar();
+                }
+            });
+        }
+
+        // --- 3. Standard Modal Actions ---
         
-        // Close via Outside Click
+        // Close Modal via Button
+        this.dom.btnCloseModal.addEventListener('click', () => {
+            this._saveAndClose();
+        });
+        
+        // Close via Outside Click (Overlay)
         this.dom.modal.addEventListener('click', (e) => {
-            if (e.target === this.dom.modal) this.closeModal();
+            // Only if clicking the overlay background
+            if (e.target === this.dom.modal) {
+                this._saveAndClose();
+            }
         });
 
         // Handle Priority Change
@@ -159,9 +220,8 @@ class TodoListManager {
                 GameAPI.updateTaskPriority(
                     this.state.activeTaskId, 
                     e.target.value, 
-                    this.state.activeListId // To refresh view
+                    this.state.activeListId
                 );
-                this._flashSaveIndicator();
             }
         });
 
@@ -169,20 +229,70 @@ class TodoListManager {
         this.dom.modalListSelect.addEventListener('change', (e) => {
             if (this.state.activeTaskId) {
                 const newListId = parseInt(e.target.value);
-                
-                // Confirm move
                 GameAPI.moveTask(
                     this.state.activeTaskId, 
                     newListId, 
-                    this.state.activeListId // Current list (to remove task from view)
+                    this.state.activeListId
                 );
-                
-                this.closeModal(); // Close modal because task is gone from current view
+                this.closeModal();
             }
         });
+    }
 
-        // Save Description
-        this.dom.btnSaveDesc.addEventListener('click', () => this.saveDescription());
+    // --- Sidecar Positioning Logic ---
+
+    toggleSidecar() {
+        if (!this.dom.sidecar) return;
+        const isVisible = this.dom.sidecar.classList.contains('visible');
+        if (isVisible) {
+            this.closeSidecar();
+        } else {
+            this.openSidecar();
+        }
+    }
+
+    openSidecar() {
+        if (!this.dom.sidecar || !this.dom.modalCard || !this.dom.btnDateTrigger) return;
+
+        // 1. Get Geometry of the Main Modal Card
+        const cardRect = this.dom.modalCard.getBoundingClientRect();
+        
+        // 2. Calculate Position
+        
+        // Left: Align to the right of the modal card + 15px margin
+        const leftPos = cardRect.right + 15;
+        
+        // Top: Align with the TOP of the Modal Card (Cleaner "Sidebar" look)
+        // CHANGED: Use cardRect.top instead of triggerRect.top
+        const topPos = cardRect.top;
+
+        // 3. Apply Styles
+        this.dom.sidecar.style.top = `${topPos}px`;
+        this.dom.sidecar.style.left = `${leftPos}px`;
+
+        // 4. Show & Animate
+        this.dom.sidecar.classList.remove('hidden');
+        requestAnimationFrame(() => {
+            this.dom.sidecar.classList.add('visible');
+        });
+        
+        this.dom.btnDateTrigger.classList.add('active');
+    }
+
+    closeSidecar() {
+        if (!this.dom.sidecar) return;
+
+        this.dom.sidecar.classList.remove('visible');
+        
+        // Wait for CSS transition (0.2s) before hiding display
+        setTimeout(() => {
+            this.dom.sidecar.classList.add('hidden');
+        }, 200);
+
+        // Keep button active if a date is set (checking text content as simple state check)
+        if (this.dom.btnDateText && this.dom.btnDateText.textContent === "Set Due Date") {
+             this.dom.btnDateTrigger.classList.remove('active');
+        }
     }
 
     // --- List Logic ---
@@ -208,26 +318,20 @@ class TodoListManager {
     }
 
     switchList(id, title, icon) {
-        // 1. Update State
         this.state.activeListId = id;
         this.state.activeListTitle = title;
         this.state.activeListIcon = icon;
 
-        // 2. Update Header UI
         if (this.dom.headerTitle) {
             this.dom.headerTitle.innerHTML = `<i class="${icon}"></i> ${title}`;
         }
 
-        // 3. Toggle Delete Button (Hidden for Inbox ID 1)
         if (this.dom.btnDeleteList) {
             if (id === 1) this.dom.btnDeleteList.classList.add('hidden');
             else this.dom.btnDeleteList.classList.remove('hidden');
         }
 
-        // 4. Update Sidebar Highlights
         this.renderLists(this.state.lists);
-
-        // 5. Fetch Tasks for this List
         GameAPI.getTasks(id);
     }
 
@@ -239,7 +343,6 @@ class TodoListManager {
         
         if (!content) return;
         
-        // Pass activeListId to API
         GameAPI.addTask({ 
             content, 
             priority, 
@@ -257,14 +360,13 @@ class TodoListManager {
 
     render() {
         if (!this.dom.listContainer) {
-            // Re-cache if missing (safety for page navigation)
             this.dom.listContainer = document.getElementById('todo-list-container');
             if(!this.dom.listContainer) return;
         }
 
         const filteredTasks = this.filterTasks(this.state.tasks);
         this.updateCounts();
-        this.updateClearButtonState(); // FIX: Update button status
+        this.updateClearButtonState();
 
         this.dom.listContainer.innerHTML = '';
 
@@ -298,6 +400,11 @@ class TodoListManager {
             ? `<i class="fa-solid fa-align-left" style="font-size:0.8rem; margin-left:8px; opacity:0.5;"></i>` 
             : '';
 
+        // If task has a date, maybe show icon (optional visual enhancement)
+        const hasDateIcon = task.due_date
+            ? `<i class="fa-regular fa-calendar" style="font-size:0.8rem; margin-left:8px; opacity:0.5; color:#60a5fa;"></i>`
+            : '';
+
         item.innerHTML = `
             <div class="task-left">
                 <label class="check-container">
@@ -306,22 +413,21 @@ class TodoListManager {
                 </label>
                 <span class="task-text">${this.escapeHtml(task.content)}</span>
                 ${hasDescIcon}
+                ${hasDateIcon}
             </div>
             <button class="btn-delete" title="Delete Task">
                 <i class="fa-solid fa-trash"></i>
             </button>
         `;
 
-        // 1. Checkbox click
-        // FIX: Prevent row click (Modal) when clicking the label container
+        // Checkbox click
         const checkContainer = item.querySelector('.check-container');
         checkContainer.addEventListener('click', (e) => e.stopPropagation());
 
         const checkbox = item.querySelector('input[type="checkbox"]');
-        // Pass listId to toggleTask to refresh correct list
         checkbox.addEventListener('change', () => GameAPI.toggleTask(task.id, this.state.activeListId));
 
-        // 2. Delete click
+        // Delete click
         const delBtn = item.querySelector('.btn-delete');
         delBtn.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -330,7 +436,7 @@ class TodoListManager {
             }
         });
 
-        // 3. Item click (Open Details)
+        // Item click (Open Details)
         item.addEventListener('click', () => {
             const selection = window.getSelection();
             if (selection.toString().length === 0) {
@@ -341,12 +447,9 @@ class TodoListManager {
         return item;
     }
 
-    // --- Helper: Clear Button Logic (FIX) ---
     updateClearButtonState() {
         if (!this.dom.clearBtn) return;
-        
         const hasCompleted = this.state.tasks.some(t => t.completed === 1);
-        
         this.dom.clearBtn.disabled = !hasCompleted;
         this.dom.clearBtn.style.opacity = hasCompleted ? '1' : '0.5';
         this.dom.clearBtn.style.cursor = hasCompleted ? 'pointer' : 'not-allowed';
@@ -356,14 +459,34 @@ class TodoListManager {
 
     openModal(task) {
         this.state.activeTaskId = task.id;
+        this.state.originalDescription = task.description || "";
         this.dom.modalTitle.textContent = task.content;
         this.dom.modalDesc.value = task.description || "";
-
-        // 1. Set Priority
         this.dom.modalPriority.value = task.priority || 'p4';
 
-        // 2. Populate List Select
         this.populateListSelect(this.state.activeListId);
+
+        // 1. Reset Sidecar State (Always start hidden)
+        if (this.dom.sidecar) {
+            this.dom.sidecar.classList.remove('visible');
+            this.dom.sidecar.classList.add('hidden');
+        }
+
+        // 2. Update Date Trigger Text
+        if (task.due_date) {
+            this.dom.btnDateText.textContent = task.due_date; // e.g. "2025-12-25"
+            this.dom.btnDateTrigger.classList.add('active');
+        } else {
+            this.dom.btnDateText.textContent = "Set Due Date";
+            this.dom.btnDateTrigger.classList.remove('active');
+        }
+
+        // 3. Load Data into Calendar Widget
+        if (this.calendarWidget) {
+            const dueDate = task.due_date || null; 
+            const repeatRule = task.repeat_rule || null;
+            this.calendarWidget.loadTaskData(dueDate, repeatRule);
+        }
 
         this.dom.saveIndicator.classList.remove('visible');
         this.dom.modal.classList.remove('hidden');
@@ -385,30 +508,27 @@ class TodoListManager {
         });
     }
 
-    _flashSaveIndicator() {
-        this.dom.saveIndicator.classList.add('visible');
-        setTimeout(() => {
-            this.dom.saveIndicator.classList.remove('visible');
-        }, 1500);
+    _saveAndClose() {
+        // Save description if changed
+        if (this.state.activeTaskId) {
+            const currentDesc = this.dom.modalDesc.value;
+            if (currentDesc !== this.state.originalDescription) {
+                GameAPI.updateTaskDescription(
+                    this.state.activeTaskId, 
+                    currentDesc, 
+                    this.state.activeListId
+                );
+            }
+        }
+        this.closeModal();
     }
 
     closeModal() {
         this.dom.modal.classList.add('hidden');
+        // Ensure sidecar closes when modal closes
+        this.closeSidecar();
         this.state.activeTaskId = null;
-    }
-
-    saveDescription() {
-        if (this.state.activeTaskId) {
-            const newDesc = this.dom.modalDesc.value;
-            // Pass listId for refresh
-            GameAPI.updateTaskDescription(this.state.activeTaskId, newDesc, this.state.activeListId);
-            
-            // Visual feedback
-            this.dom.saveIndicator.classList.add('visible');
-            setTimeout(() => {
-                this.dom.saveIndicator.classList.remove('visible');
-            }, 1500);
-        }
+        this.state.originalDescription = "";
     }
 
     // --- Utilities ---
