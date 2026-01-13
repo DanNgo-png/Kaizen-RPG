@@ -34,8 +34,10 @@ export class HabitController {
             }
         });
 
+        // --- FIX: Added Missing Update Listener ---
         app.events.on("updateHabit", (payload) => {
             try {
+                // payload: { id, title, stack, icon }
                 this.repo.updateHabit(payload.id, {
                     title: payload.title,
                     stack: payload.stack,
