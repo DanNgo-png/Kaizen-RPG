@@ -15,6 +15,7 @@
 
     /* HABIT TRACKER */
     @import url('css/plan/habit-tracker/habit-tracker.css');
+    @import url('css/plan/habit-tracker/icon-picker-grid.css');
 
     /* KANBAN BOARD */
     @import url('css/plan/kanban-board/kanban-board.css');
