@@ -2,6 +2,17 @@ import { HabitAPI } from "../api/HabitAPI.js";
 import { HabitUI } from "./habit-tracker/HabitUI.js";
 import { notifier } from "../_global-managers/NotificationManager.js"; 
 
+const COMMON_ICONS = [
+    "fa-solid fa-check", "fa-solid fa-book", "fa-solid fa-person-running", 
+    "fa-solid fa-dumbbell", "fa-solid fa-apple-whole", "fa-solid fa-utensils", "fa-solid fa-bed",
+    "fa-solid fa-glass-water", "fa-solid fa-tooth", "fa-solid fa-sun",
+    "fa-solid fa-moon", "fa-solid fa-laptop-code", "fa-solid fa-pen-nib",
+    "fa-solid fa-briefcase", "fa-solid fa-graduation-cap", "fa-solid fa-brain",
+    "fa-solid fa-heart-pulse", "fa-solid fa-code", "fa-solid fa-person-hiking",
+    "fa-solid fa-money-bill", "fa-solid fa-piggy-bank", "fa-solid fa-house",
+    "fa-solid fa-broom", "fa-solid fa-paw", "fa-solid fa-music"
+];
+
 export class HabitTrackerManager {
     constructor() {
         this.state = {
@@ -10,19 +21,22 @@ export class HabitTrackerManager {
             filter: 'all' // 'all', 'focus', 'mastery'
         };
 
+        this.editingId = null; // Track if we are editing
+
         this.dom = {
             board: document.querySelector('.habit-board'),
             btnAdd: document.getElementById('btn-add-new-habit'),
-            // Fixed Selectors
             btnAll: document.querySelector('.view-btn[title="Show All"]'),
             btnFocus: document.querySelector('.view-btn[title*="Focus"]'),
-            btnMastery: document.querySelector('.view-btn[title*="Mastered"]'), // FIXED: Matches 'View Mastered Habits'
+            btnMastery: document.querySelector('.view-btn[title*="Mastered"]'),
             
             modal: document.getElementById('modal-new-habit'),
+            modalTitle: document.getElementById('modal-title'),
             form: {
                 title: document.getElementById('input-habit-title'),
                 stack: document.getElementById('input-habit-stack'),
-                icon: document.getElementById('input-habit-icon'),
+                iconInput: document.getElementById('input-habit-icon'),
+                iconGrid: document.getElementById('habit-icon-grid'),
                 btnSave: document.getElementById('btn-save-habit'),
                 btnCancel: document.getElementById('btn-cancel-habit')
             }
@@ -35,7 +49,6 @@ export class HabitTrackerManager {
     init() {
         if (!this.dom.board) return;
 
-        // 1. Data Events
         Neutralino.events.on('receiveHabitsData', (e) => {
             this.state.habits = e.detail.habits || [];
             this.state.logs = e.detail.logs || [];
@@ -45,27 +58,26 @@ export class HabitTrackerManager {
         const refresh = () => this.fetchData();
         
         Neutralino.events.on('habitCreated', refresh);
+        Neutralino.events.on('habitUpdated', refresh); 
         Neutralino.events.on('habitDeleted', refresh);
         
         Neutralino.events.on('habitArchived', () => {
             refresh();
-            if (this.state.filter !== 'mastery') {
-                notifier.show("Habit Mastered", "Moved to Mastery list.", "fa-solid fa-trophy");
-            } else {
-                notifier.show("Habit Restored", "Moved back to active list.", "fa-solid fa-box-open");
-            }
+            const msg = (this.state.filter !== 'mastery') 
+                ? "Habit Mastered! Moved to Mastery list." 
+                : "Habit Restored! Moved to Active list.";
+            notifier.show("Habit Updated", msg, "fa-solid fa-box-open");
         });
         
-        // 2. Button Events
         if(this.dom.btnAdd) this.dom.btnAdd.addEventListener('click', () => this.openModal());
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
         if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
 
-        // 3. Filter Buttons
         if (this.dom.btnAll) this.dom.btnAll.addEventListener('click', () => this.setFilter('all', this.dom.btnAll));
         if (this.dom.btnFocus) this.dom.btnFocus.addEventListener('click', () => this.setFilter('focus', this.dom.btnFocus));
         if (this.dom.btnMastery) this.dom.btnMastery.addEventListener('click', () => this.setFilter('mastery', this.dom.btnMastery));
 
+        this._renderIconGrid();
         this.fetchData();
     }
 
@@ -76,10 +88,8 @@ export class HabitTrackerManager {
 
     setFilter(mode, btnElement) {
         this.state.filter = mode;
-        
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         if(btnElement) btnElement.classList.add('active');
-
         this.fetchData(); 
     }
 
@@ -93,24 +103,54 @@ export class HabitTrackerManager {
                 return !isDoneToday;
             });
         }
-
         this.ui.render(filteredHabits, this.state.logs, this.state.filter);
     }
 
-    // --- Modal Logic ---
+    _renderIconGrid() {
+        if (!this.dom.form.iconGrid) return;
+        this.dom.form.iconGrid.innerHTML = '';
+
+        COMMON_ICONS.forEach(iconClass => {
+            const el = document.createElement('div');
+            el.className = 'icon-option';
+            el.innerHTML = `<i class="${iconClass}"></i>`;
+            el.dataset.value = iconClass;
+            el.addEventListener('click', () => this._selectIcon(iconClass));
+            this.dom.form.iconGrid.appendChild(el);
+        });
+    }
+
+    _selectIcon(iconClass) {
+        this.dom.form.iconInput.value = iconClass;
+        const options = this.dom.form.iconGrid.querySelectorAll('.icon-option');
+        options.forEach(opt => {
+            if (opt.dataset.value === iconClass) opt.classList.add('selected');
+            else opt.classList.remove('selected');
+        });
+    }
 
     openModal(habitToEdit = null) {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
             
             if (habitToEdit) {
+                // EDIT MODE
+                this.editingId = habitToEdit.id;
+                this.dom.modalTitle.textContent = "Edit Habit";
+                this.dom.form.btnSave.textContent = "Update";
+                
                 this.dom.form.title.value = habitToEdit.title;
                 this.dom.form.stack.value = habitToEdit.stack_name;
-                this.dom.form.icon.value = habitToEdit.icon;
+                this._selectIcon(habitToEdit.icon);
             } else {
+                // CREATE MODE
+                this.editingId = null;
+                this.dom.modalTitle.textContent = "New Habit";
+                this.dom.form.btnSave.textContent = "Create";
+                
                 this.dom.form.title.value = '';
                 this.dom.form.stack.value = '';
-                this.dom.form.icon.value = '';
+                this._selectIcon('fa-solid fa-check'); // Default
             }
             this.dom.form.title.focus();
         }
@@ -123,10 +163,16 @@ export class HabitTrackerManager {
     saveHabit() {
         const title = this.dom.form.title.value.trim();
         const stack = this.dom.form.stack.value || 'General';
-        const icon = this.dom.form.icon.value || 'fa-solid fa-check'; 
+        const icon = this.dom.form.iconInput.value || 'fa-solid fa-check'; 
 
         if (title) {
-            HabitAPI.createHabit(title, stack, icon, 7);
+            if (this.editingId) {
+                // UPDATE (Persistence Fix: Logic was correct but ensuring API is called properly)
+                HabitAPI.updateHabit(this.editingId, title, stack, icon);
+            } else {
+                // CREATE
+                HabitAPI.createHabit(title, stack, icon, 7);
+            }
             this.closeModal();
         }
     }
