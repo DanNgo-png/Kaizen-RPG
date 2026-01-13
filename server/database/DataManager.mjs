@@ -1,4 +1,5 @@
 import { TaskController } from "../controllers/TaskController.mjs";
+import { HabitController } from "../controllers/HabitController.mjs";
 import { MercenaryController } from "../controllers/MercenaryController.mjs";
 import { AppSettingsController } from "../controllers/AppSettingsController.mjs";
 import { FocusSessionController } from "../controllers/FocusSessionController.mjs";
@@ -14,6 +15,7 @@ export class DataManager {
         console.log("⚙️ Initializing Data Manager...");
 
         this.registerController(new TaskController());
+        this.registerController(new HabitController());
         this.registerController(new MercenaryController());
         this.registerController(new AppSettingsController());
         this.registerController(new FocusSessionController());
