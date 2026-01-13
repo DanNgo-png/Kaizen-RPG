@@ -1,6 +1,7 @@
 import { HabitAPI } from "../api/HabitAPI.js";
 import { HabitUI } from "./habit-tracker/HabitUI.js";
 import { notifier } from "../_global-managers/NotificationManager.js"; 
+import { StackDragLogic } from "./habit-tracker/dragLogic.js";
 
 const COMMON_ICONS = [
     "fa-solid fa-check", "fa-solid fa-book", "fa-solid fa-person-running", 
@@ -12,6 +13,8 @@ const COMMON_ICONS = [
     "fa-solid fa-money-bill", "fa-solid fa-piggy-bank", "fa-solid fa-house",
     "fa-solid fa-broom", "fa-solid fa-paw", "fa-solid fa-music"
 ];
+
+const DEFAULT_STACKS = ["Morning Routine", "Evening Routine", "Health", "Skills", "Work"];
 
 export class HabitTrackerManager {
     constructor() {
@@ -35,6 +38,8 @@ export class HabitTrackerManager {
             form: {
                 title: document.getElementById('input-habit-title'),
                 stack: document.getElementById('input-habit-stack'),
+                // Cache the dropdown container
+                stackDropdown: document.getElementById('stack-custom-dropdown'), 
                 iconInput: document.getElementById('input-habit-icon'),
                 iconGrid: document.getElementById('habit-icon-grid'),
                 btnSave: document.getElementById('btn-save-habit'),
@@ -77,10 +82,11 @@ export class HabitTrackerManager {
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
         if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
 
-        // Close Modal on Outside Click
+        // --- NEW: Custom Stack Dropdown Logic ---
+        this._setupStackDropdown();
+
         if (this.dom.modal) {
             this.dom.modal.addEventListener('click', (e) => {
-                // If the click target IS the overlay (not the content inside it)
                 if (e.target === this.dom.modal) {
                     this.closeModal();
                 }
@@ -93,6 +99,68 @@ export class HabitTrackerManager {
 
         this._renderIconGrid();
         this.fetchData();
+    }
+
+    // --- NEW: Dropdown Helper Methods ---
+
+    _setupStackDropdown() {
+        const input = this.dom.form.stack;
+        const dropdown = this.dom.form.stackDropdown;
+
+        if (!input || !dropdown) return;
+
+        // Show on focus
+        input.addEventListener('focus', () => {
+            this._renderStackOptions(input.value);
+        });
+
+        // Filter on type
+        input.addEventListener('input', () => {
+            this._renderStackOptions(input.value);
+        });
+
+        // Close on outside click
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.classList.add('hidden');
+            }
+        });
+    }
+
+    _renderStackOptions(filterText = '') {
+        const dropdown = this.dom.form.stackDropdown;
+        dropdown.innerHTML = '';
+
+        // 1. Gather all unique stack names
+        const existingStacks = this.state.habits.map(h => h.stack_name);
+        const allStacks = new Set([...DEFAULT_STACKS, ...existingStacks]);
+        
+        // 2. Filter based on input
+        const filtered = [...allStacks].filter(name => 
+            name.toLowerCase().includes(filterText.toLowerCase())
+        ).sort();
+
+        // 3. Hide if no matches
+        if (filtered.length === 0) {
+            dropdown.classList.add('hidden');
+            return;
+        }
+
+        // 4. Create DOM elements
+        filtered.forEach(stackName => {
+            const div = document.createElement('div');
+            div.className = 'dropdown-option';
+            div.textContent = stackName;
+            
+            div.addEventListener('click', () => {
+                this.dom.form.stack.value = stackName;
+                dropdown.classList.add('hidden');
+            });
+
+            dropdown.appendChild(div);
+        });
+
+        dropdown.classList.remove('hidden');
     }
 
     fetchData() {
@@ -118,6 +186,8 @@ export class HabitTrackerManager {
             });
         }
         this.ui.render(filteredHabits, this.state.logs, this.state.filter);
+
+        StackDragLogic.init(this.dom.board);
     }
 
     _renderIconGrid() {
@@ -147,6 +217,9 @@ export class HabitTrackerManager {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
             
+            // Hide any open dropdowns initially
+            if(this.dom.form.stackDropdown) this.dom.form.stackDropdown.classList.add('hidden');
+
             if (habitToEdit) {
                 // EDIT MODE
                 this.editingId = habitToEdit.id;
@@ -172,6 +245,7 @@ export class HabitTrackerManager {
 
     closeModal() {
         if (this.dom.modal) this.dom.modal.classList.add('hidden');
+        if (this.dom.form.stackDropdown) this.dom.form.stackDropdown.classList.add('hidden');
     }
 
     saveHabit() {

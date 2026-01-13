@@ -1,0 +1,50 @@
+/* --- Custom Stack Dropdown --- */
+.input-row {
+    position: relative; /* Anchor for absolute dropdown */
+}
+
+.custom-dropdown {
+    position: absolute;
+    top: 100%; /* Right below input */
+    left: 0;
+    width: 100%;
+    background-color: #1a1a1a; /* Dark background matching input/modal */
+    border: 1px solid #374151;
+    border-top: none; /* Merge with input visually */
+    border-radius: 0 0 6px 6px;
+    max-height: 150px;
+    overflow-y: auto;
+    z-index: 50; /* Above other inputs */
+    box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+}
+
+.custom-dropdown.hidden {
+    display: none;
+}
+
+.dropdown-option {
+    padding: 10px 12px;
+    color: #d1d5db;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background-color 0.1s;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.dropdown-option:last-child {
+    border-bottom: none;
+}
+
+.dropdown-option:hover {
+    background-color: #2d3748;
+    color: #fff;
+}
+
+/* Scrollbar for the dropdown */
+.custom-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.custom-dropdown::-webkit-scrollbar-thumb {
+    background: #4b5563;
+    border-radius: 3px;
+}

@@ -54,15 +54,16 @@
         <!-- Stack -->
         <div class="input-row" style="margin-bottom:0;">
           <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Stack / Group</label>
-          <input type="text" id="input-habit-stack" list="stack-suggestions"
+          
+          <!-- Removed 'list' attribute, added autocomplete="off" -->
+          <input type="text" id="input-habit-stack" autocomplete="off"
             style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px; box-sizing: border-box;"
             placeholder="e.g. Morning Routine">
-          <datalist id="stack-suggestions">
-            <option value="Morning Routine">
-            <option value="Evening Routine">
-            <option value="Health">
-            <option value="Skills">
-          </datalist>
+            
+          <!-- New Custom Dropdown Container -->
+          <div id="stack-custom-dropdown" class="custom-dropdown hidden">
+            <!-- Options will be injected by JS -->
+          </div>
         </div>
 
         <!-- Icon Picker -->
