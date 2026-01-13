@@ -6,10 +6,10 @@ export class HabitRepository {
 
         this.statements = {
             getAll: this.db.prepare("SELECT * FROM habits WHERE archived = 0 ORDER BY stack_name, id"),
+            getArchived: this.db.prepare("SELECT * FROM habits WHERE archived = 1 ORDER BY stack_name, id"), // NEW
             create: this.db.prepare("INSERT INTO habits (title, stack_name, icon, target_days) VALUES (@title, @stack, @icon, @target)"),
             delete: this.db.prepare("DELETE FROM habits WHERE id = ?"),
             
-            // Logs
             getLogsRange: this.db.prepare(`
                 SELECT * FROM habit_logs 
                 WHERE log_date BETWEEN @startDate AND @endDate
@@ -19,20 +19,19 @@ export class HabitRepository {
                 VALUES (@habitId, @date, 1)
                 ON CONFLICT(habit_id, log_date) DO UPDATE SET status = CASE WHEN status = 1 THEN 0 ELSE 1 END
             `),
-            
-            // Stats
             getStreak: this.db.prepare(`
                 SELECT count(*) as count FROM habit_logs WHERE habit_id = ? AND status = 1
             `)
         };
     }
 
-    // Update getAll to support filtering by archived status
-    getHabits(includeArchived = false) {
-        if (includeArchived) {
-            return this.db.prepare("SELECT * FROM habits ORDER BY stack_name, id").all();
-        }
-        return this.db.prepare("SELECT * FROM habits WHERE archived = 0 ORDER BY stack_name, id").all();
+    getHabits() {
+        return this.statements.getAll.all();
+    }
+
+    // NEW Method for Mastery View
+    getArchivedHabits() {
+        return this.statements.getArchived.all();
     }
     
     createHabit(data) { 
@@ -47,13 +46,11 @@ export class HabitRepository {
 
     toggleDay(habitId, date) {
         this.statements.toggleLog.run({ habitId, date });
-        // Return new status
         const row = this.db.prepare("SELECT status FROM habit_logs WHERE habit_id = ? AND log_date = ?").get(habitId, date);
         return row ? row.status : 0;
     }
 
     toggleArchive(id) {
-        // Toggle the 'archived' status (0 or 1)
         this.db.prepare("UPDATE habits SET archived = CASE WHEN archived = 0 THEN 1 ELSE 0 END WHERE id = ?").run(id);
     }
 }
