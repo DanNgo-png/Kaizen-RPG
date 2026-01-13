@@ -8,6 +8,7 @@ export class HabitRepository {
             getAll: this.db.prepare("SELECT * FROM habits WHERE archived = 0 ORDER BY stack_name, id"),
             getArchived: this.db.prepare("SELECT * FROM habits WHERE archived = 1 ORDER BY stack_name, id"), // NEW
             create: this.db.prepare("INSERT INTO habits (title, stack_name, icon, target_days) VALUES (@title, @stack, @icon, @target)"),
+            update: this.db.prepare("UPDATE habits SET title = @title, stack_name = @stack, icon = @icon WHERE id = @id"),
             delete: this.db.prepare("DELETE FROM habits WHERE id = ?"),
             
             getLogsRange: this.db.prepare(`
@@ -29,13 +30,16 @@ export class HabitRepository {
         return this.statements.getAll.all();
     }
 
-    // NEW Method for Mastery View
     getArchivedHabits() {
         return this.statements.getArchived.all();
     }
     
     createHabit(data) { 
         return this.statements.create.run(data); 
+    }
+
+    updateHabit(id, data) {
+        return this.statements.update.run({ ...data, id });
     }
 
     deleteHabit(id) { return this.statements.delete.run(id); }
