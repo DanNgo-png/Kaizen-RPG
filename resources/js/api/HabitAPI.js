@@ -5,6 +5,10 @@ export const HabitAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getHabitsData", { startDate, endDate, viewMode });
     },
 
+    saveStackOrder: async (orderArray) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "saveStackOrder", { order: orderArray });
+    },
+
     createHabit: async (title, stack, icon, target) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "createHabit", { title, stack, icon, target });
     },
