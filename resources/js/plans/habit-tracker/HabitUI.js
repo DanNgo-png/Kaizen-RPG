@@ -1,10 +1,10 @@
 import { HabitAPI } from "../../api/HabitAPI.js";
-import { handleHabitContextMenu } from "./createCustomMenu.js"; 
+import { handleHabitContextMenu } from "./createCustomMenu.js";
 
 export class HabitUI {
-    constructor(container, onEditCallback) { 
+    constructor(container, onEditCallback) {
         this.container = container;
-        this.onEditCallback = onEditCallback; 
+        this.onEditCallback = onEditCallback;
         this.currentWeekStart = this._getMonday(new Date());
         
         this.dom = {
@@ -50,12 +50,10 @@ export class HabitUI {
         const start = this.currentWeekStart;
         const end = new Date(start);
         end.setDate(end.getDate() + 6);
-        const oneJan = new Date(start.getFullYear(), 0, 1);
-        const numberOfDays = Math.floor((start - oneJan) / (24 * 60 * 60 * 1000));
-        const weekNum = Math.ceil((start.getDay() + 1 + numberOfDays) / 7);
+
         const opt = { month: 'short', day: 'numeric' };
         const rangeStr = `${start.toLocaleDateString('en-US', opt)} - ${end.toLocaleDateString('en-US', opt)}`;
-        this.dom.headerSub.textContent = `Week ${weekNum} • ${rangeStr}`;
+        this.dom.headerSub.textContent = `Current Week • ${rangeStr}`;
     }
 
     _createStackElement(stackName, habits, weekDates, logs, viewMode) {
@@ -78,6 +76,7 @@ export class HabitUI {
         const bodyDiv = document.createElement('div');
         bodyDiv.className = 'stack-body';
 
+        // Grid Headers
         const dayHeaders = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
         const todayStr = new Date().toISOString().split('T')[0];
 
@@ -103,6 +102,7 @@ export class HabitUI {
         stackDiv.innerHTML = headerHtml;
         stackDiv.appendChild(bodyDiv);
 
+        // Toggle Collapse
         stackDiv.querySelector('.stack-header').addEventListener('click', () => {
             stackDiv.classList.toggle('collapsed');
         });
@@ -114,12 +114,12 @@ export class HabitUI {
         const row = document.createElement('div');
         row.className = 'habit-row';
 
-        // --- NEW: Add Context Menu Listener ---
+        // Context Menu Event
         row.addEventListener('contextmenu', (e) => {
             handleHabitContextMenu(e, habit, this.onEditCallback);
         });
 
-        // Col 1: Name & Icon
+        // Name
         const nameCell = document.createElement('div');
         nameCell.className = 'h-cell name-col';
         nameCell.innerHTML = `
@@ -128,21 +128,20 @@ export class HabitUI {
         `;
         row.appendChild(nameCell);
 
-        // Col 2: Streak
+        // Streak
         const currentStreak = this._calculateStreak(habit.id, logs);
         const statCell = document.createElement('div');
         statCell.className = 'h-cell';
         const streakStyle = currentStreak > 0 ? 'opacity:1; color:#fb923c;' : 'opacity:0.3;';
-        statCell.innerHTML = `<span class="fire-streak" style="${streakStyle}">
-            <i class="fa-solid fa-fire"></i> ${currentStreak}
-        </span>`;
+        statCell.innerHTML = `<span class="fire-streak" style="${streakStyle}"><i class="fa-solid fa-fire"></i> ${currentStreak}</span>`;
         row.appendChild(statCell);
 
-        // Col 3-9: Days
+        // Days
         weekDates.forEach(dateStr => {
             const cell = document.createElement('div');
             cell.className = 'h-cell';
             const isDone = logs.some(l => l.habit_id === habit.id && l.log_date === dateStr && l.status === 1);
+            
             const btn = document.createElement('button');
             btn.className = `check-btn ${isDone ? 'done' : ''}`;
             if(isDone) btn.innerHTML = '<i class="fa-solid fa-check"></i>';
@@ -159,21 +158,20 @@ export class HabitUI {
             row.appendChild(cell);
         });
 
-        // Col 10: Actions (Keep these as visual backup)
+        // Actions
         const actionCell = document.createElement('div');
         actionCell.className = 'h-cell';
         
-        const settingsBtn = document.createElement('i');
-        settingsBtn.className = 'fa-solid fa-ellipsis-vertical';
-        settingsBtn.style.cssText = "opacity:0.5; cursor:pointer; font-size:1rem; padding:5px;";
-        
-        // Left click on ellipsis also opens context menu
-        settingsBtn.addEventListener('click', (e) => {
+        // Ellipsis menu trigger
+        const menuBtn = document.createElement('i');
+        menuBtn.className = 'fa-solid fa-ellipsis-vertical';
+        menuBtn.style.cssText = "opacity:0.5; cursor:pointer; font-size:1rem; padding:5px;";
+        menuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
             handleHabitContextMenu(e, habit, this.onEditCallback);
         });
 
-        actionCell.appendChild(settingsBtn);
+        actionCell.appendChild(menuBtn);
         row.appendChild(actionCell);
 
         return row;
@@ -188,20 +186,16 @@ export class HabitUI {
         if (habitLogs.length === 0) return 0;
 
         const today = new Date().toISOString().split('T')[0];
-        const yesterdayDate = new Date(Date.now() - 86400000);
-        const yesterday = yesterdayDate.toISOString().split('T')[0];
+        const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-        const lastLog = habitLogs[0];
-        if (lastLog !== today && lastLog !== yesterday) return 0; 
+        if (habitLogs[0] !== today && habitLogs[0] !== yesterday) return 0;
 
         let streak = 1;
-        let currentDate = new Date(lastLog); 
+        let currentDate = new Date(habitLogs[0]);
 
         for (let i = 1; i < habitLogs.length; i++) {
             const prevDate = new Date(habitLogs[i]);
-            const diffTime = Math.abs(currentDate - prevDate);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
-
+            const diffDays = Math.ceil(Math.abs(currentDate - prevDate) / (1000 * 60 * 60 * 24));
             if (diffDays === 1) {
                 streak++;
                 currentDate = prevDate;
