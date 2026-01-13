@@ -52,7 +52,11 @@ const SCHEMAS = {
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
             name TEXT NOT NULL, 
             role TEXT NOT NULL, 
-            level INTEGER DEFAULT 1 
+            level INTEGER DEFAULT 1,
+            xp INTEGER DEFAULT 0,
+            str INTEGER DEFAULT 10,
+            int INTEGER DEFAULT 10,
+            spd INTEGER DEFAULT 10
         );
         -- You can add inventory tables here later
     `,
