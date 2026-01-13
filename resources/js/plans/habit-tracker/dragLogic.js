@@ -1,8 +1,3 @@
-/**
- * dragLogic.js
- * Smoother drag with FLIP animations for shifting items.
- */
-
 export const StackDragLogic = {
     // Configuration
     LONG_PRESS_DURATION: 300,
@@ -19,9 +14,12 @@ export const StackDragLogic = {
     avatar: null,
     placeholder: null,
     container: null,
+    onOrderChange: null, // Callback for saving
 
-    init(containerElement) {
+    init(containerElement, onOrderChange) {
         this.container = containerElement;
+        this.onOrderChange = onOrderChange;
+
         const headers = this.container.querySelectorAll('.stack-header');
         
         headers.forEach(header => {
@@ -33,6 +31,7 @@ export const StackDragLogic = {
         });
     },
 
+    // ... (handlePressStart, checkMovement, cancelPress, _removeTempListeners, startDrag remain the same) ...
     handlePressStart(e, stackElement) {
         if (e.type === 'mousedown' && e.button !== 0) return;
 
@@ -94,12 +93,10 @@ export const StackDragLogic = {
         
         const rect = this.draggedElement.getBoundingClientRect();
 
-        // 1. Create Placeholder
         this.placeholder = document.createElement('div');
         this.placeholder.className = 'habit-stack stack-placeholder';
         this.placeholder.style.height = `${rect.height}px`;
         
-        // 2. Create Avatar
         this.avatar = this.draggedElement.cloneNode(true);
         this.avatar.classList.add('stack-drag-avatar');
         this.avatar.classList.remove('is-pressing'); 
@@ -109,14 +106,12 @@ export const StackDragLogic = {
         this.avatar.style.top = `${rect.top}px`;
         this.avatar.style.left = `${rect.left}px`;
         
-        // 3. Swap in DOM
         document.body.appendChild(this.avatar);
         this.container.insertBefore(this.placeholder, this.draggedElement);
         this.draggedElement.style.display = 'none';
         
         if (navigator.vibrate) navigator.vibrate(20);
 
-        // 4. Bind Listeners
         const moveEvent = e.type.includes('mouse') ? 'mousemove' : 'touchmove';
         const upEvent = e.type.includes('mouse') ? 'mouseup' : 'touchend';
 
@@ -129,39 +124,25 @@ export const StackDragLogic = {
         this._removeTempListeners();
     },
 
-    /**
-     * FLIP Animation Helper
-     * Captures positions, executes the DOM change callback, then animates the difference.
-     */
     _withFlipAnimation(domChangeCallback) {
-        // 1. First (Snapshot positions)
         const siblings = Array.from(this.container.querySelectorAll('.habit-stack'));
         const positions = new Map();
         siblings.forEach(el => positions.set(el, el.getBoundingClientRect().top));
 
-        // 2. Execute DOM Change
         domChangeCallback();
 
-        // 3. Last & Invert & Play
         siblings.forEach(el => {
             const oldTop = positions.get(el);
             const newTop = el.getBoundingClientRect().top;
             const delta = oldTop - newTop;
 
             if (delta !== 0) {
-                // Invert: translate back to old position instantly
                 el.style.transform = `translateY(${delta}px)`;
                 el.style.transition = 'none';
-                
-                // Force Reflow
                 void el.offsetHeight; 
-
-                // Play: Animate to new position (0)
-                // Use a spring-like cubic-bezier for that "flutter" feel
                 el.style.transition = 'transform 300ms cubic-bezier(0.2, 0, 0, 1)';
                 el.style.transform = '';
 
-                // Clean up styles after animation matches duration
                 const cleanup = () => {
                     el.style.transition = '';
                     el.style.transform = '';
@@ -179,11 +160,9 @@ export const StackDragLogic = {
         const clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
         const clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
 
-        // 1. Move Avatar
         const newTop = clientY - this.offsetY;
         this.avatar.style.top = `${newTop}px`;
 
-        // 2. Detect Reorder
         this.avatar.style.display = 'none';
         const elementUnder = document.elementFromPoint(clientX, clientY);
         this.avatar.style.display = ''; 
@@ -194,10 +173,8 @@ export const StackDragLogic = {
             const box = targetStack.getBoundingClientRect();
             const boxCenter = box.top + (box.height / 2);
             
-            // Determine Direction
             const moveUp = clientY < boxCenter;
             
-            // Wrap the DOM move in FLIP animation
             this._withFlipAnimation(() => {
                 if (moveUp) {
                     this.container.insertBefore(this.placeholder, targetStack);
@@ -230,6 +207,19 @@ export const StackDragLogic = {
             this.draggedElement.classList.remove('is-pressing');
             this.avatar.remove();
 
+            // --- SAVE LOGIC ---
+            if (this.onOrderChange) {
+                const newOrder = Array.from(this.container.querySelectorAll('.habit-stack'))
+                    .map(el => {
+                        // Use the data attribute we added in HabitUI
+                        return el.dataset.stackName || el.querySelector('.stack-title-text')?.textContent.trim();
+                    })
+                    .filter(name => name); // Clean empty strings
+                
+                this.onOrderChange(newOrder);
+            }
+
+            // Cleanup
             this.avatar = null;
             this.placeholder = null;
             this.draggedElement = null;

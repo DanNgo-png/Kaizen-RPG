@@ -1,7 +1,7 @@
 import { HabitAPI } from "../api/HabitAPI.js";
 import { HabitUI } from "./habit-tracker/HabitUI.js";
-import { notifier } from "../_global-managers/NotificationManager.js"; 
 import { StackDragLogic } from "./habit-tracker/dragLogic.js";
+import { notifier } from "../_global-managers/NotificationManager.js"; 
 
 const COMMON_ICONS = [
     "fa-solid fa-check", "fa-solid fa-book", "fa-solid fa-person-running", 
@@ -21,10 +21,11 @@ export class HabitTrackerManager {
         this.state = {
             habits: [],
             logs: [],
-            filter: 'all' // 'all', 'focus', 'mastery'
+            stackOrder: [], 
+            filter: 'all'
         };
 
-        this.editingId = null; // Track if we are editing
+        this.editingId = null;
 
         this.dom = {
             board: document.querySelector('.habit-board'),
@@ -38,7 +39,6 @@ export class HabitTrackerManager {
             form: {
                 title: document.getElementById('input-habit-title'),
                 stack: document.getElementById('input-habit-stack'),
-                // Cache the dropdown container
                 stackDropdown: document.getElementById('stack-custom-dropdown'), 
                 iconInput: document.getElementById('input-habit-icon'),
                 iconGrid: document.getElementById('habit-icon-grid'),
@@ -61,6 +61,7 @@ export class HabitTrackerManager {
         Neutralino.events.on('receiveHabitsData', (e) => {
             this.state.habits = e.detail.habits || [];
             this.state.logs = e.detail.logs || [];
+            this.state.stackOrder = e.detail.stackOrder || []; 
             this.render();
         });
 
@@ -82,7 +83,6 @@ export class HabitTrackerManager {
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
         if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
 
-        // --- NEW: Custom Stack Dropdown Logic ---
         this._setupStackDropdown();
 
         if (this.dom.modal) {
@@ -101,65 +101,39 @@ export class HabitTrackerManager {
         this.fetchData();
     }
 
-    // --- NEW: Dropdown Helper Methods ---
-
     _setupStackDropdown() {
         const input = this.dom.form.stack;
         const dropdown = this.dom.form.stackDropdown;
-
         if (!input || !dropdown) return;
-
-        // Show on focus
-        input.addEventListener('focus', () => {
-            this._renderStackOptions(input.value);
-        });
-
-        // Filter on type
-        input.addEventListener('input', () => {
-            this._renderStackOptions(input.value);
-        });
-
-        // Close on outside click
+        input.addEventListener('focus', () => this._renderStackOptions(input.value));
+        input.addEventListener('input', () => this._renderStackOptions(input.value));
         document.addEventListener('click', (e) => {
-            if (!input.contains(e.target) && !dropdown.contains(e.target)) {
-                dropdown.classList.add('hidden');
-            }
+            if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
         });
     }
 
     _renderStackOptions(filterText = '') {
         const dropdown = this.dom.form.stackDropdown;
         dropdown.innerHTML = '';
-
-        // 1. Gather all unique stack names
         const existingStacks = this.state.habits.map(h => h.stack_name);
         const allStacks = new Set([...DEFAULT_STACKS, ...existingStacks]);
-        
-        // 2. Filter based on input
-        const filtered = [...allStacks].filter(name => 
-            name.toLowerCase().includes(filterText.toLowerCase())
-        ).sort();
+        const filtered = [...allStacks].filter(name => name.toLowerCase().includes(filterText.toLowerCase())).sort();
 
-        // 3. Hide if no matches
         if (filtered.length === 0) {
             dropdown.classList.add('hidden');
             return;
         }
 
-        // 4. Create DOM elements
         filtered.forEach(stackName => {
             const div = document.createElement('div');
             div.className = 'dropdown-option';
             div.textContent = stackName;
-            
             div.addEventListener('click', () => {
                 this.dom.form.stack.value = stackName;
                 dropdown.classList.add('hidden');
             });
-
             dropdown.appendChild(div);
         });
-
         dropdown.classList.remove('hidden');
     }
 
@@ -185,15 +159,20 @@ export class HabitTrackerManager {
                 return !isDoneToday;
             });
         }
-        this.ui.render(filteredHabits, this.state.logs, this.state.filter);
-
-        StackDragLogic.init(this.dom.board);
+        
+        // Pass stackOrder to UI
+        this.ui.render(filteredHabits, this.state.logs, this.state.filter, this.state.stackOrder);
+        
+        // Initialize Drag Logic with Callback
+        StackDragLogic.init(this.dom.board, (newOrder) => {
+            this.state.stackOrder = newOrder; // Update local state immediately
+            HabitAPI.saveStackOrder(newOrder); // Save to DB
+        });
     }
 
     _renderIconGrid() {
         if (!this.dom.form.iconGrid) return;
         this.dom.form.iconGrid.innerHTML = '';
-
         COMMON_ICONS.forEach(iconClass => {
             const el = document.createElement('div');
             el.className = 'icon-option';
@@ -216,25 +195,19 @@ export class HabitTrackerManager {
     openModal(habitToEdit = null, defaultStack = '') {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
-            
-            // Hide any open dropdowns initially
             if(this.dom.form.stackDropdown) this.dom.form.stackDropdown.classList.add('hidden');
 
             if (habitToEdit) {
-                // EDIT MODE
                 this.editingId = habitToEdit.id;
                 this.dom.modalTitle.textContent = "Edit Habit";
                 this.dom.form.btnSave.textContent = "Update";
-                
                 this.dom.form.title.value = habitToEdit.title;
                 this.dom.form.stack.value = habitToEdit.stack_name;
                 this._selectIcon(habitToEdit.icon);
             } else {
-                // CREATE MODE
                 this.editingId = null;
                 this.dom.modalTitle.textContent = "New Habit";
                 this.dom.form.btnSave.textContent = "Create";
-                
                 this.dom.form.title.value = '';
                 this.dom.form.stack.value = defaultStack || '';
                 this._selectIcon('fa-solid fa-check'); 

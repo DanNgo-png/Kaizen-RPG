@@ -6,6 +6,7 @@ export class HabitController {
     }
 
     register(app) {
+        // 1. Get Data
         app.events.on("getHabitsData", (payload) => {
             try {
                 const { startDate, endDate, viewMode } = payload;
@@ -14,17 +15,30 @@ export class HabitController {
                 if (viewMode === 'mastery') {
                     habits = this.repo.getArchivedHabits(); 
                 } else {
-                    habits = this.repo.getHabits(); // Active only
+                    habits = this.repo.getHabits();
                 }
 
                 const logs = this.repo.getLogs(startDate, endDate);
+                
+                // Fetch Order from Habit DB, not App Settings
+                const stackOrder = this.repo.getStackOrder();
 
-                app.events.broadcast("receiveHabitsData", { habits, logs });
+                app.events.broadcast("receiveHabitsData", { habits, logs, stackOrder });
             } catch (err) {
                 console.error("❌ Habit Error:", err);
             }
         });
 
+        // 2. Save Order
+        app.events.on("saveStackOrder", (payload) => {
+            try {
+                this.repo.saveStackOrder(payload.order);
+            } catch (err) {
+                console.error("❌ Error saving stack order:", err);
+            }
+        });
+
+        // 3. CRUD
         app.events.on("createHabit", (payload) => {
             try {
                 this.repo.createHabit(payload);
@@ -34,10 +48,8 @@ export class HabitController {
             }
         });
 
-        // --- FIX: Added Missing Update Listener ---
         app.events.on("updateHabit", (payload) => {
             try {
-                // payload: { id, title, stack, icon }
                 this.repo.updateHabit(payload.id, {
                     title: payload.title,
                     stack: payload.stack,
@@ -45,7 +57,6 @@ export class HabitController {
                 });
                 app.events.broadcast("habitUpdated", { success: true });
             } catch (err) {
-                console.error("❌ HabitController: Update Failed:", err);
                 app.events.broadcast("habitUpdated", { success: false, error: err.message });
             }
         });

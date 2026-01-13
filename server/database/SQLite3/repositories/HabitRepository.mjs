@@ -6,7 +6,7 @@ export class HabitRepository {
 
         this.statements = {
             getAll: this.db.prepare("SELECT * FROM habits WHERE archived = 0 ORDER BY stack_name, id"),
-            getArchived: this.db.prepare("SELECT * FROM habits WHERE archived = 1 ORDER BY stack_name, id"), // NEW
+            getArchived: this.db.prepare("SELECT * FROM habits WHERE archived = 1 ORDER BY stack_name, id"),
             create: this.db.prepare("INSERT INTO habits (title, stack_name, icon, target_days) VALUES (@title, @stack, @icon, @target)"),
             update: this.db.prepare("UPDATE habits SET title = @title, stack_name = @stack, icon = @icon WHERE id = @id"),
             delete: this.db.prepare("DELETE FROM habits WHERE id = ?"),
@@ -20,33 +20,18 @@ export class HabitRepository {
                 VALUES (@habitId, @date, 1)
                 ON CONFLICT(habit_id, log_date) DO UPDATE SET status = CASE WHEN status = 1 THEN 0 ELSE 1 END
             `),
-            getStreak: this.db.prepare(`
-                SELECT count(*) as count FROM habit_logs WHERE habit_id = ? AND status = 1
-            `)
+            toggleArchive: this.db.prepare("UPDATE habits SET archived = CASE WHEN archived = 0 THEN 1 ELSE 0 END WHERE id = ?"),
+            getMeta: this.db.prepare("SELECT value FROM habit_metadata WHERE key = ?"),
+            setMeta: this.db.prepare("INSERT OR REPLACE INTO habit_metadata (key, value) VALUES (@key, @value)")
         };
     }
 
-    getHabits() {
-        return this.statements.getAll.all();
-    }
-
-    getArchivedHabits() {
-        return this.statements.getArchived.all();
-    }
-    
-    createHabit(data) { 
-        return this.statements.create.run(data); 
-    }
-
-    updateHabit(id, data) {
-        return this.statements.update.run({ ...data, id });
-    }
-
+    getHabits() { return this.statements.getAll.all(); }
+    getArchivedHabits() { return this.statements.getArchived.all(); }
+    createHabit(data) { return this.statements.create.run(data); }
+    updateHabit(id, data) { return this.statements.update.run({ ...data, id }); }
     deleteHabit(id) { return this.statements.delete.run(id); }
-
-    getLogs(startDate, endDate) {
-        return this.statements.getLogsRange.all({ startDate, endDate });
-    }
+    getLogs(startDate, endDate) { return this.statements.getLogsRange.all({ startDate, endDate }); }
 
     toggleDay(habitId, date) {
         this.statements.toggleLog.run({ habitId, date });
@@ -55,6 +40,16 @@ export class HabitRepository {
     }
 
     toggleArchive(id) {
-        this.db.prepare("UPDATE habits SET archived = CASE WHEN archived = 0 THEN 1 ELSE 0 END WHERE id = ?").run(id);
+        this.statements.toggleArchive.run(id);
+    }
+
+    getStackOrder() {
+        const result = this.statements.getMeta.get('stack_order');
+        return result ? JSON.parse(result.value) : [];
+    }
+
+    saveStackOrder(orderArray) {
+        const json = JSON.stringify(orderArray);
+        this.statements.setMeta.run({ key: 'stack_order', value: json });
     }
 }

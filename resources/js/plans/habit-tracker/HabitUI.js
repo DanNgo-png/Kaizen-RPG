@@ -4,7 +4,7 @@ import { handleHabitContextMenu } from "./createCustomMenu.js";
 export class HabitUI {
     constructor(container, callbacks) {
         this.container = container;
-        this.callbacks = callbacks; // Expects { onEdit: fn, onAddStack: fn }
+        this.callbacks = callbacks; 
         this.currentWeekStart = this._getMonday(new Date());
         
         this.dom = {
@@ -13,7 +13,8 @@ export class HabitUI {
         };
     }
 
-    render(habits, logs, viewMode) {
+    // UPDATED: Accept stackOrder
+    render(habits, logs, viewMode, stackOrder = []) {
         this.updateHeader();
         this.container.innerHTML = '';
         
@@ -21,16 +22,17 @@ export class HabitUI {
             const emptyMsg = viewMode === 'mastery' 
                 ? "No mastered habits yet. Keep pushing!" 
                 : "No active habits found. Create one to get started.";
-                
+            
+            // FIXED: Use Flexbox to ensure Icon and Text are centered and close together
             this.container.innerHTML = `
-                <div style="text-align:center; color:#6b7280; margin-top:50px; font-size:0.9rem;">
-                    <i class="fa-solid fa-wind" style="font-size:2rem; margin-bottom:10px; display:block;"></i>
-                    ${emptyMsg}
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; margin-top: 50px; font-size: 1.1rem; width: 100%;">
+                    <span>${emptyMsg}</span>
                 </div>`;
             return;
         }
 
         const stacks = {};
+        // ... (Rest of the render function remains the same)
         habits.forEach(h => {
             const stackName = h.stack_name || 'General';
             if (!stacks[stackName]) stacks[stackName] = [];
@@ -39,12 +41,37 @@ export class HabitUI {
 
         const weekDates = this._getWeekDates();
 
-        Object.keys(stacks).forEach(stackName => {
+        // --- SORTING LOGIC ---
+        let stackKeys = Object.keys(stacks);
+        
+        if (stackOrder && stackOrder.length > 0) {
+            stackKeys.sort((a, b) => {
+                const idxA = stackOrder.indexOf(a);
+                const idxB = stackOrder.indexOf(b);
+                
+                // If both are in the saved order, sort by index
+                if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+                
+                // If only A is found, put A first
+                if (idxA !== -1) return -1;
+                
+                // If only B is found, put B first
+                if (idxB !== -1) return 1;
+                
+                // Fallback to alphabetical
+                return a.localeCompare(b);
+            });
+        } else {
+            stackKeys.sort(); // Default Alphabetical if no save data
+        }
+
+        stackKeys.forEach(stackName => {
             const stackEl = this._createStackElement(stackName, stacks[stackName], weekDates, logs, viewMode);
             this.container.appendChild(stackEl);
         });
     }
 
+    // ... (Rest of class: updateHeader, _createStackElement, _createHabitRow, etc. remain unchanged) ...
     updateHeader() {
         if (!this.dom.headerSub) return;
         const start = this.currentWeekStart;
@@ -61,11 +88,13 @@ export class HabitUI {
         stackDiv.className = 'habit-stack';
         if (viewMode === 'mastery') stackDiv.classList.add('mastered');
 
+        stackDiv.dataset.stackName = stackName; 
+
         const headerHtml = `
             <div class="stack-header">
                 <div class="stack-title">
                     <i class="fa-solid fa-chevron-down stack-chevron"></i>
-                    ${stackName}
+                    <span class="stack-title-text">${stackName}</span>
                 </div>
                 <div class="stack-meta">
                     ${habits.length} ${habits.length === 1 ? 'Habit' : 'Habits'}
@@ -76,7 +105,6 @@ export class HabitUI {
         const bodyDiv = document.createElement('div');
         bodyDiv.className = 'stack-body';
 
-        // Grid Headers
         const dayHeaders = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
         const todayStr = new Date().toISOString().split('T')[0];
 
@@ -102,7 +130,6 @@ export class HabitUI {
         stackDiv.innerHTML = headerHtml;
         stackDiv.appendChild(bodyDiv);
 
-        // Toggle Collapse
         stackDiv.querySelector('.stack-header').addEventListener('click', () => {
             stackDiv.classList.toggle('collapsed');
         });
@@ -114,12 +141,10 @@ export class HabitUI {
         const row = document.createElement('div');
         row.className = 'habit-row';
 
-        // Context Menu Event (Right Click)
         row.addEventListener('contextmenu', (e) => {
             handleHabitContextMenu(e, habit, this.callbacks);
         });
 
-        // Name
         const nameCell = document.createElement('div');
         nameCell.className = 'h-cell name-col';
         nameCell.innerHTML = `
@@ -128,7 +153,6 @@ export class HabitUI {
         `;
         row.appendChild(nameCell);
 
-        // Streak
         const currentStreak = this._calculateStreak(habit.id, logs);
         const statCell = document.createElement('div');
         statCell.className = 'h-cell';
@@ -136,7 +160,6 @@ export class HabitUI {
         statCell.innerHTML = `<span class="fire-streak" style="${streakStyle}"><i class="fa-solid fa-fire"></i> ${currentStreak}</span>`;
         row.appendChild(statCell);
 
-        // Days
         weekDates.forEach(dateStr => {
             const cell = document.createElement('div');
             cell.className = 'h-cell';
@@ -158,11 +181,9 @@ export class HabitUI {
             row.appendChild(cell);
         });
 
-        // Actions
         const actionCell = document.createElement('div');
         actionCell.className = 'h-cell';
         
-        // Ellipsis menu trigger
         const menuBtn = document.createElement('i');
         menuBtn.className = 'fa-solid fa-ellipsis-vertical';
         menuBtn.style.cssText = "opacity:0.5; cursor:pointer; font-size:1rem; padding:5px;";

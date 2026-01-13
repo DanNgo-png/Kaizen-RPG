@@ -44,6 +44,11 @@ const SCHEMAS = {
             FOREIGN KEY(habit_id) REFERENCES habits(id) ON DELETE CASCADE,
             UNIQUE(habit_id, log_date)
         );
+
+        CREATE TABLE IF NOT EXISTS habit_metadata (
+            key TEXT PRIMARY KEY,
+            value TEXT
+        );
     `,
 
     // Stores RPG elements (Mercenaries, Inventory)
