@@ -42,7 +42,6 @@ export class HabitTrackerManager {
             }
         };
         
-        // Pass callbacks for actions
         this.ui = new HabitUI(this.dom.board, {
             onEdit: (habit) => this.openModal(habit),
             onAddStack: (stackName) => this.openModal(null, stackName)
@@ -77,6 +76,16 @@ export class HabitTrackerManager {
         if(this.dom.btnAdd) this.dom.btnAdd.addEventListener('click', () => this.openModal());
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
         if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
+
+        // Close Modal on Outside Click
+        if (this.dom.modal) {
+            this.dom.modal.addEventListener('click', (e) => {
+                // If the click target IS the overlay (not the content inside it)
+                if (e.target === this.dom.modal) {
+                    this.closeModal();
+                }
+            });
+        }
 
         if (this.dom.btnAll) this.dom.btnAll.addEventListener('click', () => this.setFilter('all', this.dom.btnAll));
         if (this.dom.btnFocus) this.dom.btnFocus.addEventListener('click', () => this.setFilter('focus', this.dom.btnFocus));
@@ -134,7 +143,6 @@ export class HabitTrackerManager {
         });
     }
 
-    // UPDATE: Accepts defaultStack
     openModal(habitToEdit = null, defaultStack = '') {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
@@ -155,8 +163,8 @@ export class HabitTrackerManager {
                 this.dom.form.btnSave.textContent = "Create";
                 
                 this.dom.form.title.value = '';
-                this.dom.form.stack.value = defaultStack || ''; // Pre-fill stack
-                this._selectIcon('fa-solid fa-check'); // Default
+                this.dom.form.stack.value = defaultStack || '';
+                this._selectIcon('fa-solid fa-check'); 
             }
             this.dom.form.title.focus();
         }
@@ -173,10 +181,8 @@ export class HabitTrackerManager {
 
         if (title) {
             if (this.editingId) {
-                // UPDATE
                 HabitAPI.updateHabit(this.editingId, title, stack, icon);
             } else {
-                // CREATE
                 HabitAPI.createHabit(title, stack, icon, 7);
             }
             this.closeModal();
