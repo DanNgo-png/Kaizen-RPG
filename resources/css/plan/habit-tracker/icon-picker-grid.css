@@ -1,0 +1,49 @@
+/* --- Icon Picker Grid --- */
+.icon-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin-top: 5px;
+    padding: 10px;
+    background-color: #111; /* Dark input bg */
+    border: 1px solid #374151;
+    border-radius: 8px;
+    max-height: 150px;
+    overflow-y: auto;
+}
+
+.icon-option {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.05);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 1.1rem;
+    border: 1px solid transparent;
+}
+
+.icon-option:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.icon-option.selected {
+    background-color: var(--accent-active-bg);
+    color: var(--accent-active-text);
+    border-color: var(--accent-active-text);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+/* Scrollbar for icon grid */
+.icon-picker-grid::-webkit-scrollbar {
+    width: 6px;
+}
+.icon-picker-grid::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 3px;
+}
