@@ -2,10 +2,9 @@ import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 import { SettingsAPI } from './js/api/SettingsAPI.js';
 
-
-
 // PLAN PAGE
 import { initTodoList } from './js/plans/todoListManager.js';
+import { initHabitTracker } from './js/plans/habitTrackerManager.js';
 
 // FOCUS PAGE
 import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js'; 
@@ -63,7 +62,7 @@ async function app() {
             sidebarToggle.addEventListener("click", toggleSideBar);
         }
 
-        // Setup "Plan: Todo Lists" Button
+        // Plan: Todo Lists
         const todoListsButton = document.querySelector(".todo-lists-button");
         if (todoListsButton) {
             todoListsButton.addEventListener("click", async () => {
@@ -72,7 +71,16 @@ async function app() {
             });
         }
 
-        // Setup "Plan: Kanban Board" Button
+        // Plan: Habit Tracker
+        const habitTrackerButton = document.querySelector(".habit-tracker-button");
+        if (habitTrackerButton) {
+            habitTrackerButton.addEventListener("click", async () => {
+                await loadPage('./pages/plans/habit-tracker.html');
+                initHabitTracker();
+            });
+        }
+
+        // Plan: Kanban Board
         const kanbanBoardButton = document.querySelector(".kanban-board-button");
         if (kanbanBoardButton) {
             kanbanBoardButton.addEventListener("click", async () => {
@@ -81,7 +89,7 @@ async function app() {
             });
         }
 
-        // Setup "Focus: Standard" Button
+        // Focus: Standard
         const focusStandardButton = document.querySelector(".focus-standard-button");
         if (focusStandardButton) {
             focusStandardButton.addEventListener("click", async () => {

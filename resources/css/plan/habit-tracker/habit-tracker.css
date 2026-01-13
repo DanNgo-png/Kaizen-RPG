@@ -1,0 +1,300 @@
+/* --- Scoped Styles for Scalable Habit Tracker --- */
+.habit-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    color: var(--text-primary, #fff);
+    font-family: var(--font-main, "Segoe UI", sans-serif);
+    animation: fadeIn 0.4s ease-out;
+    padding-bottom: 60px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: hidden; /* Main scroll handled by inner container */
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* --- 1. Header & Controls --- */
+.habit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--bg-hover, #3D3D3D);
+    flex-shrink: 0;
+}
+
+.header-left h2 {
+    font-size: 24px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 5px 0;
+}
+
+.header-sub {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.view-controls {
+    display: flex;
+    gap: 10px;
+    background-color: var(--surface-color);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid var(--bg-hover);
+}
+
+.view-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: all 0.2s;
+}
+
+.view-btn.active {
+    background-color: var(--bg-hover);
+    color: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+.view-btn.focus-mode-active {
+    color: var(--accent-active-text);
+    background-color: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+/* --- 2. Main Scroll Area --- */
+.habit-board {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
+}
+
+/* Scrollbar */
+.habit-board::-webkit-scrollbar { width: 6px; }
+.habit-board::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 3px; }
+
+/* --- 3. Habit Stacks (Groups) --- */
+.habit-stack {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+/* Stack Header */
+.stack-header {
+    padding: 15px 20px;
+    background-color: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid var(--bg-hover);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+}
+
+.stack-header:hover { background-color: rgba(255, 255, 255, 0.04); }
+
+.stack-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #e5e7eb;
+}
+
+.stack-meta {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+/* Stack Body (The Grid) */
+.stack-body {
+    display: grid;
+    /* Name | Progress/Details | Days (7) | Actions */
+    grid-template-columns: minmax(250px, 2fr) 120px repeat(7, 1fr) 50px;
+    transition: max-height 0.3s ease-out;
+}
+
+.habit-stack.collapsed .stack-body {
+    display: none;
+}
+
+.habit-stack.collapsed .stack-chevron {
+    transform: rotate(-90deg);
+}
+
+.stack-chevron { transition: transform 0.2s; }
+
+/* --- 4. Rows & Cells --- */
+.grid-header-row {
+    display: contents; /* Allows children to sit in the parent grid */
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+}
+
+.header-cell {
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--bg-hover);
+    background-color: rgba(0,0,0,0.1);
+}
+
+.header-cell.align-left { text-align: left; padding-left: 20px; }
+.header-cell.today { color: var(--accent-active-text); background-color: rgba(59, 130, 246, 0.05); }
+
+/* Generic Habit Row */
+.habit-row {
+    display: contents;
+}
+
+.h-cell {
+    padding: 12px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+.h-cell.name-col {
+    justify-content: flex-start;
+    padding-left: 20px;
+    gap: 12px;
+}
+
+.habit-row:hover .h-cell {
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* Checkbox Styling */
+.check-btn {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid var(--bg-hover);
+    background-color: var(--bg-body);
+    cursor: pointer;
+    color: transparent;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.check-btn:hover { border-color: #6b7280; }
+
+.check-btn.done {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+    color: white;
+}
+
+/* --- 5. Variants: Sprint (Date Bound) --- */
+.habit-row.sprint .h-cell {
+    background-color: rgba(59, 130, 246, 0.03); /* Subtle blue tint */
+}
+
+.sprint-badge {
+    font-size: 0.7rem;
+    background-color: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    margin-left: auto;
+}
+
+.sprint-progress-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 2px;
+    background-color: #60a5fa;
+    opacity: 0.7;
+}
+
+/* --- 6. Variants: Mastered (Archived/Gold) --- */
+.habit-stack.mastered {
+    border-color: #d97706; /* Dark Gold */
+    opacity: 0.8;
+}
+
+.habit-stack.mastered .stack-header {
+    background: linear-gradient(90deg, rgba(217, 119, 6, 0.1), transparent);
+}
+
+.mastery-badge {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+/* --- 7. Utility --- */
+.habit-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: var(--bg-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.fire-streak {
+    color: #fb923c;
+    font-weight: 700;
+    font-family: monospace;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.btn-create-float {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background-color: var(--accent-active-bg);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s;
+    z-index: 100;
+}
+
+.btn-create-float:hover { transform: scale(1.1); }

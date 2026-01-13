@@ -13,6 +13,9 @@
     @import url('css/plan/todo-list/todo-list.css');
     @import url('css/plan/todo-list/task-modal-overlay.css');
 
+    /* HABIT TRACKER */
+    @import url('css/plan/habit-tracker/habit-tracker.css');
+
     /* KANBAN BOARD */
     @import url('css/plan/kanban-board/kanban-board.css');
     @import url('css/plan/kanban-board/buttons.css');

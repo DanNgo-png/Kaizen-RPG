@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Habit Tracker - Kaizen RPG</title>
+</head>
+
+<body>
+  <div class="habit-container">
+
+    <!-- Header -->
+    <header class="habit-header">
+      <div class="header-left">
+        <h2><i class="fa-regular fa-calendar-check" style="color: #10b981;"></i> Habit Tracker</h2>
+        <span class="header-sub">Week 52 • Dec 22 - Dec 28</span>
+      </div>
+
+      <div class="view-controls">
+        <button class="view-btn active" title="Show All"><i class="fa-solid fa-layer-group"></i> All</button>
+        <button class="view-btn focus-mode-active" title="Focus Mode: Only show current time of day"><i
+            class="fa-solid fa-eye"></i> Focus</button>
+        <button class="view-btn" title="View Mastered Habits"><i class="fa-solid fa-trophy"></i> Mastery</button>
+      </div>
+    </header>
+
+    <!-- Main Board -->
+    <div class="habit-board">
+      <!-- JS generates stack content here -->
+    </div>
+
+    <!-- Floating Add Button -->
+    <button class="btn-create-float" id="btn-add-new-habit">
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+    <!-- HABIT MODAL -->
+    <div id="modal-new-habit" class="modal-overlay hidden"
+      style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:flex; align-items:center; justify-content:center;">
+      <div class="focus-flexible-modal-content"
+        style="background:#1f2937; padding:30px; border-radius:12px; width:400px; border:1px solid #374151;">
+        <h3 style="margin-top:0; color:#fff;">New Habit</h3>
+
+        <div class="input-row" style="margin-top:20px;">
+          <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Habit Name</label>
+          <input type="text" id="input-habit-title"
+            style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px;"
+            placeholder="e.g. Read 10 pages">
+        </div>
+
+        <div class="input-row" style="margin-top:15px;">
+          <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Stack / Group</label>
+          <input type="text" id="input-habit-stack" list="stack-suggestions"
+            style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px;"
+            placeholder="e.g. Morning Routine">
+          <datalist id="stack-suggestions">
+            <option value="Morning Routine">
+            <option value="Evening Routine">
+            <option value="Health">
+            <option value="Skills">
+          </datalist>
+        </div>
+
+        <div class="input-row" style="margin-top:15px;">
+          <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Icon Class
+            (FontAwesome)</label>
+          <input type="text" id="input-habit-icon"
+            style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px;"
+            placeholder="fa-solid fa-book">
+        </div>
+
+        <div class="modal-actions" style="margin-top:25px; display:flex; justify-content:flex-end; gap:10px;">
+          <button id="btn-cancel-habit" class="btn-flex-secondary"
+            style="background:transparent; border:1px solid #4b5563; color:#ccc; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
+          <button id="btn-save-habit" class="btn-flex-primary"
+            style="background:#10b981; border:none; color:white; padding:8px 16px; border-radius:6px; cursor:pointer;">Create</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>
