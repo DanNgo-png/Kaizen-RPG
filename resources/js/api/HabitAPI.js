@@ -1,8 +1,8 @@
 import { EXTENSION_ID } from "./_extension_id.js";
 
 export const HabitAPI = {
-    getHabitsData: async (startDate, endDate) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "getHabitsData", { startDate, endDate });
+    getHabitsData: async (startDate, endDate, viewMode = 'all') => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getHabitsData", { startDate, endDate, viewMode });
     },
 
     createHabit: async (title, stack, icon, target) => {
@@ -11,6 +11,10 @@ export const HabitAPI = {
 
     toggleDay: async (id, date) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "toggleHabitDay", { id, date });
+    },
+
+    toggleArchive: async (id) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "toggleHabitArchive", { id });
     },
     
     deleteHabit: async (id) => {
