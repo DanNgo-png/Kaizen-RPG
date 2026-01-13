@@ -6,20 +6,15 @@ export class HabitTrackerManager {
         this.state = {
             habits: [],
             logs: [],
-            filter: 'all'
+            filter: 'all' // 'all', 'focus', 'mastery'
         };
 
-        // Cache DOM elements
         this.dom = {
             board: document.querySelector('.habit-board'),
             btnAdd: document.getElementById('btn-add-new-habit'),
-            
-            // Filter Buttons
             btnAll: document.querySelector('.view-btn[title="Show All"]'),
             btnFocus: document.querySelector('.view-btn[title*="Focus"]'),
             btnMastery: document.querySelector('.view-btn[title*="Mastery"]'),
-            
-            // Modal Elements
             modal: document.getElementById('modal-new-habit'),
             form: {
                 title: document.getElementById('input-habit-title'),
@@ -37,62 +32,45 @@ export class HabitTrackerManager {
     init() {
         if (!this.dom.board) return;
 
-        console.log("✅ Habit Tracker Initialized");
-
-        // 1. Listen for Data
+        // 1. Data Events
         Neutralino.events.on('receiveHabitsData', (e) => {
-            console.log("📥 Received Habits Data:", e.detail);
             this.state.habits = e.detail.habits || [];
             this.state.logs = e.detail.logs || [];
             this.render();
         });
 
-        // 2. Auto-refresh events
         const refresh = () => this.fetchData();
-        Neutralino.events.on('habitCreated', (e) => {
-            if(e.detail.success) {
-                console.log("✨ Habit Created Successfully");
-                refresh();
-            } else {
-                console.error("❌ Failed to create habit:", e.detail.error);
-                alert("Failed to create habit. Check console.");
-            }
-        });
+        Neutralino.events.on('habitCreated', refresh);
         Neutralino.events.on('habitDeleted', refresh);
+        Neutralino.events.on('habitArchived', refresh); // Listen for archive
         
-        // 3. Button Events
+        // ... (Keep button events) ...
         if(this.dom.btnAdd) this.dom.btnAdd.addEventListener('click', () => this.openModal());
-        
-        if (this.dom.form.btnCancel) {
-            this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
-        }
+        if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
+        if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
 
-        if (this.dom.form.btnSave) {
-            this.dom.form.btnSave.addEventListener('click', () => {
-                console.log("🖱️ Save Button Clicked");
-                this.saveHabit();
-            });
-        }
-
-        // 4. View Filters
+        // 3. Filter Buttons
         if (this.dom.btnAll) this.dom.btnAll.addEventListener('click', () => this.setFilter('all', this.dom.btnAll));
         if (this.dom.btnFocus) this.dom.btnFocus.addEventListener('click', () => this.setFilter('focus', this.dom.btnFocus));
         if (this.dom.btnMastery) this.dom.btnMastery.addEventListener('click', () => this.setFilter('mastery', this.dom.btnMastery));
 
-        // Initial Fetch
         this.fetchData();
     }
 
     fetchData() {
         const dates = this.ui._getWeekDates();
-        HabitAPI.getHabitsData(dates[0], dates[6]);
+        // Pass the current filter/view mode to backend
+        HabitAPI.getHabitsData(dates[0], dates[6], this.state.filter);
     }
 
     setFilter(mode, btnElement) {
         this.state.filter = mode;
+        
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         if(btnElement) btnElement.classList.add('active');
-        this.render();
+
+        // Fetch new data (because Mastery needs different DB query)
+        this.fetchData(); 
     }
 
     render() {
@@ -105,14 +83,12 @@ export class HabitTrackerManager {
                 return !isDoneToday;
             });
         }
-        
-        // Note: 'Mastery' logic handled via 'archived' flag in DB usually, 
-        // but currently getHabits returns only active ones. 
-        // Future feature: add toggle to get archived habits.
 
-        this.ui.render(filteredHabits, this.state.logs);
+        // Pass filter to render so it can style 'mastery' view
+        this.ui.render(filteredHabits, this.state.logs, this.state.filter);
     }
 
+    // ... (Keep openModal, closeModal, saveHabit) ...
     openModal() {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
@@ -130,15 +106,10 @@ export class HabitTrackerManager {
         const stack = this.dom.form.stack.value || 'General';
         const icon = this.dom.form.icon.value || 'fa-solid fa-check'; 
 
-        if (!title) {
-            alert("Please enter a habit name.");
-            this.dom.form.title.focus();
-            return;
+        if (title) {
+            HabitAPI.createHabit(title, stack, icon, 7);
+            this.closeModal();
         }
-
-        console.log(`📤 Sending Create Request: ${title} in ${stack}`);
-        HabitAPI.createHabit(title, stack, icon, 7);
-        this.closeModal();
     }
 }
 

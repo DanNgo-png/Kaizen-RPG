@@ -27,7 +27,13 @@ export class HabitRepository {
         };
     }
 
-    getHabits() { return this.statements.getAll.all(); }
+    // Update getAll to support filtering by archived status
+    getHabits(includeArchived = false) {
+        if (includeArchived) {
+            return this.db.prepare("SELECT * FROM habits ORDER BY stack_name, id").all();
+        }
+        return this.db.prepare("SELECT * FROM habits WHERE archived = 0 ORDER BY stack_name, id").all();
+    }
     
     createHabit(data) { 
         return this.statements.create.run(data); 
@@ -44,5 +50,10 @@ export class HabitRepository {
         // Return new status
         const row = this.db.prepare("SELECT status FROM habit_logs WHERE habit_id = ? AND log_date = ?").get(habitId, date);
         return row ? row.status : 0;
+    }
+
+    toggleArchive(id) {
+        // Toggle the 'archived' status (0 or 1)
+        this.db.prepare("UPDATE habits SET archived = CASE WHEN archived = 0 THEN 1 ELSE 0 END WHERE id = ?").run(id);
     }
 }
