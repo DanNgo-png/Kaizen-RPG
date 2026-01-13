@@ -34,6 +34,7 @@ import { initCustomAnalytics } from './js/analyze/CustomAnalyticsManager.js';
 
 // GAME PAGE
 import { initMenuButtons } from './js/games/playGameManager.js';
+import { initParty } from './js/games/party/PartyManager.js'; 
 
 // OTHER
 import { loadPage } from './js/router.js';
@@ -256,7 +257,7 @@ async function app() {
         if (partyButton) {
             partyButton.addEventListener("click", async () => {
                 await loadPage('./pages/games/party.html');
-                // placeholder(); 
+                initParty(); 
             });
         }
 
