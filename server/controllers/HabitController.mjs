@@ -12,7 +12,6 @@ export class HabitController {
 
                 let habits;
                 if (viewMode === 'mastery') {
-                    // Use new dedicated method
                     habits = this.repo.getArchivedHabits(); 
                 } else {
                     habits = this.repo.getHabits(); // Active only
@@ -26,11 +25,6 @@ export class HabitController {
             }
         });
 
-        app.events.on("toggleHabitArchive", (payload) => {
-            this.repo.toggleArchive(payload.id);
-            app.events.broadcast("habitArchived", { success: true });
-        });
-
         app.events.on("createHabit", (payload) => {
             try {
                 this.repo.createHabit(payload);
@@ -38,6 +32,25 @@ export class HabitController {
             } catch (err) {
                 app.events.broadcast("habitCreated", { success: false, error: err.message });
             }
+        });
+
+        app.events.on("updateHabit", (payload) => {
+            try {
+                this.repo.updateHabit(payload.id, {
+                    title: payload.title,
+                    stack: payload.stack,
+                    icon: payload.icon
+                });
+                app.events.broadcast("habitUpdated", { success: true });
+            } catch (err) {
+                console.error("❌ HabitController: Update Failed:", err);
+                app.events.broadcast("habitUpdated", { success: false, error: err.message });
+            }
+        });
+
+        app.events.on("toggleHabitArchive", (payload) => {
+            this.repo.toggleArchive(payload.id);
+            app.events.broadcast("habitArchived", { success: true });
         });
 
         app.events.on("toggleHabitDay", (payload) => {
