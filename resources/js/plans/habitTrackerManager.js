@@ -42,7 +42,12 @@ export class HabitTrackerManager {
             }
         };
         
-        this.ui = new HabitUI(this.dom.board, (habit) => this.openModal(habit));
+        // Pass callbacks for actions
+        this.ui = new HabitUI(this.dom.board, {
+            onEdit: (habit) => this.openModal(habit),
+            onAddStack: (stackName) => this.openModal(null, stackName)
+        });
+
         this.init();
     }
 
@@ -129,7 +134,8 @@ export class HabitTrackerManager {
         });
     }
 
-    openModal(habitToEdit = null) {
+    // UPDATE: Accepts defaultStack
+    openModal(habitToEdit = null, defaultStack = '') {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
             
@@ -149,7 +155,7 @@ export class HabitTrackerManager {
                 this.dom.form.btnSave.textContent = "Create";
                 
                 this.dom.form.title.value = '';
-                this.dom.form.stack.value = '';
+                this.dom.form.stack.value = defaultStack || ''; // Pre-fill stack
                 this._selectIcon('fa-solid fa-check'); // Default
             }
             this.dom.form.title.focus();
@@ -167,7 +173,7 @@ export class HabitTrackerManager {
 
         if (title) {
             if (this.editingId) {
-                // UPDATE (Persistence Fix: Logic was correct but ensuring API is called properly)
+                // UPDATE
                 HabitAPI.updateHabit(this.editingId, title, stack, icon);
             } else {
                 // CREATE

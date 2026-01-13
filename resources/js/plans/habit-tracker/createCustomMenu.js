@@ -3,17 +3,26 @@ import { HabitAPI } from "../../api/HabitAPI.js";
 
 const menuManager = new CustomMenuManager();
 
-export function handleHabitContextMenu(event, habit, onEditCallback) {
+export function handleHabitContextMenu(event, habit, callbacks) {
     const isMastered = habit.archived === 1;
+    const { onEdit, onAddStack } = callbacks || {};
 
     const items = [
         {
             label: "Edit Habit",
             icon: '<i class="fa-solid fa-pen"></i>',
             action: () => {
-                if (onEditCallback) onEditCallback(habit);
+                if (onEdit) onEdit(habit);
             }
         },
+        {
+            label: "Add to Stack",
+            icon: '<i class="fa-solid fa-plus"></i>',
+            action: () => {
+                if (onAddStack) onAddStack(habit.stack_name);
+            }
+        },
+        { separator: true },
         {
             label: isMastered ? "Restore to Active" : "Archive (Mastered)",
             icon: isMastered ? '<i class="fa-solid fa-box-open"></i>' : '<i class="fa-solid fa-trophy"></i>',
@@ -21,7 +30,6 @@ export function handleHabitContextMenu(event, habit, onEditCallback) {
                 HabitAPI.toggleArchive(habit.id);
             }
         },
-        { separator: true },
         {
             label: "Delete Permanently",
             icon: '<i class="fa-solid fa-trash"></i>',

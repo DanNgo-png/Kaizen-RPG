@@ -2,9 +2,9 @@ import { HabitAPI } from "../../api/HabitAPI.js";
 import { handleHabitContextMenu } from "./createCustomMenu.js";
 
 export class HabitUI {
-    constructor(container, onEditCallback) {
+    constructor(container, callbacks) {
         this.container = container;
-        this.onEditCallback = onEditCallback;
+        this.callbacks = callbacks; // Expects { onEdit: fn, onAddStack: fn }
         this.currentWeekStart = this._getMonday(new Date());
         
         this.dom = {
@@ -114,9 +114,9 @@ export class HabitUI {
         const row = document.createElement('div');
         row.className = 'habit-row';
 
-        // Context Menu Event
+        // Context Menu Event (Right Click)
         row.addEventListener('contextmenu', (e) => {
-            handleHabitContextMenu(e, habit, this.onEditCallback);
+            handleHabitContextMenu(e, habit, this.callbacks);
         });
 
         // Name
@@ -168,7 +168,7 @@ export class HabitUI {
         menuBtn.style.cssText = "opacity:0.5; cursor:pointer; font-size:1rem; padding:5px;";
         menuBtn.addEventListener('click', (e) => {
             e.stopPropagation();
-            handleHabitContextMenu(e, habit, this.onEditCallback);
+            handleHabitContextMenu(e, habit, this.callbacks);
         });
 
         actionCell.appendChild(menuBtn);
