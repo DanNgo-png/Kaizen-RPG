@@ -24,6 +24,28 @@ const SCHEMAS = {
         );
     `,
 
+    // Stores Habit Definitions and Daily Logs
+    'habits_data': `
+        CREATE TABLE IF NOT EXISTS habits (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            stack_name TEXT DEFAULT 'General', -- For grouping (e.g. "Morning Routine")
+            target_days INTEGER DEFAULT 7,     -- Goal per week
+            icon TEXT DEFAULT 'fa-solid fa-check',
+            archived INTEGER DEFAULT 0,        -- 1 = Mastered/Archived
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS habit_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            habit_id INTEGER NOT NULL,
+            log_date TEXT NOT NULL, -- Format: YYYY-MM-DD
+            status INTEGER DEFAULT 1, -- 1 = Done
+            FOREIGN KEY(habit_id) REFERENCES habits(id) ON DELETE CASCADE,
+            UNIQUE(habit_id, log_date)
+        );
+    `,
+
     // Stores RPG elements (Mercenaries, Inventory)
     'game_data': `
         CREATE TABLE IF NOT EXISTS mercenaries ( 
