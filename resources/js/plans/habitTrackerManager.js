@@ -1,5 +1,6 @@
 import { HabitAPI } from "../api/HabitAPI.js";
 import { HabitUI } from "./habit-tracker/HabitUI.js";
+import { notifier } from "../_global-managers/NotificationManager.js"; 
 
 export class HabitTrackerManager {
     constructor() {
@@ -12,9 +13,11 @@ export class HabitTrackerManager {
         this.dom = {
             board: document.querySelector('.habit-board'),
             btnAdd: document.getElementById('btn-add-new-habit'),
+            // Fixed Selectors
             btnAll: document.querySelector('.view-btn[title="Show All"]'),
             btnFocus: document.querySelector('.view-btn[title*="Focus"]'),
-            btnMastery: document.querySelector('.view-btn[title*="Mastery"]'),
+            btnMastery: document.querySelector('.view-btn[title*="Mastered"]'), // FIXED: Matches 'View Mastered Habits'
+            
             modal: document.getElementById('modal-new-habit'),
             form: {
                 title: document.getElementById('input-habit-title'),
@@ -25,7 +28,7 @@ export class HabitTrackerManager {
             }
         };
         
-        this.ui = new HabitUI(this.dom.board);
+        this.ui = new HabitUI(this.dom.board, (habit) => this.openModal(habit));
         this.init();
     }
 
@@ -40,11 +43,20 @@ export class HabitTrackerManager {
         });
 
         const refresh = () => this.fetchData();
+        
         Neutralino.events.on('habitCreated', refresh);
         Neutralino.events.on('habitDeleted', refresh);
-        Neutralino.events.on('habitArchived', refresh); // Listen for archive
         
-        // ... (Keep button events) ...
+        Neutralino.events.on('habitArchived', () => {
+            refresh();
+            if (this.state.filter !== 'mastery') {
+                notifier.show("Habit Mastered", "Moved to Mastery list.", "fa-solid fa-trophy");
+            } else {
+                notifier.show("Habit Restored", "Moved back to active list.", "fa-solid fa-box-open");
+            }
+        });
+        
+        // 2. Button Events
         if(this.dom.btnAdd) this.dom.btnAdd.addEventListener('click', () => this.openModal());
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
         if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
@@ -59,7 +71,6 @@ export class HabitTrackerManager {
 
     fetchData() {
         const dates = this.ui._getWeekDates();
-        // Pass the current filter/view mode to backend
         HabitAPI.getHabitsData(dates[0], dates[6], this.state.filter);
     }
 
@@ -69,7 +80,6 @@ export class HabitTrackerManager {
         document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
         if(btnElement) btnElement.classList.add('active');
 
-        // Fetch new data (because Mastery needs different DB query)
         this.fetchData(); 
     }
 
@@ -84,15 +94,24 @@ export class HabitTrackerManager {
             });
         }
 
-        // Pass filter to render so it can style 'mastery' view
         this.ui.render(filteredHabits, this.state.logs, this.state.filter);
     }
 
-    // ... (Keep openModal, closeModal, saveHabit) ...
-    openModal() {
+    // --- Modal Logic ---
+
+    openModal(habitToEdit = null) {
         if (this.dom.modal) {
             this.dom.modal.classList.remove('hidden');
-            this.dom.form.title.value = '';
+            
+            if (habitToEdit) {
+                this.dom.form.title.value = habitToEdit.title;
+                this.dom.form.stack.value = habitToEdit.stack_name;
+                this.dom.form.icon.value = habitToEdit.icon;
+            } else {
+                this.dom.form.title.value = '';
+                this.dom.form.stack.value = '';
+                this.dom.form.icon.value = '';
+            }
             this.dom.form.title.focus();
         }
     }
