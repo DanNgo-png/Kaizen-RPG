@@ -9,6 +9,10 @@ export const HabitAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "createHabit", { title, stack, icon, target });
     },
 
+    updateHabit: async (id, title, stack, icon) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "updateHabit", { id, title, stack, icon });
+    },
+
     toggleDay: async (id, date) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "toggleHabitDay", { id, date });
     },
