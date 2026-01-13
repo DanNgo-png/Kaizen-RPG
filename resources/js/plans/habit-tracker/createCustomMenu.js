@@ -3,12 +3,6 @@ import { HabitAPI } from "../../api/HabitAPI.js";
 
 const menuManager = new CustomMenuManager();
 
-/**
- * Trigger context menu for a habit row.
- * @param {MouseEvent} event 
- * @param {Object} habit 
- * @param {Function} [onEditCallback] - Optional callback to open edit modal
- */
 export function handleHabitContextMenu(event, habit, onEditCallback) {
     const isMastered = habit.archived === 1;
 
@@ -18,7 +12,6 @@ export function handleHabitContextMenu(event, habit, onEditCallback) {
             icon: '<i class="fa-solid fa-pen"></i>',
             action: () => {
                 if (onEditCallback) onEditCallback(habit);
-                else alert(`Edit feature for "${habit.title}" coming soon.`);
             }
         },
         {
@@ -34,7 +27,7 @@ export function handleHabitContextMenu(event, habit, onEditCallback) {
             icon: '<i class="fa-solid fa-trash"></i>',
             danger: true,
             action: () => {
-                if (confirm(`Permanently delete "${habit.title}"? This cannot be undone.`)) {
+                if (confirm(`Delete "${habit.title}"? This cannot be undone.`)) {
                     HabitAPI.deleteHabit(habit.id);
                 }
             }
