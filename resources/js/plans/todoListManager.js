@@ -1,6 +1,7 @@
 import { TaskAPI } from "../api/TaskAPI.js";
 import { TaskRenderer } from "./todo-list/TaskRenderer.js";
 import { TaskModalManager } from "./todo-list/TaskModalManager.js";
+import { handleTodoListContextMenu, handleTaskContextMenu } from "./todo-list/createCustomMenu.js";
 
 class TodoListManager {
     constructor() {
@@ -19,13 +20,11 @@ class TodoListManager {
     }
 
     init() {
-        // 1. Cleanup previous instances (crucial for Single Page App navigation)
         if (this.modalManager) {
             this.modalManager.destroy();
             this.modalManager = null;
         }
 
-        // 2. Cache DOM (NOW safe because page is loaded)
         this.dom = {
             listsNav: document.getElementById('todo-lists-nav'),
             listContainer: document.getElementById('todo-list-container'),
@@ -35,35 +34,47 @@ class TodoListManager {
             addBtn: document.getElementById('add-task-btn'),
             clearBtn: document.getElementById('clear-completed-btn'),
             btnAddList: document.getElementById('btn-add-list'),
-            btnDeleteList: document.getElementById('btn-delete-list'),
             tabs: document.querySelectorAll('.tab-btn')
         };
 
-        if (!this.dom.listContainer) return; // Guard against running on wrong page
+        if (!this.dom.listContainer) return;
 
-        // 3. Initialize Sub-Modules
         this.modalManager = new TaskModalManager();
-        this.modalManager.init(); // Bind to new DOM
+        this.modalManager.init();
 
         this.renderer = new TaskRenderer({
             onTaskClick: (task) => this.modalManager.open(task, this.state.lists, this.state.activeListId),
             onDeleteTask: (id) => TaskAPI.deleteTask(id, this.state.activeListId),
             onToggleTask: (id) => TaskAPI.toggleTask(id, this.state.activeListId),
-            onListSwitch: (id, title, icon) => this.switchList(id, title, icon)
+            onListSwitch: (id, title, icon) => this.switchList(id, title, icon),
+            
+            // Right click on SIDEBAR LIST
+            onListContextMenu: (e, list) => {
+                handleTodoListContextMenu(e, list, {
+                    onDelete: (deletedId) => {
+                        if (this.state.activeListId === deletedId) {
+                            this.switchList(1, 'Inbox', 'fa-solid fa-inbox');
+                        }
+                    }
+                });
+            },
+
+            // Right click on TASK ITEM
+            onTaskContextMenu: (e, task) => {
+                handleTaskContextMenu(e, task, {
+                    onEdit: (t) => this.modalManager.open(t, this.state.lists, this.state.activeListId),
+                    onDelete: (id) => TaskAPI.deleteTask(id, this.state.activeListId),
+                    onToggle: (id) => TaskAPI.toggleTask(id, this.state.activeListId)
+                });
+            }
         });
 
-        // 4. Bind Events
         this._bindGlobalEvents();
         
-        // 5. Data Listeners
-        // Remove old listeners to prevent duplicates
         Neutralino.events.off('receiveTodoLists', this._onReceiveListsBound);
-        
-        // Create bound function for reference
         this._onReceiveListsBound = (e) => this._onReceiveLists(e.detail);
         Neutralino.events.on('receiveTodoLists', this._onReceiveListsBound);
 
-        // 6. Fetch Data
         TaskAPI.getTodoLists();
         TaskAPI.getTasks(this.state.activeListId);
     }
@@ -82,12 +93,6 @@ class TodoListManager {
             this.dom.headerTitle.innerHTML = `<i class="${icon}"></i> ${title}`;
         }
 
-        if (this.dom.btnDeleteList) {
-            if (id === 1) this.dom.btnDeleteList.classList.add('hidden');
-            else this.dom.btnDeleteList.classList.remove('hidden');
-        }
-
-        // Refresh Lists UI highlight
         if (this.renderer) {
             this.renderer.renderLists(this.dom.listsNav, this.state.lists, id);
         }
@@ -121,16 +126,6 @@ class TodoListManager {
             this.dom.btnAddList.onclick = () => {
                 const name = prompt("Enter new list name:");
                 if (name?.trim()) TaskAPI.addTodoList(name.trim(), "fa-solid fa-list");
-            };
-        }
-
-        if (this.dom.btnDeleteList) {
-            this.dom.btnDeleteList.onclick = () => {
-                if (this.state.activeListId === 1) return;
-                if (confirm(`Delete list "${this.state.activeListTitle}"?`)) {
-                    TaskAPI.deleteTodoList(this.state.activeListId);
-                    this.switchList(1, 'Inbox', 'fa-solid fa-inbox');
-                }
             };
         }
 

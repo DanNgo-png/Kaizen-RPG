@@ -1,6 +1,7 @@
 export class TaskRenderer {
     constructor(callbacks) {
-        this.callbacks = callbacks; // { onTaskClick, onDeleteTask, onToggleTask }
+        // callbacks: { onTaskClick, onDeleteTask, onToggleTask, onListSwitch, onListContextMenu, onTaskContextMenu }
+        this.callbacks = callbacks;
     }
 
     renderLists(container, lists, activeListId) {
@@ -15,6 +16,13 @@ export class TaskRenderer {
             
             btn.addEventListener('click', () => {
                 this.callbacks.onListSwitch(list.id, list.title, list.icon);
+            });
+
+            // Context Menu for Lists
+            btn.addEventListener('contextmenu', (e) => {
+                if (this.callbacks.onListContextMenu) {
+                    this.callbacks.onListContextMenu(e, list);
+                }
             });
 
             container.appendChild(btn);
@@ -54,7 +62,6 @@ export class TaskRenderer {
         item.className = `task-item ${priorityClass} ${completedClass}`;
         item.dataset.id = task.id; 
 
-        // Icons
         const hasDescIcon = task.description 
             ? `<i class="fa-solid fa-align-left" style="font-size:0.8rem; margin-left:8px; opacity:0.5;"></i>` 
             : '';
@@ -87,7 +94,6 @@ export class TaskRenderer {
         
         checkbox.addEventListener('change', () => {
             this.callbacks.onToggleTask(task.id);
-            // Optimistic update
             item.classList.toggle('completed');
         });
 
@@ -102,6 +108,13 @@ export class TaskRenderer {
             const selection = window.getSelection();
             if (selection.toString().length === 0) {
                 this.callbacks.onTaskClick(task);
+            }
+        });
+
+        // --- NEW: Context Menu for Tasks ---
+        item.addEventListener('contextmenu', (e) => {
+            if (this.callbacks.onTaskContextMenu) {
+                this.callbacks.onTaskContextMenu(e, task);
             }
         });
 
