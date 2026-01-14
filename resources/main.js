@@ -1,6 +1,7 @@
 import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 import { SettingsAPI } from './js/api/SettingsAPI.js';
+import { initGlobalInputListeners } from './js/_global-managers/GlobalInputListener.js'; 
 
 // PLAN PAGE
 import { initTodoList } from './js/plans/todoListManager.js';
@@ -46,6 +47,7 @@ import { initMainSettings } from './js/main-settings/mainSettingsManager.js';
 async function app() {
     try {
         EventRegistry.init();
+        initGlobalInputListeners(); // INITIALIZE AUDIO LISTENERS
 
         // FOCUS PAGE
         standardManager.initialize();
