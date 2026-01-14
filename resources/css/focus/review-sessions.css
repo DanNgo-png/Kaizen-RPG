@@ -351,7 +351,7 @@
 
 .btn-secondary:hover { border-color: #fff; color: #fff; }
 
-.btn-primary {
+.review-log-btn-primary {
     background-color: var(--stat-blue);
     color: white;
     border: none;
@@ -359,4 +359,4 @@
     border-radius: 6px;
     cursor: pointer;
 }
-.btn-primary:hover { background-color: #1d4ed8; }
+.review-log-btn-primary:hover { background-color: #1d4ed8; }
