@@ -3,7 +3,7 @@ import { FocusAPI } from "../api/FocusAPI.js";
 export class DayManager {
     constructor() {
         this.currentDate = new Date();
-        
+
         // --- NAV CHECK ---
         const jumpDate = localStorage.getItem('kaizen_jump_date');
         if (jumpDate) {
@@ -12,11 +12,11 @@ export class DayManager {
             localStorage.removeItem('kaizen_jump_date');
         }
 
-        this.tagsMap = new Map(); 
-        
+        this.tagsMap = new Map();
+
         // Filter State
         this.hiddenTags = new Set();
-        this.currentSessions = []; 
+        this.currentSessions = [];
 
         // Helper: Convert to Local SQL format YYYY-MM-DD HH:MM:SS
         this.toSQL = (d) => {
@@ -29,15 +29,15 @@ export class DayManager {
             btnPrev: document.getElementById('day-btn-prev'),
             btnNext: document.getElementById('day-btn-next'),
             inputDate: document.getElementById('day-date-input'),
-            
+
             // Stats
             valTime: document.getElementById('day-stat-total-time'),
             valCount: document.getElementById('day-stat-total-sessions'),
-            
+
             // Chart
             chartCircle: document.getElementById('day-donut-chart'),
             legendContainer: document.getElementById('day-legend-container'),
-            
+
             // Timeline
             timelineContainer: document.getElementById('day-timeline-tracks')
         };
@@ -74,7 +74,7 @@ export class DayManager {
             this.hiddenTags.add(tagName);
         }
         // Re-render using cached data
-        this.render(this.currentSessions); 
+        this.render(this.currentSessions);
     }
 
     init() {
@@ -82,9 +82,9 @@ export class DayManager {
 
         this.dom.btnPrev.addEventListener('click', () => this.changeDate(-1));
         this.dom.btnNext.addEventListener('click', () => this.changeDate(1));
-        
+
         this.dom.inputDate.addEventListener('change', (e) => {
-            const parts = e.target.value.split('-'); 
+            const parts = e.target.value.split('-');
             if (parts.length === 3) {
                 this.currentDate = new Date(parts[0], parts[1] - 1, parts[2]);
                 this.loadDate(this.currentDate);
@@ -98,7 +98,7 @@ export class DayManager {
         Neutralino.events.off('receiveTags', this.handleTags);
         Neutralino.events.on('receiveTags', this.handleTags);
 
-        FocusAPI.getTags(); 
+        FocusAPI.getTags();
         this.loadDate(this.currentDate);
     }
 
@@ -114,7 +114,7 @@ export class DayManager {
 
         const start = new Date(date);
         start.setHours(0, 0, 0, 0);
-        
+
         const end = new Date(date);
         end.setHours(23, 59, 59, 999);
 
@@ -125,15 +125,16 @@ export class DayManager {
     updateHeader(date) {
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         this.dom.headerDate.textContent = date.toLocaleDateString('en-US', options);
-        
+
         const offset = date.getTimezoneOffset();
-        const local = new Date(date.getTime() - (offset*60*1000));
+        const local = new Date(date.getTime() - (offset * 60 * 1000));
         this.dom.inputDate.value = local.toISOString().split('T')[0];
     }
 
     render(sessions) {
         this.renderStats(sessions);
         this.renderChart(sessions);
+        this.renderTicks();
         this.renderTimeline(sessions);
     }
 
@@ -144,7 +145,7 @@ export class DayManager {
 
         const h = Math.floor(totalSeconds / 3600);
         const m = Math.floor((totalSeconds % 3600) / 60);
-        
+
         let timeStr = `${m}m`;
         if (h > 0) timeStr = `${h}h ${m}m`;
 
@@ -182,7 +183,7 @@ export class DayManager {
         let legendHTML = '';
 
         if (totalTimeAll === 0) {
-            this.dom.chartCircle.style.background = '#374151'; 
+            this.dom.chartCircle.style.background = '#374151';
             this.dom.legendContainer.innerHTML = '<div style="color:#9ca3af; text-align:center; padding:10px;">No data recorded</div>';
             return;
         }
@@ -190,19 +191,19 @@ export class DayManager {
         sortedTags.forEach(tag => {
             const seconds = distribution[tag];
             const isHidden = this.hiddenTags.has(tag);
-            
+
             // Generate Legend Item
             const color = this.tagsMap.get(tag) || this._generateColor(tag);
-            
+
             // Visual styles for hidden state
             const opacity = isHidden ? '0.5' : '1';
             const textDec = isHidden ? 'line-through' : 'none';
-            const dotColor = isHidden ? '#6b7280' : color; 
+            const dotColor = isHidden ? '#6b7280' : color;
 
             const h = Math.floor(seconds / 3600);
             const m = Math.floor((seconds % 3600) / 60);
             const durStr = h > 0 ? `${h}h ${m}m` : `${m}m`;
-            
+
             // Legend % is based on TOTAL time (to keep context), not just visible
             const pctOfTotal = (seconds / totalTimeAll) * 100;
 
@@ -226,7 +227,7 @@ export class DayManager {
 
         // Apply
         this.dom.legendContainer.innerHTML = legendHTML;
-        
+
         if (visibleTotalTime > 0) {
             this.dom.chartCircle.style.background = `conic-gradient(${gradientParts.join(', ')})`;
         } else {
@@ -242,6 +243,42 @@ export class DayManager {
         });
     }
 
+    renderTicks() {
+        if (!this.dom.timelineContainer) return;
+
+        // 1. Get or Create the ticks container
+        let tickContainer = this.dom.timelineContainer.querySelector('.day-timeline-ticks');
+        if (!tickContainer) {
+            tickContainer = document.createElement('div');
+            tickContainer.className = 'day-timeline-ticks';
+            // Insert before the axis line or append; order matters less with absolute pos, 
+            // but semantically good to be near the axis.
+            this.dom.timelineContainer.appendChild(tickContainer);
+        }
+
+        tickContainer.innerHTML = ''; // Clear existing
+
+        // 2. Generate Ticks: 0, 2, 4 ... 24
+        for (let h = 0; h <= 24; h += 2) {
+            const pct = (h / 24) * 100;
+
+            const el = document.createElement('div');
+            el.className = 'day-tick';
+            el.style.left = `${pct}%`; // Exact linear position
+
+            // Label Formatting (12h format)
+            const ampm = (h >= 12 && h < 24) ? 'PM' : 'AM';
+            let hour12 = h % 12;
+            if (hour12 === 0) hour12 = 12;
+            if (h === 24) { hour12 = 12; } // 24:00 is 12 AM next day
+
+            // HTML Structure
+            el.innerHTML = `<span class="day-tick-label">${hour12} ${ampm}</span>`;
+
+            tickContainer.appendChild(el);
+        }
+    }
+
     renderTimeline(sessions) {
         if (!this.dom.timelineContainer) return;
 
@@ -249,46 +286,73 @@ export class DayManager {
         const oldBlocks = this.dom.timelineContainer.querySelectorAll('.day-session-block');
         oldBlocks.forEach(el => el.remove());
 
-        const MINUTES_IN_DAY = 1440; 
+        const MINUTES_IN_DAY = 1440;
+
+        // 1. Define the boundaries of the CURRENT VIEW DATE
+        // We clone this.currentDate to avoid mutating the actual view state
+        const viewStart = new Date(this.currentDate);
+        viewStart.setHours(0, 0, 0, 0);
+
+        const viewEnd = new Date(this.currentDate);
+        viewEnd.setHours(23, 59, 59, 999);
 
         sessions.forEach(s => {
             const displayTag = this._getDisplayTag(s);
+            if (this.hiddenTags.has(displayTag)) return;
 
-            // Filter Logic
-            if (this.hiddenTags.has(displayTag)) return; 
-
-            // Parse End Time (created_at is when session finished)
-            const dateStr = s.created_at.replace(' ', 'T'); 
-            const endDateObj = new Date(dateStr);
-            
-            // Calculate Start Time: EndTime - Duration
+            // 2. Calculate Actual Session Start/End
+            const dateStr = s.created_at.replace(' ', 'T');
+            const actualEndObj = new Date(dateStr);
             const durationSeconds = s.focus_seconds || 0;
-            const startDateObj = new Date(endDateObj.getTime() - (durationSeconds * 1000));
-            
-            const startHour = startDateObj.getHours();
-            const startMin = startDateObj.getMinutes();
+            const actualStartObj = new Date(actualEndObj.getTime() - (durationSeconds * 1000));
+
+            // 3. Check for Intersection with View Date
+            // If session ends before today starts OR starts after today ends, skip it
+            if (actualEndObj < viewStart || actualStartObj > viewEnd) return;
+
+            // 4. Clamp the times to fit within Today (00:00 - 24:00)
+            // visualStart is the later of: Actual Start vs Today 00:00
+            const visualStart = (actualStartObj < viewStart) ? viewStart : actualStartObj;
+
+            // visualEnd is the earlier of: Actual End vs Today 23:59
+            const visualEnd = (actualEndObj > viewEnd) ? viewEnd : actualEndObj;
+
+            // 5. Calculate Positioning based on Clamped Times
+            const startHour = visualStart.getHours();
+            const startMin = visualStart.getMinutes();
             const startTotalMins = (startHour * 60) + startMin;
 
-            const durationMins = Math.ceil(durationSeconds / 60);
-            
-            const leftPct = (startTotalMins / MINUTES_IN_DAY) * 100;
-            const widthPct = (durationMins / MINUTES_IN_DAY) * 100;
-            // Ensure tiny sessions are at least visible (0.5% width)
-            const finalWidth = Math.max(widthPct, 0.5);
+            // Calculate visual duration in minutes
+            const visualDurationMins = (visualEnd - visualStart) / 1000 / 60;
 
-            // Create Element
+            const leftPct = (startTotalMins / MINUTES_IN_DAY) * 100;
+            const widthPct = (visualDurationMins / MINUTES_IN_DAY) * 100;
+
+            // Ensure tiny sessions are visible (min 0.2%)
+            const finalWidth = Math.max(widthPct, 0.2);
+
+            // 6. Create Element
             const block = document.createElement('div');
             block.className = 'day-session-block';
             block.style.left = `${leftPct}%`;
             block.style.width = `${finalWidth}%`;
-            
+
+            // --- Visual Indicators for Split Sessions ---
+            // If actual start is earlier than visual start, it started yesterday
+            if (actualStartObj < viewStart) block.classList.add('starts-yesterday');
+            // If actual end is later than visual end, it continues tomorrow
+            if (actualEndObj > viewEnd) block.classList.add('continues-tomorrow');
+
             const color = this.tagsMap.get(displayTag) || '#2563eb';
             block.style.backgroundColor = color;
             block.style.boxShadow = `0 0 0 1px ${color}`;
 
-            // Tooltip
-            const timeLabel = startDateObj.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-            block.title = `${displayTag}: ${timeLabel} (${durationMins}m)`;
+            // 7. Tooltip: Show the REAL times, even if visually clamped
+            const labelStart = actualStartObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const labelEnd = actualEndObj.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            const realDurationMins = Math.ceil(durationSeconds / 60);
+
+            block.title = `${displayTag}: ${labelStart} - ${labelEnd} (${realDurationMins}m)`;
 
             this.dom.timelineContainer.appendChild(block);
         });

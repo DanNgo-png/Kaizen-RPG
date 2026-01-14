@@ -213,10 +213,8 @@
 .day-timeline-container {
     position: relative;
     margin-top: 40px;
-    /* Space for labels */
     height: 80px;
-    display: flex;
-    align-items: flex-end;
+    display: block;
 }
 
 /* The horizontal axis line */
@@ -227,54 +225,72 @@
     right: 0;
     height: 2px;
     background-color: #4b5563;
+    z-index: 0;
 }
 
 /* Ticks Wrapper */
 .day-timeline-ticks {
-    display: flex;
-    justify-content: space-between;
+    position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    position: relative;
+    height: 100%;
+    pointer-events: none; 
     z-index: 1;
 }
 
 .day-tick {
+    position: absolute;
+    bottom: 0;
+    height: 100%;
+    /* Use transform to center the tick line exactly on the % coordinate */
+    transform: translateX(-50%); 
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
-    position: relative;
+    justify-content: flex-end;
 }
 
 /* The vertical line */
 .day-tick::before {
     content: '';
     width: 1px;
-    height: 15px;
-    /* Height of tick mark */
+    height: 10px;
     background-color: #6b7280;
-    margin-bottom: -25px;
-    /* Push it down to intersect the axis */
+    margin-bottom: 5px; /* Spacing between line and text */
 }
 
 .day-tick-label {
     font-size: 0.75rem;
-    color: #6b7280;
-    margin-top: 35px;
-    /* Push label below axis */
+    color: #9ca3af;
+    /* Ensure text doesn't wrap awkwardly */
+    white-space: nowrap; 
 }
 
 /* Session Blocks */
 .day-session-block {
     position: absolute;
-    bottom: 26px; /* Sit on top of axis */
+    bottom: 26px; 
     height: 40px;
     background-color: #2563eb; 
-    border-radius: 4px;
+    border-radius: 4px; /* Standard rounded corners */
     opacity: 0.9;
-    border: 1px solid rgba(255,255,255,0.3);
     z-index: 10;
     transition: all 0.2s;
+}
+
+/* Came from yesterday (Flat left side) */
+.day-session-block.starts-yesterday {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: 0;
+    border-left: 2px dashed rgba(255, 255, 255, 0.5); /* Visual cue */
+}
+
+/* Continues tomorrow (Flat right side) */
+.day-session-block.continues-tomorrow {
+    border-top-right-radius: 0;
+    border-bottom-right-radius: 0;
+    border-right: 2px dashed rgba(255, 255, 255, 0.5); /* Visual cue */
 }
 
 .day-session-block:hover {
