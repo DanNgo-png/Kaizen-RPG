@@ -1,5 +1,3 @@
-import { GameAPI } from "../../api/GameAPI.js";
-
 export class TaskRenderer {
     constructor(callbacks) {
         this.callbacks = callbacks; // { onTaskClick, onDeleteTask, onToggleTask }

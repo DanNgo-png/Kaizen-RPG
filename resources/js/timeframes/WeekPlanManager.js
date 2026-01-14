@@ -1,4 +1,4 @@
-import { GameAPI } from "../api/GameAPI.js";
+import { TaskAPI } from "../api/TaskAPI.js";
 import { EXTENSION_ID } from "../api/_extension_id.js";
 
 export class WeekPlanManager {
@@ -165,7 +165,7 @@ export class WeekPlanManager {
         // Click to Toggle (Simple interaction)
         div.querySelector('.wc-check').addEventListener('click', (e) => {
             e.stopPropagation();
-            GameAPI.toggleTask(task.id);
+            TaskAPI.toggleTask(task.id);
             // Optimistic UI toggle
             div.classList.toggle('completed');
             // Refresh data shortly after

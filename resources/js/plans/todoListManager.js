@@ -1,4 +1,4 @@
-import { GameAPI } from "../api/GameAPI.js";
+import { TaskAPI } from "../api/TaskAPI.js";
 import { TaskRenderer } from "./todo-list/TaskRenderer.js";
 import { TaskModalManager } from "./todo-list/TaskModalManager.js";
 
@@ -47,8 +47,8 @@ class TodoListManager {
 
         this.renderer = new TaskRenderer({
             onTaskClick: (task) => this.modalManager.open(task, this.state.lists, this.state.activeListId),
-            onDeleteTask: (id) => GameAPI.deleteTask(id, this.state.activeListId),
-            onToggleTask: (id) => GameAPI.toggleTask(id, this.state.activeListId),
+            onDeleteTask: (id) => TaskAPI.deleteTask(id, this.state.activeListId),
+            onToggleTask: (id) => TaskAPI.toggleTask(id, this.state.activeListId),
             onListSwitch: (id, title, icon) => this.switchList(id, title, icon)
         });
 
@@ -64,8 +64,8 @@ class TodoListManager {
         Neutralino.events.on('receiveTodoLists', this._onReceiveListsBound);
 
         // 6. Fetch Data
-        GameAPI.getTodoLists();
-        GameAPI.getTasks(this.state.activeListId);
+        TaskAPI.getTodoLists();
+        TaskAPI.getTasks(this.state.activeListId);
     }
 
     updateTasks(tasks) {
@@ -92,7 +92,7 @@ class TodoListManager {
             this.renderer.renderLists(this.dom.listsNav, this.state.lists, id);
         }
         
-        GameAPI.getTasks(id);
+        TaskAPI.getTasks(id);
     }
 
     _bindGlobalEvents() {
@@ -100,7 +100,7 @@ class TodoListManager {
             const content = this.dom.input.value.trim();
             if (!content) return;
             
-            GameAPI.addTask({ 
+            TaskAPI.addTask({ 
                 content, 
                 priority: this.dom.prioritySelect?.value || 'p4', 
                 listId: this.state.activeListId 
@@ -120,7 +120,7 @@ class TodoListManager {
         if (this.dom.btnAddList) {
             this.dom.btnAddList.onclick = () => {
                 const name = prompt("Enter new list name:");
-                if (name?.trim()) GameAPI.addTodoList(name.trim(), "fa-solid fa-list");
+                if (name?.trim()) TaskAPI.addTodoList(name.trim(), "fa-solid fa-list");
             };
         }
 
@@ -128,7 +128,7 @@ class TodoListManager {
             this.dom.btnDeleteList.onclick = () => {
                 if (this.state.activeListId === 1) return;
                 if (confirm(`Delete list "${this.state.activeListTitle}"?`)) {
-                    GameAPI.deleteTodoList(this.state.activeListId);
+                    TaskAPI.deleteTodoList(this.state.activeListId);
                     this.switchList(1, 'Inbox', 'fa-solid fa-inbox');
                 }
             };
@@ -136,9 +136,9 @@ class TodoListManager {
 
         if (this.dom.clearBtn) {
             this.dom.clearBtn.onclick = () => {
-                 if (confirm("Clear completed tasks?")) {
-                     GameAPI.clearCompletedTasks(this.state.activeListId);
-                 }
+                if (confirm("Clear completed tasks?")) {
+                    TaskAPI.clearCompletedTasks(this.state.activeListId);
+                }
             };
         }
 

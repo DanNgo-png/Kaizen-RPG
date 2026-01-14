@@ -1,4 +1,4 @@
-import { GameAPI } from "../../api/GameAPI.js";
+import { TaskAPI } from "../../api/TaskAPI.js";
 import { DateSidecarManager } from "./DateSidecarManager.js";
 
 export class TaskModalManager {
@@ -63,7 +63,7 @@ export class TaskModalManager {
 
         this.dom.priority.addEventListener('change', (e) => {
             if (this.activeTaskId) {
-                GameAPI.updateTaskPriority(this.activeTaskId, e.target.value, this.activeListId);
+                TaskAPI.updateTaskPriority(this.activeTaskId, e.target.value, this.activeListId);
                 this._showSaveIndicator();
             }
         });
@@ -71,7 +71,7 @@ export class TaskModalManager {
         this.dom.listSelect.addEventListener('change', (e) => {
             if (this.activeTaskId) {
                 const newListId = parseInt(e.target.value);
-                GameAPI.moveTask(this.activeTaskId, newListId, this.activeListId);
+                TaskAPI.moveTask(this.activeTaskId, newListId, this.activeListId);
                 this.close(); 
             }
         });
@@ -103,7 +103,7 @@ export class TaskModalManager {
         if (this.activeTaskId) {
             const currentDesc = this.dom.desc.value;
             if (currentDesc !== this.originalDescription) {
-                GameAPI.updateTaskDescription(this.activeTaskId, currentDesc, this.activeListId);
+                TaskAPI.updateTaskDescription(this.activeTaskId, currentDesc, this.activeListId);
             }
         }
         this.close();

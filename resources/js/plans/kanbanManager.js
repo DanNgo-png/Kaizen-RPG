@@ -1,8 +1,8 @@
-import { GameAPI } from "../api/GameAPI.js";
+import { TaskAPI } from "../api/TaskAPI.js";
 
 export function initKanbanBoard() {
     // 1. Request Data
-    GameAPI.getTasks();
+    TaskAPI.getTasks();
     
     // 2. Listen for Data (One-time binding handled by caller or idempotent check)
     // Note: We reuse the generic 'receiveTasks' event.
