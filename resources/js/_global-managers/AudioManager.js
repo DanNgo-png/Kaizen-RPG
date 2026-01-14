@@ -16,7 +16,11 @@ export class AudioManager {
         this.volume = 0.7;
 
         // Initialize Web Audio Context for synth sounds (hover)
+        // Browsers generally start this in 'suspended' state until a gesture occurs.
         this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Setup unlock listener for first user interaction
+        this._setupAudioUnlock();
 
         this.init();
     }
@@ -31,6 +35,28 @@ export class AudioManager {
                 if (this.activeAudio) this.activeAudio.volume = this.volume;
             }
         });
+    }
+
+    /**
+     * Resumes AudioContext on first user interaction (Click/Keydown).
+     * Prevents "AudioContext was not allowed to start" errors.
+     */
+    _setupAudioUnlock() {
+        const unlock = () => {
+            if (this.audioCtx && this.audioCtx.state === 'suspended') {
+                this.audioCtx.resume().then(() => {
+                    // Remove listeners once successfully resumed
+                    document.removeEventListener('click', unlock);
+                    document.removeEventListener('keydown', unlock);
+                }).catch(e => {
+                    // Ignore errors if resume happens too early or context invalid
+                });
+            }
+        };
+
+        // Listen for valid user gestures
+        document.addEventListener('click', unlock);
+        document.addEventListener('keydown', unlock);
     }
 
     play(category, key) {
@@ -74,7 +100,10 @@ export class AudioManager {
             if (category === 'alarm') this.activeAudio = audio;
 
             audio.play().catch(e => {
-                if (e.name !== 'AbortError') console.warn("Audio Playback Error:", e);
+                // Ignore errors related to lack of user interaction or interruptions
+                if (e.name !== 'AbortError' && e.name !== 'NotAllowedError') {
+                    console.warn("Audio Playback Error:", e);
+                }
             });
         } catch (e) {
             console.error("AudioManager Error:", e);
@@ -82,8 +111,13 @@ export class AudioManager {
     }
 
     _playSynth(config) {
-        if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+        // Guard: If context doesn't exist, exit
+        if (!this.audioCtx) return;
+
+        // Guard: If context is suspended (no user interaction yet), 
+        // do NOT try to resume here. It will fail on 'mouseover'.
+        // Just return silently. The sound will work after the user clicks once.
+        if (this.audioCtx.state === 'suspended') return;
 
         const osc = this.audioCtx.createOscillator();
         const gainNode = this.audioCtx.createGain();
