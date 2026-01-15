@@ -51,6 +51,12 @@
     align-items: center;
     gap: 10px;
     transition: 0.2s;
+    /* Prevent text wrapping weirdly on indentation */
+    white-space: nowrap; 
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    position: relative;
 }
 
 .list-item-btn:hover {

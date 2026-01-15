@@ -15,7 +15,9 @@ export class TaskController {
         });
 
         app.events.on("addTodoList", (payload) => {
-            this.handleSafeDBAction(() => this.repo.addList(payload.title, payload.icon));
+            this.handleSafeDBAction(() => {
+                this.repo.addList(payload.title, payload.icon, payload.parentId || null);
+            });
             app.events.broadcast("receiveTodoLists", this.repo.getLists());
         });
 

@@ -5,8 +5,8 @@ export const TaskAPI = {
     getTodoLists: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getTodoLists", null);
     },
-    addTodoList: async (title, icon) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "addTodoList", { title, icon });
+    addTodoList: async (title, icon, parentId = null) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "addTodoList", { title, icon, parentId });
     },
     deleteTodoList: async (id) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "deleteTodoList", { id });

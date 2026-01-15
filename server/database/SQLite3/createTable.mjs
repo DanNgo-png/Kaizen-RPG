@@ -6,15 +6,17 @@ const SCHEMAS = {
             title TEXT NOT NULL,
             icon TEXT DEFAULT 'fa-solid fa-list',
             is_default INTEGER DEFAULT 0,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+            parent_id INTEGER DEFAULT NULL, -- NEW COLUMN
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY(parent_id) REFERENCES todo_lists(id) ON DELETE CASCADE
         );
 
-        -- Insert default 'Inbox' if not exists
-        INSERT OR IGNORE INTO todo_lists (id, title, icon, is_default) VALUES (1, 'Inbox', 'fa-solid fa-inbox', 1);
+        -- Insert default 'Inbox'
+        INSERT OR IGNORE INTO todo_lists (id, title, icon, is_default, parent_id) VALUES (1, 'Inbox', 'fa-solid fa-inbox', 1, NULL);
 
         CREATE TABLE IF NOT EXISTS tasks (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            list_id INTEGER DEFAULT 1, -- Link to todo_lists
+            list_id INTEGER DEFAULT 1,
             content TEXT NOT NULL,
             description TEXT,
             priority TEXT DEFAULT 'p4',

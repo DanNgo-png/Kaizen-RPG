@@ -1,6 +1,5 @@
 export class TaskRenderer {
     constructor(callbacks) {
-        // callbacks: { onTaskClick, onDeleteTask, onToggleTask, onListSwitch, onListContextMenu, onTaskContextMenu }
         this.callbacks = callbacks;
     }
 
@@ -8,17 +7,58 @@ export class TaskRenderer {
         if (!container) return;
         container.innerHTML = '';
 
-        lists.forEach(list => {
+        // 1. Build Tree Structure
+        const tree = this._buildTree(lists);
+
+        // 2. Recursive Render
+        this._renderTreeNodes(container, tree, activeListId, 0);
+    }
+
+    _buildTree(flatLists) {
+        const map = {};
+        const roots = [];
+
+        // Init Map
+        flatLists.forEach(l => {
+            map[l.id] = { ...l, children: [] };
+        });
+
+        // Link Children
+        flatLists.forEach(l => {
+            if (l.parent_id && map[l.parent_id]) {
+                map[l.parent_id].children.push(map[l.id]);
+            } else {
+                roots.push(map[l.id]);
+            }
+        });
+
+        return roots;
+    }
+
+    _renderTreeNodes(container, nodes, activeListId, depth) {
+        nodes.forEach(list => {
             const btn = document.createElement('button');
             const isActive = list.id === activeListId;
-            btn.className = `list-item-btn ${isActive ? 'active' : ''}`;
-            btn.innerHTML = `<i class="${list.icon}"></i> ${list.title}`;
             
+            // Indentation Style
+            const indent = depth * 15; 
+            btn.style.paddingLeft = `${10 + indent}px`; 
+            
+            btn.className = `list-item-btn ${isActive ? 'active' : ''}`;
+            
+            // Visual indicator for sub-list
+            const iconHtml = list.parent_id 
+                ? `<i class="fa-solid fa-turn-up fa-rotate-90" style="font-size:0.7em; opacity:0.5; margin-right:5px;"></i> <i class="${list.icon}"></i>`
+                : `<i class="${list.icon}"></i>`;
+
+            btn.innerHTML = `${iconHtml} ${list.title}`;
+            
+            // Click
             btn.addEventListener('click', () => {
                 this.callbacks.onListSwitch(list.id, list.title, list.icon);
             });
 
-            // Context Menu for Lists
+            // Context Menu
             btn.addEventListener('contextmenu', (e) => {
                 if (this.callbacks.onListContextMenu) {
                     this.callbacks.onListContextMenu(e, list);
@@ -26,9 +66,15 @@ export class TaskRenderer {
             });
 
             container.appendChild(btn);
+
+            // Render Children
+            if (list.children && list.children.length > 0) {
+                this._renderTreeNodes(container, list.children, activeListId, depth + 1);
+            }
         });
     }
 
+    // ... (renderTasks and existing helper methods remain unchanged) ...
     renderTasks(container, tasks, filterType) {
         if (!container) return;
         container.innerHTML = '';
@@ -85,7 +131,6 @@ export class TaskRenderer {
             </button>
         `;
 
-        // Bind Events
         const checkbox = item.querySelector('input[type="checkbox"]');
         const checkContainer = item.querySelector('.check-container');
         const delBtn = item.querySelector('.btn-delete');
@@ -111,7 +156,6 @@ export class TaskRenderer {
             }
         });
 
-        // --- NEW: Context Menu for Tasks ---
         item.addEventListener('contextmenu', (e) => {
             if (this.callbacks.onTaskContextMenu) {
                 this.callbacks.onTaskContextMenu(e, task);

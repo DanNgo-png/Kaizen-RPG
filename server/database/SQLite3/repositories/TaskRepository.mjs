@@ -18,8 +18,8 @@ export class TaskRepository {
 
             // LISTS
             getLists: this.db.prepare('SELECT * FROM todo_lists ORDER BY is_default DESC, id ASC'),
-            addList: this.db.prepare('INSERT INTO todo_lists (title, icon) VALUES (@title, @icon)'),
-            deleteList: this.db.prepare('DELETE FROM todo_lists WHERE id = ? AND is_default = 0') // Protect Inbox
+            addList: this.db.prepare('INSERT INTO todo_lists (title, icon, parent_id) VALUES (@title, @icon, @parentId)'),
+            deleteList: this.db.prepare('DELETE FROM todo_lists WHERE id = ? AND is_default = 0')
         };
     }
     
@@ -36,7 +36,7 @@ export class TaskRepository {
     removeTask(id) { return this.statements.delete.run(id); }
     clearCompleted(listId) { return this.statements.clearCompleted.run({ listId }); }
     getLists() { return this.statements.getLists.all(); }
-    addList(title, icon) { return this.statements.addList.run({ title, icon }); }
+    addList(title, icon, parentId = null) { return this.statements.addList.run({ title, icon, parentId }); }
     deleteList(id) { return this.statements.deleteList.run(id); }
 
     // Task Modal Overay

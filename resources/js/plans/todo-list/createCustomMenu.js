@@ -6,14 +6,27 @@ const menuManager = new CustomMenuManager();
 /**
  * Menu for Sidebar Lists
  */
-export function handleTodoListContextMenu(event, list, callbacks) {
-    // Prevent context menu on Inbox (ID 1)
-    if (list.id === 1 || list.is_default === 1) return;
-
+export function handleTodoListContextMenu(event, list, callbacks) {  
     const { onDelete } = callbacks || {};
+    const isDeletable = (list.id !== 1 && list.is_default !== 1);
 
     const items = [
         {
+            label: "Create Sub-list",
+            icon: '<i class="fa-solid fa-turn-up fa-rotate-90"></i>', // L-shaped arrow
+            action: () => {
+                const name = prompt(`New list inside "${list.title}":`);
+                if (name?.trim()) {
+                    TaskAPI.addTodoList(name.trim(), "fa-solid fa-list", list.id);
+                }
+            }
+        }
+    ];
+
+    // Only add delete option for non-default lists
+    if (isDeletable) {
+        items.push({ separator: true });
+        items.push({
             label: "Delete List",
             icon: '<i class="fa-solid fa-trash"></i>',
             danger: true,
@@ -23,15 +36,12 @@ export function handleTodoListContextMenu(event, list, callbacks) {
                     if (onDelete) onDelete(list.id);
                 }
             }
-        }
-    ];
+        });
+    }
 
     menuManager.show(event, items);
 }
 
-/**
- * Menu for Tasks
- */
 export function handleTaskContextMenu(event, task, callbacks) {
     const { onEdit, onDelete, onToggle } = callbacks || {};
 
