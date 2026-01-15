@@ -3,6 +3,7 @@ import { GameAPI } from "./js/api/GameAPI.js";
 import { SettingsAPI } from './js/api/SettingsAPI.js';
 import { initGlobalInputListeners } from './js/_global-managers/GlobalInputListener.js';
 import { updateManager } from "./js/_global-managers/UpdateManager.js";
+import { notifier } from "./js/_global-managers/NotificationManager.js"; 
 
 // PLAN PAGE
 import { initTodoList } from './js/plans/todoListManager.js';
