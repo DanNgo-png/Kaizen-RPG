@@ -1,3 +1,4 @@
+import { updateManager } from "../_global-managers/UpdateManager.js"; 
 import { SettingsAPI } from "../api/SettingsAPI.js";
 import { FocusAPI } from "../api/FocusAPI.js";
 
@@ -32,6 +33,60 @@ export function initMainSettings() {
     const modalContent = modal ? modal.querySelector('.clear-history-modal-content') : null;
     const btnConfirm = document.getElementById('clear-history-btn-confirm-clear');
     const btnCancel = document.getElementById('clear-history-btn-cancel-clear');
+
+    // Update Checker Logic 
+    const btnCheckUpdate = document.querySelector('.ms-btn-primary'); // The "Check Now" button
+    const versionBadge = document.querySelector('.version-badge');
+
+    if (btnCheckUpdate) {
+        // Display current version on load
+        Neutralino.app.getConfig().then(config => {
+            if (versionBadge) versionBadge.textContent = `v${config.version}`;
+        });
+
+        btnCheckUpdate.addEventListener('click', async () => {
+            // 1. UI Loading State
+            const originalText = btnCheckUpdate.innerHTML;
+            btnCheckUpdate.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Checking...`;
+            btnCheckUpdate.disabled = true;
+
+            try {
+                // 2. Perform Check
+                const manifest = await updateManager.check();
+
+                if (manifest) {
+                    // 3a. Update Available
+                    const confirm = await Neutralino.os.showMessageBox(
+                        'Update Available',
+                        `Version ${manifest.version} is available. \n\n${manifest.data?.changelog || 'Bug fixes and improvements.'}\n\nInstall now?`,
+                        'YES_NO',
+                        'QUESTION'
+                    );
+
+                    if (confirm === 'YES') {
+                        btnCheckUpdate.innerHTML = `<i class="fa-solid fa-download"></i> Installing...`;
+                        await updateManager.install();
+                    } else {
+                        btnCheckUpdate.innerHTML = originalText;
+                        btnCheckUpdate.disabled = false;
+                    }
+                } else {
+                    // 3b. No Update
+                    // Use OS Message Box for better visibility or the Notifier
+                    await Neutralino.os.showMessageBox('Up to Date', 'You are running the latest version.', 'OK', 'INFO');
+                    btnCheckUpdate.innerHTML = originalText;
+                    btnCheckUpdate.disabled = false;
+                }
+            } catch (err) {
+                console.error(err);
+                btnCheckUpdate.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error`;
+                setTimeout(() => {
+                    btnCheckUpdate.innerHTML = originalText;
+                    btnCheckUpdate.disabled = false;
+                }, 2000);
+            }
+        });
+    }
 
     if (fontSelect) {
         // 1. Listen for changes
