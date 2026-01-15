@@ -5,24 +5,17 @@ export class UpdateManager {
         if (UpdateManager.instance) return UpdateManager.instance;
         UpdateManager.instance = this;
 
-        // URL where your manifest.json is hosted (GitHub Pages, AWS S3, etc.)
+        // Ensure this URL matches your actual GitHub Pages structure
         this.manifestUrl = "https://danngo-png.github.io/Kaizen-RPG/updates/manifest.json";
     }
 
-    /**
-     * Checks for updates against the remote manifest.
-     * @returns {Promise<Object|null>} Returns manifest if update exists, null otherwise.
-     */
     async check() {
         try {
             console.log(`🔍 Checking for updates at: ${this.manifestUrl}`);
             const manifest = await Neutralino.updater.checkForUpdates(this.manifestUrl);
-            
             console.log("🚀 Update available:", manifest.version);
             return manifest;
         } catch (error) {
-            // Neutralino rejects the promise if no update is found or if there is a network error.
-            // We differentiate by checking the error message or context if needed.
             if (error.code === 'NE_UP_CUPDERR') {
                 console.log("✅ Application is up to date.");
             } else {
@@ -33,7 +26,8 @@ export class UpdateManager {
     }
 
     /**
-     * Downloads and installs the update, then restarts the app.
+     * Downloads and installs the update.
+     * @returns {Promise<boolean>} True if successful, False if failed.
      */
     async install() {
         try {
@@ -43,14 +37,16 @@ export class UpdateManager {
             
             notifier.show("Success", "Update installed. Restarting...", "fa-solid fa-rotate");
             
-            // Short delay to let user read the toast
             setTimeout(async () => {
                 await Neutralino.app.restart();
             }, 1500);
 
+            return true; // Success
+
         } catch (error) {
             console.error("❌ Install failed:", error);
-            notifier.show("Update Failed", "Could not install update.", "fa-solid fa-triangle-exclamation");
+            notifier.show("Update Failed", "Could not install update. Check console.", "fa-solid fa-triangle-exclamation");
+            return false; // Failed
         }
     }
 }

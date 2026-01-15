@@ -46,7 +46,7 @@ export function initMainSettings() {
 
         btnCheckUpdate.addEventListener('click', async () => {
             // 1. UI Loading State
-            const originalText = btnCheckUpdate.innerHTML;
+            const originalText = "Check Now"; // Or grab existing innerHTML
             btnCheckUpdate.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Checking...`;
             btnCheckUpdate.disabled = true;
 
@@ -65,14 +65,24 @@ export function initMainSettings() {
 
                     if (confirm === 'YES') {
                         btnCheckUpdate.innerHTML = `<i class="fa-solid fa-download"></i> Installing...`;
-                        await updateManager.install();
+                        
+                        // Wait for result
+                        const success = await updateManager.install();
+                        
+                        // If failed (e.g. 404), reset UI
+                        if (!success) {
+                            btnCheckUpdate.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Failed`;
+                            setTimeout(() => {
+                                btnCheckUpdate.innerHTML = originalText;
+                                btnCheckUpdate.disabled = false;
+                            }, 3000);
+                        }
                     } else {
                         btnCheckUpdate.innerHTML = originalText;
                         btnCheckUpdate.disabled = false;
                     }
                 } else {
                     // 3b. No Update
-                    // Use OS Message Box for better visibility or the Notifier
                     await Neutralino.os.showMessageBox('Up to Date', 'You are running the latest version.', 'OK', 'INFO');
                     btnCheckUpdate.innerHTML = originalText;
                     btnCheckUpdate.disabled = false;
