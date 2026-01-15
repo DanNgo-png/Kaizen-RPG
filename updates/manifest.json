@@ -1,8 +1,8 @@
 {
   "applicationId": "js.neutralino.kaizenrpg",
   "version": "1.1.0",
-  "resourcesURL": "https://DanNgo-png.github.io/updates/v1.1.0/resources.neu",
+  "resourcesURL": "https://danngo-png.github.io/Kaizen-RPG/updates/v1.1.0/resources.neu",
   "data": {
-    "changelog": "- Added Empire Builder mode\n- Fixed focus timer bug"
+    "changelog": "First release"
   }
 }
