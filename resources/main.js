@@ -1,22 +1,23 @@
 import { EventRegistry } from "./js/events/EventRegistry.js";
 import { GameAPI } from "./js/api/GameAPI.js";
 import { SettingsAPI } from './js/api/SettingsAPI.js';
-import { initGlobalInputListeners } from './js/_global-managers/GlobalInputListener.js'; 
+import { initGlobalInputListeners } from './js/_global-managers/GlobalInputListener.js';
+import { updateManager } from "./js/_global-managers/UpdateManager.js";
 
 // PLAN PAGE
 import { initTodoList } from './js/plans/todoListManager.js';
 import { initHabitTracker } from './js/plans/habitTrackerManager.js';
 
 // FOCUS PAGE
-import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js'; 
+import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js';
 import { configureSidebar } from './js/focus/configureSidebar.js';
 import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
 import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
 import { initReviewSessions } from './js/focus/review/ReviewManager.js';
 import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
-    // MANAGERS (Singleton Instances)
-    import { standardManager } from './js/focus/standard/StandardFocusManager.js';
-    import { flexManager } from './js/focus/flexible/FlexibleFocusManager.js';
+// MANAGERS (Singleton Instances)
+import { standardManager } from './js/focus/standard/StandardFocusManager.js';
+import { flexManager } from './js/focus/flexible/FlexibleFocusManager.js';
 
 // TIMEFRAMES
 import { initTodayView } from './js/timeframes/TodayManager.js';
@@ -35,7 +36,7 @@ import { initCustomAnalytics } from './js/analyze/CustomAnalyticsManager.js';
 
 // GAME PAGE
 import { initMenuButtons } from './js/games/playGameManager.js';
-import { initParty } from './js/games/party/PartyManager.js'; 
+import { initParty } from './js/games/party/PartyManager.js';
 
 // OTHER
 import { loadPage } from './js/router.js';
@@ -46,14 +47,28 @@ import { initMainSettings } from './js/main-settings/mainSettingsManager.js';
 
 async function app() {
     try {
+        setTimeout(async () => {
+            const manifest = await updateManager.check();
+            if (manifest) {
+                // Use a toast to inform the user unobtrusively
+                notifier.show(
+                    "Update Available",
+                    `Version ${manifest.version} is ready. Go to Settings to install.`,
+                    "fa-solid fa-wand-magic-sparkles"
+                );
+
+                // Optional: Update the Settings button badge if you have one
+            }
+        }, 5000);
+
         EventRegistry.init();
         initGlobalInputListeners(); // INITIALIZE AUDIO LISTENERS
 
         // FOCUS PAGE
         standardManager.initialize();
-        flexManager.initialize(); 
-        initGlobalFocusListener(); 
-        
+        flexManager.initialize();
+        initGlobalFocusListener();
+
         SettingsAPI.getSetting('fontFamily');
         await GameAPI.getMercenaries();
         handleDropdowns();
@@ -143,7 +158,7 @@ async function app() {
         if (focusSettingsButton) {
             focusSettingsButton.addEventListener("click", async () => {
                 await loadPage('./pages/focus/focus-settings.html');
-                initFocusSettings(); 
+                initFocusSettings();
             });
         }
 
@@ -152,7 +167,7 @@ async function app() {
         if (todayTimeframeButton) {
             todayTimeframeButton.addEventListener("click", async () => {
                 await loadPage('./pages/timeframes/today.html');
-                initTodayView(); 
+                initTodayView();
             });
         }
 
@@ -215,7 +230,7 @@ async function app() {
         if (analyzeWeek) {
             analyzeWeek.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/week.html');
-                initWeekAnalytics(); 
+                initWeekAnalytics();
             });
         }
 
@@ -224,7 +239,7 @@ async function app() {
         if (analyzeMonth) {
             analyzeMonth.addEventListener("click", async () => {
                 await loadPage('./pages/analyze/month.html');
-                initMonthAnalytics(); 
+                initMonthAnalytics();
             });
         }
 
@@ -259,7 +274,7 @@ async function app() {
         if (partyButton) {
             partyButton.addEventListener("click", async () => {
                 await loadPage('./pages/games/party.html');
-                initParty(); 
+                initParty();
             });
         }
 
