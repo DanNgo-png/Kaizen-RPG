@@ -25,3 +25,4 @@ backup_files
 resources/audio/alarm/custom/*.mp3
 resources/audio/alarm/custom/*.wav
 resources/audio/alarm/custom/*.ogg
+*.zip
