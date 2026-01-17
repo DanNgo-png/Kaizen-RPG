@@ -5,313 +5,54 @@ import { initGlobalInputListeners } from './js/_global-managers/GlobalInputListe
 import { updateManager } from "./js/_global-managers/UpdateManager.js";
 import { notifier } from "./js/_global-managers/NotificationManager.js"; 
 
-// PLAN PAGE
-import { initTodoList } from './js/plans/todoListManager.js';
-import { initHabitTracker } from './js/plans/habitTrackerManager.js';
-
-// FOCUS PAGE
-import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js';
-import { configureSidebar } from './js/focus/configureSidebar.js';
-import { initFocusTimer } from './js/focus/standard/StandardFocusTimer.js';
-import { initFlexibleFocusTimer } from './js/focus/flexible/FlexibleFocusTimer.js';
-import { initReviewSessions } from './js/focus/review/ReviewManager.js';
-import { initFocusSettings } from './js/focus/FocusSettingsManager.js';
-// MANAGERS (Singleton Instances)
+// Global Managers
 import { standardManager } from './js/focus/standard/StandardFocusManager.js';
 import { flexManager } from './js/focus/flexible/FlexibleFocusManager.js';
+import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js';
 
-// TIMEFRAMES
-import { initTodayView } from './js/timeframes/TodayManager.js';
-import { initWeekPlan } from './js/timeframes/WeekPlanManager.js';
-import { initQuarterView } from './js/timeframes/QuarterPlanManager.js';
-import { initYearPlan } from './js/timeframes/YearPlanManager.js';
-import { initTimeframeSettings } from './js/timeframes/settings/TimeframesSetting.js';
-
-// ANALYZE PAGE
-import { initOverview } from './js/analyze/OverviewManager.js';
-import { initDayAnalytics } from './js/analyze/DayManager.js';
-import { initWeekAnalytics } from './js/analyze/WeekManager.js';
-import { initMonthAnalytics } from './js/analyze/MonthManager.js';
-import { initYearAnalytics } from './js/analyze/YearManager.js';
-import { initCustomAnalytics } from './js/analyze/CustomAnalyticsManager.js';
-
-// GAME PAGE
-import { initMenuButtons } from './js/games/playGameManager.js';
-import { initParty } from './js/games/party/PartyManager.js';
-
-// OTHER
-import { loadPage } from './js/router.js';
-import { toggleSideBar } from './js/toggleSideBar.js';
+// UI Managers
 import { handleDropdowns } from './js/dropdown.js';
 import { initSidebarTooltips } from './js/sidebarTooltip.js';
-import { initMainSettings } from './js/main-settings/mainSettingsManager.js';
+import { LoadPageManager } from './js/_main-app/LoadPageManager.js';
 
 async function app() {
     try {
+        console.log("🚀 Starting Kaizen RPG...");
+
+        // 1. Initialize Core Systems
+        EventRegistry.init();
+        initGlobalInputListeners();
+        
+        // 2. Initialize Focus Engine (Singleton Background Logic)
+        standardManager.initialize();
+        flexManager.initialize();
+        initGlobalFocusListener();
+
+        // 3. Pre-load Global Data
+        SettingsAPI.getSetting('fontFamily');
+        await GameAPI.getMercenaries();
+
+        // 4. Initialize UI Components
+        handleDropdowns();
+        initSidebarTooltips();
+        
+        // 5. Setup Navigation
+        LoadPageManager.init();
+
+        // 6. Check for Updates (Delayed)
         setTimeout(async () => {
             const manifest = await updateManager.check();
             if (manifest) {
-                // Use a toast to inform the user unobtrusively
                 notifier.show(
                     "Update Available",
                     `Version ${manifest.version} is ready. Go to Settings to install.`,
                     "fa-solid fa-wand-magic-sparkles"
                 );
-
-                // Optional: Update the Settings button badge if you have one
             }
         }, 5000);
 
-        EventRegistry.init();
-        initGlobalInputListeners(); // INITIALIZE AUDIO LISTENERS
-
-        // FOCUS PAGE
-        standardManager.initialize();
-        flexManager.initialize();
-        initGlobalFocusListener();
-
-        SettingsAPI.getSetting('fontFamily');
-        await GameAPI.getMercenaries();
-        handleDropdowns();
-        initSidebarTooltips();
-
-        // Sidebar Toggle
-        const sidebarToggle = document.getElementById("sidebar-toggle");
-        if (sidebarToggle) {
-            sidebarToggle.addEventListener("click", toggleSideBar);
-        }
-
-        // Plan: Todo Lists
-        const todoListsButton = document.querySelector(".todo-lists-button");
-        if (todoListsButton) {
-            todoListsButton.addEventListener("click", async () => {
-                await loadPage('./pages/plans/todo-lists.html');
-                initTodoList();
-            });
-        }
-
-        // Plan: Habit Tracker
-        const habitTrackerButton = document.querySelector(".habit-tracker-button");
-        if (habitTrackerButton) {
-            habitTrackerButton.addEventListener("click", async () => {
-                await loadPage('./pages/plans/habit-tracker.html');
-                initHabitTracker();
-            });
-        }
-
-        // Plan: Kanban Board
-        const kanbanBoardButton = document.querySelector(".kanban-board-button");
-        if (kanbanBoardButton) {
-            kanbanBoardButton.addEventListener("click", async () => {
-                await loadPage('./pages/plans/kanban-board.html');
-                // placeholder(); 
-            });
-        }
-
-        // Focus: Standard
-        const focusStandardButton = document.querySelector(".focus-standard-button");
-        if (focusStandardButton) {
-            focusStandardButton.addEventListener("click", async () => {
-                await loadPage('./pages/focus/focus-standard.html');
-                initFocusTimer();
-            });
-        }
-
-        // Focus: Standard; Configure Sidebar
-        document.addEventListener('click', function (event) {
-            // Configure Sidebar Button
-            if (event.target.closest('#configure-footer-button')) {
-                configureSidebar();
-                return; // Stop further checks
-            }
-            // NOTE: You can add more delegated events here in the future
-        });
-
-        // Setup "Focus: Flexible" Button
-        const focusFlexibleButton = document.querySelector(".focus-flexible-button");
-        if (focusFlexibleButton) {
-            focusFlexibleButton.addEventListener("click", async () => {
-                await loadPage('./pages/focus/focus-flexible.html');
-                initFlexibleFocusTimer();
-            });
-        }
-
-        // "Focus: Review" Button (1/2)
-        document.addEventListener('click', async (event) => {
-            // Check if clicked element is the Log button
-            if (event.target.closest('.log-footer-button')) {
-                await loadPage('./pages/focus/review-sessions.html');
-                initReviewSessions();
-            }
-        });
-
-        // "Focus: Review" Button (2/2)
-        const reviewBtn = document.querySelector(".focus-review-button");
-        if (reviewBtn) {
-            reviewBtn.addEventListener("click", async () => {
-                await loadPage('./pages/focus/review-sessions.html');
-                initReviewSessions();
-            });
-        }
-
-        // Setup "Focus: Settings" Button
-        const focusSettingsButton = document.querySelector(".focus-settings-button");
-        if (focusSettingsButton) {
-            focusSettingsButton.addEventListener("click", async () => {
-                await loadPage('./pages/focus/focus-settings.html');
-                initFocusSettings();
-            });
-        }
-
-        // "Timeframe: Today"
-        const todayTimeframeButton = document.querySelector(".today-timeframe-button");
-        if (todayTimeframeButton) {
-            todayTimeframeButton.addEventListener("click", async () => {
-                await loadPage('./pages/timeframes/today.html');
-                initTodayView();
-            });
-        }
-
-        // "Timeframe: This Week"
-        const weekTimeframeButton = document.querySelector(".week-timeframe-button");
-        if (weekTimeframeButton) {
-            weekTimeframeButton.addEventListener("click", async () => {
-                await loadPage('./pages/timeframes/this-week.html');
-                initWeekPlan();
-            });
-        }
-
-        // "Timeframe: This Quarter"
-        const quarterTimeframeButton = document.querySelector(".quarter-timeframe-button");
-        if (quarterTimeframeButton) {
-            quarterTimeframeButton.addEventListener("click", async () => {
-                await loadPage('./pages/timeframes/this-quarter.html');
-                initQuarterView();
-            });
-        }
-
-        // "Timeframe: This Year"
-        const yearTimeframeButton = document.querySelector(".year-timeframe-button");
-        if (yearTimeframeButton) {
-            yearTimeframeButton.addEventListener("click", async () => {
-                await loadPage('./pages/timeframes/this-year.html');
-                initYearPlan();
-            });
-        }
-
-        // Timeframe: Settings
-        const settingsTimeframeButton = document.querySelector(".timeframe-settings-button");
-        if (settingsTimeframeButton) {
-            settingsTimeframeButton.addEventListener("click", async () => {
-                await loadPage('./pages/timeframes/timeframes-settings.html');
-                initTimeframeSettings();
-            });
-        }
-
-        // "Analyze: Overview"
-        const analyzeOverview = document.querySelector(".analyze-overview-button");
-        if (analyzeOverview) {
-            analyzeOverview.addEventListener("click", async () => {
-                await loadPage('./pages/analyze/overview.html');
-                initOverview();
-            });
-        }
-
-        // "Analyze: Day"
-        const analyzeDay = document.querySelector(".analyze-day-button");
-        if (analyzeDay) {
-            analyzeDay.addEventListener("click", async () => {
-                await loadPage('./pages/analyze/day.html');
-                initDayAnalytics();
-            });
-        }
-
-        // "Analyze: Week"
-        const analyzeWeek = document.querySelector(".analyze-week-button");
-        if (analyzeWeek) {
-            analyzeWeek.addEventListener("click", async () => {
-                await loadPage('./pages/analyze/week.html');
-                initWeekAnalytics();
-            });
-        }
-
-        // "Analyze: Month"
-        const analyzeMonth = document.querySelector(".analyze-month-button");
-        if (analyzeMonth) {
-            analyzeMonth.addEventListener("click", async () => {
-                await loadPage('./pages/analyze/month.html');
-                initMonthAnalytics();
-            });
-        }
-
-        // "Analyze: Year"
-        const analyzeYear = document.querySelector(".analyze-year-button");
-        if (analyzeYear) {
-            analyzeYear.addEventListener("click", async () => {
-                await loadPage('./pages/analyze/year.html');
-                initYearAnalytics();
-            });
-        }
-
-        // "Analyze: Custom"
-        const analyzeCustom = document.querySelector(".analyze-custom-button");
-        if (analyzeCustom) {
-            analyzeCustom.addEventListener("click", async () => {
-                await loadPage('./pages/analyze/custom.html');
-                initCustomAnalytics();
-            });
-        }
-
-        // --- GAMES SECTION ---
-        const playGameButton = document.querySelector(".play-game-button");
-        if (playGameButton) {
-            playGameButton.addEventListener("click", async () => {
-                await loadPage('./pages/games/play-game.html');
-                initMenuButtons();
-            });
-        }
-
-        const partyButton = document.querySelector(".game-party-button");
-        if (partyButton) {
-            partyButton.addEventListener("click", async () => {
-                await loadPage('./pages/games/party.html');
-                initParty();
-            });
-        }
-
-        const questButton = document.querySelector(".game-quests-button");
-        if (questButton) {
-            questButton.addEventListener("click", async () => {
-                await loadPage('./pages/games/quests.html');
-                // placeholder(); 
-            });
-        }
-
-        const inventoryButton = document.querySelector(".game-inventory-button");
-        if (inventoryButton) {
-            inventoryButton.addEventListener("click", async () => {
-                await loadPage('./pages/games/inventory.html');
-                // placeholder(); 
-            });
-        }
-
-        const gameSettingsButton = document.querySelector(".game-settings-button");
-        if (gameSettingsButton) {
-            gameSettingsButton.addEventListener("click", async () => {
-                await loadPage('./pages/games/game-settings.html');
-                // placeholder(); 
-            });
-        }
-
-        const mainSettingsButton = document.querySelector(".main-settings-button");
-        if (mainSettingsButton) {
-            mainSettingsButton.addEventListener("click", async () => {
-                await loadPage('./pages/main-settings/main-settings.html');
-                initMainSettings();
-            });
-        }
     } catch (error) {
-        console.error("App initialization failed:", error);
+        console.error("❌ App initialization failed:", error);
     }
 }
 
