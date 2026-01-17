@@ -80,14 +80,15 @@
 
 /* === GAME PAGE === */
     /* GAME MODES */
-    @import url('css/games/game-modes.css');
+    @import url('css/games/game-modes/game-modes.css');
+    /* @import url('css/games/game-modes.css');
     @import url('css/games/party.css');
     @import url('css/games/quests.css');
     @import url('css/games/inventory.css');
-    @import url('css/games/settings.css');
+    @import url('css/games/settings.css'); */
 
     /* EMPIRE BUILDER */
-    @import url('css/games/empire-builder.css');
+    /* @import url('css/games/empire-builder.css'); */
 
 /* === MAIN SETTINGS === */
 @import url('css/main-settings/main-settings-sidebar.css');
