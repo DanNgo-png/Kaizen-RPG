@@ -1,15 +1,68 @@
-<!-- pages/games/game-modes.html -->
 <!DOCTYPE html>
 <html lang="en">
 
 <head>
-	<meta charset="UTF-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>Game Modes - Kaizen RPG</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Game Modes - Kaizen RPG</title>
 </head>
 
 <body>
+  <div class="game-modes-container">
 
+    <!-- Header -->
+    <div class="game-header-compact">
+      <div class="header-icon">
+        <i class="fa-solid fa-dragon"></i>
+      </div>
+      <div class="header-text">
+        <h2>Select Origin</h2>
+        <p>Choose the background for your new company.</p>
+      </div>
+    </div>
+
+    <!-- Split Layout -->
+    <div class="campaign-split-layout">
+
+      <!-- LEFT: Mode Selection List -->
+      <div class="mode-selection-panel">
+        <div id="mode-list" class="mode-list">
+          <!-- JS injects items here -->
+        </div>
+      </div>
+
+      <!-- RIGHT: Details Panel -->
+      <div class="mode-details-panel">
+        <div id="mode-details-content" class="details-content">
+          <!-- JS injects details here -->
+        </div>
+
+        <!-- Action Footer (Sticky) -->
+        <div class="details-footer">
+          <button id="btn-start-selected" class="btn-start-campaign">
+            <span class="btn-text">Start Campaign</span>
+            <i class="fa-solid fa-arrow-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- OVERLAY: Empire Builder Confirmation (Kept from previous version) -->
+    <div id="empire-modal-overlay" class="modal-overlay hidden">
+      <div class="modal-content">
+        <div class="modal-icon"><i class="fa-solid fa-crown"></i></div>
+        <h2>Enter the Realm?</h2>
+        <p>You are about to establish a new productivity kingdom. This mode tracks separate resources and map progress
+          from your other campaigns.</p>
+        <div class="modal-actions">
+          <button id="btn-cancel-empire" class="btn-secondary">Retreat</button>
+          <button id="btn-confirm-empire" class="btn-primary">Establish Kingdom</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
 </body>
 
 </html>
