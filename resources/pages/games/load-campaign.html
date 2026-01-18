@@ -5,7 +5,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Load Campaign - Kaizen RPG</title>
-  <!-- Note: CSS is loaded via main layout, but we assume load-campaign.css is imported there -->
 </head>
 
 <body>
@@ -29,9 +28,7 @@
 
     <!-- Save Slots Grid -->
     <div class="save-slots-grid" id="save-slots-container">
-      <!-- Content injected by LoadCampaignManager.js -->
-
-      <!-- LOADING STATE (Placeholder) -->
+      <!-- Slots are injected here by JS -->
       <div class="loading-state">
         <i class="fa-solid fa-circle-notch fa-spin"></i> Finding Save Files...
       </div>
@@ -50,19 +47,28 @@
 
   </div>
 
-  <!-- Delete Confirmation Modal -->
+  <!-- DELETE CONFIRMATION MODAL -->
   <div id="modal-delete-save" class="modal-overlay hidden">
-    <div class="modal-content">
-      <div class="modal-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+    <div class="modal-content" style="max-width: 400px; text-align: center;">
+
+      <div class="modal-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); margin: 0 auto 20px auto;">
         <i class="fa-solid fa-trash-can"></i>
       </div>
-      <h2>Delete Save?</h2>
-      <p>Are you sure you want to delete <b id="delete-slot-name">Slot X</b>? This creates a permanent vacuum in the
-        time-space continuum.</p>
-      <div class="modal-actions">
+
+      <h2 style="margin-top: 0;">Delete Save?</h2>
+
+      <p style="color: #9ca3af; margin-bottom: 25px;">
+        Are you sure you want to delete <b id="delete-slot-name" style="color: #fff;">Slot X</b>?
+        <br>This action cannot be undone.
+      </p>
+
+      <div class="modal-actions" style="justify-content: center;">
         <button id="btn-cancel-delete" class="btn-secondary">Cancel</button>
-        <button id="btn-confirm-delete" class="btn-primary" style="background-color: #dc2626;">Delete Forever</button>
+        <button id="btn-confirm-delete" class="btn-primary" style="background-color: #dc2626; border-color: #dc2626;">
+          Delete Forever
+        </button>
       </div>
+
     </div>
   </div>
 

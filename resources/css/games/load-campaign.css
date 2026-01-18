@@ -150,13 +150,13 @@
     border-color: var(--accent-green);
 }
 
-.btn-delete {
+.load-campaign-btn-delete {
     background-color: transparent;
     color: #ef4444;
     border-color: rgba(239, 68, 68, 0.3);
 }
 
-.btn-delete:hover {
+.load-campaign-btn-delete:hover {
     background-color: rgba(239, 68, 68, 0.1);
     border-color: #ef4444;
 }

@@ -10,6 +10,8 @@ export class LoadCampaignManager {
             container: document.getElementById('save-slots-container'),
             btnBack: document.getElementById('btn-back-menu'),
             btnRefresh: document.getElementById('btn-refresh-saves'),
+            
+            // Modal DOM Elements
             modalDelete: document.getElementById('modal-delete-save'),
             btnConfirmDelete: document.getElementById('btn-confirm-delete'),
             btnCancelDelete: document.getElementById('btn-cancel-delete'),
@@ -23,7 +25,7 @@ export class LoadCampaignManager {
     }
 
     init() {
-        // Bind Events
+        // Navigation Events
         if (this.dom.btnBack) {
             this.dom.btnBack.addEventListener('click', () => {
                 loadPage('./pages/games/play-game.html').then(initMenuButtons);
@@ -34,9 +36,13 @@ export class LoadCampaignManager {
             this.dom.btnRefresh.addEventListener('click', () => this.fetchSaves());
         }
 
-        // Delete Modal Logic
-        this.dom.btnCancelDelete.addEventListener('click', () => this.toggleModal(false));
-        this.dom.btnConfirmDelete.addEventListener('click', () => this.executeDelete());
+        // --- Delete Modal Events ---
+        if (this.dom.btnCancelDelete) {
+            this.dom.btnCancelDelete.addEventListener('click', () => this.toggleModal(false));
+        }
+        if (this.dom.btnConfirmDelete) {
+            this.dom.btnConfirmDelete.addEventListener('click', () => this.executeDelete());
+        }
 
         // Listen for Data
         Neutralino.events.off('receiveSaveSlots', this._onReceiveSlots);
@@ -55,7 +61,7 @@ export class LoadCampaignManager {
     }
 
     _onReceiveSlots(e) {
-        const files = e.detail || []; // Array of { filename, slotId, lastModified }
+        const files = e.detail || []; 
         this.render(files);
     }
 
@@ -72,7 +78,7 @@ export class LoadCampaignManager {
             const el = document.createElement('div');
             
             if (saveFile) {
-                // OCCUPIED SLOT
+                // --- POPULATED SLOT ---
                 const dateStr = new Date(saveFile.lastModified).toLocaleDateString(undefined, { 
                     year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' 
                 });
@@ -90,22 +96,27 @@ export class LoadCampaignManager {
                     </div>
                     <div class="slot-actions">
                         <button class="btn-slot-action btn-load">Load</button>
-                        <button class="btn-slot-action btn-delete" title="Delete Save"><i class="fa-solid fa-trash"></i></button>
+                        
+                        <!-- DELETE BUTTON ADDED HERE -->
+                        <button class="btn-slot-action load-campaign-btn-delete" title="Delete Save">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
                     </div>
                 `;
 
                 // Bind Load
                 el.querySelector('.btn-load').addEventListener('click', () => this.loadGame(id));
                 
-                // Bind Delete
-                el.querySelector('.btn-delete').addEventListener('click', () => {
+                // Bind Delete (Triggers Modal)
+                el.querySelector('.load-campaign-btn-delete').addEventListener('click', (e) => {
+                    e.stopPropagation();
                     this.pendingDeleteId = id;
                     this.dom.deleteNameSpan.textContent = `Slot ${id}`;
                     this.toggleModal(true);
                 });
 
             } else {
-                // EMPTY SLOT
+                // --- EMPTY SLOT ---
                 el.className = 'save-card empty';
                 el.innerHTML = `
                     <div class="slot-info">
@@ -120,7 +131,6 @@ export class LoadCampaignManager {
                     </div>
                 `;
 
-                // Bind Create (Redirects to Game Modes)
                 el.querySelector('.btn-create').addEventListener('click', async () => {
                     localStorage.setItem('kaizen_target_slot', id);
                     await loadPage("./pages/games/game-modes.html");
@@ -136,7 +146,6 @@ export class LoadCampaignManager {
         // UI Feedback
         const btns = document.querySelectorAll('.btn-load');
         btns.forEach(b => { b.disabled = true; b.textContent = 'Loading...'; });
-
         Neutralino.extensions.dispatch(EXTENSION_ID, "loadGame", { slotId });
     }
 
@@ -151,16 +160,18 @@ export class LoadCampaignManager {
         }
     }
 
+    // --- Execute Logic ---
     executeDelete() {
         if (!this.pendingDeleteId) return;
         
-        // Dispatch to backend (Ensure backend has this listener set up in SaveController)
+        // Dispatch to backend
         Neutralino.extensions.dispatch(EXTENSION_ID, "deleteSaveSlot", { slotId: this.pendingDeleteId });
         
-        // Optimistic update or wait for refresh
-        // Here we just wait for a refresh trigger or manually refresh
-        setTimeout(() => this.fetchSaves(), 500); 
+        // Wait briefly for FS operation then refresh list
+        setTimeout(() => this.fetchSaves(), 300); 
+        
         this.toggleModal(false);
+        this.pendingDeleteId = null;
     }
 
     toggleModal(show) {
