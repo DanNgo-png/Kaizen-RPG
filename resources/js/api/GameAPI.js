@@ -1,16 +1,17 @@
 import { EXTENSION_ID } from "./_extension_id.js";
 
 export const GameAPI = {
-    // --- MERCENARIES ---
-    getMercenaries: async () => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "getMercenaries", null);
-    },
-    addMercenary: async (mercenaryData) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "addMercenary", mercenaryData);
-    },
-
-    // --- CAMPAIGN MANAGEMENT ---
+    // --- CAMPAIGN ---
     createCampaign: async (slotId, campaignData) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "createNewGame", { slotId, campaignData });
+    },
+
+    // --- PARTY & RESOURCES ---
+    getPartyData: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getPartyData", null);
+    },
+
+    hireMercenary: async (mercData, cost) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "hireMercenary", { mercData, cost });
     }
 };

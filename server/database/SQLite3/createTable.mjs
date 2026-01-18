@@ -142,5 +142,8 @@ export function initializeSchema(db, dbName) {
 
 export function initializeGameSchema(db) {
     db.exec(GAME_SCHEMA_SQL);
+    db.prepare(`INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('gold', '500')`).run();
+    db.prepare(`INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('renown', '0')`).run();
+    db.prepare(`INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('day', '1')`).run();
     console.log("⚔️ Game Schema Initialized for Save Slot");
 }

@@ -6,33 +6,56 @@ export class MercenaryController {
     }
 
     register(app) {
-        app.events.on("getMercenaries", () => {
+        // Get Party + Resources
+        app.events.on("getPartyData", () => {
             try {
-                // This will throw if no save is loaded
-                const data = this.repo.getAllMercenaries();
-                app.events.broadcast("receiveMercenaries", data);
+                const mercs = this.repo.getAllMercenaries();
+                const resources = this.repo.getResources();
+                
+                app.events.broadcast("receivePartyData", { 
+                    mercenaries: mercs, 
+                    resources: resources 
+                });
             } catch (error) {
-                // If it's the specific "No active save" error, just send null/empty
-                if (error.message.includes("No active save slot")) {
-                    // Ideally, the frontend PartyManager handles null to show "Please load a game"
-                    app.events.broadcast("receiveMercenaries", null);
+                if (error.message.includes("No active save")) {
+                    app.events.broadcast("receivePartyData", null);
                 } else {
-                    console.error("❌ Mercenary DB Error:", error);
+                    console.error("❌ DB Error:", error);
                 }
             }
         });
 
-        app.events.on("addMercenary", (payload) => {
+        // Hire Mercenary (Transactional)
+        app.events.on("hireMercenary", (payload) => {
             try {
-                const result = this.repo.addMercenary(payload);
-                app.events.broadcast("mercenaryAdded", {
+                const cost = payload.cost || 100; // Default hiring cost
+                
+                // 1. Deduct Gold (Throws if insufficient)
+                const newGoldBalance = this.repo.updateGold(-cost);
+
+                // 2. Add Mercenary
+                const result = this.repo.addMercenary(payload.mercData);
+
+                // 3. Broadcast Success & Updates
+                app.events.broadcast("mercenaryHired", {
                     success: true,
-                    id: result.lastInsertRowid,
-                    ...payload
+                    newGold: newGoldBalance,
+                    merc: { id: result.lastInsertRowid, ...payload.mercData }
                 });
+
+                // Refresh the full view
+                this._refreshParty(app);
+
             } catch (error) {
-                console.error("❌ Mercenary DB Error:", error);
+                console.error("❌ Hiring Error:", error);
+                app.events.broadcast("mercenaryHired", { success: false, error: error.message });
             }
         });
+    }
+
+    _refreshParty(app) {
+        const mercs = this.repo.getAllMercenaries();
+        const resources = this.repo.getResources();
+        app.events.broadcast("receivePartyData", { mercenaries: mercs, resources });
     }
 }
