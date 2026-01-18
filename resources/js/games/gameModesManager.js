@@ -63,6 +63,7 @@ const GAME_MODES = [
 export class GameModesManager {
     constructor() {
         this.selectedModeId = null;
+        this.glider = null;
         
         this.dom = {
             list: document.getElementById('mode-list'),
@@ -119,6 +120,13 @@ export class GameModesManager {
     renderList() {
         this.dom.list.innerHTML = '';
         
+        // 1. Create and Append the Glider
+        const glider = document.createElement('div');
+        glider.className = 'mode-list-glider';
+        this.dom.list.appendChild(glider);
+        this.glider = glider; // Save reference for selectMode
+        
+        // 2. Render Items
         GAME_MODES.forEach(mode => {
             const el = document.createElement('div');
             el.className = 'mode-list-item';
@@ -140,17 +148,33 @@ export class GameModesManager {
     }
 
     selectMode(id) {
+        // Allow re-clicking to ensure glider alignment if window resized, 
+        // but generally we just update state.
         this.selectedModeId = id;
         const modeData = GAME_MODES.find(m => m.id === id);
 
-        // 1. Update List Visuals
+        // 1. Update Active Classes (for text colors/icons)
         const items = this.dom.list.querySelectorAll('.mode-list-item');
+        let selectedEl = null;
+
         items.forEach(el => {
-            if (el.dataset.id === id) el.classList.add('active');
-            else el.classList.remove('active');
+            if (el.dataset.id === id) {
+                el.classList.add('active');
+                selectedEl = el;
+            } else {
+                el.classList.remove('active');
+            }
         });
 
-        // 2. Render Details
+        // 2. Move the Glider
+        if (selectedEl && this.glider) {
+            // Use offsetTop to handle the vertical position including margins
+            this.glider.style.top = `${selectedEl.offsetTop}px`;
+            // Match the height of the element
+            this.glider.style.height = `${selectedEl.offsetHeight}px`;
+        }
+
+        // 3. Render Details
         this.renderDetails(modeData);
     }
 

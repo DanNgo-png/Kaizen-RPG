@@ -1,0 +1,25 @@
+/* Ensure the container is the reference point for absolute positioning */
+.mode-list {
+    position: relative;
+    /* Ensure z-context */
+    z-index: 0;
+}
+
+/* --- The Glider (Sliding Background) --- */
+.mode-list-glider {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    /* Match your previous active state styles */
+    background-color: rgba(31, 41, 55, 0.8);
+    border: 1px solid var(--accent-active-text);
+    box-shadow: 0 0 15px rgba(28, 57, 142, 0.2);
+    border-radius: 8px;
+    z-index: -1; /* Sit behind the text content */
+    
+    /* The sliding animation */
+    transition: top 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), 
+                height 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    
+    pointer-events: none; /* Allow clicks to pass through to items */
+}
