@@ -3,7 +3,8 @@
    ========================================= */
 
 .management-container {
-    height: 100vh;
+    /* CHANGED: From 100vh to 100% to fit parent (modal or page) */
+    height: 100%; 
     display: flex;
     flex-direction: column;
     /* Deep RPG Background */
@@ -11,23 +12,26 @@
     color: var(--text-primary, #fff);
     font-family: var(--font-main, "Segoe UI", sans-serif);
     overflow: hidden;
+    /* Added: inherit border radius when inside modal */
+    border-radius: inherit; 
 }
-
 /* --- Layout Grid --- */
 .mgmt-layout {
     flex: 1;
     display: grid;
     grid-template-columns: 380px 1fr; /* Fixed Left, Fluid Right */
-    grid-template-rows: 1fr 150px;    /* Fluid Top, Fixed Bottom */
+    grid-template-rows: 1fr 110px;    /* Top takes available space, Bottom fixed for Roster */
+    
+    /* UPDATED GRID AREAS FOR NEW DESIGN */
     grid-template-areas: 
-        "char stash"
-        "roster roster";
+        "char stash"   /* Char Left, Stash Top-Right */
+        "char roster"; /* Char continues Left, Roster Bottom-Right */
+        
     gap: 20px;
     padding: 20px;
     overflow: hidden;
     position: relative;
 }
-
 /* =========================================
    2. HEADER
    ========================================= */
@@ -44,6 +48,10 @@
     box-shadow: 0 4px 20px rgba(0,0,0,0.4);
     z-index: 20;
     flex-shrink: 0;
+    
+    /* ADDED: Fix cut-off issues */
+    width: 100%; 
+    box-sizing: border-box;
 }
 
 .header-left { 
@@ -87,6 +95,8 @@
 .header-stats { 
     display: flex; 
     gap: 20px; 
+    /* ADDED: Prevent stats from shrinking/cutting */
+    flex-shrink: 0; 
 }
 
 .stat-pill {
@@ -128,9 +138,13 @@
     grid-area: char;
     display: flex;
     flex-direction: column;
-    padding: 25px;
-    gap: 25px;
+    padding: 20px; 
+    gap: 15px;     
     overflow-y: auto;
+}
+
+.char-panel::-webkit-scrollbar {
+    display: none;
 }
 
 /* Header Info */
@@ -138,7 +152,7 @@
     display: flex;
     gap: 20px;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    padding-bottom: 20px;
+    padding-bottom: 15px;
 }
 
 .char-portrait {
@@ -216,11 +230,11 @@
 .paper-doll-grid {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr;
-    grid-template-rows: 90px 90px;
-    gap: 15px;
+    grid-template-rows: 80px 80px;
+    gap: 10px;
     justify-items: center;
     background: rgba(0, 0, 0, 0.2);
-    padding: 20px;
+    padding: 15px;
     border-radius: 12px;
     border: 1px solid rgba(255,255,255,0.05);
 }
@@ -265,18 +279,19 @@
 .char-stats-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 12px;
+    gap: 8px;
 }
 
 .stat-row {
     display: flex; 
     justify-content: space-between;
     background: rgba(255, 255, 255, 0.03);
-    padding: 8px 12px;
+    padding: 6px 12px;
     border-radius: 6px;
     font-size: 0.9rem;
     border: 1px solid transparent;
     transition: background 0.2s;
+    align-items: center;
 }
 
 .stat-row:hover {
@@ -346,6 +361,7 @@
     padding: 8px 18px; 
     border-radius: 20px; 
     cursor: pointer;
+    font-family: var(--font-main);
     font-weight: 600;
     font-size: 0.9rem;
     transition: all 0.2s;
@@ -398,6 +414,11 @@
     font-size: 1.8rem; 
     color: #64748b;
     box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.item-card.empty:hover {
+    border-color: rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .item-card:hover { 
@@ -478,6 +499,34 @@
     border-radius: 3px;
 }
 
+.management-sort-btn {
+    background: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #94a3b8; /* Slate-400 */
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.management-sort-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #fff;
+    border-color: #fff;
+    transform: translateY(-1px);
+}
+
+.management-sort-btn:active {
+    transform: translateY(0);
+    opacity: 0.8;
+}
+
 /* =========================================
    6. BOTTOM: ROSTER CAROUSEL
    ========================================= */
@@ -494,7 +543,8 @@
     display: flex;
     gap: 20px;
     overflow-x: auto;
-    padding: 25px 5px; /* Padding for hover lift */
+    /* CHANGED: Reduced vertical padding to fit in smaller row height (80px + 20px padding) */
+    padding: 10px 5px; 
     scroll-behavior: smooth;
     /* Hide scrollbar here */
     scrollbar-width: none; 
@@ -502,8 +552,9 @@
 .roster-scroll-area::-webkit-scrollbar { display: none; }
 
 .roster-card {
-    width: 90px; 
-    height: 110px;
+    /* CHANGED: Smaller dimensions since text is removed */
+    width: 70px; 
+    height: 80px;
     background: #1e293b;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 10px;
@@ -533,25 +584,15 @@
 }
 
 .roster-img { 
-    font-size: 2.2rem; 
+    font-size: 2rem; /* Adjusted for smaller card */
     color: #64748b; 
-    margin-bottom: 8px; 
+    margin-bottom: 5px; 
     transition: color 0.2s;
 }
 .roster-card:hover .roster-img { color: #f1f5f9; }
 .roster-card.selected .roster-img { color: #60a5fa; }
 
-.roster-name { 
-    font-size: 0.75rem; 
-    text-align: center; 
-    color: #e2e8f0; 
-    font-weight: 700; 
-    width: 100%; 
-    white-space: nowrap; 
-    overflow: hidden; 
-    text-overflow: ellipsis; 
-    padding: 0 5px;
-}
+/* REMOVED: .roster-name selector */
 
 /* Mini HP Bar */
 .roster-hp-bar { 
@@ -559,7 +600,7 @@
     height: 4px; 
     background: #0f172a; 
     border-radius: 2px; 
-    margin-top: 8px; 
+    margin-top: 4px; /* Reduced margin */
 }
 .roster-hp-fill { 
     height: 100%; 
@@ -596,7 +637,8 @@
 @media (max-width: 1100px) {
     .mgmt-layout {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 1fr 140px;
+        /* CHANGED: Updated bottom row height here as well */
+        grid-template-rows: auto 1fr 120px;
         grid-template-areas: 
             "char"
             "stash"
