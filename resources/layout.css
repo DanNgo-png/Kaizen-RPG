@@ -81,6 +81,7 @@
 /* === GAME PAGE === */
     /* GAME MODES */
     @import url('css/games/game-modes/game-modes.css');
+    @import url('css/games/game-modes/company-setup.css');
     @import url('css/games/game-modes/animations.css');
     /* @import url('css/games/game-modes.css');
     @import url('css/games/party.css');
