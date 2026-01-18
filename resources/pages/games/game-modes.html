@@ -16,13 +16,13 @@
         <i class="fa-solid fa-dragon"></i>
       </div>
       <div class="header-text">
-        <h2>Select Origin</h2>
-        <p>Choose the background for your new company.</p>
+        <h2 id="header-title">Select Origin</h2>
+        <p id="header-desc">Choose the background for your new company.</p>
       </div>
     </div>
 
-    <!-- Split Layout -->
-    <div class="campaign-split-layout">
+    <!-- STEP 1: MODE SELECTION -->
+    <div id="step-origin" class="campaign-split-layout">
 
       <!-- LEFT: Mode Selection List -->
       <div class="mode-selection-panel">
@@ -37,10 +37,14 @@
           <!-- JS injects details here -->
         </div>
 
-        <!-- Action Footer (Sticky) -->
+        <!-- Action Footer -->
         <div class="details-footer">
-          <button id="btn-start-selected" class="btn-start-campaign">
-            <span class="btn-text">Start Campaign</span>
+          <button id="btn-back-to-menu" class="btn-secondary" style="padding: 12px 24px; font-weight: 600;">
+            Cancel
+          </button>
+          
+          <button id="btn-next-step" class="btn-start-campaign">
+            <span class="btn-text">Next</span>
             <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
@@ -48,7 +52,213 @@
 
     </div>
 
-    <!-- OVERLAY: Empire Builder Confirmation (Kept from previous version) -->
+    <!-- STEP 2: COMPANY DETAILS (Hidden by default) -->
+    <div id="step-company" class="company-setup-layout hidden">
+      
+      <!-- LEFT: Company Identity -->
+      <div class="setup-panel">
+        <h3 class="setup-heading"><i class="fa-solid fa-flag"></i> Company Identity</h3>
+        
+        <div class="form-group">
+          <label class="setup-label">Company Name</label>
+          <input type="text" id="input-company-name" class="setup-input" placeholder="e.g. The Iron Brotherhood">
+        </div>
+
+        <div class="form-group">
+          <label class="setup-label">Banner</label>
+          <div class="banner-grid" id="banner-selection">
+            <div class="banner-opt selected"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-wolf-pack-battalion"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-dragon"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-skull"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-chess-rook"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-hand-fist"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-scroll"></i></div>
+            <div class="banner-opt"><i class="fa-solid fa-khanda"></i></div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="setup-label">Colors</label>
+          <div class="color-picker-row" id="color-selection">
+            <div class="color-opt selected" style="background-color: #ef4444;" data-color="#ef4444"></div>
+            <div class="color-opt" style="background-color: #f97316;" data-color="#f97316"></div>
+            <div class="color-opt" style="background-color: #eab308;" data-color="#eab308"></div>
+            <div class="color-opt" style="background-color: #22c55e;" data-color="#22c55e"></div>
+            <div class="color-opt" style="background-color: #3b82f6;" data-color="#3b82f6"></div>
+            <div class="color-opt" style="background-color: #a855f7;" data-color="#a855f7"></div>
+            <div class="color-opt" style="background-color: #ec4899;" data-color="#ec4899"></div>
+            <div class="color-opt" style="background-color: #6b7280;" data-color="#6b7280"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Late Game Crisis -->
+      <div class="setup-panel">
+        <h3 class="setup-heading"><i class="fa-solid fa-skull-crossbones"></i> Late Game Crisis</h3>
+        <p class="setup-desc">A persistent threat that will challenge your company once you establish renown.</p>
+        
+        <div class="crisis-list" id="crisis-selection">
+          <!-- Random -->
+          <div class="crisis-card selected" data-crisis="random">
+            <div class="crisis-icon"><i class="fa-solid fa-question"></i></div>
+            <div class="crisis-info">
+              <h4>Random</h4>
+              <span>Unknown threat.</span>
+            </div>
+          </div>
+
+          <!-- Nobles -->
+          <div class="crisis-card" data-crisis="nobles">
+            <div class="crisis-icon"><i class="fa-solid fa-crown"></i></div>
+            <div class="crisis-info">
+              <h4>Nobles at War</h4>
+              <span>Great houses feud over territory.</span>
+            </div>
+          </div>
+
+          <!-- Greenskins -->
+          <div class="crisis-card" data-crisis="greenskins">
+            <div class="crisis-icon"><i class="fa-solid fa-hand-fist"></i></div>
+            <div class="crisis-info">
+              <h4>Greenskin Invasion</h4>
+              <span>Hordes of Orcs raid the frontiers.</span>
+            </div>
+          </div>
+
+          <!-- Undead -->
+          <div class="crisis-card" data-crisis="undead">
+            <div class="crisis-icon"><i class="fa-solid fa-ghost"></i></div>
+            <div class="crisis-info">
+              <h4>Undead Scourge</h4>
+              <span>The dead rise to claim the living.</span>
+            </div>
+          </div>
+
+          <!-- Holy War -->
+          <div class="crisis-card" data-crisis="holywar">
+            <div class="crisis-icon"><i class="fa-solid fa-sun"></i></div>
+            <div class="crisis-info">
+              <h4>Holy War</h4>
+              <span>Fanatics purge the non-believers.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2 FOOTER -->
+      <div class="details-footer full-width">
+        <button id="btn-back-step-1" class="btn-secondary" style="padding: 12px 24px; font-weight: 600;">
+          Back
+        </button>
+        <button id="btn-goto-step-3" class="btn-start-campaign">
+          <span class="btn-text">Next</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- STEP 3: DIFFICULTY & WORLD (New Container) -->
+    <div id="step-difficulty" class="company-setup-layout hidden">
+      
+      <!-- LEFT: Challenge Settings -->
+      <div class="setup-panel">
+        <h3 class="setup-heading"><i class="fa-solid fa-sliders"></i> Difficulty</h3>
+        
+        <!-- Economic Difficulty -->
+        <div class="form-group">
+          <label class="setup-label">Economic Difficulty</label>
+          <select id="input-economy" class="setup-select">
+            <option value="beginner">Beginner (High Rewards)</option>
+            <option value="veteran" selected>Veteran (Standard)</option>
+            <option value="expert">Expert (Low Rewards)</option>
+            <option value="legendary">Legendary (Pauper)</option>
+          </select>
+        </div>
+
+        <!-- Starting Funds -->
+        <div class="form-group">
+          <label class="setup-label">Starting Funds</label>
+          <select id="input-funds" class="setup-select">
+            <option value="high">High</option>
+            <option value="medium" selected>Medium</option>
+            <option value="low">Low</option>
+            <option value="none">None (Debt)</option>
+          </select>
+        </div>
+
+        <!-- Combat Difficulty -->
+        <div class="form-group">
+          <label class="setup-label">Combat Difficulty</label>
+          <select id="input-combat" class="setup-select">
+            <option value="beginner">Beginner</option>
+            <option value="veteran" selected>Veteran</option>
+            <option value="expert">Expert</option>
+            <option value="legendary">Legendary</option>
+          </select>
+        </div>
+
+        <!-- Ironman Mode -->
+        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+          <div>
+            <label class="setup-label" style="margin-bottom: 2px;">Ironman Mode</label>
+            <span style="font-size: 0.8rem; color: #9ca3af;">Single save file. No turning back.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="input-ironman">
+            <span class="slider round"></span>
+          </label>
+        </div>
+      </div>
+
+      <!-- RIGHT: World Generation -->
+      <div class="setup-panel">
+        <h3 class="setup-heading"><i class="fa-solid fa-globe"></i> World Generation</h3>
+        
+        <!-- Map Seed -->
+        <div class="form-group">
+          <label class="setup-label">Map Seed</label>
+          <div style="display: flex; gap: 10px;">
+            <input type="text" id="input-map-seed" class="setup-input" style="font-family: monospace; letter-spacing: 1px;">
+            <button id="btn-random-seed" class="btn-secondary" title="Randomize Seed"><i class="fa-solid fa-dice"></i></button>
+          </div>
+        </div>
+
+        <!-- Unexplored Map -->
+        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+          <div>
+            <label class="setup-label" style="margin-bottom: 2px;">Unexplored Map</label>
+            <span style="font-size: 0.8rem; color: #9ca3af;">World map starts covered in Fog of War.</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="input-unexplored" checked>
+            <span class="slider round"></span>
+          </label>
+        </div>
+
+        <div style="margin-top: auto; padding: 15px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px;">
+          <h4 style="margin: 0 0 5px 0; color: #60a5fa; font-size: 0.9rem;"><i class="fa-solid fa-circle-info"></i> Note</h4>
+          <p style="margin: 0; font-size: 0.85rem; color: #d1d5db; line-height: 1.4;">
+            Higher difficulty settings increase the rate of Legendary loot drops but significantly increase the penalty for failed Focus Sessions.
+          </p>
+        </div>
+      </div>
+
+      <!-- FOOTER -->
+      <div class="details-footer full-width">
+        <button id="btn-back-step-2" class="btn-secondary" style="padding: 12px 24px; font-weight: 600;">
+          Back
+        </button>
+        <button id="btn-final-start" class="btn-start-campaign">
+          <span class="btn-text">Start Campaign</span>
+          <i class="fa-solid fa-play"></i>
+        </button>
+      </div>
+
+    </div>
+
+    <!-- OVERLAY: Empire Builder Confirmation -->
     <div id="empire-modal-overlay" class="modal-overlay hidden">
       <div class="modal-content">
         <div class="modal-icon"><i class="fa-solid fa-crown"></i></div>

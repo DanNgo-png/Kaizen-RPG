@@ -1,6 +1,8 @@
 import { loadPage } from "../router.js";
 import { initEmpireBuilder } from "./game_modes/empire_builder/empireBuilderManager.js";
+import { initMenuButtons } from "./playGameManager.js";
 
+// ... (GAME_MODES Data remains the same) ...
 const GAME_MODES = [
     {
         id: 'sellswords',
@@ -65,11 +67,58 @@ export class GameModesManager {
         this.selectedModeId = null;
         this.glider = null;
         
+        // Campaign Settings State (Updated)
+        this.companySettings = {
+            // Step 2
+            name: '',
+            bannerIndex: 0,
+            color: '#ef4444',
+            crisis: 'random',
+            
+            // Step 3 (Defaults)
+            economy: 'veteran',
+            funds: 'medium',
+            combat: 'veteran',
+            ironman: false,
+            seed: '',
+            unexplored: true
+        };
+        
         this.dom = {
+            // Steps Containers
+            stepOrigin: document.getElementById('step-origin'),
+            stepCompany: document.getElementById('step-company'),
+            stepDifficulty: document.getElementById('step-difficulty'), // NEW
+            
+            // Step 1 Elements
             list: document.getElementById('mode-list'),
             details: document.getElementById('mode-details-content'),
-            btnStart: document.getElementById('btn-start-selected'),
+            btnNext: document.getElementById('btn-next-step'),
+            btnBackMenu: document.getElementById('btn-back-to-menu'),
             
+            // Header Elements
+            headerTitle: document.getElementById('header-title'),
+            headerDesc: document.getElementById('header-desc'),
+
+            // Step 2 Elements
+            inputName: document.getElementById('input-company-name'),
+            bannerGrid: document.getElementById('banner-selection'),
+            colorRow: document.getElementById('color-selection'),
+            crisisList: document.getElementById('crisis-selection'),
+            btnBackStep1: document.getElementById('btn-back-step-1'),
+            btnGoToStep3: document.getElementById('btn-goto-step-3'), // Renamed
+
+            // Step 3 Elements (NEW)
+            inputEconomy: document.getElementById('input-economy'),
+            inputFunds: document.getElementById('input-funds'),
+            inputCombat: document.getElementById('input-combat'),
+            inputIronman: document.getElementById('input-ironman'),
+            inputSeed: document.getElementById('input-map-seed'),
+            btnRandomSeed: document.getElementById('btn-random-seed'),
+            inputUnexplored: document.getElementById('input-unexplored'),
+            btnBackStep2: document.getElementById('btn-back-step-2'),
+            btnFinalStart: document.getElementById('btn-final-start'),
+
             // Empire Modal References
             empireModal: document.getElementById("empire-modal-overlay"),
             btnConfirmEmpire: document.getElementById("btn-confirm-empire"),
@@ -83,15 +132,25 @@ export class GameModesManager {
         if (!this.dom.list) return;
 
         this.renderList();
-        
-        // Select first by default
         this.selectMode(GAME_MODES[0].id);
-
+        this.generateRandomSeed(); // Generate initial seed
+        
         this.bindEvents();
+        this.bindStep2Events();
+        this.bindStep3Events(); // New binding
     }
 
     bindEvents() {
-        this.dom.btnStart.addEventListener('click', () => this.handleStartClick());
+        // Step 1: Next -> Go to Step 2
+        this.dom.btnNext.addEventListener('click', () => this.goToStep2());
+
+        // Back to Main Menu
+        if (this.dom.btnBackMenu) {
+            this.dom.btnBackMenu.addEventListener('click', async () => {
+                await loadPage('./pages/games/play-game.html');
+                initMenuButtons(); 
+            });
+        }
 
         // Empire Modal Bindings
         if (this.dom.btnCancelEmpire) {
@@ -117,6 +176,135 @@ export class GameModesManager {
         }
     }
 
+    bindStep2Events() {
+        // Back to Step 1
+        this.dom.btnBackStep1.addEventListener('click', () => this.goToStep1());
+
+        // Step 2 -> Step 3
+        this.dom.btnGoToStep3.addEventListener('click', () => this.goToStep3());
+
+        // Banners
+        const banners = this.dom.bannerGrid.querySelectorAll('.banner-opt');
+        banners.forEach((el, index) => {
+            el.addEventListener('click', () => {
+                banners.forEach(b => b.classList.remove('selected'));
+                el.classList.add('selected');
+                this.companySettings.bannerIndex = index;
+            });
+        });
+
+        // Colors
+        const colors = this.dom.colorRow.querySelectorAll('.color-opt');
+        colors.forEach(el => {
+            el.addEventListener('click', () => {
+                colors.forEach(c => c.classList.remove('selected'));
+                el.classList.add('selected');
+                this.companySettings.color = el.dataset.color;
+            });
+        });
+
+        // Crisis
+        const crises = this.dom.crisisList.querySelectorAll('.crisis-card');
+        crises.forEach(el => {
+            el.addEventListener('click', () => {
+                crises.forEach(c => c.classList.remove('selected'));
+                el.classList.add('selected');
+                this.companySettings.crisis = el.dataset.crisis;
+            });
+        });
+    }
+
+    bindStep3Events() {
+        // Back to Step 2
+        this.dom.btnBackStep2.addEventListener('click', () => this.goToStep2());
+
+        // Random Seed
+        this.dom.btnRandomSeed.addEventListener('click', () => this.generateRandomSeed());
+
+        // Final Start
+        this.dom.btnFinalStart.addEventListener('click', () => this.handleFinalStart());
+    }
+
+    generateRandomSeed() {
+        // Generate a random alphanumeric string
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+        let seed = '';
+        for (let i = 0; i < 10; i++) {
+            seed += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        this.dom.inputSeed.value = seed;
+        this.companySettings.seed = seed;
+    }
+
+    // --- NAVIGATION LOGIC ---
+    goToStep1() {
+        this.dom.stepCompany.classList.add('hidden');
+        this.dom.stepDifficulty.classList.add('hidden');
+        this.dom.stepOrigin.classList.remove('hidden');
+
+        this.dom.headerTitle.textContent = "Select Origin";
+        this.dom.headerDesc.textContent = "Choose the background for your new company.";
+    }
+
+    goToStep2() {
+        if (!this.selectedModeId) return;
+
+        this.dom.stepOrigin.classList.add('hidden');
+        this.dom.stepDifficulty.classList.add('hidden');
+        this.dom.stepCompany.classList.remove('hidden');
+
+        this.dom.headerTitle.textContent = "Company Details";
+        this.dom.headerDesc.textContent = "Establish your identity and choose your fate.";
+    }
+
+    goToStep3() {
+        // Validation for Step 2
+        const name = this.dom.inputName.value.trim();
+        if (!name) {
+            alert("Please enter a company name.");
+            this.dom.inputName.focus();
+            return;
+        }
+        this.companySettings.name = name;
+
+        // Transition
+        this.dom.stepCompany.classList.add('hidden');
+        this.dom.stepDifficulty.classList.remove('hidden');
+
+        this.dom.headerTitle.textContent = "World Settings";
+        this.dom.headerDesc.textContent = "Configure the rules of engagement.";
+    }
+
+    handleFinalStart() {
+        // Gather Step 3 Data
+        this.companySettings.economy = this.dom.inputEconomy.value;
+        this.companySettings.funds = this.dom.inputFunds.value;
+        this.companySettings.combat = this.dom.inputCombat.value;
+        this.companySettings.ironman = this.dom.inputIronman.checked;
+        this.companySettings.seed = this.dom.inputSeed.value.trim() || "KAIZEN";
+        this.companySettings.unexplored = this.dom.inputUnexplored.checked;
+
+        console.log("🚀 Starting Campaign with:", {
+            mode: this.selectedModeId,
+            settings: this.companySettings
+        });
+
+        // ... (Existing Mode Specific Logic) ...
+        if (this.selectedModeId === 'empire') {
+            this.dom.empireModal.classList.remove("hidden");
+        } 
+        else if (this.selectedModeId === 'sellswords' || this.selectedModeId === 'lonewolf') {
+            alert("Campaign created! Loading world...");
+            // await loadPage('./pages/games/party.html');
+            // initParty();
+        } 
+        else {
+            alert(`The mode "${this.selectedModeId}" is currently in development.`);
+        }
+    }
+
+    // --- RENDER LOGIC (STEP 1) ---
+
     renderList() {
         this.dom.list.innerHTML = '';
         
@@ -124,7 +312,7 @@ export class GameModesManager {
         const glider = document.createElement('div');
         glider.className = 'mode-list-glider';
         this.dom.list.appendChild(glider);
-        this.glider = glider; // Save reference for selectMode
+        this.glider = glider; 
         
         // 2. Render Items
         GAME_MODES.forEach(mode => {
@@ -148,12 +336,10 @@ export class GameModesManager {
     }
 
     selectMode(id) {
-        // Allow re-clicking to ensure glider alignment if window resized, 
-        // but generally we just update state.
         this.selectedModeId = id;
         const modeData = GAME_MODES.find(m => m.id === id);
 
-        // 1. Update Active Classes (for text colors/icons)
+        // 1. Update Active Classes
         const items = this.dom.list.querySelectorAll('.mode-list-item');
         let selectedEl = null;
 
@@ -168,9 +354,7 @@ export class GameModesManager {
 
         // 2. Move the Glider
         if (selectedEl && this.glider) {
-            // Use offsetTop to handle the vertical position including margins
             this.glider.style.top = `${selectedEl.offsetTop}px`;
-            // Match the height of the element
             this.glider.style.height = `${selectedEl.offsetHeight}px`;
         }
 
@@ -181,7 +365,6 @@ export class GameModesManager {
     renderDetails(mode) {
         if (!mode) return;
 
-        // Generate Features HTML
         const featuresHtml = mode.features.map(f => `
             <li class="feature-item">
                 <i class="${f.icon}" style="color: ${f.color}"></i>
@@ -208,26 +391,8 @@ export class GameModesManager {
             </ul>
         `;
     }
-
-    handleStartClick() {
-        if (!this.selectedModeId) return;
-
-        console.log(`Starting campaign mode: ${this.selectedModeId}`);
-
-        if (this.selectedModeId === 'empire') {
-            this.dom.empireModal.classList.remove("hidden");
-        } 
-        else if (this.selectedModeId === 'sellswords') {
-            alert("Starting standard campaign... (Feature coming soon)");
-            // In future: loadPage('./pages/games/campaign-dashboard.html');
-        } 
-        else {
-            alert(`The mode "${this.selectedModeId}" is currently in development.`);
-        }
-    }
 }
 
-// Hook for main router
 export function initGameModes() {
     new GameModesManager();
 }
