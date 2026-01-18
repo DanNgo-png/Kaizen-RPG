@@ -38,6 +38,10 @@ export class FocusSessionController {
 
                 console.log(`✅ Focus Session Saved (ID: ${result.lastInsertRowid}) at ${localCreatedAt}`);
 
+                app.events.dispatch("internal:sessionCompleted", { 
+                    focusSeconds: payload.focusSeconds 
+                });
+                
                 app.events.broadcast("focusSessionSaved", {
                     success: true,
                     id: result.lastInsertRowid

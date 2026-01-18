@@ -1,18 +1,21 @@
 import { GameAPI } from "../../api/GameAPI.js";
+import { EXTENSION_ID } from "../../api/_extension_id.js";
 import { loadPage } from "../../router.js"; 
 import { initLoadCampaign } from "../LoadCampaignManager.js"; 
 import { NAMES } from "./Names.js";
 import { ROLES } from "./Roles.js";
+import { notifier } from "../../_global-managers/NotificationManager.js";
 
 export class PartyManager {
     constructor() {
         this.dom = {
             grid: document.querySelector('.party-grid'),
             btnRecruit: document.querySelector('.btn-recruit'),
+            toolbarActions: document.querySelector('.toolbar-actions'),
             stats: {
                 power: document.querySelector('.p-val.text-fire'),
                 buffs: document.querySelector('.p-val.text-blue'),
-                gold: null
+                gold: null // Found dynamically
             }
         };
 
@@ -23,17 +26,20 @@ export class PartyManager {
     init() {
         if (!this.dom.grid) return;
 
-        // 1. Listen for Data
+        // 1. Listen for Data Updates
         Neutralino.events.off('receivePartyData', this._onDataReceived);
         Neutralino.events.on('receivePartyData', this._onDataReceived.bind(this));
 
-        // 2. Listen for Hiring Result
+        // 2. Listen for Action Results
         Neutralino.events.off('mercenaryHired', this._onHired);
         Neutralino.events.on('mercenaryHired', this._onHired.bind(this));
 
-        // 3. Bind Actions
+        Neutralino.events.off('dayEnded', this._onDayEnded);
+        Neutralino.events.on('dayEnded', this._onDayEnded.bind(this));
+
+        // 3. Bind Recruit Button
         if (this.dom.btnRecruit) {
-            // Remove old listeners to prevent duplicates
+            // Clone to remove old listeners
             const newBtn = this.dom.btnRecruit.cloneNode(true);
             this.dom.btnRecruit.parentNode.replaceChild(newBtn, this.dom.btnRecruit);
             this.dom.btnRecruit = newBtn;
@@ -41,8 +47,33 @@ export class PartyManager {
             this.dom.btnRecruit.addEventListener('click', () => this.generateRecruit());
         }
 
-        // 4. Fetch
+        // 4. Inject "End Day" Button
+        this._injectEndDayButton();
+
+        // 5. Initial Fetch
         GameAPI.getPartyData();
+    }
+
+    _injectEndDayButton() {
+        if (this.dom.toolbarActions && !document.getElementById('btn-end-day')) {
+            const btnEnd = document.createElement('button');
+            btnEnd.id = 'btn-end-day';
+            // Styling to match existing toolbar buttons but slightly distinct
+            btnEnd.style.backgroundColor = '#1f2937'; 
+            btnEnd.style.border = '1px solid #374151';
+            btnEnd.style.color = '#e5e7eb';
+            btnEnd.style.padding = '8px 16px';
+            btnEnd.style.borderRadius = '6px';
+            btnEnd.style.cursor = 'pointer';
+            btnEnd.style.marginRight = '10px';
+            btnEnd.style.fontWeight = '600';
+            btnEnd.innerHTML = `<i class="fa-solid fa-moon"></i> End Day`;
+
+            btnEnd.addEventListener('click', () => this.handleEndDay());
+            
+            // Insert as first item
+            this.dom.toolbarActions.prepend(btnEnd);
+        }
     }
 
     _onDataReceived(e) {
@@ -59,37 +90,67 @@ export class PartyManager {
     _onHired(e) {
         const res = e.detail;
         if (!res.success) {
-            // Use a toast or modal in the future, alert for now
-            console.warn(`Recruitment failed: ${res.error}`); 
-            alert(`Not enough coin, captain. Need more gold.`);
-        } 
+            notifier.show("Hiring Failed", "Not enough gold or roster full.", "fa-solid fa-coins");
+        } else {
+            notifier.show("Recruited!", "A new mercenary has joined the company.", "fa-solid fa-handshake");
+        }
+    }
+
+    _onDayEnded(e) {
+        if(e.detail.success) {
+            notifier.show("Day Ended", `Paid ${e.detail.wagesPaid}g wages. Party rested.`, "fa-solid fa-moon");
+            // Data refresh is automatic via controller
+        } else {
+            alert("Failed to end day: " + e.detail.error);
+        }
+    }
+
+    handleEndDay() {
+        const wageSum = this.partyData.mercenaries.reduce((sum, m) => sum + (m.daily_wage || 0), 0);
+        
+        if (confirm(`End the day?\n\nCosts: ${wageSum}g in wages.\nEffect: Active mercs gain fatigue. Resting mercs heal.`)) {
+            Neutralino.extensions.dispatch(EXTENSION_ID, "processDayEnd");
+        }
+    }
+
+    handleToggleStatus(merc) {
+        // Toggle between 1 (Active) and 0 (Resting)
+        const newStatus = merc.is_active ? 0 : 1;
+        
+        // Dispatch to backend (Requires backend handler for 'toggleMercenaryStatus')
+        Neutralino.extensions.dispatch(EXTENSION_ID, "toggleMercenaryStatus", { 
+            id: merc.id, 
+            is_active: newStatus 
+        });
     }
 
     generateRecruit() {
         const currentGold = this.partyData.resources.gold;
-        // Basic cost calculation (could be dynamic based on stats later)
         const recruitCost = 100; 
 
         if (currentGold < recruitCost) {
-            alert(`You cannot afford this contract. (Cost: ${recruitCost}g, Have: ${currentGold}g)`);
+            notifier.show("Insufficient Funds", `Recruiting costs ${recruitCost}g.`, "fa-solid fa-coins");
             return;
         }
 
         const name = NAMES[Math.floor(Math.random() * NAMES.length)];
         const role = ROLES[Math.floor(Math.random() * ROLES.length)];
         
-        // Random Stats (Base 5-15)
-        // In the future, we can weigh these based on Role (e.g. Hedge Knight has high Str, low Spd)
+        // Random Stats
         const str = 5 + Math.floor(Math.random() * 10);
         const int = 5 + Math.floor(Math.random() * 10);
         const spd = 5 + Math.floor(Math.random() * 10);
+        
+        // Daily wage based on stats
+        const statSum = str + int + spd;
+        const wage = Math.floor(statSum / 2); 
 
         const mercData = { 
-            name, 
-            role, 
-            level: 1, 
-            str, int, spd,
-            wage: 10 + Math.floor(Math.random() * 10) // Daily wage varies
+            name, role, level: 1, 
+            str, int, spd, 
+            wage: wage,
+            current_hp: 100, max_hp: 100,
+            fatigue: 0
         };
 
         const confirmMsg = `
@@ -99,8 +160,7 @@ export class PartyManager {
             Role:  ${role}
             Wage:  ${mercData.wage}g / day
             
-            Stats:
-            [STR: ${str}] [INT: ${int}] [SPD: ${spd}]
+            Stats: [STR: ${str}] [INT: ${int}] [SPD: ${spd}]
             
             Hiring Cost: ${recruitCost}g
         `;
@@ -158,15 +218,33 @@ export class PartyManager {
         const totalStats = (merc.str || 10) + (merc.int || 10) + (merc.spd || 10);
         
         let rarity = 'rarity-common';
-        if (totalStats > 40) rarity = 'rarity-legendary'; // Orange
-        else if (totalStats > 30) rarity = 'rarity-rare'; // Blue
-        else if (totalStats > 20) rarity = 'rarity-uncommon'; // Green
+        if (totalStats > 45) rarity = 'rarity-legendary';
+        else if (totalStats > 35) rarity = 'rarity-rare';
+        else if (totalStats > 25) rarity = 'rarity-uncommon';
 
         el.className = `char-card ${rarity}`;
         
-        const xpPercent = Math.min(merc.xp || 0, 100); 
+        // --- Calculate Bars ---
+        const maxHp = merc.max_hp || 100;
+        const curHp = merc.current_hp !== undefined ? merc.current_hp : 100;
+        const hpPercent = (curHp / maxHp) * 100;
 
-        // Role Icons mapping
+        const fatigue = merc.fatigue || 0;
+        const fatiguePercent = Math.min(fatigue, 100);
+        
+        // Fatigue Color Logic
+        let fatigueColor = '#3b82f6'; // Blue (Low)
+        if (fatigue > 50) fatigueColor = '#f59e0b'; // Orange (Medium)
+        if (fatigue > 80) fatigueColor = '#ef4444'; // Red (Danger)
+
+        // Status Badge Logic
+        const statusClass = merc.is_active ? 'badge-active' : 'badge-bench';
+        const statusText = merc.is_active ? 'On Duty' : 'Resting';
+        const statusStyle = merc.is_active 
+            ? 'background:rgba(16,185,129,0.15); color:#34d399; border:1px solid #059669;' 
+            : 'background:rgba(59,130,246,0.15); color:#60a5fa; border:1px solid #1d4ed8;';
+
+        // Role Icon
         let roleIcon = 'fa-user-shield';
         if (merc.role === 'Skirmisher' || merc.role === 'Raider') roleIcon = 'fa-person-running';
         if (merc.role === 'Quartermaster') roleIcon = 'fa-scroll';
@@ -182,33 +260,55 @@ export class PartyManager {
                     <h3>${merc.name}</h3>
                     <span class="char-class">${merc.role} • Lvl ${merc.level}</span>
                 </div>
-                <div class="char-badge badge-idle">Idle</div>
+                <div class="char-badge" style="${statusStyle}">${statusText}</div>
             </div>
 
             <div class="char-body">
+                <!-- HP Bar -->
                 <div class="stat-row">
-                    <span class="stat-name">XP</span>
-                    <div class="progress-bar">
-                        <div class="fill" style="width: ${xpPercent}%; background-color: var(--accent-purple);"></div>
+                    <span class="stat-name"><i class="fa-solid fa-heart" style="color:#ef4444" title="Health"></i></span>
+                    <div class="progress-bar" style="background:#374151;">
+                        <div class="fill" style="width: ${hpPercent}%; background-color: #ef4444; height:100%; border-radius:3px;"></div>
                     </div>
-                    <span class="stat-val">${merc.xp || 0}%</span>
+                    <span class="stat-val">${curHp}</span>
+                </div>
+
+                <!-- Fatigue Bar -->
+                <div class="stat-row">
+                    <span class="stat-name"><i class="fa-solid fa-bolt" style="color:#f59e0b" title="Fatigue"></i></span>
+                    <div class="progress-bar" style="background:#374151;">
+                        <div class="fill" style="width: ${fatiguePercent}%; background-color: ${fatigueColor}; height:100%; border-radius:3px;"></div>
+                    </div>
+                    <span class="stat-val">${fatigue}%</span>
                 </div>
 
                 <div class="attributes-grid">
                     <div class="attr" title="Strength"><i class="fa-solid fa-dumbbell"></i> <span>${merc.str}</span></div>
                     <div class="attr" title="Intellect"><i class="fa-solid fa-brain"></i> <span>${merc.int}</span></div>
                     <div class="attr" title="Speed"><i class="fa-solid fa-wind"></i> <span>${merc.spd}</span></div>
+                    <div class="attr" title="Daily Wage" style="grid-column: 1 / -1; justify-content:center; color:#fbbf24;">
+                        <i class="fa-solid fa-coins"></i> <span>${merc.daily_wage || 10}g / day</span>
+                    </div>
                 </div>
             </div>
 
             <div class="char-footer">
-                <button class="btn-manage">Manage</button>
-                <button class="btn-icon-only" title="Dismiss"><i class="fa-solid fa-door-open"></i></button>
+                <button class="btn-manage action-toggle">
+                    ${merc.is_active ? 'Rest' : 'Mobilize'}
+                </button>
+                <button class="btn-icon-only action-dismiss" title="Dismiss"><i class="fa-solid fa-door-open"></i></button>
             </div>
         `;
 
-        el.querySelector('.btn-icon-only').addEventListener('click', () => {
-             alert(`You can't dismiss ${merc.name} yet. The contract is binding!`);
+        // Bind Buttons
+        el.querySelector('.action-toggle').addEventListener('click', () => this.handleToggleStatus(merc));
+        
+        el.querySelector('.action-dismiss').addEventListener('click', () => {
+             if(confirm(`Dismiss ${merc.name} permanently?`)) {
+                 // Dispatch dismiss event (assuming backend support)
+                 // Neutralino.extensions.dispatch(EXTENSION_ID, "dismissMercenary", { id: merc.id });
+                 alert("Dismissal feature coming in next patch.");
+             }
         });
 
         return el;
@@ -251,7 +351,7 @@ export class PartyManager {
             <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"><i class="fa-solid fa-floppy-disk"></i></div>
             <h2 style="color:white; margin-bottom: 10px;">No Campaign Loaded</h2>
             <p style="margin-bottom: 25px;">You need to load a save file to view your party.</p>
-            <button id="btn-goto-load" class="btn-primary" style="padding: 10px 20px; cursor:pointer;">Load Game</button>
+            <button id="btn-goto-load" class="btn-primary" style="padding: 10px 20px; cursor:pointer; background:#3b82f6; border:none; color:white; border-radius:6px;">Load Game</button>
         `;
 
         el.querySelector('#btn-goto-load').addEventListener('click', async () => {

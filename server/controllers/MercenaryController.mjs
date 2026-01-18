@@ -25,6 +25,30 @@ export class MercenaryController {
             }
         });
 
+        app.events.on("processDayEnd", () => {
+            try {
+                const result = this.repo.processDayEnd();
+                app.events.broadcast("dayEnded", { success: true, ...result });
+                this._refreshParty(app); // Refresh UI
+            } catch (error) {
+                app.events.broadcast("dayEnded", { success: false, error: error.message });
+            }
+        });
+
+        app.events.on("internal:sessionCompleted", (payload) => {
+            try {
+                const { focusSeconds } = payload;
+                const minutes = focusSeconds / 60;
+                const result = this.repo.distributeSessionXP(minutes);
+                console.log(`⚔️ Distributed ${result.xp} XP to active party.`);
+                
+                // Notify frontend to show an RPG toast
+                app.events.broadcast("xpGained", result); 
+            } catch (e) {
+                console.error("XP Distribution failed", e);
+            }
+        });
+
         // Hire Mercenary (Transactional)
         app.events.on("hireMercenary", (payload) => {
             try {
