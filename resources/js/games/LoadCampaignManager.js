@@ -3,6 +3,7 @@ import { loadPage } from "../router.js";
 import { initMenuButtons } from "./playGameManager.js";
 import { initParty } from "./party/PartyManager.js";
 import { initGameModes } from "./GameModesManager.js";
+import { initWorldMap } from "./world/WorldMapManager.js";
 
 export class LoadCampaignManager {
     constructor() {
@@ -142,13 +143,12 @@ export class LoadCampaignManager {
 
     _onGameLoaded(e) {
         if (e.detail.success) {
-            // Success! Go to Party Screen (Main Hub)
-            loadPage('./pages/games/party.html').then(() => {
-                initParty();
+            loadPage('./pages/games/world-map.html').then(() => {
+                initWorldMap();
             });
         } else {
             alert("Failed to load save: " + e.detail.error);
-            this.fetchSaves(); // Reset UI
+            this.fetchSaves(); 
         }
     }
 

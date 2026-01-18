@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Map - Kaizen RPG</title>
+  <style>
+    .world-container {
+      position: relative;
+      width: 100%;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #0f172a;
+      /* Deep Ocean Color */
+      color: white;
+      font-family: var(--font-main);
+    }
+
+    /* The Canvas Layer */
+    #world-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
+      cursor: crosshair;
+      /* Ensure canvas doesn't trigger scrollbars */
+      display: block;
+    }
+
+
+    /* HUD - Top Bar */
+    .world-hud-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 15px 25px;
+      box-sizing: border-box;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .hud-stat-group {
+      display: flex;
+      gap: 20px;
+      pointer-events: auto;
+    }
+
+    .hud-stat {
+      background: rgba(31, 41, 55, 0.9);
+      border: 1px solid #374151;
+      padding: 8px 16px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    }
+
+    .text-gold {
+      color: #facc15;
+      font-weight: 700;
+    }
+
+    .text-supplies {
+      color: #d97706;
+      font-weight: 700;
+    }
+
+    .text-day {
+      color: #e5e7eb;
+      font-weight: 600;
+      font-family: monospace;
+    }
+
+    /* HUD - Bottom Bar (Navigation) */
+    .world-hud-bottom {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 15px;
+      z-index: 10;
+      pointer-events: auto;
+      padding-bottom: 15px;
+    }
+
+    .nav-btn {
+      background-color: #1f2937;
+      border: 1px solid #374151;
+      color: #d1d5db;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.4);
+    }
+
+    .nav-btn:hover {
+      transform: translateY(-5px) scale(1.1);
+      background-color: #374151;
+      color: white;
+      border-color: white;
+    }
+
+    .nav-btn.primary {
+      background-color: #059669;
+      /* Green */
+      border-color: #059669;
+      color: white;
+      width: 70px;
+      height: 70px;
+      font-size: 1.5rem;
+    }
+
+    .nav-btn.primary:hover {
+      background-color: #047857;
+    }
+
+    /* Tooltip for Map Nodes */
+    #map-tooltip {
+      position: absolute;
+      background: rgba(0, 0, 0, 0.9);
+      border: 1px solid #4b5563;
+      color: white;
+      padding: 10px 15px;
+      border-radius: 6px;
+      pointer-events: none;
+      z-index: 20;
+      display: none;
+      font-size: 0.9rem;
+      transform: translate(15px, 15px);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="world-container">
+    <!-- Canvas Map -->
+    <canvas id="world-canvas"></canvas>
+
+    <!-- Tooltip -->
+    <div id="map-tooltip"></div>
+
+    <!-- Top HUD -->
+    <div class="world-hud-top">
+      <div class="hud-stat-group">
+        <div class="hud-stat">
+          <i class="fa-solid fa-coins text-gold"></i>
+          <span id="hud-gold">0</span>
+        </div>
+        <div class="hud-stat">
+          <i class="fa-solid fa-drumstick-bite text-supplies"></i>
+          <span id="hud-supplies">14 days</span>
+        </div>
+      </div>
+
+      <div class="hud-stat-group">
+        <div class="hud-stat">
+          <i class="fa-regular fa-clock"></i>
+          <span id="hud-day" class="text-day">Day 1</span>
+        </div>
+        <div class="hud-stat">
+          <i class="fa-solid fa-users"></i>
+          <span id="hud-roster">0 / 12</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="world-hud-bottom">
+      <button class="nav-btn" title="System Menu" id="btn-world-menu"><i class="fa-solid fa-bars"></i></button>
+      <button class="nav-btn" title="Inventory"><i class="fa-solid fa-suitcase"></i></button>
+      <button class="nav-btn primary" title="Manage Party (P)" id="btn-open-party"><i
+          class="fa-solid fa-users-viewfinder"></i></button>
+      <button class="nav-btn" title="Contract Log"><i class="fa-solid fa-scroll"></i></button>
+      <button class="nav-btn" title="Camp / Rest"><i class="fa-solid fa-campground"></i></button>
+    </div>
+  </div>
+</body>
+
+</html>

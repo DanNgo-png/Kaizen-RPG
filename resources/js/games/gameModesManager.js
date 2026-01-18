@@ -4,6 +4,7 @@ import { initMenuButtons } from "./playGameManager.js";
 import { campaignState } from "./game_modes/logic/CampaignState.js";
 import { GameAPI } from "../api/GameAPI.js"; 
 import { initParty } from "./party/PartyManager.js"; 
+import { initWorldMap } from "./world/WorldMapManager.js"; 
 
 // Import Steps
 import { SelectModeStep } from "./game_modes/steps/SelectModeStep.js";
@@ -52,9 +53,8 @@ export class GameModesManager {
         const { success, slotId } = e.detail;
         if (success) {
             console.log(`✅ Campaign created in Slot ${slotId}`);
-            // Navigate to the Party Screen (Main Hub)
-            await loadPage('./pages/games/party.html');
-            initParty();
+            await loadPage('./pages/games/world-map.html');
+            initWorldMap();
         } else {
             alert("Failed to create campaign. Check console for errors.");
         }

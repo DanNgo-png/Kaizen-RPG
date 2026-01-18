@@ -44,6 +44,14 @@ export class GameRepository {
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`)
         };
+
+        this.statements.insertSetting = this.db.prepare(`
+            INSERT OR REPLACE INTO campaign_settings (key, value) VALUES (@key, @value)
+        `);
+
+        this.statements.insertItem = this.db.prepare(`
+            INSERT INTO inventory (item_id, mercenary_id, durability) VALUES (@itemId, @mercId, 100)
+        `);
     }
 
     distributeSessionXP(focusMinutes) {
@@ -83,6 +91,16 @@ export class GameRepository {
         })();
 
         return result;
+    }
+
+    setCampaignSetting(key, value) {
+        this.ensureConnection();
+        return this.statements.insertSetting.run({ key, value: String(value) });
+    }
+
+    addItemToInventory(itemId, mercId = null) {
+        this.ensureConnection();
+        return this.statements.insertItem.run({ itemId, mercId });
     }
 
     // --- RESOURCE MANAGEMENT ---

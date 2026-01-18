@@ -28,6 +28,7 @@ export { initCustomAnalytics } from '../analyze/CustomAnalyticsManager.js';
 // GAMES
 export { initMenuButtons } from '../games/playGameManager.js';
 export { initParty } from '../games/party/PartyManager.js';
+export { initWorldMap } from '../games/world/WorldMapManager.js';
 
 // SETTINGS
 export { initMainSettings } from '../main-settings/mainSettingsManager.js';

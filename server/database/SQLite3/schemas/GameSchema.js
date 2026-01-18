@@ -4,27 +4,21 @@ export const GAME_SCHEMA_SQL = `
         value TEXT
     );
 
+    -- [Existing Mercenaries/Inventory Tables Here...] --
     CREATE TABLE IF NOT EXISTS mercenaries ( 
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT NOT NULL, 
         role TEXT NOT NULL, 
         level INTEGER DEFAULT 1,
         xp INTEGER DEFAULT 0,
-        
-        -- Core Stats
         str INTEGER DEFAULT 10,
         int INTEGER DEFAULT 10,
         spd INTEGER DEFAULT 10,
-        
-        -- Survival Mechanics
         current_hp INTEGER DEFAULT 100,
         max_hp INTEGER DEFAULT 100,
-        fatigue INTEGER DEFAULT 0, -- 0 to 100. High fatigue = injury risk
-        status TEXT DEFAULT 'Healthy', -- 'Healthy', 'Injured', 'Exhausted'
-        
-        -- Economy
+        fatigue INTEGER DEFAULT 0,
         daily_wage INTEGER DEFAULT 10,
-        is_active INTEGER DEFAULT 1 -- 1 = On Mission (Gains XP, Gains Fatigue), 0 = Reserve (Heals, No XP)
+        is_active INTEGER DEFAULT 1 
     );
 
     CREATE TABLE IF NOT EXISTS inventory (
@@ -34,12 +28,27 @@ export const GAME_SCHEMA_SQL = `
         durability INTEGER DEFAULT 100
     );
     
-    -- Transaction Ledger for History
     CREATE TABLE IF NOT EXISTS company_ledger (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         day INTEGER,
         description TEXT,
-        amount INTEGER, -- Positive for income, negative for expense
+        amount INTEGER,
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
+
+    -- NEW: World Map Data
+    CREATE TABLE IF NOT EXISTS world_nodes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        type TEXT NOT NULL, -- 'town', 'village', 'stronghold', 'ruins'
+        name TEXT,
+        x INTEGER,
+        y INTEGER,
+        faction_id INTEGER,
+        is_visited INTEGER DEFAULT 0
+    );
+
+    -- NEW: Player Position Tracking
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_x', '400');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_y', '300');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('map_generated', 'false');
 `;

@@ -16,29 +16,13 @@ body {
     box-sizing: border-box; 
 } 
 
-/* --- Special Case: Full Viewport Pages (e.g. Play Menu) --- */
+/* --- Special Case: Full Viewport Pages --- */
 #default-page.full-viewport-view {
-    /* Reset positioning to fill the screen */
-    left: 0 !important;
-    top: 0 !important;
-    
-    /* Override sidebar JS toggling margins */
-    margin-left: 0 !important;
-    
-    /* Force full dimensions */
-    width: 100vw !important;
-    height: 100vh !important;
-    
-    /* Remove padding so the game background touches edges */
-    padding: 0 !important;
-    
-    /* Ensure it sits behind the sidebar (sidebar z-index is 1000) 
-       but on top of the body background */
-    z-index: 1; 
-    
-    /* Allow internal scrolling if content overflows */
-    overflow-y: auto;
-    overflow-x: hidden;
+    padding: 0 !important; /* Removes the 20px padding */
+}
+/* Helper for Canvas-based games (World Map) */
+#default-page.no-scroll {
+    overflow: hidden !important;
 }
 
 /* --- Special Case: Centered Content View (e.g. Focus Timer) --- */

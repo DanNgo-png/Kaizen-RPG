@@ -16,6 +16,16 @@ const routeMiddleware = {
     //     onEnter: (container) => container.classList.add('centered-content-view'),
     //     onLeave: (container) => container.classList.remove('centered-content-view')
     // }
+
+    // World Map (Full screen + No Scroll + Zoom logic)
+    'world-map.html': {
+        onEnter: (container) => {
+            container.classList.add('full-viewport-view', 'no-scroll');
+        },
+        onLeave: (container) => {
+            container.classList.remove('full-viewport-view', 'no-scroll');
+        }
+    }
 };
 
 /**

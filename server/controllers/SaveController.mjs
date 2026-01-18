@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { loadGameDatabase, deleteSaveFile } from '../database/SQLite3/connection.mjs';
 import { GameRepository } from '../database/SQLite3/repositories/GameRepository.mjs';
+import { CampaignGenerator } from '../services/CampaignGenerator.mjs'; 
 
 const SAVE_DIR = './data/dynamic/saves';
 
@@ -61,19 +62,29 @@ export class SaveController {
             try {
                 const { slotId, campaignData } = payload;
 
+                console.log(`💾 Creating New Save in Slot ${slotId}...`);
+
                 // 1. Delete if exists (Overwrite logic)
                 deleteSaveFile(slotId);
 
-                // 2. Initialize new DB (Creates tables)
+                // 2. Initialize new DB (Creates tables via schema)
                 this.gameRepo.initialize(slotId);
 
-                // 3. Insert Initial Data (Leader, Starting Gold, etc.)
-                // this.gameRepo.setCampaignSetting('companyName', campaignData.name);
-                // this.gameRepo.addMercenary(campaignData.leader);
+                // 3. PROCEDURAL GENERATION
+                const generator = new CampaignGenerator(this.gameRepo);
+                generator.generate(campaignData);
 
+                // 4. Success Broadcast
                 app.events.broadcast("gameCreated", { success: true, slotId });
+                
+                // 5. Immediately broadcast new data to UI so it's ready on load
+                const mercs = this.gameRepo.getAllMercenaries();
+                const resources = this.gameRepo.getResources();
+                app.events.broadcast("receivePartyData", { mercenaries: mercs, resources });
+
             } catch (err) {
-                console.error(err);
+                console.error("❌ Create Game Failed:", err);
+                app.events.broadcast("gameCreated", { success: false, error: err.message });
             }
         });
 
