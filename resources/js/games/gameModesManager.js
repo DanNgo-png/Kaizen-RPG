@@ -2,6 +2,8 @@ import { loadPage } from "../router.js";
 import { initEmpireBuilder } from "./game_modes/origins/empire_builder/empireBuilderManager.js";
 import { initMenuButtons } from "./playGameManager.js";
 import { campaignState } from "./game_modes/logic/CampaignState.js";
+import { GameAPI } from "../api/GameAPI.js"; 
+import { initParty } from "./party/PartyManager.js"; 
 
 // Import Steps
 import { SelectModeStep } from "./game_modes/steps/SelectModeStep.js";
@@ -23,11 +25,18 @@ export class GameModesManager {
 
         this.empireModal = document.getElementById("empire-modal-overlay");
         
+        // Retrieve the slot ID passed from the Load Screen
+        this.targetSlotId = localStorage.getItem('kaizen_target_slot') || 1; 
+
         this.init();
     }
 
     init() {
         campaignState.reset();
+
+        // Listen for the Game Created event
+        Neutralino.events.off('gameCreated', this._onGameCreated);
+        Neutralino.events.on('gameCreated', this._onGameCreated);
 
         // Initialize all Steps
         Object.values(this.steps).forEach(step => step.init());
@@ -38,6 +47,18 @@ export class GameModesManager {
         // Start at Step 1
         this.goToOrigin();
     }
+
+    _onGameCreated = async (e) => {
+        const { success, slotId } = e.detail;
+        if (success) {
+            console.log(`✅ Campaign created in Slot ${slotId}`);
+            // Navigate to the Party Screen (Main Hub)
+            await loadPage('./pages/games/party.html');
+            initParty();
+        } else {
+            alert("Failed to create campaign. Check console for errors.");
+        }
+    };
 
     bindNavigation() {
         // Step 1 -> 2
@@ -66,13 +87,12 @@ export class GameModesManager {
             });
         }
 
-        // Empire Modal logic (kept simple here)
         this.bindEmpireModal();
     }
 
     updateHeader(title, desc) {
-        this.header.title.textContent = title;
-        this.header.desc.textContent = desc;
+        if(this.header.title) this.header.title.textContent = title;
+        if(this.header.desc) this.header.desc.textContent = desc;
     }
 
     // --- NAVIGATION FLOW ---
@@ -106,13 +126,16 @@ export class GameModesManager {
 
         if (finalConfig.modeId === 'empire') {
             this.empireModal.classList.remove("hidden");
-        } else if (['sellswords', 'lonewolf', 'ironman'].includes(finalConfig.modeId)) {
-            alert("Campaign created! Loading world...");
-            // In future: Save to DB here via GameAPI
-            // await loadPage('./pages/games/party.html');
-            // initParty();
         } else {
-            alert("Mode in development.");
+            // For standard modes, create the save file immediately
+            const btn = document.getElementById('btn-final-start');
+            if(btn) {
+                btn.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Creating...`;
+                btn.disabled = true;
+            }
+
+            // Dispatch to backend
+            GameAPI.createCampaign(this.targetSlotId, finalConfig);
         }
     }
 
@@ -123,6 +146,7 @@ export class GameModesManager {
         if (confirm) {
             confirm.addEventListener("click", async () => {
                 this.empireModal.classList.add("hidden");
+                // TODO: Empire Mode should probably also initialize a Save DB
                 await loadPage("./pages/games/empire-builder.html");
                 initEmpireBuilder();
             });

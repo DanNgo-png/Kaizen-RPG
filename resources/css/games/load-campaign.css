@@ -1,0 +1,191 @@
+.load-campaign-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px 40px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    animation: fadeIn 0.4s ease-out;
+}
+
+.header-content-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+/* --- Slots Grid --- */
+.save-slots-grid {
+    display: grid;
+    grid-template-columns: 1fr; /* Stack vertically for details */
+    gap: 15px;
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+    margin-bottom: 20px;
+}
+
+/* Scrollbar styling */
+.save-slots-grid::-webkit-scrollbar { width: 6px; }
+.save-slots-grid::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 3px; }
+
+/* --- Save Card Styling --- */
+.save-card {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.save-card:hover {
+    border-color: var(--text-secondary);
+    transform: translateX(4px);
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Left Accent Bar */
+.save-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background-color: var(--bg-hover);
+}
+
+/* Active/Populated State */
+.save-card.populated::before {
+    background-color: var(--accent-green);
+}
+
+.save-card.populated .slot-icon {
+    color: var(--accent-green);
+    background-color: rgba(16, 185, 129, 0.1);
+}
+
+/* Empty State */
+.save-card.empty {
+    opacity: 0.6;
+    border-style: dashed;
+}
+
+.save-card.empty::before {
+    background-color: transparent;
+}
+
+/* Card Content */
+.slot-info {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.slot-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 8px;
+    background-color: var(--bg-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    border: 1px solid var(--bg-hover);
+}
+
+.slot-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.slot-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.slot-subtitle {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.slot-actions {
+    display: flex;
+    gap: 10px;
+    opacity: 0.8;
+}
+
+.save-card:hover .slot-actions {
+    opacity: 1;
+}
+
+.btn-slot-action {
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-family: var(--font-main);
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: 0.2s;
+}
+
+.btn-load {
+    background-color: var(--bg-hover);
+    color: #fff;
+}
+
+.btn-load:hover {
+    background-color: var(--accent-green);
+    border-color: var(--accent-green);
+}
+
+.btn-delete {
+    background-color: transparent;
+    color: #ef4444;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.btn-delete:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: #ef4444;
+}
+
+.btn-create {
+    background-color: transparent;
+    border: 1px dashed var(--text-secondary);
+    color: var(--text-secondary);
+}
+
+.btn-create:hover {
+    border-color: var(--accent-active-text);
+    color: var(--accent-active-text);
+}
+
+/* Footer */
+.load-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid var(--bg-hover);
+    padding-top: 15px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+.disk-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: monospace;
+}

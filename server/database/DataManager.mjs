@@ -4,6 +4,7 @@ import { MercenaryController } from "../controllers/MercenaryController.mjs";
 import { AppSettingsController } from "../controllers/AppSettingsController.mjs";
 import { FocusSessionController } from "../controllers/FocusSessionController.mjs";
 import { TimeframeController } from "../controllers/TimeframeController.mjs";
+import { SaveController } from "../controllers/SaveController.mjs";
 
 export class DataManager {
     constructor(app) {
@@ -20,6 +21,7 @@ export class DataManager {
         this.registerController(new AppSettingsController());
         this.registerController(new FocusSessionController());
         this.registerController(new TimeframeController());
+        this.registerController(new SaveController()); 
         // Add more controllers here as the game grows
 
         console.log("✅ Data Manager Initialized");

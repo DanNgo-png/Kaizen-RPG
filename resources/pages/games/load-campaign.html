@@ -1,11 +1,71 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Load Campaign</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Load Campaign - Kaizen RPG</title>
+  <!-- Note: CSS is loaded via main layout, but we assume load-campaign.css is imported there -->
 </head>
+
 <body>
-    
+  <div class="load-campaign-container">
+
+    <!-- Header -->
+    <div class="game-header-compact">
+      <button id="btn-back-menu" class="btn-icon-back">
+        <i class="fa-solid fa-arrow-left"></i>
+      </button>
+      <div class="header-content-wrapper">
+        <div class="header-icon">
+          <i class="fa-solid fa-floppy-disk"></i>
+        </div>
+        <div class="header-text">
+          <h2>Load Campaign</h2>
+          <p>Select a save slot to resume your journey.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Slots Grid -->
+    <div class="save-slots-grid" id="save-slots-container">
+      <!-- Content injected by LoadCampaignManager.js -->
+
+      <!-- LOADING STATE (Placeholder) -->
+      <div class="loading-state">
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Finding Save Files...
+      </div>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="load-footer">
+      <div class="disk-info">
+        <i class="fa-solid fa-hard-drive"></i>
+        <span id="save-dir-path">.../data/dynamic/saves/</span>
+      </div>
+      <button id="btn-refresh-saves" class="btn-secondary">
+        <i class="fa-solid fa-rotate"></i> Refresh
+      </button>
+    </div>
+
+  </div>
+
+  <!-- Delete Confirmation Modal -->
+  <div id="modal-delete-save" class="modal-overlay hidden">
+    <div class="modal-content">
+      <div class="modal-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.1);">
+        <i class="fa-solid fa-trash-can"></i>
+      </div>
+      <h2>Delete Save?</h2>
+      <p>Are you sure you want to delete <b id="delete-slot-name">Slot X</b>? This creates a permanent vacuum in the
+        time-space continuum.</p>
+      <div class="modal-actions">
+        <button id="btn-cancel-delete" class="btn-secondary">Cancel</button>
+        <button id="btn-confirm-delete" class="btn-primary" style="background-color: #dc2626;">Delete Forever</button>
+      </div>
+    </div>
+  </div>
+
 </body>
+
 </html>

@@ -1,53 +1,90 @@
 import Database from 'better-sqlite3';
 import fs from 'fs';
 import path from 'path';
-import { initializeSchema } from './createTable.mjs';
+import { initializeSchema, initializeGameSchema } from './createTable.mjs';
 
-const DATA_DIRECTORY = './data/dynamic/global';
+const GLOBAL_DATA_DIR = './data/dynamic/global';
+const SAVE_DATA_DIR = './data/dynamic/saves';
 
-// Cache to store active database connections
-// Key: dbName, Value: Database Instance
-const connections = new Map();
+// Cache for global connections (tasks, habits, etc.)
+const globalConnections = new Map();
 
-function ensureDirectory() {
-    if (!fs.existsSync(DATA_DIRECTORY)) {
-        fs.mkdirSync(DATA_DIRECTORY, { recursive: true });
+// Single reference for the CURRENTLY LOADED game save
+let activeGameConnection = null;
+
+function ensureDirectory(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
     }
 }
 
-/**
- * Factory function to get or create a database connection.
- * 
- * @param {string} dbName - The unique name for the database (e.g., 'user_tasks', 'game_data'). 
- *                          This will be used as the filename: 'user_tasks.db'.
- * @returns {Database} - The better-sqlite3 database instance.
- */
+// 1. GLOBAL ACCESS (Unchanged behavior)
 export function getDatabase(dbName) {
-    // 1. Check Cache: Return existing connection if available
-    if (connections.has(dbName)) {
-        return connections.get(dbName);
-    }
+    if (globalConnections.has(dbName)) return globalConnections.get(dbName);
 
-    // 2. Setup File Path
-    ensureDirectory();
-    const filePath = path.join(DATA_DIRECTORY, `${dbName}.db`);
+    ensureDirectory(GLOBAL_DATA_DIR);
+    const filePath = path.join(GLOBAL_DATA_DIR, `${dbName}.db`);
     
     try {
-        console.log(`🔌 Connecting to SQLite: ${dbName}.db ...`);
-        
-        // 3. Create Connection
         const db = new Database(filePath);
-        db.pragma('journal_mode = WAL'); // Optimization
-
-        // 4. Initialize Tables (Auto-run schema based on name)
-        initializeSchema(db, dbName);
-
-        // 5. Cache and Return
-        connections.set(dbName, db);
+        db.pragma('journal_mode = WAL');
+        initializeSchema(db, dbName); // Initialize Global Tables
+        globalConnections.set(dbName, db);
         return db;
-
     } catch (error) {
-        console.error(`❌ DB Connection Error (${dbName}):`, error);
+        console.error(`❌ Global DB Error (${dbName}):`, error);
         throw error;
     }
+}
+
+// 2. DYNAMIC GAME SAVE ACCESS
+export function loadGameDatabase(slotId) {
+    // Close existing connection if switching saves
+    if (activeGameConnection) {
+        console.log("Closing previous save connection...");
+        activeGameConnection.close();
+        activeGameConnection = null;
+    }
+
+    ensureDirectory(SAVE_DATA_DIR);
+    const filename = `slot_${slotId}.db`; // e.g., slot_1.db
+    const filePath = path.join(SAVE_DATA_DIR, filename);
+
+    try {
+        console.log(`🎮 Loading Save Slot: ${slotId}`);
+        const db = new Database(filePath);
+        db.pragma('journal_mode = WAL');
+        
+        // Initialize Game-Specific Tables (Mercenaries, Inventory, etc.)
+        initializeGameSchema(db); 
+        
+        activeGameConnection = db;
+        return db;
+    } catch (error) {
+        console.error(`❌ Save Load Error (${filename}):`, error);
+        throw error;
+    }
+}
+
+// Helper to get the currently active connection
+export function getActiveGameDB() {
+    if (!activeGameConnection) {
+        throw new Error("No game save is currently loaded.");
+    }
+    return activeGameConnection;
+}
+
+// Helper to delete a save
+export function deleteSaveFile(slotId) {
+    const filePath = path.join(SAVE_DATA_DIR, `slot_${slotId}.db`);
+    if (fs.existsSync(filePath)) {
+        // Close if it's the active one
+        if (activeGameConnection && activeGameConnection.name === filePath) {
+            activeGameConnection.close();
+            activeGameConnection = null;
+        }
+        fs.unlinkSync(filePath);
+        return true;
+    }
+    return false;
 }

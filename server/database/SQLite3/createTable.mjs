@@ -1,4 +1,4 @@
-const SCHEMAS = {
+const GLOBAL_SCHEMAS = {
     // Stores Todo lists and Kanbans
     'user_tasks': `
         CREATE TABLE IF NOT EXISTS todo_lists (
@@ -51,21 +51,6 @@ const SCHEMAS = {
             key TEXT PRIMARY KEY,
             value TEXT
         );
-    `,
-
-    // Stores RPG elements (Mercenaries, Inventory)
-    'game_data': `
-        CREATE TABLE IF NOT EXISTS mercenaries ( 
-            id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            name TEXT NOT NULL, 
-            role TEXT NOT NULL, 
-            level INTEGER DEFAULT 1,
-            xp INTEGER DEFAULT 0,
-            str INTEGER DEFAULT 10,
-            int INTEGER DEFAULT 10,
-            spd INTEGER DEFAULT 10
-        );
-        -- You can add inventory tables here later
     `,
 
     // Stores App Settings (Volume, Theme, Window State)
@@ -123,24 +108,39 @@ const SCHEMAS = {
     `
 };
 
-/**
- * Initializes the schema for a specific database instance based on its name.
- * @param {Database} db - The better-sqlite3 instance
- * @param {string} dbName - The key matching the SCHEMAS object (e.g., 'user_tasks')
- */
+const GAME_SCHEMA_SQL = `
+    CREATE TABLE IF NOT EXISTS campaign_settings (
+        key TEXT PRIMARY KEY,
+        value TEXT
+    );
+
+    CREATE TABLE IF NOT EXISTS mercenaries ( 
+        id INTEGER PRIMARY KEY AUTOINCREMENT, 
+        name TEXT NOT NULL, 
+        role TEXT NOT NULL, 
+        level INTEGER DEFAULT 1,
+        xp INTEGER DEFAULT 0,
+        str INTEGER DEFAULT 10,
+        int INTEGER DEFAULT 10,
+        spd INTEGER DEFAULT 10,
+        is_active INTEGER DEFAULT 1
+    );
+
+    CREATE TABLE IF NOT EXISTS inventory (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        item_id TEXT NOT NULL,
+        mercenary_id INTEGER, -- Null if in stash
+        durability INTEGER DEFAULT 100
+    );
+`;
+
 export function initializeSchema(db, dbName) {
-    const sql = SCHEMAS[dbName];
-
-    if (!sql) {
-        console.warn(`⚠️ No schema definition found for '${dbName}'. Database created without tables.`);
-        return;
+    if (GLOBAL_SCHEMAS[dbName]) {
+        db.exec(GLOBAL_SCHEMAS[dbName]);
     }
+}
 
-    try {
-        db.exec(sql); // .exec is better for multiple statements in one string
-        console.log(`🔨 Schema initialized for: ${dbName}`);
-    } catch (error) {
-        console.error(`❌ Failed to initialize schema for ${dbName}:`, error);
-        throw error;
-    }
+export function initializeGameSchema(db) {
+    db.exec(GAME_SCHEMA_SQL);
+    console.log("⚔️ Game Schema Initialized for Save Slot");
 }

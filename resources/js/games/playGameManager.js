@@ -1,6 +1,7 @@
 import { loadPage } from "../router.js";
 import { initGameModes } from "./GameModesManager.js";
 import { initModsManager } from "../mods/modsManager.js";
+import { initLoadCampaign } from "./LoadCampaignManager.js";
 
 export function initMenuButtons() {
     const newCampaignBtn = document.getElementById("btn-new-campaign");
@@ -18,9 +19,10 @@ export function initMenuButtons() {
 
     // 2. Load Game (Placeholder)
     if (loadCampaignBtn) {
-        loadCampaignBtn.addEventListener("click", () => {
+        loadCampaignBtn.addEventListener("click", async () => {
             console.log("Load Game clicked");
-            // await loadPage("./pages/games/load-campaign.html");
+            await loadPage("./pages/games/load-campaign.html");
+            initLoadCampaign();
         });
     }
 

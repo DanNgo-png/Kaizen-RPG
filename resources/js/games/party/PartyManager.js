@@ -1,6 +1,7 @@
 import { GameAPI } from "../../api/GameAPI.js";
+import { loadPage } from "../../router.js"; // Import loadPage to redirect
+import { initLoadCampaign } from "../LoadCampaignManager.js"; // Import init for Load Campaign
 
-// Mock Data Generators for "Recruit" functionality
 const ROLES = ['Code Weaver', 'Pixel Mage', 'Note Taker', 'Bug Slayer', 'Data Cleric'];
 const NAMES = ['Kael', 'Lyra', 'Torin', 'Vex', 'Iris', 'Zane', 'Mira'];
 
@@ -24,8 +25,17 @@ export class PartyManager {
 
         // 1. Listen for Data
         Neutralino.events.off('receiveMercenaries', this.onDataReceived);
+        
         Neutralino.events.on('receiveMercenaries', (e) => {
-            this.mercenaries = e.detail || [];
+            const data = e.detail;
+            
+            // Handle "No Save Loaded" state
+            if (data === null) {
+                this.renderNoSaveState();
+                return;
+            }
+
+            this.mercenaries = data || [];
             this.render();
         });
 
@@ -42,11 +52,35 @@ export class PartyManager {
         GameAPI.getMercenaries();
     }
 
+    renderNoSaveState() {
+        this.dom.grid.innerHTML = '';
+        const el = document.createElement('div');
+        el.style.gridColumn = "1 / -1";
+        el.style.textAlign = "center";
+        el.style.padding = "60px";
+        el.style.color = "#9ca3af";
+        
+        el.innerHTML = `
+            <div style="font-size: 3rem; margin-bottom: 20px; opacity: 0.5;"><i class="fa-solid fa-floppy-disk"></i></div>
+            <h2 style="color:white; margin-bottom: 10px;">No Campaign Loaded</h2>
+            <p style="margin-bottom: 25px;">You need to load a save file to view your party.</p>
+            <button id="btn-goto-load" class="btn-primary" style="padding: 10px 20px; cursor:pointer;">Load Game</button>
+        `;
+
+        el.querySelector('#btn-goto-load').addEventListener('click', async () => {
+            await loadPage('./pages/games/load-campaign.html');
+            initLoadCampaign();
+        });
+
+        this.dom.grid.appendChild(el);
+    }
+
     recruitRandom() {
+        if (!this.mercenaries) return; // Guard against recruiting when no save loaded
+
         const name = NAMES[Math.floor(Math.random() * NAMES.length)];
         const role = ROLES[Math.floor(Math.random() * ROLES.length)];
         
-        // Random Stats
         const str = 8 + Math.floor(Math.random() * 8);
         const int = 8 + Math.floor(Math.random() * 8);
         const spd = 8 + Math.floor(Math.random() * 8);
@@ -64,7 +98,6 @@ export class PartyManager {
                 const card = this.createCard(merc);
                 this.dom.grid.appendChild(card);
             });
-            // Always add one empty slot at the end for visual "add" cue
             this.dom.grid.appendChild(this.createEmptySlot());
         }
 
@@ -73,7 +106,6 @@ export class PartyManager {
 
     createCard(merc) {
         const el = document.createElement('div');
-        // Simple rarity logic based on stats sum
         const totalStats = (merc.str || 10) + (merc.int || 10) + (merc.spd || 10);
         let rarity = 'rarity-common';
         if (totalStats > 35) rarity = 'rarity-rare';
@@ -116,10 +148,7 @@ export class PartyManager {
             </div>
         `;
 
-        // Bind Dismiss Button (Placeholder logic for now)
-        const btnDismiss = el.querySelector('.btn-icon-only');
-        btnDismiss.addEventListener('click', () => {
-             // We would add a GameAPI.removeMercenary here
+        el.querySelector('.btn-icon-only').addEventListener('click', () => {
              alert("Dismissal feature coming next update!");
         });
 
