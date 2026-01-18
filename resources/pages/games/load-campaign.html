@@ -9,7 +9,6 @@
 
 <body>
   <div class="load-campaign-container">
-
     <!-- Header -->
     <div class="game-header-compact">
       <button id="btn-back-menu" class="btn-icon-back">
@@ -44,14 +43,11 @@
         <i class="fa-solid fa-rotate"></i> Refresh
       </button>
     </div>
-
   </div>
-
   <!-- DELETE CONFIRMATION MODAL -->
   <div id="modal-delete-save" class="modal-overlay hidden">
-    <div class="modal-content" style="max-width: 400px; text-align: center;">
-
-      <div class="modal-icon" style="color: #ef4444; background: rgba(239, 68, 68, 0.1); margin: 0 auto 20px auto;">
+    <div class="delete-save-modal-content">
+      <div class="delete-save-modal-icon">
         <i class="fa-solid fa-trash-can"></i>
       </div>
 
@@ -64,14 +60,13 @@
 
       <div class="modal-actions" style="justify-content: center;">
         <button id="btn-cancel-delete" class="btn-secondary">Cancel</button>
-        <button id="btn-confirm-delete" class="btn-primary" style="background-color: #dc2626; border-color: #dc2626;">
+        <button id="btn-confirm-delete" class="btn-primary btn-delete-confirm">
           Delete Forever
         </button>
       </div>
 
     </div>
   </div>
-
 </body>
 
 </html>
