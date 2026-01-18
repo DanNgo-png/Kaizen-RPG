@@ -38,9 +38,8 @@ export class InventoryUI {
                 el.draggable = true;
                 // Add drag events here later
             } else {
-                // Empty Slot styling
-                el.style.opacity = "0.2";
-                el.style.borderStyle = "dashed";
+                // Empty Slot styling: Use class instead of inline styles for better visibility control
+                el.classList.add('empty');
             }
             
             this.container.appendChild(el);
