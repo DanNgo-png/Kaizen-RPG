@@ -257,7 +257,6 @@ export class GameModesManager {
     }
 
     goToStep3() {
-        // Validation for Step 2
         const name = this.dom.inputName.value.trim();
         if (!name) {
             alert("Please enter a company name.");
@@ -302,7 +301,7 @@ export class GameModesManager {
         }
     }
 
-    // --- RENDER LOGIC (STEP 1) ---
+    // --- RENDER LOGIC ---
 
     renderList() {
         this.dom.list.innerHTML = '';
