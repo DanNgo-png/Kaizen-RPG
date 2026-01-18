@@ -2,7 +2,6 @@ import { loadPage } from "../router.js";
 import { initEmpireBuilder } from "./game_modes/empire_builder/empireBuilderManager.js";
 import { initMenuButtons } from "./playGameManager.js";
 
-// ... (GAME_MODES Data remains the same) ...
 const GAME_MODES = [
     {
         id: 'sellswords',
