@@ -92,6 +92,19 @@ export class WorldMapManager {
         const openBtn = document.getElementById('btn-open-party-modal');
         const closeBtn = document.getElementById('btn-close-mgmt-modal');
 
+        // Helper to close overlay
+        const closeOverlay = () => {
+            if (!overlay) return;
+            // 1. Hide Overlay
+            overlay.classList.add('hidden');
+            
+            // 2. Resume Game Loop
+            this.startLoop();
+            
+            // 3. Refresh Map HUD (in case gold/supplies changed in management)
+            GameAPI.getWorldData();
+        };
+
         if (openBtn && overlay) {
             openBtn.addEventListener('click', () => {
                 // 1. Pause Game Loop to save resources
@@ -109,16 +122,17 @@ export class WorldMapManager {
             });
         }
 
-        if (closeBtn && overlay) {
-            closeBtn.addEventListener('click', () => {
-                // 1. Hide Overlay
-                overlay.classList.add('hidden');
-                
-                // 2. Resume Game Loop
-                this.startLoop();
-                
-                // 3. Refresh Map HUD (in case gold/supplies changed in management)
-                GameAPI.getWorldData();
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeOverlay);
+        }
+
+        // Add listener for clicking outside the content (on the overlay background)
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                // If the click target IS the overlay div (not a child), close it.
+                if (e.target === overlay) {
+                    closeOverlay();
+                }
             });
         }
 
