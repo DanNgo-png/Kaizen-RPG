@@ -3,7 +3,6 @@ import { initEmpireBuilder } from "./game_modes/origins/empire_builder/empireBui
 import { initMenuButtons } from "./playGameManager.js";
 import { campaignState } from "./game_modes/logic/CampaignState.js";
 import { GameAPI } from "../api/GameAPI.js"; 
-import { initParty } from "./party/PartyManager.js"; 
 import { initWorldMap } from "./world/WorldMapManager.js"; 
 
 // Import Steps

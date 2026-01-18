@@ -1,7 +1,6 @@
 import { EXTENSION_ID } from "../api/_extension_id.js";
 import { loadPage } from "../router.js";
 import { initMenuButtons } from "./playGameManager.js";
-import { initParty } from "./party/PartyManager.js";
 import { initGameModes } from "./GameModesManager.js";
 import { initWorldMap } from "./world/WorldMapManager.js";
 

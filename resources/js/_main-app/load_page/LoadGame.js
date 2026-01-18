@@ -1,5 +1,5 @@
 import { loadPage } from '../../router.js';
-import { initMenuButtons, initParty } from '../ImportManager.js';
+import { initMenuButtons, initManagement } from '../ImportManager.js';
 
 export function setupGameNavigation() {
     const playGameButton = document.querySelector(".play-game-button");
@@ -10,11 +10,11 @@ export function setupGameNavigation() {
         });
     }
 
-    const partyButton = document.querySelector(".game-party-button");
-    if (partyButton) {
-        partyButton.addEventListener("click", async () => {
-            await loadPage('./pages/games/party.html');
-            initParty();
+    const managementButton = document.querySelector(".game-party-button");
+    if (managementButton) {
+        managementButton.addEventListener("click", async () => {
+            await loadPage('./pages/games/management.html'); 
+            initManagement();
         });
     }
 
@@ -28,10 +28,11 @@ export function setupGameNavigation() {
     const inventoryButton = document.querySelector(".game-inventory-button");
     if (inventoryButton) {
         inventoryButton.addEventListener("click", async () => {
-            await loadPage('./pages/games/inventory.html');
+            await loadPage('./pages/games/management.html');
+            initManagement();
         });
     }
-
+    
     const gameSettingsButton = document.querySelector(".game-settings-button");
     if (gameSettingsButton) {
         gameSettingsButton.addEventListener("click", async () => {

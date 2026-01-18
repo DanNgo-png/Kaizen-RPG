@@ -1,3 +1,4 @@
+import { initManagement } from "../management/ManagementManager.js";
 import { Camera } from "./core/Camera.js";
 import { InputHandler } from "./core/InputHandler.js";
 import { GameLoop } from "./core/GameLoop.js";
@@ -5,7 +6,6 @@ import { RenderSystem } from "./systems/RenderSystem.js";
 import { WorldState } from "./data/WorldState.js";
 import { WorldHUD } from "./ui/WorldHUD.js"; 
 import { loadPage } from "../../router.js";
-import { initParty } from "../party/PartyManager.js";
 import { initMenuButtons } from "../playGameManager.js";
 
 export class WorldMapManager {
@@ -75,8 +75,8 @@ export class WorldMapManager {
     bindUI() {
         document.getElementById('btn-open-party')?.addEventListener('click', async () => {
             this.stopLoop(); // Optimization: Stop rendering when leaving page
-            await loadPage('./pages/games/party.html');
-            initParty();
+            await loadPage('./pages/games/management.html');
+            initManagement();
         });
 
         document.getElementById('btn-world-menu')?.addEventListener('click', async () => {
