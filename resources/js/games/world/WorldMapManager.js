@@ -7,6 +7,7 @@ import { WorldState } from "./data/WorldState.js";
 import { WorldHUD } from "./ui/WorldHUD.js"; 
 import { loadPage } from "../../router.js";
 import { initMenuButtons } from "../playGameManager.js";
+import { GameAPI } from "../../api/GameAPI.js"; 
 
 export class WorldMapManager {
     constructor() {
@@ -66,10 +67,27 @@ export class WorldMapManager {
             }
         };
 
-        this.bindUI();
-        await this.loadWorldData();
+        // Data Listener
+        Neutralino.events.off('receiveWorldData', this._onWorldDataLoaded);
+        Neutralino.events.on('receiveWorldData', this._onWorldDataLoaded.bind(this));
 
+        this.bindUI();
+        GameAPI.getWorldData();
         this.gameLoop.start();
+    }
+
+    _onWorldDataLoaded(e) {
+        const data = e.detail;
+        if(data && data.nodes) {
+            console.log("🗺️ Loaded World Map from DB:", data.nodes.length, "nodes");
+            this.state.setNodes(data.nodes);
+            
+            // Update HUD
+            if(data.resources) this.hud.updateStats(data.resources);
+
+            // Optional: Center on player or first node
+            // this.camera.centerOn(this.state.player.x, this.state.player.y);
+        }
     }
 
     bindUI() {
@@ -93,28 +111,6 @@ export class WorldMapManager {
         this.canvas.height = window.innerHeight;
         this.camera.resize(window.innerWidth, window.innerHeight);
         this.renderer.draw(this.state); // Force redraw
-    }
-
-    async loadWorldData() {
-        // ... (Simulated or Real Fetch) ...
-        // Mock Generation for now
-        this.state.setNodes(this._generateProceduralMap());
-        this.camera.centerOn(this.state.player.x, this.state.player.y);
-    }
-
-    _generateProceduralMap() {
-        // ... (Logic from previous GenerateProceduralMap) ...
-        const nodes = [];
-        for (let i = 0; i < 15; i++) {
-            nodes.push({
-                id: i,
-                x: Math.random() * 2000,
-                y: Math.random() * 1500,
-                type: Math.random() > 0.3 ? 'Village' : 'Stronghold',
-                name: `Node ${i}`
-            });
-        }
-        return nodes;
     }
 
     startLoop() {

@@ -40,6 +40,13 @@ export class GameRepository {
             getWages: this.db.prepare(`SELECT SUM(daily_wage) as total FROM mercenaries`),
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
 
+            // World Map Statements
+            insertNode: this.db.prepare(`
+                INSERT INTO world_nodes (type, name, x, y, faction_id) 
+                VALUES (@type, @name, @x, @y, @faction_id)
+            `),
+            getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
+
             // Settings / Resources
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`)
@@ -101,6 +108,22 @@ export class GameRepository {
     addItemToInventory(itemId, mercId = null) {
         this.ensureConnection();
         return this.statements.insertItem.run({ itemId, mercId });
+    }
+
+    createWorldNode(node) {
+        this.ensureConnection();
+        return this.statements.insertNode.run({
+            type: node.type,
+            name: node.name,
+            x: node.x,
+            y: node.y,
+            faction_id: node.faction_id || null
+        });
+    }
+
+    getWorldNodes() {
+        this.ensureConnection();
+        return this.statements.getAllNodes.all();
     }
 
     // --- RESOURCE MANAGEMENT ---

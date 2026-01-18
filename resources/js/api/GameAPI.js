@@ -5,6 +5,10 @@ export const GameAPI = {
     createCampaign: async (slotId, campaignData) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "createNewGame", { slotId, campaignData });
     },
+    
+    getWorldData: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getWorldData", null);
+    },
 
     // --- PARTY & RESOURCES ---
     getPartyData: async () => {

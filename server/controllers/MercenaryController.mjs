@@ -6,6 +6,26 @@ export class MercenaryController {
     }
 
     register(app) {
+        // Handle World Data Request
+        app.events.on("getWorldData", () => {
+            try {
+                // 1. Get Mercenaries (Player position/state)
+                // We'll bundle everything needed for the map screen
+                const resources = this.repo.getResources();
+                
+                // 2. Get Map Nodes from DB
+                const nodes = this.repo.getWorldNodes();
+
+                app.events.broadcast("receiveWorldData", { 
+                    resources: resources,
+                    nodes: nodes
+                });
+            } catch (error) {
+                console.error("❌ Map Load Error:", error);
+                app.events.broadcast("receiveWorldData", { nodes: [] });
+            }
+        });
+
         // Get Party + Resources
         app.events.on("getPartyData", () => {
             try {
