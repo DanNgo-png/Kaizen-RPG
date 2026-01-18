@@ -1,0 +1,262 @@
+/* --- STEP 2: COMPANY SETUP --- */
+.company-setup-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    flex: 1;
+    min-height: 0;
+    position: relative;
+    padding-bottom: 80px; /* Space for footer */
+}
+
+/* Footer Positioning for Step 2 */
+.details-footer.full-width {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    border-radius: 12px;
+}
+
+.setup-panel {
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    padding: 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.setup-heading {
+    margin: 0 0 20px 0;
+    font-size: 1.2rem;
+    color: #fff;
+    border-bottom: 1px solid var(--bg-hover);
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.setup-desc {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+/* Forms */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.setup-label {
+    display: block;
+    color: #d1d5db;
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.setup-input {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    border-radius: 6px;
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+.setup-input:focus {
+    border-color: var(--accent-active-text);
+}
+
+/* Banner Grid */
+.banner-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+}
+
+.banner-opt {
+    aspect-ratio: 1;
+    background-color: var(--bg-sidebar-inner);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.banner-opt:hover {
+    background-color: var(--bg-hover);
+    color: #fff;
+}
+
+.banner-opt.selected {
+    background-color: rgba(59, 130, 246, 0.1);
+    border-color: var(--accent-active-text);
+    color: var(--accent-active-text);
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.2);
+}
+
+/* Color Picker */
+.color-picker-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.color-opt {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: transform 0.2s;
+}
+
+.color-opt:hover {
+    transform: scale(1.1);
+}
+
+.color-opt.selected {
+    border-color: #fff;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.5);
+    transform: scale(1.1);
+}
+
+/* Crisis List */
+.crisis-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.crisis-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background-color: var(--bg-sidebar-inner);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.crisis-card:hover {
+    background-color: var(--bg-hover);
+}
+
+.crisis-card.selected {
+    background-color: rgba(245, 158, 11, 0.1);
+    border-color: #f59e0b; /* Orange */
+}
+
+.crisis-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 6px;
+    background-color: var(--bg-body);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--text-secondary);
+}
+
+.crisis-card.selected .crisis-icon {
+    color: #f59e0b;
+    background-color: rgba(245, 158, 11, 0.2);
+}
+
+.crisis-info h4 {
+    margin: 0;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.crisis-info span {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Utilities */
+.hidden {
+    display: none !important;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .company-setup-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* --- STEP 3: COMPANY SETUP --- */
+.setup-select {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    border-radius: 6px;
+    color: #fff;
+    font-family: var(--font-main);
+    font-size: 1rem;
+    box-sizing: border-box;
+    outline: none;
+    transition: border-color 0.2s;
+    cursor: pointer;
+    /* Custom Dropdown Arrow */
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%239ca3af%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+    background-repeat: no-repeat;
+    background-position: right .7em top 50%;
+    background-size: .65em auto;
+}
+
+.setup-select:focus {
+    border-color: var(--accent-active-text);
+}
+
+.setup-select option {
+    background-color: var(--bg-body);
+    color: #fff;
+    padding: 10px;
+}
+
+/* Style the Map Seed input (moving inline styles to CSS) */
+#input-map-seed {
+    font-family: "Consolas", "Monaco", monospace;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-weight: 700;
+    color: var(--accent-active-text);
+}
+
+/* Style the Random Seed button to sit nicely next to the input */
+#btn-random-seed {
+    width: 50px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-color: var(--bg-hover);
+}
+
+#btn-random-seed:hover {
+    color: var(--accent-active-text);
+    border-color: var(--accent-active-text);
+    background-color: rgba(59, 130, 246, 0.1);
+}
