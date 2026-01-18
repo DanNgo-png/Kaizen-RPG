@@ -16,13 +16,13 @@ export class RosterUI {
             const el = document.createElement('div');
             el.className = 'roster-card';
             el.dataset.id = merc.id;
+            el.title = merc.name; // Added tooltip since text is removed
             
             // HP Percent calculation
             const hpPct = Math.min(100, (merc.current_hp / merc.max_hp) * 100);
 
             el.innerHTML = `
                 <div class="roster-img"><i class="fa-solid fa-user-shield"></i></div>
-                <div class="roster-name">${merc.name}</div>
                 <div class="roster-hp-bar"><div class="roster-hp-fill" style="width:${hpPct}%"></div></div>
             `;
 

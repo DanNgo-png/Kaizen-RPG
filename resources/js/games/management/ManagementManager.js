@@ -2,8 +2,7 @@ import { GameAPI } from "../../api/GameAPI.js";
 import { RosterUI } from "./RosterUI.js";
 import { CharacterSheetUI } from "./CharacterSheetUI.js";
 import { InventoryUI } from "./InventoryUI.js";
-import { initWorldMap } from "../world/WorldMapManager.js";
-import { loadPage } from "../../router.js";
+// import { initWorldMap } from "../world/WorldMapManager.js"; // Removed: No longer navigating back
 
 export class ManagementManager {
     constructor() {
@@ -31,13 +30,16 @@ export class ManagementManager {
         Neutralino.events.off('receivePartyData', this._onDataReceived);
         Neutralino.events.on('receivePartyData', this._onDataReceived.bind(this));
 
-        // Back Button
-        document.getElementById('btn-back-map')?.addEventListener('click', async () => {
-            await loadPage('./pages/games/world-map.html');
-            initWorldMap();
-        });
+        // OLD: Back Button navigating to page
+        // document.getElementById('btn-back-map')?.addEventListener('click', ... );
 
-        // Request Data
+        // NEW: Back/Close Button logic is handled by WorldMapManager toggling the modal class.
+        // We can just ensure data is fetched when initialized.
+        this.refresh();
+    }
+
+    refresh() {
+        // Request Fresh Data
         GameAPI.getPartyData();
     }
 
@@ -48,16 +50,21 @@ export class ManagementManager {
         this.data = payload;
         
         // Update Resource Header
-        document.getElementById('mgmt-gold').textContent = this.data.resources.gold || 0;
-        document.getElementById('mgmt-roster-count').textContent = `${this.data.mercenaries.length} / 12`;
+        const elGold = document.getElementById('mgmt-gold');
+        const elRoster = document.getElementById('mgmt-roster-count');
+        
+        if (elGold) elGold.textContent = this.data.resources.gold || 0;
+        if (elRoster) elRoster.textContent = `${this.data.mercenaries.length} / 12`;
 
         // Render Roster
         this.rosterUI.render(this.data.mercenaries);
 
-        // Select first merc if none selected
-        if (!this.state.selectedMercId && this.data.mercenaries.length > 0) {
+        // Select first merc if none selected or selection invalid
+        const validSelection = this.data.mercenaries.find(m => m.id === this.state.selectedMercId);
+        
+        if ((!this.state.selectedMercId || !validSelection) && this.data.mercenaries.length > 0) {
             this.selectMercenary(this.data.mercenaries[0].id);
-        } else {
+        } else if (this.state.selectedMercId) {
             // Re-render current selection to update stats/equip
             this.selectMercenary(this.state.selectedMercId);
         }
@@ -75,6 +82,7 @@ export class ManagementManager {
     }
 }
 
+// Return instance to allow external refresh calls
 export function initManagement() {
-    new ManagementManager();
+    return new ManagementManager();
 }

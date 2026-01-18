@@ -12,7 +12,6 @@
       height: 100vh;
       overflow: hidden;
       background-color: #0f172a;
-      /* Deep Ocean Color */
       color: white;
       font-family: var(--font-main);
     }
@@ -24,10 +23,8 @@
       left: 0;
       z-index: 1;
       cursor: crosshair;
-      /* Ensure canvas doesn't trigger scrollbars */
       display: block;
     }
-
 
     /* HUD - Top Bar */
     .world-hud-top {
@@ -116,7 +113,6 @@
 
     .nav-btn.primary {
       background-color: #059669;
-      /* Green */
       border-color: #059669;
       color: white;
       width: 70px;
@@ -141,6 +137,55 @@
       display: none;
       font-size: 0.9rem;
       transform: translate(15px, 15px);
+    }
+
+    /* --- NEW: Management Overlay Styles --- */
+    .mgmt-overlay {
+      position: absolute;
+      /* CHANGED from fixed: Now respects parent container (#default-page) bounds/padding */
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(8px);
+      z-index: 50;
+      /* Inside #default-page context */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    .mgmt-overlay.hidden {
+      display: none;
+    }
+
+    /* Wrapper to reuse existing CSS */
+    .mgmt-modal-wrapper {
+      width: 95%;
+      height: 90%;
+      background-color: var(--bg-body);
+      border: 1px solid var(--bg-hover);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      display: flex;
+      flex-direction: column;
+      box-sizing: border-box;
+      /* Ensures padding doesn't break width */
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: scale(0.98);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
     }
   </style>
 </head>
@@ -182,11 +227,119 @@
     <div class="world-hud-bottom">
       <button class="nav-btn" title="System Menu" id="btn-world-menu"><i class="fa-solid fa-bars"></i></button>
       <button class="nav-btn" title="Inventory"><i class="fa-solid fa-suitcase"></i></button>
-      <button class="nav-btn primary" title="Manage Party (P)" id="btn-open-party"><i
+      <!-- Primary Button triggers Modal now -->
+      <button class="nav-btn primary" title="Manage Party (P)" id="btn-open-party-modal"><i
           class="fa-solid fa-users-viewfinder"></i></button>
       <button class="nav-btn" title="Contract Log"><i class="fa-solid fa-scroll"></i></button>
       <button class="nav-btn" title="Camp / Rest"><i class="fa-solid fa-campground"></i></button>
     </div>
+
+    <!-- MANAGEMENT OVERLAY (Structure copied from management.html, wrapped in modal) -->
+    <div id="management-overlay" class="mgmt-overlay hidden">
+      <div class="mgmt-modal-wrapper management-container">
+
+        <!-- Header (Modified Back Button ID) -->
+        <header class="mgmt-header">
+          <div class="header-left">
+            <button id="btn-close-mgmt-modal" class="btn-icon-circle"><i class="fa-solid fa-xmark"></i></button>
+            <h2>Company Management</h2>
+          </div>
+          <div class="header-stats">
+            <div class="stat-pill">
+              <i class="fa-solid fa-coins text-gold"></i> <span id="mgmt-gold">0</span>
+            </div>
+            <div class="stat-pill">
+              <i class="fa-solid fa-users text-blue"></i> <span id="mgmt-roster-count">0/12</span>
+            </div>
+          </div>
+        </header>
+
+        <!-- MAIN GRID (Standard Layout) -->
+        <div class="mgmt-layout">
+
+          <!-- LEFT: Character Sheet -->
+          <section class="char-panel">
+            <div class="char-header-info">
+              <div class="char-portrait">
+                <i class="fa-solid fa-user-knight"></i>
+              </div>
+              <div class="char-details">
+                <h3 id="char-name">Select a Mercenary</h3>
+                <div class="char-sub">
+                  <span id="char-role">Role</span> • Lvl <span id="char-level">1</span>
+                </div>
+                <div class="xp-bar-container">
+                  <div class="xp-bar-fill" style="width: 45%"></div>
+                  <span class="xp-text">450 / 1000 XP</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="paper-doll-grid">
+              <div class="doll-slot slot-helm" data-slot="head"><i class="fa-solid fa-helmet-safety"></i></div>
+              <div class="doll-slot slot-armor" data-slot="body"><i class="fa-solid fa-shirt"></i></div>
+              <div class="doll-slot slot-main" data-slot="main_hand"><i class="fa-solid fa-gavel"></i></div>
+              <div class="doll-slot slot-off" data-slot="off_hand"><i class="fa-solid fa-shield-halved"></i></div>
+              <div class="doll-slot slot-acc" data-slot="accessory"><i class="fa-solid fa-ring"></i></div>
+              <div class="doll-slot slot-ammo" data-slot="ammo"><i class="fa-solid fa-arrows-up-down"></i></div>
+            </div>
+
+            <div class="char-stats-grid">
+              <div class="stat-row" title="Hit Points"><i class="fa-solid fa-heart text-red"></i> <span
+                  id="stat-hp">0</span></div>
+              <div class="stat-row" title="Fatigue"><i class="fa-solid fa-bolt text-yellow"></i> <span
+                  id="stat-fat">0</span></div>
+              <div class="stat-row" title="Resolve"><i class="fa-solid fa-flag text-blue"></i> <span
+                  id="stat-res">0</span></div>
+              <div class="stat-row" title="Initiative"><i class="fa-solid fa-person-running text-green"></i> <span
+                  id="stat-ini">0</span></div>
+              <div class="stat-row" title="Melee Skill"><i class="fa-solid fa-khanda"></i> <span id="stat-matk">0</span>
+              </div>
+              <div class="stat-row" title="Ranged Skill"><i class="fa-solid fa-bullseye"></i> <span
+                  id="stat-ratk">0</span></div>
+              <div class="stat-row" title="Melee Defense"><i class="fa-solid fa-shield"></i> <span
+                  id="stat-mdef">0</span></div>
+              <div class="stat-row" title="Ranged Defense"><i class="fa-solid fa-shield-cat"></i> <span
+                  id="stat-rdef">0</span></div>
+            </div>
+
+            <div class="char-traits-area" id="char-traits-list"></div>
+          </section>
+
+          <!-- RIGHT: Inventory Stash -->
+          <section class="stash-panel">
+            <div class="stash-tabs">
+              <button class="stash-tab active" data-filter="all">Stash</button>
+              <button class="stash-tab" data-filter="weapons">Weapons</button>
+              <button class="stash-tab" data-filter="armor">Armor</button>
+              <button class="stash-tab" data-filter="consumables">Supplies</button>
+            </div>
+
+            <div class="stash-grid-container" id="stash-grid"></div>
+
+            <div class="stash-footer">
+              <div class="capacity-bar">
+                <i class="fa-solid fa-weight-hanging"></i>
+                <div class="cap-track">
+                  <div class="cap-fill" style="width: 30%"></div>
+                </div>
+                <span>30 / 100</span>
+              </div>
+              <button class="management-sort-btn"><i class="fa-solid fa-filter"></i> Sort</button>
+            </div>
+          </section>
+
+          <!-- BOTTOM: Roster Strip -->
+          <section class="roster-strip-container">
+            <button class="roster-nav-btn left"><i class="fa-solid fa-chevron-left"></i></button>
+            <div class="roster-scroll-area" id="roster-list"></div>
+            <button class="roster-nav-btn right"><i class="fa-solid fa-chevron-right"></i></button>
+          </section>
+
+        </div>
+      </div>
+    </div>
+
   </div>
 </body>
 

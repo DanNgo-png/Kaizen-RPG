@@ -25,6 +25,8 @@ export class WorldMapManager {
             () => this.draw()         // Render
         );
 
+        this.managementInstance = null; // Store management logic instance
+
         this.init();
     }
 
@@ -36,7 +38,6 @@ export class WorldMapManager {
         this.renderer.draw(this.state);
     }
 
-    // Called when leaving the page (e.g. "Exit to Menu" button)
     stop() {
         this.gameLoop.stop();
     }
@@ -45,7 +46,7 @@ export class WorldMapManager {
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
-        // 3. Connect Input Events to Logic
+        // 3. Connect Input Events
         this.input.onPan = (dx, dy) => this.camera.pan(dx, dy);
         this.input.onZoom = (x, y, delta) => this.camera.zoomAt(x, y, delta);
 
@@ -81,22 +82,47 @@ export class WorldMapManager {
         if(data && data.nodes) {
             console.log("🗺️ Loaded World Map from DB:", data.nodes.length, "nodes");
             this.state.setNodes(data.nodes);
-            
-            // Update HUD
             if(data.resources) this.hud.updateStats(data.resources);
-
-            // Optional: Center on player or first node
-            // this.camera.centerOn(this.state.player.x, this.state.player.y);
         }
     }
 
     bindUI() {
-        document.getElementById('btn-open-party')?.addEventListener('click', async () => {
-            this.stopLoop(); // Optimization: Stop rendering when leaving page
-            await loadPage('./pages/games/management.html');
-            initManagement();
-        });
+        // --- Overlay Logic ---
+        const overlay = document.getElementById('management-overlay');
+        const openBtn = document.getElementById('btn-open-party-modal');
+        const closeBtn = document.getElementById('btn-close-mgmt-modal');
 
+        if (openBtn && overlay) {
+            openBtn.addEventListener('click', () => {
+                // 1. Pause Game Loop to save resources
+                this.stopLoop();
+                
+                // 2. Show Overlay
+                overlay.classList.remove('hidden');
+
+                // 3. Init or Refresh Management UI
+                if (!this.managementInstance) {
+                    this.managementInstance = initManagement();
+                } else {
+                    this.managementInstance.refresh();
+                }
+            });
+        }
+
+        if (closeBtn && overlay) {
+            closeBtn.addEventListener('click', () => {
+                // 1. Hide Overlay
+                overlay.classList.add('hidden');
+                
+                // 2. Resume Game Loop
+                this.startLoop();
+                
+                // 3. Refresh Map HUD (in case gold/supplies changed in management)
+                GameAPI.getWorldData();
+            });
+        }
+
+        // --- Exit Menu Logic ---
         document.getElementById('btn-world-menu')?.addEventListener('click', async () => {
             if (confirm("Exit to Main Menu?")) {
                 this.stopLoop();
@@ -110,13 +136,14 @@ export class WorldMapManager {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;
         this.camera.resize(window.innerWidth, window.innerHeight);
-        this.renderer.draw(this.state); // Force redraw
+        this.renderer.draw(this.state);
     }
 
     startLoop() {
+        if (this.isRunning) return;
         this.isRunning = true;
         this.lastTime = performance.now();
-        requestAnimationFrame((t) => this.loop(t));
+        this.loop(this.lastTime);
     }
 
     stopLoop() {
@@ -126,14 +153,10 @@ export class WorldMapManager {
     loop(timestamp) {
         if (!this.isRunning) return;
 
-        // Calculate Delta Time (seconds)
         const dt = (timestamp - this.lastTime) / 1000;
         this.lastTime = timestamp;
 
-        // 1. Update State
         this.state.updatePlayer(dt);
-
-        // 2. Render
         this.renderer.draw(this.state);
 
         requestAnimationFrame((t) => this.loop(t));
