@@ -1,5 +1,5 @@
 import { loadPage } from "../router.js";
-import { initGameModes } from "./gameModesManager.js";
+import { initGameModes } from "./GameModesManager.js";
 import { initModsManager } from "../mods/modsManager.js";
 
 export function initMenuButtons() {
