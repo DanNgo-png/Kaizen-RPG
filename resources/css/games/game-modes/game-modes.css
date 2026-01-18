@@ -26,6 +26,29 @@
     flex-shrink: 0;
 }
 
+/* Back Button Styles */
+.btn-icon-back {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 1.2rem;
+    cursor: pointer;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+    margin-right: 5px; /* Slight extra gap before the icon */
+}
+
+.btn-icon-back:hover {
+    background-color: var(--bg-hover);
+    color: #fff;
+    transform: translateX(-2px); /* Subtle slide left hint */
+}
+
 .game-header-compact .header-icon {
     font-size: 1.5rem;
     color: var(--stat-fire);
@@ -246,6 +269,7 @@
     background-color: rgba(20, 20, 25, 0.95);
     display: flex;
     justify-content: flex-end;
+    gap: 15px; /* Added gap for Cancel and Start buttons */
 }
 
 .btn-start-campaign {
@@ -279,8 +303,7 @@
 
 /* Responsive */
 @media (max-width: 900px) {
-    .campaign-split-layout {
+    .company-setup-layout {
         grid-template-columns: 1fr;
-        grid-template-rows: 200px 1fr; /* List on top */
     }
 }
