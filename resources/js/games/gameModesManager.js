@@ -107,7 +107,7 @@ export class GameModesManager {
             btnBackStep1: document.getElementById('btn-back-step-1'),
             btnGoToStep3: document.getElementById('btn-goto-step-3'), // Renamed
 
-            // Step 3 Elements (NEW)
+            // Step 3 Elements 
             inputEconomy: document.getElementById('input-economy'),
             inputFunds: document.getElementById('input-funds'),
             inputCombat: document.getElementById('input-combat'),
@@ -132,14 +132,14 @@ export class GameModesManager {
 
         this.renderList();
         this.selectMode(GAME_MODES[0].id);
-        this.generateRandomSeed(); // Generate initial seed
+        this.generateRandomSeed(); 
         
-        this.bindEvents();
+        this.bindStep1Events();
         this.bindStep2Events();
-        this.bindStep3Events(); // New binding
+        this.bindStep3Events(); 
     }
 
-    bindEvents() {
+    bindStep1Events() {
         // Step 1: Next -> Go to Step 2
         this.dom.btnNext.addEventListener('click', () => this.goToStep2());
 
