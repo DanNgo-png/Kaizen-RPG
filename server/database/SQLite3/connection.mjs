@@ -41,8 +41,10 @@ export function getDatabase(dbName) {
 export function loadGameDatabase(slotId) {
     // Close existing connection if switching saves
     if (activeGameConnection) {
-        console.log("Closing previous save connection...");
-        activeGameConnection.close();
+        try {
+            console.log("Closing previous save connection...");
+            activeGameConnection.close();
+        } catch(e) { /* ignore if already closed */ }
         activeGameConnection = null;
     }
 
@@ -59,6 +61,7 @@ export function loadGameDatabase(slotId) {
         initializeGameSchema(db); 
         
         activeGameConnection = db;
+        
         return db;
     } catch (error) {
         console.error(`❌ Save Load Error (${filename}):`, error);
@@ -71,20 +74,33 @@ export function getActiveGameDB() {
     if (!activeGameConnection) {
         throw new Error("No game save is currently loaded.");
     }
+    if (!activeGameConnection.open) {
+        throw new Error("Active game connection is closed.");
+    }
     return activeGameConnection;
 }
 
 // Helper to delete a save
 export function deleteSaveFile(slotId) {
     const filePath = path.join(SAVE_DATA_DIR, `slot_${slotId}.db`);
-    if (fs.existsSync(filePath)) {
-        // Close if it's the active one
-        if (activeGameConnection && activeGameConnection.name === filePath) {
+    
+    // Close if it's the active one
+    // better-sqlite3 .name property contains the path passed to constructor
+    if (activeGameConnection && activeGameConnection.name === filePath) {
+        try {
             activeGameConnection.close();
-            activeGameConnection = null;
-        }
-        fs.unlinkSync(filePath);
-        return true;
+        } catch(e) {}
+        activeGameConnection = null;
     }
-    return false;
+
+    try {
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+        // Clean up WAL/SHM files to prevent corruption warnings
+        if (fs.existsSync(filePath + '-wal')) fs.unlinkSync(filePath + '-wal');
+        if (fs.existsSync(filePath + '-shm')) fs.unlinkSync(filePath + '-shm');
+        return true;
+    } catch(e) {
+        console.error("Failed to delete save file:", e);
+        return false;
+    }
 }

@@ -6,23 +6,28 @@ export class GameRepository {
         this.statements = {};
     }
 
+    // Called by SaveController when explicitly loading/creating a specific slot
     initialize(slotId) {
         this.db = loadGameDatabase(slotId);
         this._prepareStatements();
     }
 
+    // Called by MercenaryController (and others) to ensure they use the currently active game
     ensureConnection() {
-        if (!this.db) {
-            try {
-                this.db = getActiveGameDB();
-                this._prepareStatements();
-            } catch (e) {
-                throw new Error("GameRepository: No active save slot loaded.");
-            }
+        // 1. Get the globally active connection (throws if none)
+        const activeDB = getActiveGameDB();
+
+        // 2. Check if our local reference is stale or null
+        if (this.db !== activeDB) {
+            // console.log("🔄 GameRepository: Syncing to active save connection.");
+            this.db = activeDB;
+            this._prepareStatements();
         }
     }
 
     _prepareStatements() {
+        if (!this.db) return;
+
         this.statements = {
             getAll: this.db.prepare('SELECT * FROM mercenaries WHERE is_active = 1'),
             getById: this.db.prepare('SELECT * FROM mercenaries WHERE id = ?'),
