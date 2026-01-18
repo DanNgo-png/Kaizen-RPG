@@ -34,7 +34,7 @@ Launcher.cs
 quick_run.bat
 run_file_cartographer.bat
 run_2.bat
-run_2.vbs
+*.vbs
 
 # Other
 *.zip
