@@ -87,11 +87,17 @@
 
 /* --- Left Column: List --- */
 .mode-selection-panel {
-    background-color: var(--bg-sidebar-inner); /* Darker background */
+    background-color: var(--bg-sidebar-inner);
     border: 1px solid var(--bg-hover);
     border-radius: 12px;
     overflow-y: auto;
     padding: 10px;
+    position: relative;
+}
+
+.mode-list {
+    position: relative; /* Context for Glider */
+    min-height: 100%;
 }
 
 /* Scrollbar */
@@ -100,9 +106,7 @@
 
 .mode-list-item {
     position: relative;
-    z-index: 1;
-    background-color: transparent; 
-    border: 1px solid transparent;
+    z-index: 2; /* Above Glider */
     display: flex;
     align-items: center;
     gap: 15px;
@@ -110,11 +114,71 @@
     border-radius: 8px;
     cursor: pointer;
     margin-bottom: 8px;
-    transition: all 0.2s ease;
+    background-color: transparent;
+    border: 1px solid transparent;
+    transition: transform 0.1s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+/* The Charging Animation */
+.mode-list-item.is-pressing {
+    transform: scale(0.97);
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* Progress Indicator (Bottom Border Fill) */
+.mode-list-item.is-pressing::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background-color: var(--accent-active-text, #8EC5FF);
+    width: 0%;
+    
+    /* Use the variable set in DragLogic.js */
+    transition: width var(--press-duration, 2000ms) linear;
+}
+
+/* Trigger animation width when pressing */
+.mode-list-item.is-pressing::after {
+    width: 100%;
 }
 
 .mode-list-item:hover {
     background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Charging (Holding down) */
+.mode-list-item.mode-reorder-charging {
+    background-color: rgba(255, 255, 255, 0.05);
+    transform: scale(0.98);
+}
+
+/* Charging Progress Bar */
+.mode-list-item::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    height: 3px;
+    background-color: var(--accent-active-text, #8EC5FF);
+    width: 0%;
+    border-radius: 0 0 8px 8px;
+    transition: none;
+    opacity: 0;
+}
+
+.mode-list-item.mode-reorder-charging::after {
+    width: 100%;
+    opacity: 1;
+    transition: width var(--press-duration, 200ms) linear;
+}
+
+/* Active Selection */
+.mode-list-item.active .mode-info h4 {
+    color: #fff;
 }
 
 /* Selected State */
@@ -125,6 +189,34 @@
     background-color: transparent;
     border-color: transparent;
     box-shadow: none;
+}
+
+/* --- Dragging Visuals --- */
+
+/* The Ghost Placeholder in the list */
+.dnd-placeholder {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    box-sizing: border-box;
+}
+
+/* The Floating Avatar */
+.dnd-avatar {
+    z-index: 9999 !important;
+    background-color: var(--surface-color); /* Opaque background */
+    border: 1px solid var(--accent-active-text);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+    border-radius: 8px;
+    /* Reset layout for floating context */
+    margin: 0;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    pointer-events: none; /* Let events pass to list below */
 }
 
 .mode-thumb {
@@ -139,23 +231,26 @@
     flex-shrink: 0;
     color: var(--text-secondary);
     border: 1px solid var(--bg-hover);
+    transition: border-color 0.2s, color 0.2s;
 }
 
 .mode-list-item.active .mode-thumb {
-    background-color: var(--accent-active-bg);
+    background-color: rgba(255, 255, 255, 0.1);
     color: #fff;
-    border-color: var(--accent-active-text);
+    border-color: rgba(255, 255, 255, 0.3);
 }
 
 .mode-info h4 {
     margin: 0 0 4px 0;
-    color: #e5e7eb;
+    color: #9ca3af; /* Gray by default */
     font-size: 1rem;
+    transition: color 0.2s;
 }
 
 .mode-info span {
     font-size: 0.8rem;
     color: var(--text-secondary);
+    opacity: 0.8;
 }
 
 /* --- Right Column: Details --- */
