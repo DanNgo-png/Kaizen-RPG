@@ -61,7 +61,7 @@ export const GAME_MODES = [
         subtitle: 'Roguelike Delve.',
         icon: 'fa-solid fa-dungeon',
         color: '#ef4444', // Red-ish
-        badge: 'New',
+        badge: 'Extraction',
         lore: `"The depths await. Descend into the infinite dungeon, battle monsters, and extract with loot. Choose your complexity level."`,
         features: [
             { icon: 'fa-solid fa-skull', text: 'Permadeath Mechanics', color: '#ef4444' },
