@@ -28,6 +28,9 @@ export class CampaignGenerator {
 
         // Save Global Settings
         this.repo.setCampaignSetting('company_name', config.name || "The Nameless");
+        // --- NEW: Save the Origin Mode ID ---
+        this.repo.setCampaignSetting('origin', config.modeId || 'sellswords'); 
+        // ------------------------------------
         this.repo.setCampaignSetting('gold', Math.floor(startingGold));
         this.repo.setCampaignSetting('day', 1);
         this.repo.setCampaignSetting('difficulty_eco', config.economy);
@@ -36,15 +39,14 @@ export class CampaignGenerator {
     }
 
     _generateRoster(modeId, seed) {
+        // ... (rest of file remains unchanged)
         const originData = ORIGIN_CONFIGS[modeId] || ORIGIN_CONFIGS['default'];
         
         originData.roster.forEach((template, index) => {
-            // 1. Generate Name
             const name = NAMES[Math.floor(Math.random() * NAMES.length)];
             const title = Math.random() > 0.7 ? ` ${TITLES[Math.floor(Math.random() * TITLES.length)]}` : '';
             const fullName = `${name}${title}`;
 
-            // 2. Generate Stats
             const ranges = ROLE_STATS[template.role] || ROLE_STATS['default'];
             const multiplier = template.statsMod || 1.0;
 
@@ -52,11 +54,9 @@ export class CampaignGenerator {
             const int = Math.floor(this._rand(ranges.int) * multiplier);
             const spd = Math.floor(this._rand(ranges.spd) * multiplier);
             
-            // Calculate Derived Stats
             const maxHp = 50 + (str * 2);
             const wage = Math.floor((str + int + spd) / 2);
 
-            // 3. Insert Mercenary
             const mercData = {
                 name: fullName,
                 role: template.role,
@@ -71,7 +71,6 @@ export class CampaignGenerator {
             const result = this.repo.addMercenary(mercData);
             const mercId = result.lastInsertRowid;
 
-            // 4. Equip Gear (Insert into Inventory linked to Merc ID)
             if (template.gear) {
                 template.gear.forEach(itemId => {
                     this.repo.addItemToInventory(itemId, mercId);
@@ -83,16 +82,13 @@ export class CampaignGenerator {
     _generateWorldMap(seed) {
         console.log("🗺️ Generating Persistent World Map...");
         
-        // Simple pseudo-random logic (In a real app, use a Seeded RNG library)
         const nodes = [];
-        const nodeCount = 15; // Number of locations
+        const nodeCount = 15; 
 
-        // Node Types
         const types = ['Stronghold', 'Village', 'Ruins', 'Town'];
         const names = ['Oakhaven', 'Ironhold', 'Grimwatch', 'Blackwood', 'Sunnydale', 'Stormpeak'];
 
         for (let i = 0; i < nodeCount; i++) {
-            // Generate random coordinates within a safe 2000x1500 bounds
             const x = Math.floor(Math.random() * 2000);
             const y = Math.floor(Math.random() * 1500);
             
@@ -107,7 +103,6 @@ export class CampaignGenerator {
                 faction_id: null
             };
 
-            // Save to DB immediately
             this.repo.createWorldNode(nodeData);
         }
         
@@ -115,12 +110,9 @@ export class CampaignGenerator {
     }
 
     _generateEmpireMap(seed) {
-        // Placeholder for grid generation logic if using Empire mode
         console.log("🗺️ Generating Grid Map for seed:", seed);
-        // this.repo.createMapTiles(...)
     }
 
-    // Helper: Random Integer between min and max
     _rand([min, max]) {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }

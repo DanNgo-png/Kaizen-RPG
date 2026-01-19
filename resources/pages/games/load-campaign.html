@@ -5,6 +5,38 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Load Campaign - Kaizen RPG</title>
+  <!-- Reuse styles for consistency -->
+  <style>
+    /* Scoped styles for the settings grid */
+    .settings-grid-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .setting-item {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .setting-label {
+      font-size: 0.75rem;
+      color: #9ca3af;
+      text-transform: uppercase;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .setting-value {
+      font-size: 1rem;
+      color: #fff;
+      font-weight: 600;
+    }
+  </style>
 </head>
 
 <body>
@@ -27,7 +59,6 @@
 
     <!-- Save Slots Grid -->
     <div class="save-slots-grid" id="save-slots-container">
-      <!-- Slots are injected here by JS -->
       <div class="loading-state">
         <i class="fa-solid fa-circle-notch fa-spin"></i> Finding Save Files...
       </div>
@@ -44,29 +75,62 @@
       </button>
     </div>
   </div>
+
   <!-- DELETE CONFIRMATION MODAL -->
   <div id="modal-delete-save" class="modal-overlay hidden">
     <div class="delete-save-modal-content">
       <div class="delete-save-modal-icon">
         <i class="fa-solid fa-trash-can"></i>
       </div>
-
       <h2 style="margin-top: 0;">Delete Save?</h2>
-
       <p style="color: #9ca3af; margin-bottom: 25px;">
         Are you sure you want to delete <b id="delete-slot-name" style="color: #fff;">Slot X</b>?
         <br>This action cannot be undone.
       </p>
-
       <div class="modal-actions" style="justify-content: center;">
         <button id="btn-cancel-delete" class="btn-secondary">Cancel</button>
         <button id="btn-confirm-delete" class="btn-primary btn-delete-confirm">
           Delete Forever
         </button>
       </div>
-
     </div>
   </div>
+
+  <!-- RENAME MODAL (NEW) -->
+  <div id="modal-rename-save" class="modal-overlay hidden">
+    <div class="delete-save-modal-content" style="text-align: left;">
+      <h3 style="margin-top: 0;"><i class="fa-solid fa-pen"></i> Rename Company</h3>
+
+      <div class="form-group" style="width: 100%; margin: 20px 0;">
+        <label style="color:#d1d5db; font-size:0.9rem; margin-bottom:5px; display:block;">New Name</label>
+        <input type="text" id="input-rename-company" class="setup-input" placeholder="e.g. The Iron Wolves"
+          style="width:100%; padding:10px; box-sizing:border-box;">
+      </div>
+
+      <div class="modal-actions" style="width: 100%; justify-content: flex-end; gap: 10px;">
+        <button id="btn-cancel-rename" class="btn-secondary">Cancel</button>
+        <button id="btn-confirm-rename" class="btn-primary" style="background-color: var(--accent-green); color: #fff;">Save
+          Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW SETTINGS MODAL (NEW) -->
+  <div id="modal-view-settings" class="modal-overlay hidden">
+    <div class="delete-save-modal-content" style="width: 500px; text-align: center;">
+      <h3 style="margin-top: 0; margin-bottom: 20px;"><i class="fa-solid fa-sliders"></i> Campaign Details</h3>
+
+      <div id="settings-content-area">
+        <!-- Content Injected via JS -->
+        <i class="fa-solid fa-circle-notch fa-spin"></i> Loading metadata...
+      </div>
+
+      <div class="modal-actions" style="width: 100%; justify-content: center; margin-top: 20px;">
+        <button id="btn-close-settings" class="btn-secondary" style="min-width: 100px;">Close</button>
+      </div>
+    </div>
+  </div>
+
 </body>
 
 </html>
