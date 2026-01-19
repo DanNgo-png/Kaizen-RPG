@@ -9,17 +9,14 @@ export class SelectModeStep {
         this.listEl = document.getElementById('mode-list');
         this.detailsEl = document.getElementById('mode-details-content');
         this.glider = null;
-        // Local state for ordering, initialized with default order
         this.sortedModes = [...GAME_MODES];
     }
 
     init() {
-        // 1. Listen for Order Setting from Backend
         document.addEventListener('kaizen:setting-update', (e) => {
             if (e.detail.key === 'gameModesOrder' && e.detail.value) {
                 try {
                     const orderIds = JSON.parse(e.detail.value);
-                    // Compare current order vs new order to avoid unnecessary re-renders
                     const currentIds = this.sortedModes.map(m => m.id);
                     if (JSON.stringify(currentIds) !== JSON.stringify(orderIds)) {
                         this.applySortOrder(orderIds);
@@ -31,15 +28,11 @@ export class SelectModeStep {
             }
         });
 
-        // 2. Initial Render (Default Order)
         this.renderList();
         
-        // 3. Initialize Drag Logic
         new DragLogic(this.listEl, {
             onReorder: (newOrderIds) => {
-                // Update local state immediately so UI logic is consistent
                 this.applySortOrder(newOrderIds);
-                // Persist the new order to the database
                 SettingsAPI.saveSetting('gameModesOrder', JSON.stringify(newOrderIds));
             },
             onDragStart: () => {
@@ -51,10 +44,8 @@ export class SelectModeStep {
             }
         });
 
-        // 4. Request Saved Order (Will trigger event listener if exists)
         SettingsAPI.getSetting('gameModesOrder');
 
-        // 5. Select Initial State
         setTimeout(() => {
             const currentId = campaignState.get('modeId') || this.sortedModes[0].id;
             this.selectMode(currentId);
@@ -62,11 +53,9 @@ export class SelectModeStep {
     }
 
     applySortOrder(orderIds) {
-        // Create a map for O(1) lookup
         const map = new Map(GAME_MODES.map(m => [m.id, m]));
         const newOrder = [];
         
-        // Add existing IDs in the saved order
         orderIds.forEach(id => {
             if (map.has(id)) {
                 newOrder.push(map.get(id));
@@ -74,24 +63,19 @@ export class SelectModeStep {
             }
         });
         
-        // Append any remaining modes (e.g., if new modes were added in an update)
         map.forEach(mode => newOrder.push(mode));
-        
         this.sortedModes = newOrder;
     }
 
     renderList() {
-        // Save current selection to restore active class
         const activeId = campaignState.get('modeId');
         
         this.listEl.innerHTML = '';
         
-        // 1. Glider Animation Element
         this.glider = document.createElement('div');
         this.glider.className = 'mode-list-glider';
         this.listEl.appendChild(this.glider);
         
-        // 2. Render Modes in Sorted Order
         this.sortedModes.forEach(mode => {
             const el = document.createElement('div');
             el.className = 'mode-list-item';
@@ -115,7 +99,6 @@ export class SelectModeStep {
             this.listEl.appendChild(el);
         });
 
-        // Update glider position after render
         this.updateGlider();
     }
 
@@ -145,7 +128,6 @@ export class SelectModeStep {
         }
 
         if (targetEl && this.glider) {
-            // Ensure metrics are available
             if (targetEl.offsetHeight > 0) {
                 this.glider.style.top = `${targetEl.offsetTop}px`;
                 this.glider.style.height = `${targetEl.offsetHeight}px`;
@@ -166,6 +148,26 @@ export class SelectModeStep {
                 </li>
             `).join('');
 
+            // --- VERSION SELECTOR LOGIC ---
+            let versionHtml = '';
+            if (mode.hasVersions) {
+                versionHtml = `
+                    <div class="detail-section-title" style="margin-top: 25px;">Select Version</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <button class="btn-version-select" data-ver="barebones" style="background: rgba(255,255,255,0.05); border: 1px solid var(--bg-hover); padding: 15px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:5px; font-family: var(--font-main);">
+                            <i class="fa-solid fa-bone" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                            <div style="font-weight: 700; color: #fff;">Barebones</div>
+                            <div style="font-size: 0.8rem;">Minimalist Logic</div>
+                        </button>
+                        <button class="btn-version-select" data-ver="complex" style="background: rgba(255,255,255,0.05); border: 1px solid var(--bg-hover); padding: 15px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:5px; font-family: var(--font-main);">
+                            <i class="fa-solid fa-gears" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
+                            <div style="font-weight: 700; color: #fff;">Complex</div>
+                            <div style="font-size: 0.8rem;">Full Mechanics</div>
+                        </button>
+                    </div>
+                `;
+            }
+
             this.detailsEl.innerHTML = `
                 <div class="detail-header">
                     <div class="detail-icon-large" style="color: ${mode.color}">
@@ -175,10 +177,38 @@ export class SelectModeStep {
                     <span class="detail-badge">${mode.badge}</span>
                 </div>
                 <div class="detail-lore">${mode.lore}</div>
+                
+                ${versionHtml}
+
                 <div class="detail-section-title">Key Features</div>
                 <ul class="feature-list">${featuresHtml}</ul>
             `;
             this.detailsEl.style.opacity = '1';
+
+            // Bind Version Buttons
+            if (mode.hasVersions) {
+                const btns = this.detailsEl.querySelectorAll('.btn-version-select');
+                btns.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        // Visual Feedback
+                        btns.forEach(b => {
+                            b.style.borderColor = 'var(--bg-hover)';
+                            b.style.background = 'rgba(255,255,255,0.05)';
+                            b.style.transform = 'scale(1)';
+                        });
+                        
+                        btn.style.borderColor = mode.color;
+                        btn.style.background = 'rgba(255,255,255,0.1)';
+                        btn.style.transform = 'scale(1.02)';
+                        
+                        // Placeholder Action
+                        const ver = btn.dataset.ver;
+                        console.log(`Version Selected: ${ver}`);
+                        // In future: campaignState.set('dungeonVersion', ver);
+                    });
+                });
+            }
+
         }, 150);
     }
 

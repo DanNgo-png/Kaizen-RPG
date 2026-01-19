@@ -54,5 +54,20 @@ export const GAME_MODES = [
             { icon: 'fa-solid fa-fire-flame-curved', text: 'Streak-based Progression', color: '#fb923c' },
             { icon: 'fa-solid fa-stopwatch', text: 'Fixed 25m Sessions Only', color: '#9ca3af' }
         ]
+    },
+    {
+        id: 'dungeon',
+        title: 'Dungeon Crawler',
+        subtitle: 'Roguelike Delve.',
+        icon: 'fa-solid fa-dungeon',
+        color: '#ef4444', // Red-ish
+        badge: 'New',
+        lore: `"The depths await. Descend into the infinite dungeon, battle monsters, and extract with loot. Choose your complexity level."`,
+        features: [
+            { icon: 'fa-solid fa-skull', text: 'Permadeath Mechanics', color: '#ef4444' },
+            { icon: 'fa-solid fa-coins', text: 'Loot & Extraction', color: '#facc15' },
+            { icon: 'fa-solid fa-layer-group', text: 'Floor Progression', color: '#9ca3af' }
+        ],
+        hasVersions: true
     }
 ];
