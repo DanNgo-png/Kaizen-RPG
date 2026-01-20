@@ -21,12 +21,12 @@ class FlexibleFocusManager {
         this.warnIntervalMinutes = 5; 
         this.lastWarnedMinute = 0; 
 
-        // REMOVED: this.initSettings()
+        // Persist Flexible Balance
+        this.persistBalance = false; 
     }
 
-    // --- NEW: Call this from main.js ---
+    // Call this from main.js
     initialize() {
-        // Listen for updates
         document.addEventListener('kaizen:setting-update', (e) => {
             const { key, value } = e.detail;
 
@@ -38,7 +38,7 @@ class FlexibleFocusManager {
                 this.warnIntervalMinutes = parseInt(value) || 5;
             }
 
-            // Persistence
+            // Timer State Persistence
             if (key === 'flexibleTimerState' && value) {
                 try {
                     const saved = JSON.parse(value);
@@ -47,11 +47,17 @@ class FlexibleFocusManager {
                     console.error("Failed to parse Flexible Timer state", err);
                 }
             }
+
+            // Persist Flexible Balance
+            if (key === 'flexibleBankPersistence') {
+                this.persistBalance = (value === true || value === 'true' || value === 1);
+            }
         });
 
         SettingsAPI.getSetting('flexibleWarnEnabled');
         SettingsAPI.getSetting('flexibleWarnInterval');
         SettingsAPI.getSetting('flexibleTimerState'); 
+        SettingsAPI.getSetting('flexibleBankPersistence');
     }
 
     saveState() {
@@ -161,6 +167,7 @@ class FlexibleFocusManager {
     }
 
     commitSession(focusSeconds, breakSeconds) {
+        // 1. Save to DB (History)
         const payload = {
             tag: this.state.currentTag,
             focusSeconds: focusSeconds,
@@ -170,14 +177,30 @@ class FlexibleFocusManager {
         };
 
         FocusAPI.saveFocusSession(payload);
-        
         this.stopTicker();
-        this.state.reset();
-        this.lastWarnedMinute = 0; 
-        
-        SettingsAPI.saveSetting('flexibleTimerState', JSON.stringify({ hasData: false }));
 
-        this.tick();
+        // Handle Flexible Timer Balance Persistence
+        if (this.persistBalance) {
+            const stats = this.state.getStats();
+            
+            this.state.reset(); 
+
+            if (stats.balanceMs > 0) {
+                // Surplus: Simulate focus time that generated this surplus
+                // Balance = Focus / Ratio  =>  Focus = Balance * Ratio
+                this.state.accumulatedFocus = stats.balanceMs * this.state.ratio;
+            } else if (stats.balanceMs < 0) {
+                // Debt: Simulate break time that caused this debt
+                // Balance = -Break => Break = -Balance
+                this.state.accumulatedBreak = Math.abs(stats.balanceMs);
+            }
+        } else {
+            this.state.reset();
+        }
+
+        this.lastWarnedMinute = 0;
+        this.saveState(); 
+        this.tick(); 
     }
 
     getStats() {

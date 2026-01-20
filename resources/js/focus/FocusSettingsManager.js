@@ -26,7 +26,10 @@ const settingsMap = [
 
     // Negative Balance Warnings
     { id: 'setting-warn-enabled',    key: 'flexibleWarnEnabled',   type: 'toggle' },
-    { id: 'setting-warn-interval',   key: 'flexibleWarnInterval',  type: 'number' }
+    { id: 'setting-warn-interval',   key: 'flexibleWarnInterval',  type: 'number' },
+
+    // Persist Flexible Balance
+    { id: 'setting-flex-persist', key: 'flexibleBankPersistence', type: 'toggle' }
 ];
 
 const STANDARD_SOUNDS = ['bell', 'chime', 'elevator', 'moktak', 'none'];
