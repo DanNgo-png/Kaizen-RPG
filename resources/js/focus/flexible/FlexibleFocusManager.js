@@ -13,24 +13,19 @@ class FlexibleFocusManager {
         this.state = new FlexibleSessionState({ ratio: 3.0 });
         this.timerInterval = null;
         
-        // Configuration needed for saving
         this.cachedTags = []; 
 
-        // Warning Logic State
         this.warnEnabled = false;
         this.warnIntervalMinutes = 5; 
         this.lastWarnedMinute = 0; 
 
-        // Persist Flexible Balance
         this.persistBalance = false; 
     }
 
-    // Call this from main.js
     initialize() {
         document.addEventListener('kaizen:setting-update', (e) => {
             const { key, value } = e.detail;
 
-            // Warnings
             if (key === 'flexibleWarnEnabled') {
                 this.warnEnabled = (value === true || value === 'true' || value === 1);
             }
@@ -38,7 +33,6 @@ class FlexibleFocusManager {
                 this.warnIntervalMinutes = parseInt(value) || 5;
             }
 
-            // Timer State Persistence
             if (key === 'flexibleTimerState' && value) {
                 try {
                     const saved = JSON.parse(value);
@@ -48,7 +42,6 @@ class FlexibleFocusManager {
                 }
             }
 
-            // Persist Flexible Balance
             if (key === 'flexibleBankPersistence') {
                 this.persistBalance = (value === true || value === 'true' || value === 1);
             }
@@ -61,21 +54,20 @@ class FlexibleFocusManager {
     }
 
     saveState() {
-        // 1. Pause internal calculation (commit current segment to totals)
         this.state.switchStatus('idle'); 
         
-        // 2. Get the snapshot
         const stats = this.state.getStats();
 
-        // 3. Prepare payload (Only save if there is meaningful data)
-        const hasData = stats.focusMs > 0 || stats.breakMs > 0;
+        // Save if there is data OR if there is a carried balance we need to remember
+        const hasData = stats.focusMs > 0 || stats.breakMs > 0 || stats.carriedMs !== 0;
         
         const payload = {
             hasData: hasData,
             ratio: stats.ratio,
             focusMs: stats.focusMs,
             breakMs: stats.breakMs,
-            tag: stats.tag
+            tag: stats.tag,
+            carriedBalance: stats.carriedMs // Save the separate balance
         };
 
         SettingsAPI.saveSetting('flexibleTimerState', JSON.stringify(payload));
@@ -86,17 +78,15 @@ class FlexibleFocusManager {
 
         console.log("🔄 Restoring Flexible Timer State:", saved);
 
-        // Apply saved values to State
         this.state.ratio = saved.ratio || 3.0;
         this.state.accumulatedFocus = saved.focusMs || 0;
         this.state.accumulatedBreak = saved.breakMs || 0;
         this.state.currentTag = saved.tag || "No Tag";
+        this.state.carriedBalance = saved.carriedBalance || 0; // Restore separate balance
         
-        // Ensure state is idle/paused
         this.state.status = 'idle';
         this.state.startTime = null;
 
-        // Force tick to update UI
         this.tick(); 
     }
 
@@ -142,8 +132,6 @@ class FlexibleFocusManager {
         notifier.show(title, message, "fa-solid fa-triangle-exclamation");
     }
 
-    // --- State Proxies ---
-    
     switchState(newStatus) {
         if (this.state.status === 'idle' && newStatus !== 'idle') {
             this.startTicker();
@@ -168,6 +156,8 @@ class FlexibleFocusManager {
 
     commitSession(focusSeconds, breakSeconds) {
         // 1. Save to DB (History)
+        // With the new logic, focusSeconds/breakSeconds ONLY come from the current session's accumulation.
+        // They do NOT include previous carried balance, so analytics will be correct (no duplication).
         const payload = {
             tag: this.state.currentTag,
             focusSeconds: focusSeconds,
@@ -179,23 +169,30 @@ class FlexibleFocusManager {
         FocusAPI.saveFocusSession(payload);
         this.stopTicker();
 
-        // Handle Flexible Timer Balance Persistence
-        if (this.persistBalance) {
-            const stats = this.state.getStats();
-            
-            this.state.reset(); 
+        // 2. Calculate Carry-Over Balance
+        // We calculate what the balance SHOULD be after this session
+        const committedFocusMs = focusSeconds * 1000;
+        const committedBreakMs = breakSeconds * 1000;
+        
+        // Earned break from THIS session
+        const sessionEarnedBreak = committedFocusMs / this.state.ratio;
+        
+        // Net result of THIS session
+        const sessionNetBalance = sessionEarnedBreak - committedBreakMs;
 
-            if (stats.balanceMs > 0) {
-                // Surplus: Simulate focus time that generated this surplus
-                // Balance = Focus / Ratio  =>  Focus = Balance * Ratio
-                this.state.accumulatedFocus = stats.balanceMs * this.state.ratio;
-            } else if (stats.balanceMs < 0) {
-                // Debt: Simulate break time that caused this debt
-                // Balance = -Break => Break = -Balance
-                this.state.accumulatedBreak = Math.abs(stats.balanceMs);
-            }
+        // Total new balance = Previous Carried + Session Net
+        const newCarriedBalance = this.state.carriedBalance + sessionNetBalance;
+
+        // 3. Reset Session
+        this.state.reset(); 
+
+        // 4. Apply Persistence Logic
+        if (this.persistBalance) {
+            // Set the carried balance for the NEXT session
+            this.state.setCarriedBalance(newCarriedBalance);
         } else {
-            this.state.reset();
+            // Wipe balance if persistence is off
+            this.state.setCarriedBalance(0);
         }
 
         this.lastWarnedMinute = 0;
