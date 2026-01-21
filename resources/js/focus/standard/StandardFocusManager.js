@@ -60,38 +60,48 @@ class StandardFocusManager {
     setTag(tagName) {
         this.currentTag = tagName;
         this.sessionConfig.tag = tagName;
+        this._emitUpdate(); // Ensure UI reflects tag change if active
     }
 
     initialize() {
-        // Listen for the saved state coming from the DB
+        // Listen for settings and state updates
         document.addEventListener('kaizen:setting-update', (e) => {
-            if (e.detail.key === 'standardTimerState' && e.detail.value) {
+            const { key, value } = e.detail;
+
+            // 1. Handle State Restoration
+            if (key === 'standardTimerState' && value) {
                 try {
-                    const state = JSON.parse(e.detail.value);
+                    const state = JSON.parse(value);
                     this.restoreState(state);
                 } catch (err) {
                     console.error("Failed to parse saved Standard Timer state", err);
                 }
             }
-        });
 
-        SettingsAPI.getSetting('standardTimerState');
-    }
-
-    initPersistence() {
-        // Listen for the saved state coming from the DB
-        document.addEventListener('kaizen:setting-update', (e) => {
-            if (e.detail.key === 'standardTimerState' && e.detail.value) {
-                try {
-                    const state = JSON.parse(e.detail.value);
-                    this.restoreState(state);
-                } catch (err) {
-                    console.error("Failed to parse saved Standard Timer state", err);
+            // 2. Handle Iteration Settings Update
+            // This ensures dots update immediately when the setting is loaded or changed via sidebar
+            if (key === 'standardFocusIterations') {
+                const val = parseInt(value);
+                if (!isNaN(val)) {
+                    this.targetIterations = val;
+                    // Force UI refresh so dots redraw immediately
+                    this._emitUpdate(); 
                 }
             }
         });
 
+        // Listen for explicit iteration events (dispatched by SettingsHandler)
+        document.addEventListener('kaizen:iterations-updated', (e) => {
+            const val = parseInt(e.detail);
+            if(!isNaN(val)) {
+                this.targetIterations = val;
+                this._emitUpdate();
+            }
+        });
+
+        // Request initial state
         SettingsAPI.getSetting('standardTimerState');
+        SettingsAPI.getSetting('standardFocusIterations');
     }
 
     /**
@@ -99,7 +109,7 @@ class StandardFocusManager {
      * Force-pauses the timer logic for the saved state.
      */
     saveState() {
-        // Force pause state for storage
+        // Force pause state for storage flag
         const wasRunning = this.isRunning;
         
         const state = {
@@ -111,7 +121,7 @@ class StandardFocusManager {
             completedSets: this.completedSets,
             targetIterations: this.targetIterations,
             sessionConfig: this.sessionConfig,
-            // If it was running or paused, we save it as 'paused' so it doesn't auto-run on boot
+            // If it was running or paused, we save it as 'active' logic so restore knows what to do
             isActiveSession: (wasRunning || this.isPaused)
         };
 
@@ -133,7 +143,7 @@ class StandardFocusManager {
         this.targetIterations = savedState.targetIterations;
         this.sessionConfig = savedState.sessionConfig || this.sessionConfig;
 
-        // Set to Paused state
+        // Set to Paused state so it doesn't auto-run on boot
         this.isRunning = false;
         this.isPaused = true;
 
@@ -152,7 +162,9 @@ class StandardFocusManager {
         this.mode = config.mode || 'focus';
         this.currentTag = config.tag || "Standard";
         this.completedSets = 0; 
-        this.targetIterations = config.iterations || 1;
+        
+        // Use provided iterations or fallback to current state
+        this.targetIterations = config.iterations || this.targetIterations || 1;
         
         this.sessionConfig = {
             focusDuration: (config.focusMinutes || 25) * 60,
@@ -207,6 +219,7 @@ class StandardFocusManager {
         this.stopTicker();
         audioManager.stopCurrent(); // Stop audio if user manually stops session
 
+        // If stopwatch focus was stopped manually and had significant time, save it
         if (wasStopwatch && elapsed > 5 && currentMode === 'focus') { 
             const payload = {
                 tag: currentTag,
@@ -221,7 +234,10 @@ class StandardFocusManager {
         // Reset defaults
         this.mode = 'focus';
         this.completedSets = 0;
-        this.secondsRemaining = this.sessionConfig.focusDuration; 
+        
+        // Reset to default time based on config (or default 25m if config missing)
+        const defaultFocus = this.sessionConfig.focusDuration || (25 * 60);
+        this.secondsRemaining = defaultFocus; 
         this.secondsElapsed = 0;
         
         this._emitUpdate();
@@ -305,6 +321,7 @@ class StandardFocusManager {
             }
 
         } else {
+            // If returning from break, check if we finished the full set count
             if (this.completedSets >= this.targetIterations) {
                 this.stop(); 
                 this.eventBus.dispatchEvent(new CustomEvent('session-completed'));
@@ -377,7 +394,7 @@ class StandardFocusManager {
                 mode: this.mode,
                 isStopwatch: this.isStopwatch,
                 completedSets: this.completedSets,
-                targetIterations: this.targetIterations,
+                targetIterations: this.targetIterations, // Ensure target is passed
                 tag: this.currentTag
             }
         }));

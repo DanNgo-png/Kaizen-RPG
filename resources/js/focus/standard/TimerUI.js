@@ -19,7 +19,7 @@ export class TimerUI {
             
             // Dots
             dotsContainer: document.querySelector('.focus-dots'),
-            dots: document.querySelectorAll('.focus-dot'),
+            // Dots NodeList is dynamic, querySelectorAll should be called when needed or updated
         };
     }
 
@@ -111,7 +111,6 @@ export class TimerUI {
             }
         } else {
             // Stopped State
-            // Keep buttons visible in break mode for better UX (optional, matches your prev logic)
             if ((mode === 'break' || mode === 'long-break') && !isStopwatch) {
                 this.elements.stopBtn.classList.remove('hidden');
                 this.elements.skipBtn.classList.remove('hidden');
@@ -133,34 +132,55 @@ export class TimerUI {
         }
     }
 
-    advanceDots(completedMode) {
-        const dots = document.querySelectorAll('.focus-dot');
-        for (let i = 0; i < dots.length; i++) {
-            const dot = dots[i];
-            const isGreen = dot.classList.contains('active') && !dot.classList.contains('break-active');
-            
-            // Logic to move from Focus -> Break
-            if (completedMode === 'focus' && isGreen) {
-                dot.classList.remove('active');
-                dot.classList.add('inactive');
-                
-                if (i + 1 < dots.length) {
-                    dots[i + 1].classList.remove('inactive');
-                    dots[i + 1].classList.add('active', 'break-active');
-                }
-                break;
-            } 
-            // Logic to move from Break -> Focus
-            else if ((completedMode === 'break' || completedMode === 'long-break') && dot.classList.contains('break-active')) {
-                dot.classList.remove('active', 'break-active');
-                dot.classList.add('inactive');
-                
-                if (i + 1 < dots.length) {
-                    dots[i + 1].classList.remove('inactive');
-                    dots[i + 1].classList.add('active');
-                }
-                break;
+    /**
+     * Renders or updates the session dots.
+     * @param {number} completedSets - How many full focus sessions completed.
+     * @param {string} currentMode - 'focus', 'break', 'long-break'
+     * @param {number} targetIterations - Total target sessions (e.g., 4)
+     */
+    renderDots(completedSets, currentMode, targetIterations) {
+        if (!this.elements.dotsContainer) return;
+
+        const targetDotCount = (targetIterations || 1) * 2;
+        const currentDotCount = this.elements.dotsContainer.children.length;
+
+        // Rebuild only if count mismatch
+        if (currentDotCount !== targetDotCount) {
+            this.elements.dotsContainer.innerHTML = '';
+            for (let i = 0; i < targetDotCount; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('focus-dot', 'inactive');
+                this.elements.dotsContainer.appendChild(dot);
             }
         }
+
+        const dots = this.elements.dotsContainer.querySelectorAll('.focus-dot');
+        let activeIndex = completedSets * 2;
+        
+        if (currentMode === 'break' || currentMode === 'long-break') {
+            activeIndex = (completedSets * 2) - 1;
+        }
+
+        // Apply visual states
+        dots.forEach((dot, i) => {
+            dot.className = 'focus-dot inactive'; // Reset
+            if (i === activeIndex) {
+                dot.classList.remove('inactive');
+                dot.classList.add('active');
+                if (currentMode === 'break' || currentMode === 'long-break') {
+                    dot.classList.add('break-active');
+                }
+            }
+        });
+    }
+
+    /**
+     * Logic to visually advance the active dot (used during phase transitions).
+     * @deprecated Use renderDots instead for full state sync.
+     */
+    advanceDots(completedMode) {
+        // This is legacy optimization logic; renderDots is safer. 
+        // Keeping for backward compat if needed, but preferred approach 
+        // is re-rendering state via renderDots.
     }
 }

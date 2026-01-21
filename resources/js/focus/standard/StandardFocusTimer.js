@@ -30,8 +30,7 @@ export function initFocusTimer() {
     const overlayManager = new FocusOverlayManager();
     overlayManager.init();
 
-    // 3. Bind Volume Toggle (UI Action)
-    // (This remains here as it's a direct UI interaction on the main screen)
+    // 3. Bind Volume Toggle
     ui.updateVolumeIcon(standardManager.isMuted);
     if (ui.elements.volBtn) {
         ui.elements.volBtn.onclick = () => {
@@ -65,8 +64,6 @@ function bindControlButtons(ui, tagManager) {
             } else {
                 // Determine Start Mode
                 const isSw = TimerConfig.isStopwatchMode();
-                
-                // Logic: Resume Pending Session vs Start New
                 const isBreakPending = state.mode === 'break' || state.mode === 'long-break';
                 const isNextFocusPending = state.mode === 'focus' && state.completedSets > 0;
 
@@ -81,7 +78,8 @@ function bindControlButtons(ui, tagManager) {
                         mode: startMode,
                         focusMinutes: TimerConfig.getFocusDuration(),
                         breakMinutes: TimerConfig.getBreakDuration(),
-                        iterations: parseInt(document.getElementById('iter-val').value) || 1,
+                        // Use stored manager iterations if input is hidden/not ready, fallback to DOM
+                        iterations: standardManager.targetIterations || parseInt(document.getElementById('iter-val').value) || 1,
                         longBreakEnabled: document.getElementById('long-break-toggle')?.checked || false,
                         longBreakMinutes: parseInt(document.getElementById('lb-dur-val').value) || 15,
                         longBreakInterval: parseInt(document.getElementById('lb-int-val').value) || 4,
@@ -95,16 +93,7 @@ function bindControlButtons(ui, tagManager) {
     if (ui.elements.stopBtn) {
         ui.elements.stopBtn.onclick = () => {
             standardManager.stop();
-            // Reset UI to idle state
-            const isSw = TimerConfig.isStopwatchMode();
-            const resetMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
-            ui.setModeVisuals(resetMode);
-            ui.updateTimeDisplay(isSw ? 0 : TimerConfig.getFocusDuration() * 60);
-            ui.setControlsState(false, false, resetMode, isSw);
-            setSidebarLocked(false);
-            
-            const savedIter = parseInt(document.getElementById('iter-val').value) || 1;
-            syncDotsVisuals(0, 'focus', savedIter);
+            resetUIState(ui);
         };
     }
 
@@ -121,8 +110,20 @@ function bindControlButtons(ui, tagManager) {
     }
 }
 
+function resetUIState(ui) {
+    const isSw = TimerConfig.isStopwatchMode();
+    const resetMode = isSw ? TimerConfig.getStopwatchSubMode() : 'focus';
+    ui.setModeVisuals(resetMode);
+    ui.updateTimeDisplay(isSw ? 0 : TimerConfig.getFocusDuration() * 60);
+    ui.setControlsState(false, false, resetMode, isSw);
+    setSidebarLocked(false);
+    
+    // Use manager state for iterations
+    ui.renderDots(0, 'focus', standardManager.targetIterations);
+}
+
 function setupLifecycleEvents(ui, tagManager) {
-    // Session Saved -> Refresh Stats
+    // 1. Session Saved -> Refresh Stats
     const handleSessionSaved = (e) => {
         if (e.detail.success) refreshDailyStats();
     };
@@ -130,23 +131,38 @@ function setupLifecycleEvents(ui, tagManager) {
     Neutralino.events.on('focusSessionSaved', handleSessionSaved);
     refreshDailyStats();
 
-    // Timer Ticks & State Changes
-    const tickHandler = (e) => syncUIFromState(ui, e.detail);
-    const phaseHandler = (e) => ui.advanceDots(e.detail.completedMode);
+    // 2. Timer Ticks & State Changes
+    // This receives the full state object from StandardFocusManager
+    const tickHandler = (e) => {
+        const state = e.detail;
+        syncUIFromState(ui, state);
+        // Sync Dots based on the tick state (ensures updates if settings change)
+        ui.renderDots(state.completedSets, state.mode, state.targetIterations);
+    };
+
+    // 3. Phase Completion
+    const phaseHandler = (e) => {
+        // Note: renderDots is now handling visual updates, but if we wanted specific animations, we'd use this.
+        // For now, tickHandler covers the state change.
+    };
     
     const completionHandler = () => {
-        // Reset to default focus state
-        ui.setModeVisuals('focus');
-        ui.updateTimeDisplay(TimerConfig.getFocusDuration() * 60);
-        ui.setControlsState(false, false, 'focus', false);
-        setSidebarLocked(false);
-        const currentIter = parseInt(document.getElementById('iter-val').value) || 1;
-        syncDotsVisuals(0, 'focus', currentIter);
+        resetUIState(ui);
+    };
+
+    // 4. Iteration Settings Update (From Sidebar/Backend)
+    const iterationsHandler = (e) => {
+        const newIterations = e.detail;
+        const state = standardManager.getState();
+        ui.renderDots(state.completedSets, state.mode, newIterations);
     };
 
     standardManager.eventBus.addEventListener('tick', tickHandler);
     standardManager.eventBus.addEventListener('phase-completed', phaseHandler);
     standardManager.eventBus.addEventListener('session-completed', completionHandler);
+    
+    // Listen for global iteration updates
+    document.addEventListener('kaizen:iterations-updated', iterationsHandler);
 
     // Cleanup when DOM removed
     const cleanupObserver = new MutationObserver((mutations) => {
@@ -154,6 +170,7 @@ function setupLifecycleEvents(ui, tagManager) {
             standardManager.eventBus.removeEventListener('tick', tickHandler);
             standardManager.eventBus.removeEventListener('phase-completed', phaseHandler);
             standardManager.eventBus.removeEventListener('session-completed', completionHandler);
+            document.removeEventListener('kaizen:iterations-updated', iterationsHandler);
             tagManager.destroy();
             cleanupObserver.disconnect();
         }
@@ -174,10 +191,12 @@ function syncInitialState(ui, currentState) {
         ui.setModeVisuals(mode);
         ui.updateTimeDisplay(duration);
         ui.setControlsState(false, false, mode, isSw);
+        // Explicit render of dots for idle state
+        ui.renderDots(0, 'focus', currentState.targetIterations);
     } else {
         // ACTIVE / PENDING
         syncUIFromState(ui, currentState);
-        syncDotsVisuals(currentState.completedSets, currentState.mode, currentState.targetIterations);
+        ui.renderDots(currentState.completedSets, currentState.mode, currentState.targetIterations);
     }
 }
 
@@ -187,42 +206,6 @@ function syncUIFromState(ui, state) {
     const active = state.isRunning || state.isPaused;
     ui.setControlsState(active, state.isPaused, state.mode, state.isStopwatch);
     setSidebarLocked(active); 
-}
-
-function syncDotsVisuals(completedSets, currentMode, targetIterations) {
-    const dotsContainer = document.querySelector('.focus-dots');
-    if (!dotsContainer) return;
-
-    const currentDotCount = dotsContainer.children.length;
-    const targetDotCount = (targetIterations || 1) * 2;
-
-    // Rebuild only if count mismatch
-    if (currentDotCount !== targetDotCount) {
-        dotsContainer.innerHTML = '';
-        for (let i = 0; i < targetDotCount; i++) {
-            const dot = document.createElement('div');
-            dot.classList.add('focus-dot', 'inactive');
-            dotsContainer.appendChild(dot);
-        }
-    }
-
-    const dots = document.querySelectorAll('.focus-dot');
-    let activeIndex = completedSets * 2;
-    
-    if (currentMode === 'break' || currentMode === 'long-break') {
-        activeIndex = (completedSets * 2) - 1;
-    }
-
-    dots.forEach((dot, i) => {
-        dot.className = 'focus-dot inactive'; // Reset
-        if (i === activeIndex) {
-            dot.classList.remove('inactive');
-            dot.classList.add('active');
-            if (currentMode === 'break' || currentMode === 'long-break') {
-                dot.classList.add('break-active');
-            }
-        }
-    });
 }
 
 function refreshDailyStats() {
