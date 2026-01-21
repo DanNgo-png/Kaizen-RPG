@@ -67,11 +67,14 @@ export const TagTemplates = {
                 <h3>Pick Color</h3>
                 <div class="color-presets">
                     <div class="color-swatch" data-color="#3b82f6" style="background: #3b82f6;"></div>
+                    <div class="color-swatch" data-color="#6366f1" style="background: #6366f1;"></div> <!-- Indigo -->
+                    <div class="color-swatch" data-color="#14b8a6" style="background: #14b8a6;"></div> <!-- Teal -->
                     <div class="color-swatch" data-color="#10b981" style="background: #10b981;"></div>
                     <div class="color-swatch" data-color="#f59e0b" style="background: #f59e0b;"></div>
                     <div class="color-swatch" data-color="#ef4444" style="background: #ef4444;"></div>
                     <div class="color-swatch" data-color="#a855f7" style="background: #a855f7;"></div>
                     <div class="color-swatch" data-color="#ec4899" style="background: #ec4899;"></div>
+                    <div class="color-swatch" data-color="#64748b" style="background: #64748b;"></div> <!-- Slate -->
                 </div>
                 <div class="input-row">
                     <label>Hex Code</label>
