@@ -9,6 +9,9 @@ export class FlexibleSessionState {
         this.startTime = null;
         
         this.currentTag = "No Tag";
+
+        // NEW: Balance carried over from previous sessions (separate from current session time)
+        this.carriedBalance = 0; 
     }
 
     /**
@@ -20,6 +23,10 @@ export class FlexibleSessionState {
 
     setTag(tag) {
         this.currentTag = tag;
+    }
+
+    setCarriedBalance(ms) {
+        this.carriedBalance = ms;
     }
 
     /**
@@ -43,7 +50,7 @@ export class FlexibleSessionState {
         this.accumulatedFocus += focusDeltaMs;
         this.accumulatedBreak += breakDeltaMs;
 
-        // Prevent negatives
+        // Prevent negatives (Current session times cannot be negative)
         if (this.accumulatedFocus < 0) this.accumulatedFocus = 0;
         if (this.accumulatedBreak < 0) this.accumulatedBreak = 0;
         
@@ -67,7 +74,9 @@ export class FlexibleSessionState {
         if (this.status === 'break') currentBreak += elapsed;
 
         const earnedBreak = currentFocus / this.ratio;
-        const balance = earnedBreak - currentBreak;
+        
+        // NEW FORMULA: Balance = (This Session Earned) - (This Session Used) + (Carried Over)
+        const balance = earnedBreak - currentBreak + this.carriedBalance;
 
         return {
             status: this.status,
@@ -75,7 +84,8 @@ export class FlexibleSessionState {
             breakMs: currentBreak,
             balanceMs: balance,
             tag: this.currentTag,
-            ratio: this.ratio
+            ratio: this.ratio,
+            carriedMs: this.carriedBalance
         };
     }
 
@@ -84,6 +94,7 @@ export class FlexibleSessionState {
         this.accumulatedFocus = 0;
         this.accumulatedBreak = 0;
         this.startTime = null;
+        // carriedBalance is NOT reset here; it persists until cleared by manager
     }
 
     _commitCurrentSegment() {

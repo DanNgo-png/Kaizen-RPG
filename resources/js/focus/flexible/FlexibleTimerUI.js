@@ -37,7 +37,7 @@ export class FlexibleTimerUI {
 
     /**
      * Updates the time numbers and balance status (Banked/Overdrawn).
-     * @param {Object} stats - { focusMs, breakMs, balanceMs }
+     * @param {Object} stats - { focusMs, breakMs, balanceMs, status }
      */
     updateStatsDisplay(stats) {
         if (!this.dom.displays.focus) return;
@@ -48,14 +48,32 @@ export class FlexibleTimerUI {
         const balancePrefix = stats.balanceMs >= 0 ? '+' : '-';
         this.dom.displays.balance.textContent = balancePrefix + this._formatTime(stats.balanceMs, false);
 
+        // Determine Status Label
+        let msg = "Banked";
+        let isDebt = false;
+
         if (stats.balanceMs < 0) {
+            isDebt = true;
+            msg = "Overdrawn";
+        }
+
+        // Context-aware messaging
+        if (stats.balanceMs === 0) {
+            msg = "Bank is empty";
+        } else if (stats.status === 'idle') {
+            // Non-zero balance while idle implies carried over time or paused session
+            msg = isDebt ? "Debt Carried Over" : "Bank Carried Over";
+        }
+
+        this.dom.displays.msgBalance.textContent = msg;
+
+        // Visual Styling
+        if (isDebt) {
             this.dom.cards.balance.classList.add('debt');
             this.dom.cards.balance.classList.remove('surplus');
-            this.dom.displays.msgBalance.textContent = "Overdrawn";
         } else {
             this.dom.cards.balance.classList.add('surplus');
             this.dom.cards.balance.classList.remove('debt');
-            this.dom.displays.msgBalance.textContent = "Banked";
         }
     }
 
