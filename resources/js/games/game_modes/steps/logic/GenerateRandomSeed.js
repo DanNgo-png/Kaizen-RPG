@@ -1,4 +1,4 @@
-import { UI_CONFIG } from "../data/GameModeConfig.js";
+import { UI_CONFIG } from "../../data/GameModeConfig.js";
 
 export function generateRandomSeed(length = UI_CONFIG.SEED_LENGTH) {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';

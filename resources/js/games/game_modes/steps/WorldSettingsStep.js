@@ -1,6 +1,6 @@
 import { BaseStep } from "./BaseStep.js";
 import { campaignState } from "../logic/CampaignState.js";
-import { generateRandomSeed } from "../logic/GenerateRandomSeed.js";
+import { generateRandomSeed } from "./logic/GenerateRandomSeed.js";
 import { ProfileAPI } from "../../../api/ProfileAPI.js";
 import { DEFAULTS } from "../data/GameModeConfig.js";
 
