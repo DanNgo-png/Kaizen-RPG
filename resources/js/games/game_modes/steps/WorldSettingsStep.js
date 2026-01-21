@@ -2,7 +2,7 @@ import { BaseStep } from "./BaseStep.js";
 import { campaignState } from "../logic/CampaignState.js";
 import { generateRandomSeed } from "../logic/GenerateRandomSeed.js";
 import { ProfileAPI } from "../../../api/ProfileAPI.js";
-import { DEFAULTS, DIFFICULTY_LEVELS } from "../data/GameModeConfig.js";
+import { DEFAULTS } from "../data/GameModeConfig.js";
 
 export class WorldSettingsStep extends BaseStep {
     constructor(containerId) {
