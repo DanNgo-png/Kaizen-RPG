@@ -150,13 +150,14 @@ class FocusTimerController {
         const fSec = parseToSeconds(focusVal);
         const bSec = parseToSeconds(breakVal);
 
+        // Commit (This might trigger persist balance which updates the stats immediately)
         flexManager.commitSession(fSec, bSec);
 
-        this.ui.resetUI();
-        this.ui.toggleModal('conclusion', false);
+        // Instead of hard resetting UI to 0, sync with the actual manager state
+        // This allows carried over balance to show up immediately
+        this.syncWithGlobalState(); 
         
-        // Reset tag to default if needed or keep last used
-        // this.tagManager.selectTag("Standard"); 
+        this.ui.toggleModal('conclusion', false);
     }
 }
 
