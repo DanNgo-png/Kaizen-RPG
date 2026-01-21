@@ -2,18 +2,17 @@
 .company-setup-layout {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 30px;
+    grid-template-rows: minmax(0, 1fr) auto;
+    gap: 15px;
     flex: 1;
     min-height: 0;
     position: relative;
-    padding-bottom: 80px; /* Space for footer */
 }
 
 /* Footer Positioning for Step 2 */
 .details-footer.full-width {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+    position: relative;
+    grid-column: 1 / -1; /* Span full width */
     width: 100%;
     box-sizing: border-box;
     border-radius: 12px;
@@ -26,6 +25,18 @@
     padding: 30px;
     display: flex;
     flex-direction: column;
+    /* ADDED: Ensure internal scrolling prevents overflow */
+    overflow-y: auto;
+}
+
+/* ADDED: Scrollbar styling for the panels */
+.setup-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.setup-panel::-webkit-scrollbar-thumb {
+    background: var(--bg-hover);
+    border-radius: 3px;
 }
 
 .setup-heading {
@@ -49,6 +60,20 @@
 /* Forms */
 .form-group {
     margin-bottom: 25px;
+}
+
+/* Flex row for toggles (Switch on the right) */
+.form-group-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+}
+
+/* Ensure text label container takes space but doesn't crowd the switch */
+.form-group-row > div:first-child {
+    flex: 1;
+    padding-right: 20px;
 }
 
 .setup-label {

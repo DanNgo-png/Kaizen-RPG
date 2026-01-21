@@ -42,7 +42,7 @@
           <button id="btn-back-to-menu" class="btn-secondary" style="padding: 12px 24px; font-weight: 600;">
             Cancel
           </button>
-          
+
           <button id="btn-next-step" class="btn-start-campaign">
             <span class="btn-text">Next</span>
             <i class="fa-solid fa-arrow-right"></i>
@@ -54,11 +54,11 @@
 
     <!-- STEP 2: COMPANY DETAILS (Hidden by default) -->
     <div id="step-company" class="company-setup-layout hidden">
-      
+
       <!-- LEFT: Company Identity -->
       <div class="setup-panel">
         <h3 class="setup-heading"><i class="fa-solid fa-flag"></i> Company Identity</h3>
-        
+
         <div class="form-group">
           <label class="setup-label">Company Name</label>
           <input type="text" id="input-company-name" class="setup-input" placeholder="e.g. The Iron Brotherhood">
@@ -97,7 +97,7 @@
       <div class="setup-panel">
         <h3 class="setup-heading"><i class="fa-solid fa-skull-crossbones"></i> Late Game Crisis</h3>
         <p class="setup-desc">A persistent threat that will challenge your company once you establish renown.</p>
-        
+
         <div class="crisis-list" id="crisis-selection">
           <!-- Random -->
           <div class="crisis-card selected" data-crisis="random">
@@ -161,11 +161,11 @@
 
     <!-- STEP 3: DIFFICULTY & WORLD (New Container) -->
     <div id="step-difficulty" class="company-setup-layout hidden">
-      
+
       <!-- LEFT: Challenge Settings -->
       <div class="setup-panel">
         <h3 class="setup-heading"><i class="fa-solid fa-sliders"></i> Difficulty</h3>
-        
+
         <!-- Economic Difficulty -->
         <div class="form-group">
           <label class="setup-label">Economic Difficulty</label>
@@ -200,7 +200,7 @@
         </div>
 
         <!-- Ironman Mode -->
-        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+        <div class="form-group-row">
           <div>
             <label class="setup-label" style="margin-bottom: 2px;">Ironman Mode</label>
             <span style="font-size: 0.8rem; color: #9ca3af;">Single save file. No turning back.</span>
@@ -210,23 +210,26 @@
             <span class="slider round"></span>
           </label>
         </div>
+
       </div>
 
       <!-- RIGHT: World Generation -->
       <div class="setup-panel">
         <h3 class="setup-heading"><i class="fa-solid fa-globe"></i> World Generation</h3>
-        
+
         <!-- Map Seed -->
         <div class="form-group">
           <label class="setup-label">Map Seed</label>
           <div style="display: flex; gap: 10px;">
-            <input type="text" id="input-map-seed" class="setup-input" style="font-family: monospace; letter-spacing: 1px;">
-            <button id="btn-random-seed" class="btn-secondary" title="Randomize Seed"><i class="fa-solid fa-dice"></i></button>
+            <input type="text" id="input-map-seed" class="setup-input"
+              style="font-family: monospace; letter-spacing: 1px;">
+            <button id="btn-random-seed" class="btn-secondary" title="Randomize Seed"><i
+                class="fa-solid fa-dice"></i></button>
           </div>
         </div>
 
         <!-- Unexplored Map -->
-        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center;">
+        <div class="form-group-row">
           <div>
             <label class="setup-label" style="margin-bottom: 2px;">Unexplored Map</label>
             <span style="font-size: 0.8rem; color: #9ca3af;">World map starts covered in Fog of War.</span>
@@ -237,10 +240,13 @@
           </label>
         </div>
 
-        <div style="margin-top: auto; padding: 15px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px;">
-          <h4 style="margin: 0 0 5px 0; color: #60a5fa; font-size: 0.9rem;"><i class="fa-solid fa-circle-info"></i> Note</h4>
+        <div
+          style="margin-top: auto; padding: 15px; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px;">
+          <h4 style="margin: 0 0 5px 0; color: #60a5fa; font-size: 0.9rem;"><i class="fa-solid fa-circle-info"></i> Note
+          </h4>
           <p style="margin: 0; font-size: 0.85rem; color: #d1d5db; line-height: 1.4;">
-            Higher difficulty settings increase the rate of Legendary loot drops but significantly increase the penalty for failed Focus Sessions.
+            Higher difficulty settings increase the rate of Legendary loot drops but significantly increase the penalty
+            for failed Focus Sessions.
           </p>
         </div>
       </div>
