@@ -1,4 +1,5 @@
 import { DragAndDropManager } from "../../../../components/DragAndDropManager.js";
+import { UI_CONFIG, CSS_CLASSES } from "../../data/GameModeConfig.js";
 
 export class DragLogic extends DragAndDropManager {
     constructor(container, callbacks) {
@@ -13,7 +14,7 @@ export class DragLogic extends DragAndDropManager {
             onReorder: onReorder
         });
 
-        this.LONG_PRESS_DURATION = 200; 
+        this.longPressDuration = UI_CONFIG.DRAG_PRESS_DURATION_MS;
         
         this.externalOnDragStart = extraCallbacks.onDragStart;
         this.externalOnDragEnd = extraCallbacks.onDragEnd;
@@ -23,15 +24,15 @@ export class DragLogic extends DragAndDropManager {
         super._handlePressStart(e);
 
         if (this.draggedElement) {
-            this.draggedElement.style.setProperty('--press-duration', `${this.LONG_PRESS_DURATION}ms`);
-            this.draggedElement.classList.add('mode-reorder-charging');
+            this.draggedElement.style.setProperty('--press-duration', `${this.longPressDuration}ms`);
+            this.draggedElement.classList.add(CSS_CLASSES.LOADING);
         }
     }
 
     _cancelPress() {
         if (this.draggedElement) {
             this.draggedElement.style.removeProperty('--press-duration');
-            this.draggedElement.classList.remove('mode-reorder-charging');
+            this.draggedElement.classList.remove(CSS_CLASSES.LOADING);
         }
         super._cancelPress();
     }
@@ -40,7 +41,7 @@ export class DragLogic extends DragAndDropManager {
         if (navigator.vibrate) navigator.vibrate(20);
 
         if (this.draggedElement) {
-            this.draggedElement.classList.remove('mode-reorder-charging');
+            this.draggedElement.classList.remove(CSS_CLASSES.LOADING);
         }
 
         if (this.externalOnDragStart) this.externalOnDragStart();
@@ -53,6 +54,6 @@ export class DragLogic extends DragAndDropManager {
         
         setTimeout(() => {
             if (this.externalOnDragEnd) this.externalOnDragEnd();
-        }, 250);
+        }, UI_CONFIG.DRAG_END_DELAY_MS);
     }
 }

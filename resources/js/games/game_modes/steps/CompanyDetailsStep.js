@@ -1,8 +1,11 @@
+import { BaseStep } from "./BaseStep.js";
 import { campaignState } from "../logic/CampaignState.js";
+import { CSS_CLASSES } from "../data/GameModeConfig.js";
 
-export class CompanyDetailsStep {
+export class CompanyDetailsStep extends BaseStep {
     constructor(containerId) {
-        this.container = document.getElementById(containerId);
+        super(containerId);
+        
         this.dom = {
             inputName: document.getElementById('input-company-name'),
             bannerGrid: document.getElementById('banner-selection'),
@@ -17,37 +20,53 @@ export class CompanyDetailsStep {
 
     _bindEvents() {
         // Name Input
-        this.dom.inputName.addEventListener('input', (e) => campaignState.set('name', e.target.value));
+        if (this.dom.inputName) {
+            this.dom.inputName.addEventListener('input', (e) => campaignState.set('name', e.target.value));
+        }
 
-        // Banner Selection
-        const banners = this.dom.bannerGrid.querySelectorAll('.banner-opt');
-        banners.forEach((el, index) => {
-            el.addEventListener('click', () => {
-                banners.forEach(b => b.classList.remove('selected'));
-                el.classList.add('selected');
+        // Delegated listener for Banners
+        if (this.dom.bannerGrid) {
+            this._setupDelegatedSelection(this.dom.bannerGrid, '.banner-opt', (el, index) => {
+                this._updateSelection(this.dom.bannerGrid, '.banner-opt', el);
                 campaignState.set('bannerIndex', index);
             });
-        });
+        }
 
-        // Color Selection
-        const colors = this.dom.colorRow.querySelectorAll('.color-opt');
-        colors.forEach(el => {
-            el.addEventListener('click', () => {
-                colors.forEach(c => c.classList.remove('selected'));
-                el.classList.add('selected');
+        // Delegated listener for Colors
+        if (this.dom.colorRow) {
+            this._setupDelegatedSelection(this.dom.colorRow, '.color-opt', (el) => {
+                this._updateSelection(this.dom.colorRow, '.color-opt', el);
                 campaignState.set('color', el.dataset.color);
             });
-        });
+        }
 
-        // Crisis Selection
-        const crises = this.dom.crisisList.querySelectorAll('.crisis-card');
-        crises.forEach(el => {
-            el.addEventListener('click', () => {
-                crises.forEach(c => c.classList.remove('selected'));
-                el.classList.add('selected');
+        // Delegated listener for Crisis
+        if (this.dom.crisisList) {
+            this._setupDelegatedSelection(this.dom.crisisList, '.crisis-card', (el) => {
+                this._updateSelection(this.dom.crisisList, '.crisis-card', el);
                 campaignState.set('crisis', el.dataset.crisis);
             });
+        }
+    }
+
+    /**
+     * Generic helper for grid/list selections
+     */
+    _setupDelegatedSelection(container, selector, callback) {
+        container.addEventListener('click', (e) => {
+            const target = e.target.closest(selector);
+            if (target) {
+                // Find index if needed (convert node list to array)
+                const index = Array.from(container.querySelectorAll(selector)).indexOf(target);
+                callback(target, index);
+            }
         });
+    }
+
+    _updateSelection(container, selector, selectedEl) {
+        const items = container.querySelectorAll(selector);
+        items.forEach(el => el.classList.remove(CSS_CLASSES.SELECTED));
+        selectedEl.classList.add(CSS_CLASSES.SELECTED);
     }
 
     validate() {
@@ -61,6 +80,28 @@ export class CompanyDetailsStep {
         return true;
     }
 
-    show() { this.container.classList.remove('hidden'); }
-    hide() { this.container.classList.add('hidden'); }
+    syncFromState() {
+        const state = campaignState.getAll();
+        
+        if (state.name && this.dom.inputName) {
+            this.dom.inputName.value = state.name;
+        }
+
+        if (state.bannerIndex !== undefined && this.dom.bannerGrid) {
+            const banners = this.dom.bannerGrid.querySelectorAll('.banner-opt');
+            if(banners[state.bannerIndex]) this._updateSelection(this.dom.bannerGrid, '.banner-opt', banners[state.bannerIndex]);
+        }
+
+        if (state.color && this.dom.colorRow) {
+            const colors = this.dom.colorRow.querySelectorAll('.color-opt');
+            const target = Array.from(colors).find(el => el.dataset.color === state.color);
+            if(target) this._updateSelection(this.dom.colorRow, '.color-opt', target);
+        }
+
+        if (state.crisis && this.dom.crisisList) {
+            const crises = this.dom.crisisList.querySelectorAll('.crisis-card');
+            const target = Array.from(crises).find(el => el.dataset.crisis === state.crisis);
+            if(target) this._updateSelection(this.dom.crisisList, '.crisis-card', target);
+        }
+    }
 }

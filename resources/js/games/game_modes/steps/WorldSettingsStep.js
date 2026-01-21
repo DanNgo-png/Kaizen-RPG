@@ -1,10 +1,12 @@
+import { BaseStep } from "./BaseStep.js";
 import { campaignState } from "../logic/CampaignState.js";
 import { generateRandomSeed } from "../logic/GenerateRandomSeed.js";
 import { ProfileAPI } from "../../../api/ProfileAPI.js";
+import { DEFAULTS, DIFFICULTY_LEVELS } from "../data/GameModeConfig.js";
 
-export class WorldSettingsStep {
+export class WorldSettingsStep extends BaseStep {
     constructor(containerId) {
-        this.container = document.getElementById(containerId);
+        super(containerId);
         this.dom = {
             economy: document.getElementById('input-economy'),
             funds: document.getElementById('input-funds'),
@@ -19,55 +21,74 @@ export class WorldSettingsStep {
 
     init() {
         this.randomizeSeed();
-        
+        this._bindEvents();
+    }
+
+    _bindEvents() {
         // --- INPUT LISTENERS (Update State) ---
-        this.dom.economy.addEventListener('change', (e) => campaignState.set('economy', e.target.value));
-        this.dom.funds.addEventListener('change', (e) => campaignState.set('funds', e.target.value));
-        this.dom.combat.addEventListener('change', (e) => campaignState.set('combat', e.target.value));
-        this.dom.ironman.addEventListener('change', (e) => campaignState.set('ironman', e.target.checked));
-        this.dom.unexplored.addEventListener('change', (e) => campaignState.set('unexplored', e.target.checked));
-        this.dom.seed.addEventListener('input', (e) => campaignState.set('seed', e.target.value));
-        this.dom.btnRandomSeed.addEventListener('click', () => this.randomizeSeed());
+        const bindInput = (el, key, isCheckbox = false) => {
+            if(el) {
+                el.addEventListener(isCheckbox ? 'change' : 'input', (e) => {
+                    const val = isCheckbox ? e.target.checked : e.target.value;
+                    campaignState.set(key, val);
+                });
+            }
+        };
+
+        bindInput(this.dom.economy, 'economy');
+        bindInput(this.dom.funds, 'funds');
+        bindInput(this.dom.combat, 'combat');
+        bindInput(this.dom.ironman, 'ironman', true);
+        bindInput(this.dom.unexplored, 'unexplored', true);
+        bindInput(this.dom.seed, 'seed');
+
+        if(this.dom.btnRandomSeed) {
+            this.dom.btnRandomSeed.addEventListener('click', () => this.randomizeSeed());
+        }
 
         // --- SAVE PROFILE ---
-        this.dom.btnSaveProfile.addEventListener('click', () => {
-            const name = prompt("Enter a name for this profile:");
-            if(name) {
-                const config = {
-                    economy: this.dom.economy.value,
-                    funds: this.dom.funds.value,
-                    combat: this.dom.combat.value,
-                    ironman: this.dom.ironman.checked,
-                    unexplored: this.dom.unexplored.checked
-                };
-                ProfileAPI.saveProfile(name, config);
-                alert(`Profile "${name}" saved! It is now available in the Start Screen.`);
-            }
-        });
+        if(this.dom.btnSaveProfile) {
+            this.dom.btnSaveProfile.addEventListener('click', () => this.saveCurrentAsProfile());
+        }
     }
 
     randomizeSeed() {
         const seed = generateRandomSeed();
-        this.dom.seed.value = seed;
+        if(this.dom.seed) this.dom.seed.value = seed;
         campaignState.set('seed', seed);
     }
 
-    // --- SYNC ON SHOW ---
-    show() { 
-        this.container.classList.remove('hidden');
-        this.syncFromState(); // CRITICAL: Updates inputs based on what was loaded in Step 1
-    }
-
-    hide() { 
-        this.container.classList.add('hidden'); 
+    saveCurrentAsProfile() {
+        const name = prompt("Enter a name for this profile:");
+        if(name) {
+            // Get ALL state (includes Step 1 & 2 data)
+            const allState = campaignState.getAll();
+            
+            // Ensure current DOM values are captured
+            const config = {
+                ...allState,
+                economy: this.dom.economy.value,
+                funds: this.dom.funds.value,
+                combat: this.dom.combat.value,
+                ironman: this.dom.ironman.checked,
+                unexplored: this.dom.unexplored.checked,
+                seed: this.dom.seed.value
+            };
+            
+            ProfileAPI.saveProfile(name, config);
+            alert(`Profile "${name}" saved!`);
+        }
     }
 
     syncFromState() {
-        // Reads from CampaignState (which might have been updated by a profile in Step 1)
-        this.dom.economy.value = campaignState.get('economy') || 'veteran';
-        this.dom.funds.value = campaignState.get('funds') || 'medium';
-        this.dom.combat.value = campaignState.get('combat') || 'veteran';
-        this.dom.ironman.checked = campaignState.get('ironman') || false;
-        this.dom.unexplored.checked = campaignState.get('unexplored') !== false;
+        // Reads from CampaignState, falling back to GameModeConfig defaults
+        if(this.dom.economy) this.dom.economy.value = campaignState.get('economy') || DEFAULTS.ECONOMY;
+        if(this.dom.funds) this.dom.funds.value = campaignState.get('funds') || DEFAULTS.FUNDS;
+        if(this.dom.combat) this.dom.combat.value = campaignState.get('combat') || DEFAULTS.COMBAT;
+        if(this.dom.ironman) this.dom.ironman.checked = campaignState.get('ironman') || DEFAULTS.IRONMAN;
+        
+        // Unexplored might not be set in state yet, check explicitly against boolean
+        const unex = campaignState.get('unexplored');
+        if(this.dom.unexplored) this.dom.unexplored.checked = (unex !== undefined) ? unex : DEFAULTS.UNEXPLORED;
     }
 }

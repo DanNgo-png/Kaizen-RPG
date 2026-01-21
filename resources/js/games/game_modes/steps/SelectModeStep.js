@@ -1,156 +1,154 @@
+import { BaseStep } from "./BaseStep.js";
 import { GAME_MODES } from "../data/GameModeList.js";
 import { campaignState } from "../logic/CampaignState.js";
 import { DragLogic } from "./logic/DragLogic.js";
+import { DragAndDropManager } from "../../../components/DragAndDropManager.js"; 
 import { SettingsAPI } from "../../../api/SettingsAPI.js";
 import { ProfileAPI } from "../../../api/ProfileAPI.js";
+import { UI_CONFIG, CSS_CLASSES } from "../data/GameModeConfig.js";
 
-export class SelectModeStep {
+export class SelectModeStep extends BaseStep {
     constructor(containerId) {
-        this.container = document.getElementById(containerId);
-        this.listEl = document.getElementById('mode-list');
-        this.detailsEl = document.getElementById('mode-details-content');
+        super(containerId);
+        
+        this.dom = {
+            list: document.getElementById('mode-list'),
+            details: document.getElementById('mode-details-content'),
+            profileSelect: document.getElementById('select-profile-quick'),
+            btnManageProfiles: document.getElementById('btn-manage-profiles'),
+            modalProfiles: document.getElementById('modal-profiles'),
+            profileListContainer: document.getElementById('profile-list-container'),
+            btnCloseProfiles: document.getElementById('btn-close-profiles'),
+            btnSortAlpha: document.getElementById('btn-sort-alpha'),
+            btnSortDate: document.getElementById('btn-sort-date')
+        };
+
         this.glider = null;
         this.sortedModes = [...GAME_MODES];
-        this.profileSelect = document.getElementById('select-profile-quick');
         this.cachedProfiles = [];
+        this.profileOrder = []; 
+        this.profileDragManager = null;
     }
 
     init() {
-        document.addEventListener('kaizen:setting-update', (e) => {
-            if (e.detail.key === 'gameModesOrder' && e.detail.value) {
-                try {
-                    const orderIds = JSON.parse(e.detail.value);
-                    const currentIds = this.sortedModes.map(m => m.id);
-                    if (JSON.stringify(currentIds) !== JSON.stringify(orderIds)) {
-                        this.applySortOrder(orderIds);
-                        this.renderList();
-                    }
-                } catch (err) {
-                    console.error("Error parsing game modes order:", err);
-                }
-            }
-        });
-
-        this.renderList();
+        this._setupSettingsListeners();
+        this._setupDragAndDrop();
+        this._setupProfiles();
         
-        new DragLogic(this.listEl, {
-            onReorder: (newOrderIds) => {
-                this.applySortOrder(newOrderIds);
-                SettingsAPI.saveSetting('gameModesOrder', JSON.stringify(newOrderIds));
-            },
-            onDragStart: () => {
-                if (this.glider) this.glider.style.opacity = '0';
-            },
-            onDragEnd: () => {
-                if (this.glider) this.glider.style.opacity = '1';
-                this.updateGlider();
+        // Initial Selection (Delayed slightly for DOM paint)
+        setTimeout(() => {
+            const currentId = campaignState.get('modeId') || this.sortedModes[0].id;
+            this.selectMode(currentId);
+        }, UI_CONFIG.ANIMATION_TIMEOUT_MS);
+    }
+
+    // --- SETUP & LISTENERS ---
+
+    _setupSettingsListeners() {
+        document.addEventListener('kaizen:setting-update', (e) => {
+            const { key, value } = e.detail;
+            
+            if (key === 'gameModesOrder' && value) {
+                this._handleModeOrderUpdate(value);
+            }
+            
+            if (key === 'campaignProfileOrder' && value) {
+                this._handleProfileOrderUpdate(value);
             }
         });
 
         SettingsAPI.getSetting('gameModesOrder');
+        SettingsAPI.getSetting('campaignProfileOrder');
+    }
 
-        setTimeout(() => {
-            const currentId = campaignState.get('modeId') || this.sortedModes[0].id;
-            this.selectMode(currentId);
-        }, 50);
+    _setupDragAndDrop() {
+        this.renderList();
+        
+        new DragLogic(this.dom.list, {
+            onReorder: (newOrderIds) => {
+                this.applySortOrder(newOrderIds);
+                SettingsAPI.saveSetting('gameModesOrder', JSON.stringify(newOrderIds));
+            },
+            onDragStart: () => { if (this.glider) this.glider.style.opacity = '0'; },
+            onDragEnd: () => { if (this.glider) this.glider.style.opacity = '1'; this.updateGlider(); }
+        });
+    }
 
-        // Listen for profiles
+    _setupProfiles() {
         Neutralino.events.off('receiveCampaignProfiles', this._onProfilesReceived.bind(this));
         Neutralino.events.on('receiveCampaignProfiles', this._onProfilesReceived.bind(this));
 
-        // Bind Select Change
-        if(this.profileSelect) {
-            this.profileSelect.addEventListener('change', (e) => this._applyProfile(e.target.value));
+        if (this.dom.profileSelect) {
+            this.dom.profileSelect.addEventListener('change', (e) => this._applyProfile(e.target.value));
         }
+
+        if (this.dom.btnManageProfiles) {
+            this.dom.btnManageProfiles.addEventListener('click', () => this.openManageModal());
+        }
+
+        if (this.dom.btnCloseProfiles) {
+            this.dom.btnCloseProfiles.addEventListener('click', () => this.dom.modalProfiles.classList.add(CSS_CLASSES.HIDDEN));
+        }
+
+        if (this.dom.btnSortAlpha) this.dom.btnSortAlpha.addEventListener('click', () => this.sortProfiles('alpha'));
+        if (this.dom.btnSortDate) this.dom.btnSortDate.addEventListener('click', () => this.sortProfiles('date'));
 
         ProfileAPI.getProfiles();
     }
 
-    _onProfilesReceived(e) {
-        this.cachedProfiles = e.detail;
-        if (!this.profileSelect) return;
+    // --- GAME MODES LOGIC ---
 
-        // Keep 'default' option
-        this.profileSelect.innerHTML = '<option value="default">Default Settings</option>';
-
-        this.cachedProfiles.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id; // Use ID to lookup in cache
-            opt.textContent = p.name;
-            this.profileSelect.appendChild(opt);
-        });
-    }
-
-    _applyProfile(profileId) {
-        if (profileId === 'default') {
-            // Reset to defaults
-            campaignState.set('economy', 'veteran');
-            campaignState.set('funds', 'medium');
-            campaignState.set('combat', 'veteran');
-            campaignState.set('ironman', false);
-            campaignState.set('unexplored', true);
-            console.log("Reverted to Default Settings");
-        } else {
-            const profile = this.cachedProfiles.find(p => p.id == profileId);
-            if (profile && profile.config) {
-                const c = profile.config;
-                // Update State
-                if(c.economy) campaignState.set('economy', c.economy);
-                if(c.funds) campaignState.set('funds', c.funds);
-                if(c.combat) campaignState.set('combat', c.combat);
-                if(c.ironman !== undefined) campaignState.set('ironman', c.ironman);
-                if(c.unexplored !== undefined) campaignState.set('unexplored', c.unexplored);
-                
-                console.log(`Loaded Profile: ${profile.name}`);
+    _handleModeOrderUpdate(jsonValue) {
+        try {
+            const orderIds = JSON.parse(jsonValue);
+            const currentIds = this.sortedModes.map(m => m.id);
+            if (JSON.stringify(currentIds) !== JSON.stringify(orderIds)) {
+                this.applySortOrder(orderIds);
+                this.renderList();
             }
+        } catch (err) {
+            console.error("Error parsing game modes order:", err);
         }
     }
 
     applySortOrder(orderIds) {
         const map = new Map(GAME_MODES.map(m => [m.id, m]));
         const newOrder = [];
-        
         orderIds.forEach(id => {
             if (map.has(id)) {
                 newOrder.push(map.get(id));
                 map.delete(id);
             }
         });
-        
         map.forEach(mode => newOrder.push(mode));
         this.sortedModes = newOrder;
     }
 
     renderList() {
         const activeId = campaignState.get('modeId');
+        this.dom.list.innerHTML = '';
         
-        this.listEl.innerHTML = '';
-        
+        // Create Glider (Visual Background)
         this.glider = document.createElement('div');
         this.glider.className = 'mode-list-glider';
-        this.listEl.appendChild(this.glider);
+        this.dom.list.appendChild(this.glider);
         
         this.sortedModes.forEach(mode => {
             const el = document.createElement('div');
             el.className = 'mode-list-item';
-            if (mode.id === activeId) el.classList.add('active');
+            if (mode.id === activeId) el.classList.add(CSS_CLASSES.ACTIVE);
             el.dataset.id = mode.id;
             
             el.innerHTML = `
-                <div class="mode-thumb" style="color: ${mode.color}">
-                    <i class="${mode.icon}"></i>
-                </div>
+                <div class="mode-thumb" style="color: ${mode.color}"><i class="${mode.icon}"></i></div>
                 <div class="mode-info">
                     <h4>${mode.title}</h4>
                     <span>${mode.subtitle}</span>
                 </div>
             `;
 
-            el.addEventListener('click', () => {
-                this.selectMode(mode.id);
-            });
-
-            this.listEl.appendChild(el);
+            el.addEventListener('click', () => this.selectMode(mode.id));
+            this.dom.list.appendChild(el);
         });
 
         this.updateGlider();
@@ -160,15 +158,15 @@ export class SelectModeStep {
         campaignState.set('modeId', id);
         const modeData = GAME_MODES.find(m => m.id === id);
 
-        const items = this.listEl.querySelectorAll('.mode-list-item');
+        const items = this.dom.list.querySelectorAll('.mode-list-item');
         let selectedEl = null;
 
         items.forEach(el => {
             if (el.dataset.id === id) {
-                el.classList.add('active');
+                el.classList.add(CSS_CLASSES.ACTIVE);
                 selectedEl = el;
             } else {
-                el.classList.remove('active');
+                el.classList.remove(CSS_CLASSES.ACTIVE);
             }
         });
 
@@ -177,22 +175,17 @@ export class SelectModeStep {
     }
 
     updateGlider(targetEl = null) {
-        if (!targetEl) {
-            targetEl = this.listEl.querySelector('.mode-list-item.active');
-        }
-
-        if (targetEl && this.glider) {
-            if (targetEl.offsetHeight > 0) {
-                this.glider.style.top = `${targetEl.offsetTop}px`;
-                this.glider.style.height = `${targetEl.offsetHeight}px`;
-            }
+        if (!targetEl) targetEl = this.dom.list.querySelector('.mode-list-item.active');
+        if (targetEl && this.glider && targetEl.offsetHeight > 0) {
+            this.glider.style.top = `${targetEl.offsetTop}px`;
+            this.glider.style.height = `${targetEl.offsetHeight}px`;
         }
     }
 
     renderDetails(mode) {
         if (!mode) return;
 
-        this.detailsEl.style.opacity = '0';
+        this.dom.details.style.opacity = '0';
         
         setTimeout(() => {
             const featuresHtml = mode.features.map(f => `
@@ -202,27 +195,10 @@ export class SelectModeStep {
                 </li>
             `).join('');
 
-            // --- VERSION SELECTOR LOGIC ---
-            let versionHtml = '';
-            if (mode.hasVersions) {
-                versionHtml = `
-                    <div class="detail-section-title" style="margin-top: 25px;">Select Version</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                        <button class="btn-version-select" data-ver="barebones" style="background: rgba(255,255,255,0.05); border: 1px solid var(--bg-hover); padding: 15px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:5px; font-family: var(--font-main);">
-                            <i class="fa-solid fa-bone" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
-                            <div style="font-weight: 700; color: #fff;">Barebones</div>
-                            <div style="font-size: 0.8rem;">Minimalist Logic</div>
-                        </button>
-                        <button class="btn-version-select" data-ver="complex" style="background: rgba(255,255,255,0.05); border: 1px solid var(--bg-hover); padding: 15px; border-radius: 8px; color: var(--text-secondary); cursor: pointer; transition: 0.2s; display:flex; flex-direction:column; align-items:center; gap:5px; font-family: var(--font-main);">
-                            <i class="fa-solid fa-gears" style="font-size: 1.5rem; margin-bottom: 5px;"></i>
-                            <div style="font-weight: 700; color: #fff;">Complex</div>
-                            <div style="font-size: 0.8rem;">Full Mechanics</div>
-                        </button>
-                    </div>
-                `;
-            }
+            // Optional: Version Selector for complex modes
+            const versionHtml = mode.hasVersions ? this._buildVersionSelector(mode) : '';
 
-            this.detailsEl.innerHTML = `
+            this.dom.details.innerHTML = `
                 <div class="detail-header">
                     <div class="detail-icon-large" style="color: ${mode.color}">
                         <i class="${mode.icon}"></i>
@@ -231,41 +207,166 @@ export class SelectModeStep {
                     <span class="detail-badge">${mode.badge}</span>
                 </div>
                 <div class="detail-lore">${mode.lore}</div>
-                
                 ${versionHtml}
-
                 <div class="detail-section-title">Key Features</div>
                 <ul class="feature-list">${featuresHtml}</ul>
             `;
-            this.detailsEl.style.opacity = '1';
+            this.dom.details.style.opacity = '1';
 
-            // Bind Version Buttons
-            if (mode.hasVersions) {
-                const btns = this.detailsEl.querySelectorAll('.btn-version-select');
-                btns.forEach(btn => {
-                    btn.addEventListener('click', () => {
-                        // Visual Feedback
-                        btns.forEach(b => {
-                            b.style.borderColor = 'var(--bg-hover)';
-                            b.style.background = 'rgba(255,255,255,0.05)';
-                            b.style.transform = 'scale(1)';
-                        });
-                        
-                        btn.style.borderColor = mode.color;
-                        btn.style.background = 'rgba(255,255,255,0.1)';
-                        btn.style.transform = 'scale(1.02)';
-                        
-                        // Placeholder Action
-                        const ver = btn.dataset.ver;
-                        console.log(`Version Selected: ${ver}`);
-                        // In future: campaignState.set('dungeonVersion', ver);
-                    });
-                });
-            }
+            this._bindVersionButtons(mode);
 
-        }, 150);
+        }, UI_CONFIG.RENDER_DELAY_MS);
     }
 
-    show() { this.container.classList.remove('hidden'); }
-    hide() { this.container.classList.add('hidden'); }
+    // --- PROFILE LOGIC ---
+
+    _handleProfileOrderUpdate(jsonValue) {
+        try {
+            this.profileOrder = JSON.parse(jsonValue);
+            this._renderProfileDropdown();
+        } catch(err) { console.error(err); }
+    }
+
+    _onProfilesReceived(e) {
+        this.cachedProfiles = e.detail;
+        this._renderProfileDropdown();
+        if (!this.dom.modalProfiles.classList.contains(CSS_CLASSES.HIDDEN)) {
+            this._renderManageList();
+        }
+    }
+
+    _renderProfileDropdown() {
+        if (!this.dom.profileSelect) return;
+        const sortedProfiles = this._getSortedProfiles();
+
+        this.dom.profileSelect.innerHTML = '<option value="default">Default Settings</option>';
+        sortedProfiles.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.textContent = p.name;
+            this.dom.profileSelect.appendChild(opt);
+        });
+    }
+
+    _applyProfile(profileId) {
+        if (profileId === 'default') {
+            campaignState.reset();
+            const modeId = campaignState.get('modeId');
+            if(modeId) this.selectMode(modeId); 
+        } else {
+            const profile = this.cachedProfiles.find(p => p.id == profileId);
+            if (profile && profile.config) {
+                // Apply all keys from profile to CampaignState
+                Object.entries(profile.config).forEach(([key, val]) => {
+                    campaignState.set(key, val);
+                });
+                
+                if (profile.config.modeId) this.selectMode(profile.config.modeId);
+            }
+        }
+    }
+
+    // --- MANAGE PROFILES MODAL ---
+
+    openManageModal() {
+        this.dom.modalProfiles.classList.remove(CSS_CLASSES.HIDDEN);
+        this._renderManageList();
+        
+        if (!this.profileDragManager) {
+            this.profileDragManager = new DragAndDropManager({
+                container: this.dom.profileListContainer,
+                itemSelector: '.profile-list-item',
+                handleSelector: '.drag-handle',
+                onReorder: (newOrderIds) => {
+                    this.profileOrder = newOrderIds;
+                    SettingsAPI.saveSetting('campaignProfileOrder', JSON.stringify(this.profileOrder));
+                    this._renderProfileDropdown();
+                }
+            });
+        } else {
+            this.profileDragManager.init();
+        }
+    }
+
+    _renderManageList() {
+        this.dom.profileListContainer.innerHTML = '';
+        const sorted = this._getSortedProfiles();
+
+        if (sorted.length === 0) {
+            this.dom.profileListContainer.innerHTML = '<div style="color:#666; font-style:italic; text-align:center; padding: 20px;">No custom profiles found.</div>';
+            return;
+        }
+
+        sorted.forEach(p => {
+            const el = document.createElement('div');
+            el.className = 'profile-list-item';
+            el.dataset.id = p.id;
+            // ... styling ...
+            el.innerHTML = `
+                <div class="drag-handle" style="cursor: grab; color: #666; padding: 0 5px;"><i class="fa-solid fa-grip-vertical"></i></div>
+                <div style="flex:1; font-weight:600; color:#e5e7eb;">${p.name}</div>
+                <button class="btn-delete-profile" style="background:transparent; border:none; color:#ef4444; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+            `;
+            el.querySelector('.btn-delete-profile').addEventListener('click', () => {
+                if(confirm(`Delete profile "${p.name}"?`)) ProfileAPI.deleteProfile(p.id);
+            });
+            this.dom.profileListContainer.appendChild(el);
+        });
+    }
+
+    _getSortedProfiles() {
+        if (!this.profileOrder || this.profileOrder.length === 0) return [...this.cachedProfiles];
+        
+        const map = new Map(this.cachedProfiles.map(p => [String(p.id), p]));
+        const sorted = [];
+        
+        this.profileOrder.forEach(id => {
+            if (map.has(String(id))) {
+                sorted.push(map.get(String(id)));
+                map.delete(String(id));
+            }
+        });
+        map.forEach(p => sorted.push(p));
+        return sorted;
+    }
+
+    sortProfiles(method) {
+        let sorted = [...this.cachedProfiles];
+        if (method === 'alpha') sorted.sort((a, b) => a.name.localeCompare(b.name));
+        else if (method === 'date') sorted.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+
+        this.profileOrder = sorted.map(p => String(p.id));
+        SettingsAPI.saveSetting('campaignProfileOrder', JSON.stringify(this.profileOrder));
+        
+        this._renderManageList();
+        this._renderProfileDropdown();
+    }
+
+    // --- HELPERS ---
+
+    _buildVersionSelector(mode) {
+        return `
+            <div class="detail-section-title" style="margin-top: 25px;">Select Version</div>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                <button class="btn-version-select" data-ver="barebones" style="..."> <!-- styling omitted for brevity -->
+                    <i class="fa-solid fa-bone"></i> <div>Barebones</div>
+                </button>
+                <button class="btn-version-select" data-ver="complex" style="...">
+                    <i class="fa-solid fa-gears"></i> <div>Complex</div>
+                </button>
+            </div>
+        `;
+    }
+
+    _bindVersionButtons(mode) {
+        if (!mode.hasVersions) return;
+        const btns = this.dom.details.querySelectorAll('.btn-version-select');
+        btns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                btns.forEach(b => b.style.borderColor = 'var(--bg-hover)');
+                btn.style.borderColor = mode.color;
+                // Save version to state if needed: campaignState.set('version', btn.dataset.ver);
+            });
+        });
+    }
 }

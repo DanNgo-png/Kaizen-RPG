@@ -1,25 +1,28 @@
+import { DEFAULTS } from "../data/GameModeConfig.js";
+
 class CampaignState {
     constructor() {
+        this.data = {};
         this.reset();
     }
 
     reset() {
         this.data = {
-            modeId: 'sellswords', // Default
+            modeId: DEFAULTS.MODE_ID,
             
             // Company Details
-            name: '',
-            bannerIndex: 0,
-            color: '#ef4444',
-            crisis: 'random',
+            name: DEFAULTS.COMPANY_NAME,
+            bannerIndex: DEFAULTS.BANNER_INDEX,
+            color: DEFAULTS.COLOR,
+            crisis: DEFAULTS.CRISIS,
             
             // World Settings
-            economy: 'veteran',
-            funds: 'medium',
-            combat: 'veteran',
-            ironman: false,
-            seed: '',
-            unexplored: true
+            economy: DEFAULTS.ECONOMY,
+            funds: DEFAULTS.FUNDS,
+            combat: DEFAULTS.COMBAT,
+            ironman: DEFAULTS.IRONMAN,
+            seed: DEFAULTS.SEED,
+            unexplored: DEFAULTS.UNEXPLORED
         };
     }
 
