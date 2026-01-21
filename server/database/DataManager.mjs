@@ -5,6 +5,7 @@ import { AppSettingsController } from "../controllers/AppSettingsController.mjs"
 import { FocusSessionController } from "../controllers/FocusSessionController.mjs";
 import { TimeframeController } from "../controllers/TimeframeController.mjs";
 import { SaveController } from "../controllers/SaveController.mjs";
+import { ProfileController } from "../controllers/ProfileController.mjs";
 
 export class DataManager {
     constructor(app) {
@@ -22,6 +23,7 @@ export class DataManager {
         this.registerController(new FocusSessionController());
         this.registerController(new TimeframeController());
         this.registerController(new SaveController()); 
+        this.registerController(new ProfileController());
         // Add more controllers here as the game grows
 
         console.log("✅ Data Manager Initialized");

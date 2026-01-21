@@ -53,12 +53,20 @@ export const GLOBAL_SCHEMAS = {
         );
     `,
 
-    // Stores App Settings (Volume, Theme, Window State)
+    // Stores App & Game Settings
     'app_settings': `
         CREATE TABLE IF NOT EXISTS settings (
             key TEXT PRIMARY KEY,
             value TEXT,
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- Campaign Profiles (Presets)
+        CREATE TABLE IF NOT EXISTS campaign_profiles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT UNIQUE NOT NULL,
+            config_json TEXT NOT NULL, -- Stores { economy, funds, combat, ironman, unexplored... }
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     `,
 

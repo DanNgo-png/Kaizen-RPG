@@ -23,33 +23,38 @@
 
     <!-- STEP 1: MODE SELECTION -->
     <div id="step-origin" class="campaign-split-layout">
-
       <!-- LEFT: Mode Selection List -->
       <div class="mode-selection-panel">
-        <div id="mode-list" class="mode-list">
-          <!-- JS injects items here -->
-        </div>
+        <div id="mode-list" class="mode-list"></div>
       </div>
 
       <!-- RIGHT: Details Panel -->
       <div class="mode-details-panel">
         <div id="mode-details-content" class="details-content">
-          <!-- JS injects details here -->
+          <!-- Details injected here -->
+        </div>
+
+        <!-- NEW: Profile Selector Area (Bottom of Details Panel) -->
+        <div style="padding: 0 40px 20px 40px; border-top: 1px solid var(--bg-hover); background: rgba(0,0,0,0.2);">
+          <div style="margin-top: 15px;">
+            <label style="display:block; color:#9ca3af; font-size:0.8rem; margin-bottom:5px; font-weight:600;">CAMPAIGN PROFILES</label>
+            <select id="select-profile-quick" class="setup-select" style="width:100%;">
+              <option value="default">Default Settings</option>
+              <!-- Profiles injected via JS -->
+            </select>
+          </div>
         </div>
 
         <!-- Action Footer -->
         <div class="details-footer">
-          <button id="btn-back-to-menu" class="btn-secondary" style="padding: 12px 24px; font-weight: 600;">
-            Cancel
-          </button>
-
+          <button id="btn-back-to-menu" class="btn-secondary"
+            style="padding: 12px 24px; font-weight: 600;">Cancel</button>
           <button id="btn-next-step" class="btn-start-campaign">
             <span class="btn-text">Next</span>
             <i class="fa-solid fa-arrow-right"></i>
           </button>
         </div>
       </div>
-
     </div>
 
     <!-- STEP 2: COMPANY DETAILS (Hidden by default) -->
@@ -159,12 +164,20 @@
 
     </div>
 
-    <!-- STEP 3: DIFFICULTY & WORLD (New Container) -->
+    <!-- STEP 3: DIFFICULTY & WORLD -->
     <div id="step-difficulty" class="company-setup-layout hidden">
 
       <!-- LEFT: Challenge Settings -->
       <div class="setup-panel">
-        <h3 class="setup-heading"><i class="fa-solid fa-sliders"></i> Difficulty</h3>
+        <!-- Header with Save Button -->
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; border-bottom:1px solid var(--bg-hover); padding-bottom:10px;">
+          <h3 class="setup-heading" style="margin:0; border:none; padding:0;"><i class="fa-solid fa-sliders"></i>
+            Difficulty</h3>
+          <button id="btn-save-current-profile" class="btn-secondary" style="font-size:0.8rem; padding:4px 10px;"
+            title="Save current settings as a new profile">
+            <i class="fa-solid fa-floppy-disk"></i> Save Preset
+          </button>
+        </div>
 
         <!-- Economic Difficulty -->
         <div class="form-group">
@@ -272,6 +285,35 @@
       </div>
 
     </div>
+
+    <!-- NEW: PROFILES MODAL -->
+    <PROFILES_MODAL id="modal-profiles" class="modal-overlay hidden">
+      <div class="modal-content" style="width: 400px; text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+          <h3 style="margin:0; color:#fff;"><i class="fa-solid fa-save"></i> Setting Profiles</h3>
+          <button id="btn-close-profiles" class="btn-icon-sm"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <!-- List of existing profiles -->
+        <div id="profile-list-container"
+          style="max-height: 200px; overflow-y: auto; margin-bottom: 20px; display:flex; flex-direction:column; gap:8px;">
+          <!-- Injected via JS -->
+          <div style="color:#666; font-style:italic; text-align:center;">No profiles found.</div>
+        </div>
+
+        <hr style="border:0; border-top:1px solid var(--bg-hover); margin-bottom:20px;">
+
+        <!-- Save Current As... -->
+        <label style="display:block; color:#9ca3af; font-size:0.8rem; margin-bottom:5px;">Save Current Settings
+          As:</label>
+        <div style="display:flex; gap:10px;">
+          <input type="text" id="input-profile-name" class="setup-input" placeholder="e.g. Hardcore Run"
+            style="padding:8px;">
+          <button id="btn-save-new-profile" class="btn-primary" style="padding:8px 12px;"><i
+              class="fa-solid fa-plus"></i></button>
+        </div>
+      </div>
+    </PROFILES_MODAL>
 
     <!-- OVERLAY: Empire Builder Confirmation -->
     <div id="empire-modal-overlay" class="modal-overlay hidden">

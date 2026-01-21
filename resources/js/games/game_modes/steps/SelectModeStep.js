@@ -2,6 +2,7 @@ import { GAME_MODES } from "../data/GameModeList.js";
 import { campaignState } from "../logic/CampaignState.js";
 import { DragLogic } from "./logic/DragLogic.js";
 import { SettingsAPI } from "../../../api/SettingsAPI.js";
+import { ProfileAPI } from "../../../api/ProfileAPI.js";
 
 export class SelectModeStep {
     constructor(containerId) {
@@ -10,6 +11,8 @@ export class SelectModeStep {
         this.detailsEl = document.getElementById('mode-details-content');
         this.glider = null;
         this.sortedModes = [...GAME_MODES];
+        this.profileSelect = document.getElementById('select-profile-quick');
+        this.cachedProfiles = [];
     }
 
     init() {
@@ -50,6 +53,57 @@ export class SelectModeStep {
             const currentId = campaignState.get('modeId') || this.sortedModes[0].id;
             this.selectMode(currentId);
         }, 50);
+
+        // Listen for profiles
+        Neutralino.events.off('receiveCampaignProfiles', this._onProfilesReceived.bind(this));
+        Neutralino.events.on('receiveCampaignProfiles', this._onProfilesReceived.bind(this));
+
+        // Bind Select Change
+        if(this.profileSelect) {
+            this.profileSelect.addEventListener('change', (e) => this._applyProfile(e.target.value));
+        }
+
+        ProfileAPI.getProfiles();
+    }
+
+    _onProfilesReceived(e) {
+        this.cachedProfiles = e.detail;
+        if (!this.profileSelect) return;
+
+        // Keep 'default' option
+        this.profileSelect.innerHTML = '<option value="default">Default Settings</option>';
+
+        this.cachedProfiles.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id; // Use ID to lookup in cache
+            opt.textContent = p.name;
+            this.profileSelect.appendChild(opt);
+        });
+    }
+
+    _applyProfile(profileId) {
+        if (profileId === 'default') {
+            // Reset to defaults
+            campaignState.set('economy', 'veteran');
+            campaignState.set('funds', 'medium');
+            campaignState.set('combat', 'veteran');
+            campaignState.set('ironman', false);
+            campaignState.set('unexplored', true);
+            console.log("Reverted to Default Settings");
+        } else {
+            const profile = this.cachedProfiles.find(p => p.id == profileId);
+            if (profile && profile.config) {
+                const c = profile.config;
+                // Update State
+                if(c.economy) campaignState.set('economy', c.economy);
+                if(c.funds) campaignState.set('funds', c.funds);
+                if(c.combat) campaignState.set('combat', c.combat);
+                if(c.ironman !== undefined) campaignState.set('ironman', c.ironman);
+                if(c.unexplored !== undefined) campaignState.set('unexplored', c.unexplored);
+                
+                console.log(`Loaded Profile: ${profile.name}`);
+            }
+        }
     }
 
     applySortOrder(orderIds) {
