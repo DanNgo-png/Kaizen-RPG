@@ -3,26 +3,23 @@ export class TagColorPicker {
         this.modal = modalElement;
         this.onSelect = onSelect;
         this.onCancel = onCancel;
-        
-        // Internal state
-        this.pendingColor = '#10b981'; // Default green
+        this.pendingColor = '#10b981';
         
         this._cacheDom();
         this._bindEvents();
     }
 
     _cacheDom() {
-        // We scope queries to 'this.modal' to decouple from global document IDs where possible
         this.dom = {
             swatches: this.modal.querySelectorAll('.color-swatch'),
-            inputHex: this.modal.querySelector('#tag-ui-hex-input'), // ID from template
+            inputHex: this.modal.querySelector('#tag-ui-hex-input'),
             btnConfirm: this.modal.querySelector('#tag-ui-color-confirm'),
             btnCancel: this.modal.querySelector('#tag-ui-color-cancel')
         };
     }
 
     _bindEvents() {
-        // 1. Handle Swatch Clicks
+        // 1. Swatches
         this.dom.swatches.forEach(swatch => {
             swatch.addEventListener('click', (e) => {
                 const color = e.target.dataset.color;
@@ -30,25 +27,30 @@ export class TagColorPicker {
             });
         });
 
-        // 2. Handle Hex Input Changes
+        // 2. Hex Input (Manual Entry)
         if (this.dom.inputHex) {
             this.dom.inputHex.addEventListener('input', (e) => {
-                this.pendingColor = e.target.value;
-                // Optional: You could add validation here to check if it's a valid hex
+                let val = e.target.value;
+                // Basic Hex validation/format logic could go here
+                if (!val.startsWith('#')) val = '#' + val;
+                this.pendingColor = val;
+                
+                // Deselect swatches since manual might not match presets
+                this.dom.swatches.forEach(s => s.classList.remove('selected'));
             });
         }
 
-        // 3. Confirm Action
+        // 3. Confirm
         if (this.dom.btnConfirm) {
             this.dom.btnConfirm.addEventListener('click', () => {
-                // Validate final value or fallback
+                // Prefer input value if typed, else pending swatch click
                 const finalColor = this.dom.inputHex.value || this.pendingColor;
                 if (this.onSelect) this.onSelect(finalColor);
                 this.close();
             });
         }
 
-        // 4. Cancel Action
+        // 4. Cancel
         if (this.dom.btnCancel) {
             this.dom.btnCancel.addEventListener('click', () => {
                 if (this.onCancel) this.onCancel();
@@ -59,11 +61,8 @@ export class TagColorPicker {
 
     _setInternalColor(color) {
         this.pendingColor = color;
-        if (this.dom.inputHex) {
-            this.dom.inputHex.value = color;
-        }
+        if (this.dom.inputHex) this.dom.inputHex.value = color;
         
-        // Visual feedback on swatches
         this.dom.swatches.forEach(s => {
             if (s.dataset.color === color) s.classList.add('selected');
             else s.classList.remove('selected');
