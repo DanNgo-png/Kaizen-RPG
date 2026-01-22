@@ -1,0 +1,246 @@
+/* --- Sidebar Profile Selector --- */
+.profile-selector-area {
+    margin-top: 20px;
+    padding: 0 20px; /* Align with parent padding */
+}
+
+.profile-label {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    margin-bottom: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.profile-control-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.profile-control-row .setup-select {
+    flex-grow: 1;
+    height: 40px; 
+    padding-top: 0;
+    padding-bottom: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+    line-height: 40px; 
+}
+
+.btn-manage-profiles {
+    width: 40px;
+    height: 40px;
+    color: var(--text-secondary);
+    background-color: var(--bg-sidebar-inner);
+    border: 1px solid var(--bg-hover);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-manage-profiles:hover {
+    color: #fff;
+    background-color: var(--bg-hover);
+    border-color: var(--text-secondary);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+/* --- Manage Profiles Modal --- */
+.profile-modal-content {
+    width: 480px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    padding: 0 !important; /* Override default modal padding */
+    background-color: var(--surface-color);
+    border: 1px solid var(--bg-hover);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+/* Modal Header */
+.profile-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--bg-hover);
+    background-color: rgba(255, 255, 255, 0.02);
+}
+
+.profile-modal-header h3 {
+    margin: 0;
+    color: #fff;
+    font-size: 1.1rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Modal Body */
+.profile-modal-body {
+    padding: 20px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.profile-toolbar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.btn-profile-sort {
+    padding: 6px 12px;
+    font-size: 0.8rem;
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    color: var(--text-secondary);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-family: var(--font-main);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-profile-sort:hover {
+    color: #fff;
+    background-color: var(--bg-hover);
+    border-color: var(--text-secondary);
+}
+
+/* Profile List */
+.profile-list-container {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 150px;
+    padding-right: 4px; /* Space for scrollbar */
+}
+
+/* Scrollbar refinement */
+.profile-list-container::-webkit-scrollbar { width: 4px; }
+.profile-list-container::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 2px; }
+
+.profile-list-item {
+    display: flex;
+    align-items: center;
+    background-color: var(--bg-body);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+    user-select: none;
+}
+
+.profile-list-item:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--bg-hover);
+    transform: translateX(2px);
+}
+
+.profile-drag-handle {
+    cursor: grab;
+    color: var(--text-secondary);
+    padding-right: 12px;
+    opacity: 0.4;
+    transition: opacity 0.2s;
+}
+
+.profile-list-item:hover .profile-drag-handle {
+    opacity: 1;
+}
+
+.profile-name {
+    flex: 1;
+    font-weight: 600;
+    color: #e5e7eb;
+    font-size: 0.95rem;
+}
+
+.btn-delete-profile {
+    background: transparent;
+    border: none;
+    color: #ef4444;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 6px;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.btn-delete-profile:hover {
+    opacity: 1;
+    background-color: rgba(239, 68, 68, 0.15);
+}
+
+/* Empty State */
+.profile-empty-state {
+    color: var(--text-secondary);
+    font-style: italic;
+    text-align: center;
+    padding: 30px;
+    font-size: 0.9rem;
+    opacity: 0.7;
+}
+
+/* Modal Footer / Save Section */
+.profile-save-section {
+    padding: 20px;
+    border-top: 1px solid var(--bg-hover);
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.profile-save-row {
+    display: flex;
+    gap: 10px;
+}
+
+.input-profile-save {
+    flex: 1;
+    padding: 10px 12px;
+    background-color: var(--bg-body);
+    border: 1px solid var(--bg-hover);
+    color: #fff;
+    border-radius: 6px;
+    font-family: var(--font-main);
+    outline: none;
+}
+
+.input-profile-save:focus {
+    border-color: var(--accent-active-text);
+}
+
+.btn-profile-add {
+    width: 42px;
+    background-color: var(--accent-active-bg);
+    color: #fff;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.btn-profile-add:hover {
+    background-color: var(--accent-active-text); /* Lighter blue */
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
+}
