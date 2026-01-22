@@ -66,6 +66,7 @@ export const TagTemplates = {
             <div class="focus-flexible-modal-content compact-modal">
                 <h3>Pick Color</h3>
                 <div class="color-presets">
+                    <div class="color-swatch" data-color="#00ffff" style="background: #00ffff;"></div>
                     <div class="color-swatch" data-color="#3b82f6" style="background: #3b82f6;"></div>
                     <div class="color-swatch" data-color="#6366f1" style="background: #6366f1;"></div> <!-- Indigo -->
                     <div class="color-swatch" data-color="#14b8a6" style="background: #14b8a6;"></div> <!-- Teal -->
