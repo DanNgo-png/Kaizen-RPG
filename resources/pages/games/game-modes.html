@@ -34,16 +34,15 @@
           <!-- Details injected here -->
         </div>
 
-        <!-- NEW: Profile Selector Area (Bottom of Details Panel) -->
-        <div style="margin-top: 15px;">
-          <label style="display:block; color:#9ca3af; font-size:0.8rem; margin-bottom:5px; margin-right: 15px; margin-left: 15px; font-weight:600;">CAMPAIGN
-            PROFILES</label>
-          <div style="display:flex; gap:10px; margin-bottom: 15px; margin-right: 15px; margin-left: 15px;">
-            <select id="select-profile-quick" class="setup-select" style="width:100%;">
+        <!-- NEW: Profile Selector Area -->
+        <div class="profile-selector-area">
+          <label class="profile-label">Campaign Profiles</label>
+          <div class="profile-control-row">
+            <select id="select-profile-quick" class="setup-select">
               <option value="default">Default Settings</option>
               <!-- Profiles injected via JS -->
             </select>
-            <button id="btn-manage-profiles" class="btn-secondary" style="padding: 0 12px;" title="Manage Profiles">
+            <button id="btn-manage-profiles" class="btn-manage-profiles" title="Manage Profiles">
               <i class="fa-solid fa-gear"></i>
             </button>
           </div>
@@ -293,43 +292,40 @@
 
     <!-- PROFILES MODAL -->
     <PROFILES_MODAL id="modal-profiles" class="modal-overlay hidden">
-      <div class="modal-content"
-        style="width: 450px; text-align:left; max-height: 80vh; display:flex; flex-direction:column;">
+      <div class="profile-modal-content">
 
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-          <h3 style="margin:0; color:#fff;"><i class="fa-solid fa-sliders"></i> Manage Profiles</h3>
+        <div class="profile-modal-header">
+          <h3><i class="fa-solid fa-sliders"></i> Manage Profiles</h3>
           <button id="btn-close-profiles" class="btn-icon-sm"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
-        <!-- Toolbar: Sort Options -->
-        <div style="display:flex; gap:10px; margin-bottom:10px;">
-          <button id="btn-sort-alpha" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;"
-            title="Sort Alphabetically">
-            <i class="fa-solid fa-arrow-down-a-z"></i> A-Z
-          </button>
-          <button id="btn-sort-date" class="btn-secondary" style="padding: 6px 12px; font-size: 0.8rem;"
-            title="Sort by Creation Date">
-            <i class="fa-regular fa-clock"></i> Date
-          </button>
-        </div>
+        <div class="profile-modal-body">
+          <!-- Toolbar: Sort Options -->
+          <div class="profile-toolbar">
+            <button id="btn-sort-alpha" class="btn-profile-sort" title="Sort Alphabetically">
+              <i class="fa-solid fa-arrow-down-a-z"></i> A-Z
+            </button>
+            <button id="btn-sort-date" class="btn-profile-sort" title="Sort by Creation Date">
+              <i class="fa-regular fa-clock"></i> Date
+            </button>
+          </div>
 
-        <!-- List of existing profiles -->
-        <div id="profile-list-container"
-          style="flex:1; overflow-y: auto; margin-bottom: 20px; display:flex; flex-direction:column; gap:8px; padding-right: 5px;">
-          <!-- Profile items injected via JS -->
-          <div style="color:#666; font-style:italic; text-align:center; padding: 20px;">No custom profiles found.</div>
+          <!-- List of existing profiles -->
+          <div id="profile-list-container" class="profile-list-container">
+            <!-- Profile items injected via JS -->
+            <div class="profile-empty-state">No custom profiles found.</div>
+          </div>
         </div>
-
-        <hr style="border:0; border-top:1px solid var(--bg-hover); margin-bottom:20px;">
 
         <!-- Save Current As... -->
-        <label style="display:block; color:#9ca3af; font-size:0.8rem; margin-bottom:5px;">Save Current Settings
-          As:</label>
-        <div style="display:flex; gap:10px;">
-          <input type="text" id="input-profile-name" class="setup-input" placeholder="e.g. Hardcore Run"
-            style="padding:8px;">
-          <button id="btn-save-new-profile" class="btn-primary" style="padding:8px 12px;"><i
-              class="fa-solid fa-plus"></i></button>
+        <div class="profile-save-section">
+          <label class="profile-label">Save Current Settings As:</label>
+          <div class="profile-save-row">
+            <input type="text" id="input-profile-name" class="input-profile-save" placeholder="e.g. Hardcore Run">
+            <button id="btn-save-new-profile" class="btn-profile-add">
+              <i class="fa-solid fa-plus"></i>
+            </button>
+          </div>
         </div>
 
       </div>

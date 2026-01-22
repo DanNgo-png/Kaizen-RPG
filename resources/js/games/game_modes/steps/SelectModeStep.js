@@ -90,6 +90,15 @@ export class SelectModeStep extends BaseStep {
             this.dom.btnCloseProfiles.addEventListener('click', () => this.dom.modalProfiles.classList.add(CSS_CLASSES.HIDDEN));
         }
 
+        // Close Modal on Outside Click
+        if (this.dom.modalProfiles) {
+            this.dom.modalProfiles.addEventListener('click', (e) => {
+                if (e.target === this.dom.modalProfiles) {
+                    this.dom.modalProfiles.classList.add(CSS_CLASSES.HIDDEN);
+                }
+            });
+        }
+
         if (this.dom.btnSortAlpha) this.dom.btnSortAlpha.addEventListener('click', () => this.sortProfiles('alpha'));
         if (this.dom.btnSortDate) this.dom.btnSortDate.addEventListener('click', () => this.sortProfiles('date'));
 
@@ -293,20 +302,22 @@ export class SelectModeStep extends BaseStep {
         const sorted = this._getSortedProfiles();
 
         if (sorted.length === 0) {
-            this.dom.profileListContainer.innerHTML = '<div style="color:#666; font-style:italic; text-align:center; padding: 20px;">No custom profiles found.</div>';
+            this.dom.profileListContainer.innerHTML = '<div class="profile-empty-state">No custom profiles found.</div>';
             return;
         }
 
         sorted.forEach(p => {
             const el = document.createElement('div');
-            el.className = 'profile-list-item';
+            el.className = 'profile-list-item'; // New class
             el.dataset.id = p.id;
-            // ... styling ...
+            
+            // Clean HTML using new classes
             el.innerHTML = `
-                <div class="drag-handle" style="cursor: grab; color: #666; padding: 0 5px;"><i class="fa-solid fa-grip-vertical"></i></div>
-                <div style="flex:1; font-weight:600; color:#e5e7eb;">${p.name}</div>
-                <button class="btn-delete-profile" style="background:transparent; border:none; color:#ef4444; cursor:pointer;"><i class="fa-solid fa-trash"></i></button>
+                <div class="profile-drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
+                <div class="profile-name">${p.name}</div>
+                <button class="btn-delete-profile"><i class="fa-solid fa-trash"></i></button>
             `;
+            
             el.querySelector('.btn-delete-profile').addEventListener('click', () => {
                 if(confirm(`Delete profile "${p.name}"?`)) ProfileAPI.deleteProfile(p.id);
             });
@@ -348,10 +359,10 @@ export class SelectModeStep extends BaseStep {
         return `
             <div class="detail-section-title" style="margin-top: 25px;">Select Version</div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
-                <button class="btn-version-select" data-ver="barebones" style="..."> <!-- styling omitted for brevity -->
+                <button class="btn-version-select" data-ver="barebones">
                     <i class="fa-solid fa-bone"></i> <div>Barebones</div>
                 </button>
-                <button class="btn-version-select" data-ver="complex" style="...">
+                <button class="btn-version-select" data-ver="complex">
                     <i class="fa-solid fa-gears"></i> <div>Complex</div>
                 </button>
             </div>
@@ -360,11 +371,35 @@ export class SelectModeStep extends BaseStep {
 
     _bindVersionButtons(mode) {
         if (!mode.hasVersions) return;
+        
         const btns = this.dom.details.querySelectorAll('.btn-version-select');
+        
+        // Helper to reset styles
+        const resetBtns = () => {
+            btns.forEach(b => {
+                b.style.borderColor = 'var(--bg-hover)';
+                b.style.color = 'var(--text-secondary)';
+                b.style.backgroundColor = 'var(--bg-sidebar-inner)';
+            });
+        };
+
+        // Helper to activate a button
+        const activateBtn = (btn) => {
+            resetBtns();
+            btn.style.borderColor = mode.color;
+            btn.style.color = '#fff';
+            // Slight tint of the mode color for background
+            btn.style.backgroundColor = `${mode.color}15`; // Hex opacity ~10%
+        };
+
+        // Select first by default
+        if (btns.length > 0) {
+            activateBtn(btns[0]);
+        }
+
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
-                btns.forEach(b => b.style.borderColor = 'var(--bg-hover)');
-                btn.style.borderColor = mode.color;
+                activateBtn(btn);
                 // Save version to state if needed: campaignState.set('version', btn.dataset.ver);
             });
         });
