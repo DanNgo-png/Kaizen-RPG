@@ -6,7 +6,7 @@ export class CampaignGenerator {
     }
 
     generate(config) {
-        console.log(`🎲 Generating Campaign: [${config.modeId}] Seed: ${config.seed}`);
+        console.log(`🎲 Generating Campaign: Source: ${config.mapSource}`);
 
         // 1. Setup Economy & Settings
         this._setupWorld(config);
@@ -15,7 +15,21 @@ export class CampaignGenerator {
         this._generateRoster(config.modeId, config.seed);
 
         // 3. Generate World Map
-        this._generateWorldMap(config.seed);
+        if (config.mapSource === 'premade') {
+            // [NEW] Use nodes passed from frontend
+            if (config.premadeNodes && Array.isArray(config.premadeNodes)) {
+                this._createPremadeNodes(config.premadeNodes);
+            } else {
+                console.error("❌ Map Source is premade but no nodes provided in config.");
+            }
+        } else {
+            this._generateWorldMap(config.seed);
+        }
+    }
+
+    _createPremadeNodes(nodes) {
+        console.log(`🗺️ Importing ${nodes.length} Premade Nodes...`);
+        nodes.forEach(n => this.repo.createWorldNode(n));
     }
 
     _setupWorld(config) {
@@ -28,9 +42,7 @@ export class CampaignGenerator {
 
         // Save Global Settings
         this.repo.setCampaignSetting('company_name', config.name || "The Nameless");
-        // --- NEW: Save the Origin Mode ID ---
         this.repo.setCampaignSetting('origin', config.modeId || 'sellswords'); 
-        // ------------------------------------
         this.repo.setCampaignSetting('gold', Math.floor(startingGold));
         this.repo.setCampaignSetting('day', 1);
         this.repo.setCampaignSetting('difficulty_eco', config.economy);
@@ -39,7 +51,6 @@ export class CampaignGenerator {
     }
 
     _generateRoster(modeId, seed) {
-        // ... (rest of file remains unchanged)
         const originData = ORIGIN_CONFIGS[modeId] || ORIGIN_CONFIGS['default'];
         
         originData.roster.forEach((template, index) => {
@@ -77,6 +88,21 @@ export class CampaignGenerator {
                 });
             }
         });
+    }
+
+    _loadPremadeMap() {
+        console.log("🗺️ Loading Premade Map...");
+        const nodes = [
+            { type: 'Stronghold', name: 'Capital City', x: 400, y: 300, faction_id: 1 },
+            { type: 'Village', name: 'Northshire', x: 400, y: 150, faction_id: 1 },
+            { type: 'Town', name: 'Goldshire', x: 200, y: 400, faction_id: 1 },
+            { type: 'Ruins', name: 'Dark Hollow', x: 600, y: 500, faction_id: null },
+            { type: 'Village', name: 'Riverwood', x: 550, y: 350, faction_id: 2 },
+            { type: 'Stronghold', name: 'Ironforge', x: 700, y: 200, faction_id: 2 }
+        ];
+        
+        nodes.forEach(n => this.repo.createWorldNode(n));
+        console.log(`✅ Loaded ${nodes.length} Premade Map nodes.`);
     }
 
     _generateWorldMap(seed) {

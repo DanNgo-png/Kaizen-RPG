@@ -20,14 +20,7 @@ async function onWindowClose() {
 }
 
 Neutralino.init();
-Neutralino.events.on("windowClose", async () => {
-    try {
-        await onWindowClose();
-    } catch (err) {
-        await onWindowClose();
-        await Neutralino.app.killProcess();
-    }
-});
+Neutralino.events.on("windowClose", onWindowClose);
 
 // Listener for REFRESH (F5 / Cmd+R)
 window.addEventListener("beforeunload", () => {

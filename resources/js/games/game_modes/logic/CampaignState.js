@@ -1,4 +1,5 @@
 import { DEFAULTS } from "../data/GameModeConfig.js";
+import { PREMADE_MAPS } from "../data/PremadeMaps.js";
 
 class CampaignState {
     constructor() {
@@ -22,7 +23,9 @@ class CampaignState {
             combat: DEFAULTS.COMBAT,
             ironman: DEFAULTS.IRONMAN,
             seed: DEFAULTS.SEED,
-            unexplored: DEFAULTS.UNEXPLORED
+            unexplored: DEFAULTS.UNEXPLORED,
+            mapSource: DEFAULTS.MAP_SOURCE,
+            premadeMapId: DEFAULTS.PREMADE_MAP_ID 
         };
     }
 
@@ -35,7 +38,16 @@ class CampaignState {
     }
 
     getAll() {
-        return { ...this.data };
+        const config = { ...this.data };
+        
+        if (config.mapSource === 'premade') {
+            const mapObj = PREMADE_MAPS.find(m => m.id === config.premadeMapId);
+            if (mapObj) {
+                config.premadeNodes = mapObj.nodes; // Pass actual geometry
+            }
+        }
+        
+        return config;
     }
 }
 

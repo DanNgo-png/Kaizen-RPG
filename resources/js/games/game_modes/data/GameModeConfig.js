@@ -18,7 +18,8 @@ export const DEFAULTS = {
     IRONMAN: false,
     UNEXPLORED: true,
     SEED: '',
-    MAP_SOURCE: 'procedural'
+    MAP_SOURCE: 'procedural',
+    PREMADE_MAP_ID: 'kingdom_classic' // Default premade map
 };
 
 export const DIFFICULTY_LEVELS = {

@@ -243,15 +243,38 @@
       <div class="setup-panel">
         <h3 class="setup-heading"><i class="fa-solid fa-globe"></i> World Generation</h3>
 
-        <!-- Map Seed -->
+        <!-- Map Source Selector -->
         <div class="form-group">
-          <label class="setup-label">Map Seed</label>
-          <div style="display: flex; gap: 10px;">
-            <input type="text" id="input-map-seed" class="setup-input"
-              style="font-family: monospace; letter-spacing: 1px;">
-            <button id="btn-random-seed" class="btn-secondary" title="Randomize Seed"><i
-                class="fa-solid fa-dice"></i></button>
+          <label class="setup-label">Map Source</label>
+          <div class="setup-select-wrapper">
+            <select id="input-map-source" class="setup-select">
+              <option value="procedural" selected>Procedural Generation</option>
+              <option value="premade">Premade Map</option>
+            </select>
+            <i class="fa-solid fa-chevron-down"></i>
           </div>
+        </div>
+
+        <!-- CONTAINER 1: PROCEDURAL (Seed) -->
+        <div id="container-procedural">
+            <div class="form-group">
+              <label class="setup-label">Map Seed</label>
+              <div style="display: flex; gap: 10px;">
+                <input type="text" id="input-map-seed" class="setup-input"
+                  style="font-family: monospace; letter-spacing: 1px;">
+                <button id="btn-random-seed" class="btn-secondary" title="Randomize Seed"><i
+                    class="fa-solid fa-dice"></i></button>
+              </div>
+            </div>
+        </div>
+
+        <!-- CONTAINER 2: PREMADE (List) -->
+        <div id="container-premade" class="hidden">
+            <label class="setup-label">Available Maps</label>
+            <!-- Scrollable list with fixed height -->
+            <div id="premade-map-list" style="max-height: 200px; overflow-y: auto; background: var(--bg-sidebar-inner); border: 1px solid var(--bg-hover); border-radius: 8px; padding: 10px; display: flex; flex-direction: column; gap: 8px;">
+                <!-- Maps injected by JS -->
+            </div>
         </div>
 
         <!-- Unexplored Map -->
