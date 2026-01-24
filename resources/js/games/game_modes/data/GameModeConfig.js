@@ -17,7 +17,8 @@ export const DEFAULTS = {
     COMBAT: 'veteran',
     IRONMAN: false,
     UNEXPLORED: true,
-    SEED: ''
+    SEED: '',
+    MAP_SOURCE: 'procedural'
 };
 
 export const DIFFICULTY_LEVELS = {
