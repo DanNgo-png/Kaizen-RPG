@@ -1,5 +1,3 @@
-/* --- resources/js/games/LoadCampaignManager.js --- */
-
 import { EXTENSION_ID } from "../api/_extension_id.js";
 import { loadPage } from "../router.js";
 import { initMenuButtons } from "./playGameManager.js";
