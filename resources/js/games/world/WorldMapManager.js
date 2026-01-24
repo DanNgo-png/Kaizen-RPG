@@ -13,7 +13,6 @@ export class WorldMapManager {
     constructor() {
         this.canvas = document.getElementById('world-canvas');
 
-        // 1. Initialize Subsystems
         this.camera = new Camera(window.innerWidth, window.innerHeight);
         this.state = new WorldState();
         this.renderer = new RenderSystem(this.canvas, this.camera);
@@ -21,11 +20,11 @@ export class WorldMapManager {
         this.hud = new WorldHUD(); 
 
         this.gameLoop = new GameLoop(
-            (dt) => this.update(dt),  // Logic
-            () => this.draw()         // Render
+            (dt) => this.update(dt),  
+            () => this.draw()         
         );
 
-        this.managementInstance = null; // Store management logic instance
+        this.managementInstance = null; 
 
         this.init();
     }
@@ -46,7 +45,6 @@ export class WorldMapManager {
         this.resize();
         window.addEventListener('resize', () => this.resize());
 
-        // 3. Connect Input Events
         this.input.onPan = (dx, dy) => this.camera.pan(dx, dy);
         this.input.onZoom = (x, y, delta) => this.camera.zoomAt(x, y, delta);
 
@@ -95,13 +93,8 @@ export class WorldMapManager {
         // Helper to close overlay
         const closeOverlay = () => {
             if (!overlay) return;
-            // 1. Hide Overlay
             overlay.classList.add('hidden');
-            
-            // 2. Resume Game Loop
             this.startLoop();
-            
-            // 3. Refresh Map HUD (in case gold/supplies changed in management)
             GameAPI.getWorldData();
         };
 
@@ -136,7 +129,7 @@ export class WorldMapManager {
             });
         }
 
-        // --- Exit Menu Logic ---
+        // Exit Menu Logic 
         document.getElementById('btn-world-menu')?.addEventListener('click', async () => {
             if (confirm("Exit to Main Menu?")) {
                 this.stopLoop();
