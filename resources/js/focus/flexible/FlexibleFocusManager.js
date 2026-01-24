@@ -129,7 +129,7 @@ class FlexibleFocusManager {
     triggerWarning(minutesOver) {
         const title = "Balance Overdrawn";
         const message = `You are ${minutesOver} minutes into focus debt. Consider focusing to recover.`;
-        notifier.show(title, message, "fa-solid fa-triangle-exclamation");
+        notifier.show(title, message, "fa-solid fa-triangle-check");
     }
 
     switchState(newStatus) {
@@ -152,6 +152,12 @@ class FlexibleFocusManager {
     adjustTotals(focusMs, breakMs) {
         this.state.adjustTotals(focusMs, breakMs);
         this.tick();
+    }
+
+    modifyBalance(amountMs) {
+        this.state.carriedBalance += amountMs;
+        this.saveState();
+        this.tick(); // Update any listeners (UI)
     }
 
     commitSession(focusSeconds, breakSeconds) {

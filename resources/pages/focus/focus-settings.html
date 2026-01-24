@@ -351,7 +351,7 @@
           <div class="section-header">
             <i class="fa-solid fa-building-columns"></i> Balance Bank
           </div>
-          <div class="setting-row">
+          <PERSIST_FLEXIBLE_BANK class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Persist Flexible Bank</span>
               <span class="setting-desc">Carry over time balance after finishing a session</span>
@@ -360,7 +360,19 @@
               <input type="checkbox" id="setting-flex-persist">
               <span class="slider round"></span>
             </label>
-          </div>
+          </PERSIST_FLEXIBLE_BANK>
+
+          <!-- Subtract Balance -->
+          <SUBTRACT_BALANCE class="setting-row">
+            <div class="setting-info">
+              <span class="setting-label">Subtract Balance</span>
+              <span class="setting-desc">Remove time from your bank</span>
+            </div>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="number" id="setting-flex-subtract" class="setting-input no-spin" min="1" placeholder="Mins" style="width: 70px;">
+              <button id="btn-flex-subtract" class="save-settings-button">Subtract</button>
+            </div>
+          </SUBTRACT_BALANCE>
         </div>
 
       </div>
@@ -441,7 +453,7 @@
             </div>
           </div>
 
-          <!-- RENAMED: Notifications -->
+          <!-- Notifications -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Completion Alerts</span>
@@ -453,7 +465,7 @@
             </label>
           </div>
 
-          <!-- NEW: Negative Balance Warning -->
+          <!-- Negative Balance Warning -->
           <div class="setting-row">
             <div class="setting-info">
               <span class="setting-label">Negative Balance Warning</span>
@@ -465,7 +477,7 @@
             </label>
           </div>
 
-          <!-- NEW: Animated Sub-Setting -->
+          <!-- Animated Sub-Setting -->
           <div class="expandable-row" id="container-warn-interval">
             <div class="setting-row" style="border:none; padding:0; background:transparent;">
               <div class="setting-info">

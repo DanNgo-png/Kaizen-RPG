@@ -1,6 +1,7 @@
 import { SettingsAPI } from "../api/SettingsAPI.js";
 import { FocusAPI } from "../api/FocusAPI.js";
 import { HistoryIOManager } from "./settings/HistoryIOManager.js"; 
+import { flexManager } from "./flexible/FlexibleFocusManager.js"; // Import flexManager
 
 const settingsMap = [
     // Section: TIMER DEFAULTS
@@ -195,6 +196,33 @@ export function initFocusSettings() {
         newBtn.addEventListener('click', () => {
             // Hand off to IO Manager
             HistoryIOManager.triggerImportFlow();
+        });
+    }
+
+    // Balance Subtraction Logic 
+    const btnSubtract = document.getElementById('btn-flex-subtract');
+    const inputSubtract = document.getElementById('setting-flex-subtract');
+    
+    if (btnSubtract && inputSubtract) {
+        // Remove old listener if any (safety pattern)
+        const newBtnSub = btnSubtract.cloneNode(true);
+        btnSubtract.parentNode.replaceChild(newBtnSub, btnSubtract);
+
+        newBtnSub.addEventListener('click', () => {
+            const mins = parseInt(inputSubtract.value);
+            if (!mins || mins <= 0) {
+                Neutralino.os.showMessageBox('Invalid Input', 'Please enter a positive number of minutes.', 'OK', 'ERROR');
+                return;
+            }
+            
+            // Subtracting means adding negative milliseconds to the carried balance
+            const msToRemove = -(mins * 60 * 1000);
+            
+            flexManager.modifyBalance(msToRemove);
+            
+            inputSubtract.value = '';
+            
+            Neutralino.os.showNotification('Balance Updated', `Subtracted ${mins} minutes from bank.`, 'INFO');
         });
     }
 
