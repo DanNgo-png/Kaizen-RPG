@@ -19,13 +19,14 @@ let cachedCustomFonts = [];
 let originalModalHTML = "";
 
 export function initMainSettings() {
-    initTabs(); // Initialize Tabs Logic
+    initTabs(); 
 
     const fontSelect = document.getElementById('setting-font-family');
     const openFontsBtn = document.getElementById('btn-open-fonts');
     const goalInput = document.getElementById('setting-daily-goal');
     const muteToggle = document.getElementById('setting-mute-audio');
     const heatmapSelect = document.getElementById('setting-heatmap-click');
+    const startupToggle = document.getElementById('setting-run-startup');
 
     // Select Elements for Clear History
     const clearFocusBtn = document.getElementById('btn-clear-focus-data');
@@ -37,6 +38,25 @@ export function initMainSettings() {
     // Update Checker Logic 
     const btnCheckUpdate = document.querySelector('.ms-btn-primary'); // The "Check Now" button
     const versionBadge = document.querySelector('.version-badge');
+
+    if (startupToggle) {
+        // 1. Listen for status from Backend (OS Source of Truth)
+        const handleStartupStatus = (e) => {
+            const { isEnabled } = e.detail;
+            startupToggle.checked = isEnabled;
+        };
+
+        Neutralino.events.off('receiveAutoLaunchStatus', handleStartupStatus);
+        Neutralino.events.on('receiveAutoLaunchStatus', handleStartupStatus);
+
+        // 2. Initial Check
+        SettingsAPI.getAutoLaunchStatus();
+
+        // 3. Handle User Click
+        startupToggle.addEventListener('change', (e) => {
+            SettingsAPI.setAutoLaunch(e.target.checked);
+        });
+    }
 
     if (btnCheckUpdate) {
         // Display current version on load

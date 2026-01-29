@@ -10,6 +10,14 @@ export const SettingsAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getSetting", { key });
     },
 
+    getAutoLaunchStatus: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getAutoLaunchStatus", null);
+    },
+
+    setAutoLaunch: async (enabled) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "setAutoLaunch", { enabled });
+    },
+
     getCustomFonts: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getCustomFonts", null);
     },
