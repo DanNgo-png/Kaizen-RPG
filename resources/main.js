@@ -18,35 +18,58 @@ async function app() {
     try {
         console.log("🚀 Starting Kaizen RPG...");
 
-        // 1. Initialize Core Systems
+        // Initialize Core Systems
         EventRegistry.init();
         initGlobalInputListeners();
         
-        // 2. Initialize Focus Engine (Singleton Background Logic)
+        // Initialize Focus Engine (Singleton Background Logic)
         standardManager.initialize();
         flexManager.initialize();
         initGlobalFocusListener();
 
-        // 3. Pre-load Global Data
+        // Pre-load Global Data
         SettingsAPI.getSetting('fontFamily');
 
-        // 4. Initialize UI Components
+        // Initialize UI Components
         handleDropdowns();
         initSidebarTooltips();
         
-        // 5. Setup Navigation
+        // Setup Navigation
         LoadPageManager.init();
 
-        // 6. Check for Updates (Delayed)
-        setTimeout(async () => {
-            const manifest = await updateManager.check();
-            if (manifest) {
-                notifier.show(
-                    "Update Available",
-                    `Version ${manifest.version} is ready. Go to Settings to install.`,
-                    "fa-solid fa-wand-magic-sparkles"
-                );
-            }
+        // Check for Updates
+        setTimeout(() => {
+            // Define a one-time listener for the setting response
+            const checkUpdateHandler = async (e) => {
+                const { key, value } = e.detail;
+                
+                if (key === 'enableUpdateReminder') {
+                    // Clean up listener immediately
+                    document.removeEventListener('kaizen:setting-update', checkUpdateHandler);
+                    
+                    // Default to true if not set yet
+                    const shouldCheck = (value === null || value === undefined || value === true || value === 'true');
+                    
+                    if (shouldCheck) {
+                        const manifest = await updateManager.check();
+                        if (manifest) {
+                            notifier.show(
+                                "Update Available",
+                                `Version ${manifest.version} is ready. Go to Settings to install.`,
+                                "fa-solid fa-wand-magic-sparkles"
+                            );
+                        }
+                    } else {
+                        console.log("🔕 Update reminders disabled by user.");
+                    }
+                }
+            };
+
+            // Register listener
+            document.addEventListener('kaizen:setting-update', checkUpdateHandler);
+            
+            // Trigger the request
+            SettingsAPI.getSetting('enableUpdateReminder');
         }, 5000);
 
     } catch (error) {

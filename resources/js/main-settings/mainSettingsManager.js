@@ -141,6 +141,33 @@ export function initMainSettings() {
         });
     }
 
+    // --- Update Reminder Logic ---
+    const updateToggle = document.getElementById('setting-update-reminder');
+    if (updateToggle) {
+        // 1. Listen for DB updates to set initial state
+        const handleUpdateSetting = (e) => {
+            const { key, value } = e.detail;
+            if (key === 'enableUpdateReminder') {
+                // Default to true if value is null/undefined
+                if (value === null || value === undefined) {
+                    updateToggle.checked = true;
+                } else {
+                    updateToggle.checked = (value === true || value === 'true');
+                }
+            }
+        };
+
+        document.addEventListener('kaizen:setting-update', handleUpdateSetting);
+
+        // 2. Fetch current state
+        SettingsAPI.getSetting('enableUpdateReminder');
+
+        // 3. Save on change
+        updateToggle.addEventListener('change', (e) => {
+            SettingsAPI.saveSetting('enableUpdateReminder', e.target.checked);
+        });
+    }
+
     // --- Heatmap Navigation Logic ---
     if (heatmapSelect) {
         // Load initial
