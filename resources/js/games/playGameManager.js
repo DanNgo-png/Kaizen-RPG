@@ -12,6 +12,7 @@ export function initMenuButtons() {
     // 1. New Campaign -> Navigate to Game Modes
     if (newCampaignBtn) {
         newCampaignBtn.addEventListener("click", async () => {
+            localStorage.removeItem('kaizen_target_slot');
             await loadPage("./pages/games/game-modes.html");
             initGameModes();
         });

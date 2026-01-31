@@ -3,6 +3,7 @@ import { initEmpireBuilder } from "./game_modes/origins/empire_builder/empireBui
 import { initMenuButtons } from "./playGameManager.js";
 import { campaignState } from "./game_modes/logic/CampaignState.js";
 import { GameAPI } from "../api/GameAPI.js"; 
+import { EXTENSION_ID } from "../api/_extension_id.js"; 
 import { initWorldMap } from "./world/WorldMapManager.js"; 
 
 // Import Steps
@@ -26,7 +27,19 @@ export class GameModesManager {
         this.empireModal = document.getElementById("empire-modal-overlay");
         
         // Retrieve the slot ID passed from the Load Screen
-        this.targetSlotId = localStorage.getItem('kaizen_target_slot') || 1; 
+        const storedSlot = localStorage.getItem('kaizen_target_slot');
+        
+        if (storedSlot) {
+            // Explicit slot chosen (e.g. from Load Screen "New Campaign")
+            this.targetSlotId = storedSlot;
+            this._autoSlotSearch = false;
+            // Clear it so it doesn't persist if we navigate away and back via main menu
+            localStorage.removeItem('kaizen_target_slot');
+        } else {
+            // No slot chosen (Main Menu flow), default to 1 but trigger search
+            this.targetSlotId = 1; 
+            this._autoSlotSearch = true;
+        }
 
         this.init();
     }
@@ -44,8 +57,40 @@ export class GameModesManager {
         // Bind Navigation Buttons
         this.bindNavigation();
 
+        // Auto-Detect Slot if needed
+        if (this._autoSlotSearch) {
+            this.findNextAvailableSlot();
+        }
+
         // Start at Step 1
         this.goToOrigin();
+    }
+
+    findNextAvailableSlot() {
+        const handler = (e) => {
+            const files = e.detail || [];
+            const usedIds = new Set(files.map(f => parseInt(f.slotId)));
+            
+            // Look for first free slot (1, 2, 3)
+            let freeId = 1;
+            while (freeId <= 3) {
+                if (!usedIds.has(freeId)) break;
+                freeId++;
+            }
+            
+            // If 1-3 are full, freeId becomes 4. 
+            // Current UI only supports 3 slots easily, so we default to overwrite Slot 1 if full.
+            if (freeId > 3) freeId = 1; 
+
+            this.targetSlotId = freeId;
+            console.log(`💾 Auto-assigned New Campaign to Slot ${this.targetSlotId}`);
+            
+            Neutralino.events.off('receiveSaveSlots', handler);
+        };
+
+        Neutralino.events.on('receiveSaveSlots', handler);
+        // Dispatch request to backend
+        Neutralino.extensions.dispatch(EXTENSION_ID, "listSaveSlots");
     }
 
     _onGameCreated = async (e) => {
