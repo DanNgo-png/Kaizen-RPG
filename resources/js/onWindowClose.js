@@ -5,6 +5,12 @@ function saveAppState() {
     console.log("💾 Saving state snapshot...");
     if (standardManager) { standardManager.saveState(); }
     if (flexManager) { flexManager.saveState(); }
+
+    // Check for active Game World save hook
+    if (typeof window.kaizenSaveWorldState === 'function') {
+        console.log("💾 Saving Active Game World...");
+        window.kaizenSaveWorldState();
+    }
 }
 
 async function onWindowClose() {

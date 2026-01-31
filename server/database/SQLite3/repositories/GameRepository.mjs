@@ -66,6 +66,37 @@ export class GameRepository {
         `);
     }
 
+    // --- WORLD MAP & POSITION ---
+    
+    getWorldState() {
+        this.ensureConnection();
+        const nodes = this.statements.getAllNodes.all();
+        
+        // Fetch saved player position (default to 400, 300 if missing)
+        const px = this.statements.getSetting.get('player_x')?.value || '400';
+        const py = this.statements.getSetting.get('player_y')?.value || '300';
+
+        return {
+            nodes,
+            player: { x: parseFloat(px), y: parseFloat(py) }
+        };
+    }
+
+    savePlayerPosition(x, y) {
+        this.ensureConnection();
+        const db = this.db;
+        const insert = this.statements.insertSetting;
+        
+        // Transaction ensures atomicity
+        const txn = db.transaction(() => {
+            insert.run({ key: 'player_x', value: String(x) });
+            insert.run({ key: 'player_y', value: String(y) });
+        });
+        txn();
+    }
+
+    // --- GAMEPLAY LOGIC ---
+
     distributeSessionXP(focusMinutes) {
         this.ensureConnection();
         // Formula: 1 Minute = 10 XP. 

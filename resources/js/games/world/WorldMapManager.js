@@ -26,6 +26,9 @@ export class WorldMapManager {
 
         this.managementInstance = null; 
 
+        // Bind for cleanup
+        this._saveBinding = () => this.save();
+
         this.init();
     }
 
@@ -39,11 +42,24 @@ export class WorldMapManager {
 
     stop() {
         this.gameLoop.stop();
+        // Remove global save hook when stopping/destroying
+        window.kaizenSaveWorldState = null;
+    }
+
+    save() {
+        // console.log("💾 Saving World State...");
+        GameAPI.saveWorldData({
+            x: this.state.player.x,
+            y: this.state.player.y
+        });
     }
 
     async init() {
         this.resize();
         window.addEventListener('resize', () => this.resize());
+
+        // Register Global Save Hook for Window Close
+        window.kaizenSaveWorldState = this._saveBinding;
 
         this.input.onPan = (dx, dy) => this.camera.pan(dx, dy);
         this.input.onZoom = (x, y, delta) => this.camera.zoomAt(x, y, delta);
@@ -77,10 +93,23 @@ export class WorldMapManager {
 
     _onWorldDataLoaded(e) {
         const data = e.detail;
-        if(data && data.nodes) {
-            console.log("🗺️ Loaded World Map from DB:", data.nodes.length, "nodes");
-            this.state.setNodes(data.nodes);
+        if(data) {
+            console.log("🗺️ Loaded World Map Data");
+            
+            // 1. Load Nodes
+            if(data.nodes) this.state.setNodes(data.nodes);
+            
+            // 2. Load Resources
             if(data.resources) this.hud.updateStats(data.resources);
+
+            // 3. Load Player Position
+            if (data.player) {
+                this.state.player.x = data.player.x;
+                this.state.player.y = data.player.y;
+                
+                // Optional: Center camera on player initially
+                this.camera.centerOn(data.player.x, data.player.y);
+            }
         }
     }
 
@@ -90,23 +119,20 @@ export class WorldMapManager {
         const openBtn = document.getElementById('btn-open-party-modal');
         const closeBtn = document.getElementById('btn-close-mgmt-modal');
 
-        // Helper to close overlay
         const closeOverlay = () => {
             if (!overlay) return;
             overlay.classList.add('hidden');
             this.startLoop();
-            GameAPI.getWorldData();
+            GameAPI.getWorldData(); // Refresh in case money changed
         };
 
         if (openBtn && overlay) {
             openBtn.addEventListener('click', () => {
-                // 1. Pause Game Loop to save resources
+                // Save before opening management (good practice)
+                this.save();
                 this.stopLoop();
-                
-                // 2. Show Overlay
                 overlay.classList.remove('hidden');
 
-                // 3. Init or Refresh Management UI
                 if (!this.managementInstance) {
                     this.managementInstance = initManagement();
                 } else {
@@ -119,20 +145,19 @@ export class WorldMapManager {
             closeBtn.addEventListener('click', closeOverlay);
         }
 
-        // Add listener for clicking outside the content (on the overlay background)
         if (overlay) {
             overlay.addEventListener('click', (e) => {
-                // If the click target IS the overlay div (not a child), close it.
-                if (e.target === overlay) {
-                    closeOverlay();
-                }
+                if (e.target === overlay) closeOverlay();
             });
         }
 
         // Exit Menu Logic 
         document.getElementById('btn-world-menu')?.addEventListener('click', async () => {
+            // Save on Exit
+            this.save();
+            
             if (confirm("Exit to Main Menu?")) {
-                this.stopLoop();
+                this.stop(); // Stop loop and remove global hook
                 await loadPage('./pages/games/play-game.html');
                 initMenuButtons();
             }

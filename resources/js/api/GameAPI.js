@@ -10,6 +10,11 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getWorldData", null);
     },
 
+    saveWorldData: async (playerData) => {
+        // playerData: { x: number, y: number }
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "saveWorldData", playerData);
+    },
+
     // --- PARTY & RESOURCES ---
     getPartyData: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getPartyData", null);

@@ -6,23 +6,35 @@ export class MercenaryController {
     }
 
     register(app) {
-        // Handle World Data Request
+        // Handle World Data Request (Load)
         app.events.on("getWorldData", () => {
             try {
-                // 1. Get Mercenaries (Player position/state)
-                // We'll bundle everything needed for the map screen
+                // 1. Get Resources
                 const resources = this.repo.getResources();
                 
-                // 2. Get Map Nodes from DB
-                const nodes = this.repo.getWorldNodes();
+                // 2. Get World State (Nodes + Player Position)
+                const worldState = this.repo.getWorldState();
 
                 app.events.broadcast("receiveWorldData", { 
                     resources: resources,
-                    nodes: nodes
+                    nodes: worldState.nodes,
+                    player: worldState.player // Send saved position
                 });
             } catch (error) {
                 console.error("❌ Map Load Error:", error);
-                app.events.broadcast("receiveWorldData", { nodes: [] });
+                app.events.broadcast("receiveWorldData", { nodes: [], player: {x: 400, y: 300} });
+            }
+        });
+
+        // Handle Save World Data (Save Position)
+        app.events.on("saveWorldData", (payload) => {
+            try {
+                if (payload && payload.x !== undefined && payload.y !== undefined) {
+                    this.repo.savePlayerPosition(payload.x, payload.y);
+                    // console.log(`💾 Saved Player Position: ${Math.round(payload.x)}, ${Math.round(payload.y)}`);
+                }
+            } catch (error) {
+                console.error("❌ Save World Data Error:", error);
             }
         });
 
