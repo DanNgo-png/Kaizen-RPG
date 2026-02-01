@@ -16,7 +16,7 @@ const COMMON_ICONS = [
 
 const DEFAULT_STACKS = ["Morning Routine", "Evening Routine", "Health", "Skills", "Work"];
 
-export class HabitTrackerManager {
+class HabitTrackerManager {
     constructor() {
         this.state = {
             habits: [],
@@ -26,7 +26,17 @@ export class HabitTrackerManager {
         };
 
         this.editingId = null;
+        this.dom = {};
+        this.ui = null;
 
+        // Bind handlers to maintain reference consistency for add/removeEventListener
+        this._onReceiveData = this._onReceiveData.bind(this);
+        this._refresh = this._refresh.bind(this);
+        this._onArchived = this._onArchived.bind(this);
+    }
+
+    init() {
+        // Cache DOM elements
         this.dom = {
             board: document.querySelector('.habit-board'),
             btnAdd: document.getElementById('btn-add-new-habit'),
@@ -46,70 +56,91 @@ export class HabitTrackerManager {
                 btnCancel: document.getElementById('btn-cancel-habit')
             }
         };
-        
+
+        if (!this.dom.board) return;
+
+        // Initialize UI
         this.ui = new HabitUI(this.dom.board, {
             onEdit: (habit) => this.openModal(habit),
             onAddStack: (stackName) => this.openModal(null, stackName)
         });
 
-        this.init();
-    }
+        // --- EVENT LISTENER CLEANUP & REGISTRATION ---
+        // Crucial: Remove existing listeners to prevent duplicates
+        Neutralino.events.off('receiveHabitsData', this._onReceiveData);
+        Neutralino.events.off('habitCreated', this._refresh);
+        Neutralino.events.off('habitUpdated', this._refresh); 
+        Neutralino.events.off('habitDeleted', this._refresh);
+        Neutralino.events.off('habitArchived', this._onArchived);
 
-    init() {
-        if (!this.dom.board) return;
-
-        Neutralino.events.on('receiveHabitsData', (e) => {
-            this.state.habits = e.detail.habits || [];
-            this.state.logs = e.detail.logs || [];
-            this.state.stackOrder = e.detail.stackOrder || []; 
-            this.render();
-        });
-
-        const refresh = () => this.fetchData();
+        // Register listeners
+        Neutralino.events.on('receiveHabitsData', this._onReceiveData);
+        Neutralino.events.on('habitCreated', this._refresh);
+        Neutralino.events.on('habitUpdated', this._refresh); 
+        Neutralino.events.on('habitDeleted', this._refresh);
+        Neutralino.events.on('habitArchived', this._onArchived);
         
-        Neutralino.events.on('habitCreated', refresh);
-        Neutralino.events.on('habitUpdated', refresh); 
-        Neutralino.events.on('habitDeleted', refresh);
-        
-        Neutralino.events.on('habitArchived', () => {
-            refresh();
-            const msg = (this.state.filter !== 'mastery') 
-                ? "Habit Mastered! Moved to Mastery list." 
-                : "Habit Restored! Moved to Active list.";
-            notifier.show("Habit Updated", msg, "fa-solid fa-box-open");
-        });
-        
-        if(this.dom.btnAdd) this.dom.btnAdd.addEventListener('click', () => this.openModal());
-        if (this.dom.form.btnCancel) this.dom.form.btnCancel.addEventListener('click', () => this.closeModal());
-        if (this.dom.form.btnSave) this.dom.form.btnSave.addEventListener('click', () => this.saveHabit());
+        // DOM Listeners (using onclick to overwrite previous bindings on these elements)
+        if(this.dom.btnAdd) this.dom.btnAdd.onclick = () => this.openModal();
+        if (this.dom.form.btnCancel) this.dom.form.btnCancel.onclick = () => this.closeModal();
+        if (this.dom.form.btnSave) this.dom.form.btnSave.onclick = () => this.saveHabit();
 
         this._setupStackDropdown();
 
         if (this.dom.modal) {
-            this.dom.modal.addEventListener('click', (e) => {
+            this.dom.modal.onclick = (e) => {
                 if (e.target === this.dom.modal) {
                     this.closeModal();
                 }
-            });
+            };
         }
 
-        if (this.dom.btnAll) this.dom.btnAll.addEventListener('click', () => this.setFilter('all', this.dom.btnAll));
-        if (this.dom.btnFocus) this.dom.btnFocus.addEventListener('click', () => this.setFilter('focus', this.dom.btnFocus));
-        if (this.dom.btnMastery) this.dom.btnMastery.addEventListener('click', () => this.setFilter('mastery', this.dom.btnMastery));
+        if (this.dom.btnAll) this.dom.btnAll.onclick = () => this.setFilter('all', this.dom.btnAll);
+        if (this.dom.btnFocus) this.dom.btnFocus.onclick = () => this.setFilter('focus', this.dom.btnFocus);
+        if (this.dom.btnMastery) this.dom.btnMastery.onclick = () => this.setFilter('mastery', this.dom.btnMastery);
 
         this._renderIconGrid();
         this.fetchData();
+    }
+
+    _onReceiveData(e) {
+        this.state.habits = e.detail.habits || [];
+        this.state.logs = e.detail.logs || [];
+        this.state.stackOrder = e.detail.stackOrder || []; 
+        this.render();
+    }
+
+    _refresh() {
+        this.fetchData();
+    }
+
+    _onArchived() {
+        this._refresh();
+        const msg = (this.state.filter !== 'mastery') 
+            ? "Habit Mastered! Moved to Mastery list." 
+            : "Habit Restored! Moved to Active list.";
+        notifier.show("Habit Updated", msg, "fa-solid fa-box-open");
     }
 
     _setupStackDropdown() {
         const input = this.dom.form.stack;
         const dropdown = this.dom.form.stackDropdown;
         if (!input || !dropdown) return;
-        input.addEventListener('focus', () => this._renderStackOptions(input.value));
-        input.addEventListener('input', () => this._renderStackOptions(input.value));
-        document.addEventListener('click', (e) => {
-            if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.classList.add('hidden');
-        });
+        
+        input.onfocus = () => this._renderStackOptions(input.value);
+        input.oninput = () => this._renderStackOptions(input.value);
+        
+        // Clean up old document listener if exists
+        if (this._boundDocClick) document.removeEventListener('click', this._boundDocClick);
+        
+        this._boundDocClick = (e) => {
+            if (this.dom.form.stack && this.dom.form.stackDropdown) {
+               if (!this.dom.form.stack.contains(e.target) && !this.dom.form.stackDropdown.contains(e.target)) {
+                   this.dom.form.stackDropdown.classList.add('hidden');
+               }
+            }
+        };
+        document.addEventListener('click', this._boundDocClick);
     }
 
     _renderStackOptions(filterText = '') {
@@ -128,16 +159,17 @@ export class HabitTrackerManager {
             const div = document.createElement('div');
             div.className = 'dropdown-option';
             div.textContent = stackName;
-            div.addEventListener('click', () => {
+            div.onclick = () => {
                 this.dom.form.stack.value = stackName;
                 dropdown.classList.add('hidden');
-            });
+            };
             dropdown.appendChild(div);
         });
         dropdown.classList.remove('hidden');
     }
 
     fetchData() {
+        if (!this.ui) return;
         const dates = this.ui._getWeekDates();
         HabitAPI.getHabitsData(dates[0], dates[6], this.state.filter);
     }
@@ -150,6 +182,7 @@ export class HabitTrackerManager {
     }
 
     render() {
+        if (!this.ui) return;
         let filteredHabits = this.state.habits;
 
         if (this.state.filter === 'focus') {
@@ -160,13 +193,11 @@ export class HabitTrackerManager {
             });
         }
         
-        // Pass stackOrder to UI
         this.ui.render(filteredHabits, this.state.logs, this.state.filter, this.state.stackOrder);
         
-        // Initialize Drag Logic with Callback
         StackDragLogic.init(this.dom.board, (newOrder) => {
-            this.state.stackOrder = newOrder; // Update local state immediately
-            HabitAPI.saveStackOrder(newOrder); // Save to DB
+            this.state.stackOrder = newOrder; 
+            HabitAPI.saveStackOrder(newOrder); 
         });
     }
 
@@ -178,7 +209,7 @@ export class HabitTrackerManager {
             el.className = 'icon-option';
             el.innerHTML = `<i class="${iconClass}"></i>`;
             el.dataset.value = iconClass;
-            el.addEventListener('click', () => this._selectIcon(iconClass));
+            el.onclick = () => this._selectIcon(iconClass);
             this.dom.form.iconGrid.appendChild(el);
         });
     }
@@ -237,6 +268,9 @@ export class HabitTrackerManager {
     }
 }
 
+// Singleton Instance
+const manager = new HabitTrackerManager();
+
 export function initHabitTracker() {
-    new HabitTrackerManager();
+    manager.init();
 }
