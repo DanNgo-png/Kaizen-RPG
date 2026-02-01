@@ -31,23 +31,21 @@ class HabitTrackerManager {
             habits: [],
             logs: [],
             stackOrder: [], 
-            stackConfig: {}, // Stores { "StackName": { color: "#...", icon: "fa-..." } }
+            stackConfig: {}, 
             filter: 'all'
         };
 
         this.editingId = null;
-        this.activeStackName = null; // Tracks which stack is currently being edited in modal
+        this.activeStackName = null;
         this.dom = {};
         this.ui = null;
 
-        // Bind handlers to maintain reference consistency
         this._onReceiveData = this._onReceiveData.bind(this);
         this._refresh = this._refresh.bind(this);
         this._onArchived = this._onArchived.bind(this);
     }
 
     init() {
-        // Cache DOM elements
         this.dom = {
             board: document.querySelector('.habit-board'),
             btnAdd: document.getElementById('btn-add-new-habit'),
@@ -55,7 +53,6 @@ class HabitTrackerManager {
             btnFocus: document.querySelector('.view-btn[title*="Focus"]'),
             btnMastery: document.querySelector('.view-btn[title*="Mastered"]'),
             
-            // Habit Modal
             modal: document.getElementById('modal-new-habit'),
             modalTitle: document.getElementById('modal-title'),
             form: {
@@ -68,7 +65,6 @@ class HabitTrackerManager {
                 btnCancel: document.getElementById('btn-cancel-habit')
             },
 
-            // Stack Settings Modal
             stackModal: document.getElementById('modal-stack-settings'),
             stackForm: {
                 nameDisplay: document.getElementById('stack-modal-name'),
@@ -83,20 +79,18 @@ class HabitTrackerManager {
 
         if (!this.dom.board) return;
 
-        // Initialize UI with callbacks
         this.ui = new HabitUI(this.dom.board, {
             onEdit: (habit) => this.openModal(habit),
             onAddStack: (stackName) => this.openModal(null, stackName),
-            onEditStack: (stackName) => this.openStackModal(stackName) // Opens the new Stack Settings modal
+            onEditStack: (stackName) => this.openStackModal(stackName) 
         });
 
-        // --- EVENT LISTENER CLEANUP & REGISTRATION ---
         Neutralino.events.off('receiveHabitsData', this._onReceiveData);
         Neutralino.events.off('habitCreated', this._refresh);
         Neutralino.events.off('habitUpdated', this._refresh); 
         Neutralino.events.off('habitDeleted', this._refresh);
         Neutralino.events.off('habitArchived', this._onArchived);
-        Neutralino.events.off('stackDetailsUpdated', this._refresh); // Listen for stack config saves
+        Neutralino.events.off('stackDetailsUpdated', this._refresh);
 
         Neutralino.events.on('receiveHabitsData', this._onReceiveData);
         Neutralino.events.on('habitCreated', this._refresh);
@@ -105,31 +99,24 @@ class HabitTrackerManager {
         Neutralino.events.on('habitArchived', this._onArchived);
         Neutralino.events.on('stackDetailsUpdated', this._refresh);
         
-        // --- DOM Listeners ---
-        
-        // Habit Modal
         if(this.dom.btnAdd) this.dom.btnAdd.onclick = () => this.openModal();
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.onclick = () => this.closeModal();
         if (this.dom.form.btnSave) this.dom.form.btnSave.onclick = () => this.saveHabit();
 
-        // Stack Modal
         if (this.dom.stackForm.btnCancel) this.dom.stackForm.btnCancel.onclick = () => this.dom.stackModal.classList.add('hidden');
         if (this.dom.stackForm.btnSave) this.dom.stackForm.btnSave.onclick = () => this.saveStackConfig();
 
         this._setupStackDropdown();
 
-        // Close modals on outside click
         window.onclick = (e) => {
             if (e.target === this.dom.modal) this.closeModal();
             if (e.target === this.dom.stackModal) this.dom.stackModal.classList.add('hidden');
         };
 
-        // Filter Buttons
         if (this.dom.btnAll) this.dom.btnAll.onclick = () => this.setFilter('all', this.dom.btnAll);
         if (this.dom.btnFocus) this.dom.btnFocus.onclick = () => this.setFilter('focus', this.dom.btnFocus);
         if (this.dom.btnMastery) this.dom.btnMastery.onclick = () => this.setFilter('mastery', this.dom.btnMastery);
 
-        // Initial Render Helpers
         this._renderIconGrid();
         this._renderStackIconGrid();
         this._bindStackColorPicker();
@@ -141,7 +128,7 @@ class HabitTrackerManager {
         this.state.habits = e.detail.habits || [];
         this.state.logs = e.detail.logs || [];
         this.state.stackOrder = e.detail.stackOrder || []; 
-        this.state.stackConfig = e.detail.stackConfig || {}; // Capture the stack icon/color map
+        this.state.stackConfig = e.detail.stackConfig || {}; 
         this.render();
     }
 
@@ -165,7 +152,6 @@ class HabitTrackerManager {
         input.onfocus = () => this._renderStackOptions(input.value);
         input.oninput = () => this._renderStackOptions(input.value);
         
-        // Clean up old document listener if exists
         if (this._boundDocClick) document.removeEventListener('click', this._boundDocClick);
         
         this._boundDocClick = (e) => {
@@ -228,7 +214,6 @@ class HabitTrackerManager {
             });
         }
         
-        // Pass stackConfig to UI for rendering colors/icons on headers
         this.ui.render(filteredHabits, this.state.logs, this.state.filter, this.state.stackOrder, this.state.stackConfig);
         
         StackDragLogic.init(this.dom.board, (newOrder) => {
@@ -309,17 +294,32 @@ class HabitTrackerManager {
 
     openStackModal(stackName) {
         this.activeStackName = stackName;
-        // Default to Blue and Layer Group icon if config doesn't exist yet
-        const config = this.state.stackConfig[stackName] || { color: '#3b82f6', icon: 'fa-solid fa-layer-group' };
+        
+        let currentColor = '#3b82f6';
+        let currentIcon = 'fa-solid fa-layer-group';
+        
+        // Check if there is a saved config
+        const config = this.state.stackConfig[stackName];
+
+        if (config) {
+            // If config exists, use saved values. 
+            // Note: If config.icon is "" (empty string), we respect that as "None".
+            currentIcon = (config.icon !== undefined) ? config.icon : 'fa-solid fa-layer-group';
+            currentColor = config.color || '#3b82f6';
+        } else {
+            // New stack or no config saved yet -> Default
+            currentIcon = 'fa-solid fa-layer-group';
+            currentColor = '#3b82f6';
+        }
 
         this.dom.stackForm.nameDisplay.textContent = stackName;
-        this.dom.stackForm.colorInput.value = config.color || '#3b82f6';
-        this.dom.stackForm.iconInput.value = config.icon || 'fa-solid fa-layer-group';
+        this.dom.stackForm.colorInput.value = currentColor;
+        this.dom.stackForm.iconInput.value = currentIcon;
 
         this.dom.stackModal.classList.remove('hidden');
         
         // Highlight active visual selections
-        this._updateStackModalVisuals(config.color, config.icon);
+        this._updateStackModalVisuals(currentColor, currentIcon);
     }
 
     saveStackConfig() {
@@ -338,6 +338,19 @@ class HabitTrackerManager {
         if (!container) return;
         container.innerHTML = '';
         
+        // 1. Add "None" Option first
+        const noneEl = document.createElement('div');
+        noneEl.className = 'icon-option';
+        noneEl.innerHTML = `<i class="fa-solid fa-ban" style="opacity:0.5;"></i>`; // Visual for "None"
+        noneEl.title = "No Icon";
+        noneEl.dataset.value = ""; // Empty string for "None"
+        noneEl.onclick = () => {
+            this.dom.stackForm.iconInput.value = "";
+            this._updateStackModalVisuals(null, "");
+        };
+        container.appendChild(noneEl);
+
+        // 2. Add Standard Icons
         STACK_ICONS.forEach(iconClass => {
             const el = document.createElement('div');
             el.className = 'icon-option';
@@ -369,8 +382,11 @@ class HabitTrackerManager {
                 else el.classList.remove('selected');
             });
         }
-        if (icon) {
+        
+        // Icon can be "" (empty string) for "None"
+        if (icon !== null && icon !== undefined) {
             this.dom.stackForm.iconGrid.querySelectorAll('.icon-option').forEach(el => {
+                // Match dataset value (which is "" for none, or the class string)
                 if (el.dataset.value === icon) el.classList.add('selected');
                 else el.classList.remove('selected');
             });
