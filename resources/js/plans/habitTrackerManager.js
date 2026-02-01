@@ -14,6 +14,15 @@ const COMMON_ICONS = [
     "fa-solid fa-broom", "fa-solid fa-paw", "fa-solid fa-music"
 ];
 
+const STACK_ICONS = [
+    "fa-solid fa-layer-group", "fa-solid fa-briefcase", "fa-solid fa-house",
+    "fa-solid fa-heart-pulse", "fa-solid fa-book", "fa-solid fa-dumbbell",
+    "fa-solid fa-laptop-code", "fa-solid fa-sun", "fa-solid fa-moon",
+    "fa-solid fa-lightbulb", "fa-solid fa-leaf", "fa-solid fa-fire",
+    "fa-solid fa-star", "fa-solid fa-rocket", "fa-solid fa-mountain",
+    "fa-solid fa-mug-hot", "fa-solid fa-calendar-check", "fa-solid fa-bullseye"
+];
+
 const DEFAULT_STACKS = ["Morning Routine", "Evening Routine", "Health", "Skills", "Work"];
 
 class HabitTrackerManager {
@@ -22,14 +31,16 @@ class HabitTrackerManager {
             habits: [],
             logs: [],
             stackOrder: [], 
+            stackConfig: {}, // Stores { "StackName": { color: "#...", icon: "fa-..." } }
             filter: 'all'
         };
 
         this.editingId = null;
+        this.activeStackName = null; // Tracks which stack is currently being edited in modal
         this.dom = {};
         this.ui = null;
 
-        // Bind handlers to maintain reference consistency for add/removeEventListener
+        // Bind handlers to maintain reference consistency
         this._onReceiveData = this._onReceiveData.bind(this);
         this._refresh = this._refresh.bind(this);
         this._onArchived = this._onArchived.bind(this);
@@ -44,6 +55,7 @@ class HabitTrackerManager {
             btnFocus: document.querySelector('.view-btn[title*="Focus"]'),
             btnMastery: document.querySelector('.view-btn[title*="Mastered"]'),
             
+            // Habit Modal
             modal: document.getElementById('modal-new-habit'),
             modalTitle: document.getElementById('modal-title'),
             form: {
@@ -54,52 +66,74 @@ class HabitTrackerManager {
                 iconGrid: document.getElementById('habit-icon-grid'),
                 btnSave: document.getElementById('btn-save-habit'),
                 btnCancel: document.getElementById('btn-cancel-habit')
+            },
+
+            // Stack Settings Modal
+            stackModal: document.getElementById('modal-stack-settings'),
+            stackForm: {
+                nameDisplay: document.getElementById('stack-modal-name'),
+                colorInput: document.getElementById('input-stack-color'),
+                iconInput: document.getElementById('input-stack-icon'),
+                colorGrid: document.getElementById('stack-color-presets'),
+                iconGrid: document.getElementById('stack-icon-grid'),
+                btnSave: document.getElementById('btn-save-stack'),
+                btnCancel: document.getElementById('btn-cancel-stack')
             }
         };
 
         if (!this.dom.board) return;
 
-        // Initialize UI
+        // Initialize UI with callbacks
         this.ui = new HabitUI(this.dom.board, {
             onEdit: (habit) => this.openModal(habit),
-            onAddStack: (stackName) => this.openModal(null, stackName)
+            onAddStack: (stackName) => this.openModal(null, stackName),
+            onEditStack: (stackName) => this.openStackModal(stackName) // Opens the new Stack Settings modal
         });
 
         // --- EVENT LISTENER CLEANUP & REGISTRATION ---
-        // Crucial: Remove existing listeners to prevent duplicates
         Neutralino.events.off('receiveHabitsData', this._onReceiveData);
         Neutralino.events.off('habitCreated', this._refresh);
         Neutralino.events.off('habitUpdated', this._refresh); 
         Neutralino.events.off('habitDeleted', this._refresh);
         Neutralino.events.off('habitArchived', this._onArchived);
+        Neutralino.events.off('stackDetailsUpdated', this._refresh); // Listen for stack config saves
 
-        // Register listeners
         Neutralino.events.on('receiveHabitsData', this._onReceiveData);
         Neutralino.events.on('habitCreated', this._refresh);
         Neutralino.events.on('habitUpdated', this._refresh); 
         Neutralino.events.on('habitDeleted', this._refresh);
         Neutralino.events.on('habitArchived', this._onArchived);
+        Neutralino.events.on('stackDetailsUpdated', this._refresh);
         
-        // DOM Listeners (using onclick to overwrite previous bindings on these elements)
+        // --- DOM Listeners ---
+        
+        // Habit Modal
         if(this.dom.btnAdd) this.dom.btnAdd.onclick = () => this.openModal();
         if (this.dom.form.btnCancel) this.dom.form.btnCancel.onclick = () => this.closeModal();
         if (this.dom.form.btnSave) this.dom.form.btnSave.onclick = () => this.saveHabit();
 
+        // Stack Modal
+        if (this.dom.stackForm.btnCancel) this.dom.stackForm.btnCancel.onclick = () => this.dom.stackModal.classList.add('hidden');
+        if (this.dom.stackForm.btnSave) this.dom.stackForm.btnSave.onclick = () => this.saveStackConfig();
+
         this._setupStackDropdown();
 
-        if (this.dom.modal) {
-            this.dom.modal.onclick = (e) => {
-                if (e.target === this.dom.modal) {
-                    this.closeModal();
-                }
-            };
-        }
+        // Close modals on outside click
+        window.onclick = (e) => {
+            if (e.target === this.dom.modal) this.closeModal();
+            if (e.target === this.dom.stackModal) this.dom.stackModal.classList.add('hidden');
+        };
 
+        // Filter Buttons
         if (this.dom.btnAll) this.dom.btnAll.onclick = () => this.setFilter('all', this.dom.btnAll);
         if (this.dom.btnFocus) this.dom.btnFocus.onclick = () => this.setFilter('focus', this.dom.btnFocus);
         if (this.dom.btnMastery) this.dom.btnMastery.onclick = () => this.setFilter('mastery', this.dom.btnMastery);
 
+        // Initial Render Helpers
         this._renderIconGrid();
+        this._renderStackIconGrid();
+        this._bindStackColorPicker();
+
         this.fetchData();
     }
 
@@ -107,6 +141,7 @@ class HabitTrackerManager {
         this.state.habits = e.detail.habits || [];
         this.state.logs = e.detail.logs || [];
         this.state.stackOrder = e.detail.stackOrder || []; 
+        this.state.stackConfig = e.detail.stackConfig || {}; // Capture the stack icon/color map
         this.render();
     }
 
@@ -193,13 +228,16 @@ class HabitTrackerManager {
             });
         }
         
-        this.ui.render(filteredHabits, this.state.logs, this.state.filter, this.state.stackOrder);
+        // Pass stackConfig to UI for rendering colors/icons on headers
+        this.ui.render(filteredHabits, this.state.logs, this.state.filter, this.state.stackOrder, this.state.stackConfig);
         
         StackDragLogic.init(this.dom.board, (newOrder) => {
             this.state.stackOrder = newOrder; 
             HabitAPI.saveStackOrder(newOrder); 
         });
     }
+
+    // --- HABIT MODAL LOGIC ---
 
     _renderIconGrid() {
         if (!this.dom.form.iconGrid) return;
@@ -264,6 +302,78 @@ class HabitTrackerManager {
                 HabitAPI.createHabit(title, stack, icon, 7);
             }
             this.closeModal();
+        }
+    }
+
+    // --- STACK SETTINGS MODAL LOGIC ---
+
+    openStackModal(stackName) {
+        this.activeStackName = stackName;
+        // Default to Blue and Layer Group icon if config doesn't exist yet
+        const config = this.state.stackConfig[stackName] || { color: '#3b82f6', icon: 'fa-solid fa-layer-group' };
+
+        this.dom.stackForm.nameDisplay.textContent = stackName;
+        this.dom.stackForm.colorInput.value = config.color || '#3b82f6';
+        this.dom.stackForm.iconInput.value = config.icon || 'fa-solid fa-layer-group';
+
+        this.dom.stackModal.classList.remove('hidden');
+        
+        // Highlight active visual selections
+        this._updateStackModalVisuals(config.color, config.icon);
+    }
+
+    saveStackConfig() {
+        if (!this.activeStackName) return;
+        const color = this.dom.stackForm.colorInput.value;
+        const icon = this.dom.stackForm.iconInput.value;
+
+        // Send to backend
+        HabitAPI.updateStackDetails(this.activeStackName, icon, color);
+        
+        this.dom.stackModal.classList.add('hidden');
+    }
+
+    _renderStackIconGrid() {
+        const container = this.dom.stackForm.iconGrid;
+        if (!container) return;
+        container.innerHTML = '';
+        
+        STACK_ICONS.forEach(iconClass => {
+            const el = document.createElement('div');
+            el.className = 'icon-option';
+            el.innerHTML = `<i class="${iconClass}"></i>`;
+            el.dataset.value = iconClass;
+            el.onclick = () => {
+                this.dom.stackForm.iconInput.value = iconClass;
+                this._updateStackModalVisuals(null, iconClass);
+            };
+            container.appendChild(el);
+        });
+    }
+
+    _bindStackColorPicker() {
+        const swatches = this.dom.stackForm.colorGrid.querySelectorAll('.color-swatch');
+        swatches.forEach(swatch => {
+            swatch.addEventListener('click', (e) => {
+                const color = e.target.dataset.color;
+                this.dom.stackForm.colorInput.value = color;
+                this._updateStackModalVisuals(color, null);
+            });
+        });
+    }
+
+    _updateStackModalVisuals(color, icon) {
+        if (color) {
+            this.dom.stackForm.colorGrid.querySelectorAll('.color-swatch').forEach(el => {
+                if (el.dataset.color === color) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
+        }
+        if (icon) {
+            this.dom.stackForm.iconGrid.querySelectorAll('.icon-option').forEach(el => {
+                if (el.dataset.value === icon) el.classList.add('selected');
+                else el.classList.remove('selected');
+            });
         }
     }
 }

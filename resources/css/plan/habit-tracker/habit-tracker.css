@@ -102,13 +102,15 @@
 /* Stack Header */
 .stack-header {
     padding: 15px 20px;
-    background-color: rgba(255, 255, 255, 0.02);
+    background-color: rgba(255, 255, 255, 0.02); /* Fallback */
     border-bottom: 1px solid var(--bg-hover);
+    border-left: 4px solid transparent; /* Prepare for dynamic color */
     display: flex;
     justify-content: space-between;
     align-items: center;
     cursor: pointer;
     user-select: none;
+    transition: background-color 0.2s;
 }
 
 .stack-header:hover { background-color: rgba(255, 255, 255, 0.04); }
@@ -116,18 +118,48 @@
 .stack-title {
     display: flex;
     align-items: center;
-    gap: 10px;
-    font-size: 1rem;
+    gap: 12px;
+    font-size: 1.05rem;
     font-weight: 700;
     color: #e5e7eb;
 }
 
-.stack-meta {
+.stack-icon-display {
+    width: 24px;
+    text-align: center;
+    color: var(--text-secondary); /* Will be overridden by JS style */
+}
+
+/* Right side of header */
+.stack-controls {
     display: flex;
     align-items: center;
     gap: 15px;
+}
+
+.stack-meta {
     font-size: 0.85rem;
     color: var(--text-secondary);
+}
+
+.btn-stack-settings {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    opacity: 0; /* Hidden until hover */
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.2s;
+}
+
+.stack-header:hover .btn-stack-settings {
+    opacity: 0.5;
+}
+
+.btn-stack-settings:hover {
+    opacity: 1 !important;
+    color: #fff;
+    transform: rotate(30deg);
 }
 
 /* Stack Body (The Grid) */

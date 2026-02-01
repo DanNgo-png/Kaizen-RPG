@@ -52,4 +52,16 @@ export class HabitRepository {
         const json = JSON.stringify(orderArray);
         this.statements.setMeta.run({ key: 'stack_order', value: json });
     }
+
+    getStackConfig() {
+        const result = this.statements.getMeta.get('stack_config');
+        return result ? JSON.parse(result.value) : {};
+    }
+
+    saveStackDetails(stackName, icon, color) {
+        const config = this.getStackConfig();
+        config[stackName] = { icon, color };
+        const json = JSON.stringify(config);
+        this.statements.setMeta.run({ key: 'stack_config', value: json });
+    }
 }

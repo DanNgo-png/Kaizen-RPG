@@ -4,7 +4,7 @@ import { handleHabitContextMenu } from "./createCustomMenu.js";
 export class HabitUI {
     constructor(container, callbacks) {
         this.container = container;
-        this.callbacks = callbacks; 
+        this.callbacks = callbacks; // Contains: onEdit, onAddStack, onEditStack
         this.currentWeekStart = this._getMonday(new Date());
         
         this.dom = {
@@ -13,8 +13,11 @@ export class HabitUI {
         };
     }
 
-    // UPDATED: Accept stackOrder
-    render(habits, logs, viewMode, stackOrder = []) {
+    /**
+     * Main Render Function
+     * Now accepts stackConfig to render specific colors and icons.
+     */
+    render(habits, logs, viewMode, stackOrder = [], stackConfig = {}) {
         this.updateHeader();
         this.container.innerHTML = '';
         
@@ -23,7 +26,6 @@ export class HabitUI {
                 ? "No mastered habits yet. Keep pushing!" 
                 : "No active habits found. Create one to get started.";
             
-            // FIXED: Use Flexbox to ensure Icon and Text are centered and close together
             this.container.innerHTML = `
                 <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; color: #6b7280; margin-top: 50px; font-size: 1.1rem; width: 100%;">
                     <span>${emptyMsg}</span>
@@ -31,8 +33,8 @@ export class HabitUI {
             return;
         }
 
+        // Group habits by stack
         const stacks = {};
-        // ... (Rest of the render function remains the same)
         habits.forEach(h => {
             const stackName = h.stack_name || 'General';
             if (!stacks[stackName]) stacks[stackName] = [];
@@ -41,87 +43,97 @@ export class HabitUI {
 
         const weekDates = this._getWeekDates();
 
-        // --- SORTING LOGIC ---
+        // Sort Stacks based on saved order
         let stackKeys = Object.keys(stacks);
-        
         if (stackOrder && stackOrder.length > 0) {
             stackKeys.sort((a, b) => {
                 const idxA = stackOrder.indexOf(a);
                 const idxB = stackOrder.indexOf(b);
-                
-                // If both are in the saved order, sort by index
                 if (idxA !== -1 && idxB !== -1) return idxA - idxB;
-                
-                // If only A is found, put A first
                 if (idxA !== -1) return -1;
-                
-                // If only B is found, put B first
                 if (idxB !== -1) return 1;
-                
-                // Fallback to alphabetical
                 return a.localeCompare(b);
             });
         } else {
-            stackKeys.sort(); // Default Alphabetical if no save data
+            stackKeys.sort();
         }
 
+        // Create DOM elements for each stack
         stackKeys.forEach(stackName => {
-            const stackEl = this._createStackElement(stackName, stacks[stackName], weekDates, logs, viewMode);
+            // Get config for this stack (color/icon) or default
+            const config = stackConfig[stackName] || { color: null, icon: null };
+            
+            const stackEl = this._createStackElement(stackName, stacks[stackName], weekDates, logs, viewMode, config);
             this.container.appendChild(stackEl);
         });
     }
 
-    // ... (Rest of class: updateHeader, _createStackElement, _createHabitRow, etc. remain unchanged) ...
-    updateHeader() {
-        if (!this.dom.headerSub) return;
-        const start = this.currentWeekStart;
-        const end = new Date(start);
-        end.setDate(end.getDate() + 6);
-
-        const opt = { month: 'short', day: 'numeric' };
-        const rangeStr = `${start.toLocaleDateString('en-US', opt)} - ${end.toLocaleDateString('en-US', opt)}`;
-        this.dom.headerSub.textContent = `Current Week • ${rangeStr}`;
-    }
-
-    _createStackElement(stackName, habits, weekDates, logs, viewMode) {
+    _createStackElement(stackName, habits, weekDates, logs, viewMode, config) {
         const stackDiv = document.createElement('div');
         stackDiv.className = 'habit-stack';
         if (viewMode === 'mastery') stackDiv.classList.add('mastered');
-
+        
+        // Data attribute for drag logic
         stackDiv.dataset.stackName = stackName; 
 
+        // --- 1. Dynamic Styling (Color & Icon) ---
+        const borderColor = config.color || '#374151'; // Default gray border
+        stackDiv.style.borderLeft = `4px solid ${borderColor}`;
+
+        // Header Gradient Background (Subtle tint)
+        const headerStyle = config.color 
+            ? `background: linear-gradient(90deg, ${config.color}15 0%, rgba(255,255,255,0.02) 100%);` 
+            : '';
+
+        // Icon Style
+        const iconStyle = config.color ? `color: ${config.color}; margin-right: 10px;` : 'margin-right: 10px;';
+        
+        // If config.icon exists, render it. 
+        const stackIconHtml = config.icon 
+            ? `<i class="${config.icon}" style="${iconStyle}"></i>` 
+            : ''; 
+
+        // --- 2. Build Header HTML ---
         const headerHtml = `
-            <div class="stack-header">
+            <div class="stack-header" style="${headerStyle}">
                 <div class="stack-title">
                     <i class="fa-solid fa-chevron-down stack-chevron"></i>
+                    ${stackIconHtml}
                     <span class="stack-title-text">${stackName}</span>
                 </div>
-                <div class="stack-meta">
-                    ${habits.length} ${habits.length === 1 ? 'Habit' : 'Habits'}
+                <div class="stack-controls">
+                    <div class="stack-meta">
+                        ${habits.length} ${habits.length === 1 ? 'Habit' : 'Habits'}
+                    </div>
+                    <!-- SETTINGS BUTTON (Gear Icon) -->
+                    <button class="btn-stack-settings" title="Customize Stack">
+                        <i class="fa-solid fa-gear"></i>
+                    </button>
                 </div>
             </div>
         `;
         
+        // --- 3. Build Body (Grid) ---
         const bodyDiv = document.createElement('div');
         bodyDiv.className = 'stack-body';
 
+        // Grid Column Headers
         const dayHeaders = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
         const todayStr = new Date().toISOString().split('T')[0];
-
         let gridHeaderHtml = `
             <div class="grid-header-row">
                 <div class="header-cell align-left">Habit</div>
                 <div class="header-cell">Streak</div>
         `;
-
         weekDates.forEach((date, i) => {
             const isToday = date === todayStr;
             gridHeaderHtml += `<div class="header-cell ${isToday ? 'today' : ''}">${dayHeaders[i]}</div>`;
         });
-
-        gridHeaderHtml += `<div class="header-cell"></div></div>`; 
+        gridHeaderHtml += `<div class="header-cell"></div></div>`; // Action column placeholder
+        
         bodyDiv.innerHTML = gridHeaderHtml;
 
+        // Render Habit Rows
         habits.forEach(habit => {
             const row = this._createHabitRow(habit, weekDates, logs, viewMode);
             bodyDiv.appendChild(row);
@@ -130,9 +142,26 @@ export class HabitUI {
         stackDiv.innerHTML = headerHtml;
         stackDiv.appendChild(bodyDiv);
 
-        stackDiv.querySelector('.stack-header').addEventListener('click', () => {
+        // --- 4. Event Listeners ---
+        
+        // Toggle Collapse
+        const headerEl = stackDiv.querySelector('.stack-header');
+        headerEl.addEventListener('click', (e) => {
+            // Don't collapse if clicking the settings button
+            if (e.target.closest('.btn-stack-settings')) return;
             stackDiv.classList.toggle('collapsed');
         });
+
+        // Settings Button Click (Triggers the Modal)
+        const settingsBtn = stackDiv.querySelector('.btn-stack-settings');
+        if (settingsBtn) {
+            settingsBtn.addEventListener('click', (e) => {
+                e.stopPropagation(); // Stop collapse
+                if (this.callbacks.onEditStack) {
+                    this.callbacks.onEditStack(stackName);
+                }
+            });
+        }
 
         return stackDiv;
     }
@@ -141,10 +170,12 @@ export class HabitUI {
         const row = document.createElement('div');
         row.className = 'habit-row';
 
+        // Context Menu
         row.addEventListener('contextmenu', (e) => {
             handleHabitContextMenu(e, habit, this.callbacks);
         });
 
+        // Name Column
         const nameCell = document.createElement('div');
         nameCell.className = 'h-cell name-col';
         nameCell.innerHTML = `
@@ -153,6 +184,7 @@ export class HabitUI {
         `;
         row.appendChild(nameCell);
 
+        // Streak Column
         const currentStreak = this._calculateStreak(habit.id, logs);
         const statCell = document.createElement('div');
         statCell.className = 'h-cell';
@@ -160,6 +192,7 @@ export class HabitUI {
         statCell.innerHTML = `<span class="fire-streak" style="${streakStyle}"><i class="fa-solid fa-fire"></i> ${currentStreak}</span>`;
         row.appendChild(statCell);
 
+        // Days Columns
         weekDates.forEach(dateStr => {
             const cell = document.createElement('div');
             cell.className = 'h-cell';
@@ -181,6 +214,7 @@ export class HabitUI {
             row.appendChild(cell);
         });
 
+        // Action Menu Column
         const actionCell = document.createElement('div');
         actionCell.className = 'h-cell';
         
@@ -244,5 +278,16 @@ export class HabitUI {
         const newDate = new Date(d.setDate(diff));
         newDate.setHours(0,0,0,0);
         return newDate;
+    }
+
+    updateHeader() {
+        if (!this.dom.headerSub) return;
+        const start = this.currentWeekStart;
+        const end = new Date(start);
+        end.setDate(end.getDate() + 6);
+
+        const opt = { month: 'short', day: 'numeric' };
+        const rangeStr = `${start.toLocaleDateString('en-US', opt)} - ${end.toLocaleDateString('en-US', opt)}`;
+        this.dom.headerSub.textContent = `Current Week • ${rangeStr}`;
     }
 }

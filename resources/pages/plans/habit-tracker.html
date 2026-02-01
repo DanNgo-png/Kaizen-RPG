@@ -54,12 +54,12 @@
         <!-- Stack -->
         <div class="input-row" style="margin-bottom:0;">
           <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Stack / Group</label>
-          
+
           <!-- Removed 'list' attribute, added autocomplete="off" -->
           <input type="text" id="input-habit-stack" autocomplete="off"
             style="width:100%; padding:10px; background:#111; border:1px solid #374151; color:white; border-radius:6px; box-sizing: border-box;"
             placeholder="e.g. Morning Routine">
-            
+
           <!-- New Custom Dropdown Container -->
           <div id="stack-custom-dropdown" class="custom-dropdown hidden">
             <!-- Options will be injected by JS -->
@@ -70,7 +70,7 @@
         <div class="input-row" style="margin-bottom:0;">
           <label style="color:#d1d5db; font-size:0.9rem; display:block; margin-bottom:5px;">Icon</label>
           <!-- Hidden input to store selected value -->
-          <input type="hidden" id="input-habit-icon" value="fa-solid fa-check">
+          <input type="hidden" id="input-habit-icon" value="fa-solid fa-check" autocomplete="off">
 
           <div id="habit-icon-grid" class="icon-picker-grid">
             <!-- JS will populate options here -->
@@ -83,6 +83,51 @@
             style="background:transparent; border:1px solid #4b5563; color:#ccc; padding:8px 16px; border-radius:6px; cursor:pointer;">Cancel</button>
           <button id="btn-save-habit" class="btn-flex-primary"
             style="background:#10b981; border:none; color:white; padding:8px 16px; border-radius:6px; cursor:pointer;">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STACK SETTINGS MODAL -->
+    <div id="modal-stack-settings" class="modal-overlay hidden"
+      style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2000; display:flex; align-items:center; justify-content:center;">
+      <div class="focus-flexible-modal-content"
+        style="background:#1f2937; padding:30px; border-radius:12px; width:380px; border:1px solid #374151;">
+
+        <h3 style="margin-top:0; color:#fff; display:flex; gap:10px; align-items:center;">
+          <i class="fa-solid fa-layer-group"></i> Stack Settings
+        </h3>
+
+        <div style="margin-bottom: 20px; font-size: 0.9rem; color: #9ca3af;">
+          Customize appearance for <b id="stack-modal-name" style="color:white;">Stack Name</b>
+        </div>
+
+        <!-- Color Picker -->
+        <div class="input-row">
+          <label style="color:#d1d5db; font-size:0.9rem; margin-bottom:8px; display:block;">Stack Color</label>
+          <div class="color-presets" id="stack-color-presets" style="grid-template-columns: repeat(6, 1fr);">
+            <!-- Colors injected by JS or hardcoded -->
+            <div class="color-swatch" data-color="#10b981" style="background:#10b981;"></div>
+            <div class="color-swatch" data-color="#3b82f6" style="background:#3b82f6;"></div>
+            <div class="color-swatch" data-color="#8b5cf6" style="background:#8b5cf6;"></div>
+            <div class="color-swatch" data-color="#f59e0b" style="background:#f59e0b;"></div>
+            <div class="color-swatch" data-color="#ef4444" style="background:#ef4444;"></div>
+            <div class="color-swatch" data-color="#ec4899" style="background:#ec4899;"></div>
+          </div>
+          <input type="hidden" id="input-stack-color" value="#3b82f6">
+        </div>
+
+        <!-- Icon Picker -->
+        <div class="input-row">
+          <label style="color:#d1d5db; font-size:0.9rem; margin-bottom:8px; display:block;">Stack Icon</label>
+          <input type="hidden" id="input-stack-icon" value="fa-solid fa-layer-group">
+          <div id="stack-icon-grid" class="icon-picker-grid" style="max-height: 120px;">
+            <!-- Icons injected by JS -->
+          </div>
+        </div>
+
+        <div class="modal-actions" style="justify-content: flex-end;">
+          <button id="btn-cancel-stack" class="btn-flex-secondary">Cancel</button>
+          <button id="btn-save-stack" class="btn-flex-primary">Save Changes</button>
         </div>
       </div>
     </div>

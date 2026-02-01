@@ -27,5 +27,10 @@ export const HabitAPI = {
     
     deleteHabit: async (id) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "deleteHabit", { id });
+    },
+
+    updateStackDetails: async (stackName, icon, color) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "updateStackDetails", { stackName, icon, color });
     }
+
 };

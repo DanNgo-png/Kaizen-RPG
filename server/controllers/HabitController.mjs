@@ -6,24 +6,18 @@ export class HabitController {
     }
 
     register(app) {
-        // 1. Get Data
+        // 1. Get Data 
         app.events.on("getHabitsData", (payload) => {
             try {
                 const { startDate, endDate, viewMode } = payload;
-
-                let habits;
-                if (viewMode === 'mastery') {
-                    habits = this.repo.getArchivedHabits(); 
-                } else {
-                    habits = this.repo.getHabits();
-                }
-
-                const logs = this.repo.getLogs(startDate, endDate);
                 
-                // Fetch Order from Habit DB, not App Settings
+                let habits = (viewMode === 'mastery') ? this.repo.getArchivedHabits() : this.repo.getHabits();
+                const logs = this.repo.getLogs(startDate, endDate);
                 const stackOrder = this.repo.getStackOrder();
+                
+                const stackConfig = this.repo.getStackConfig();
 
-                app.events.broadcast("receiveHabitsData", { habits, logs, stackOrder });
+                app.events.broadcast("receiveHabitsData", { habits, logs, stackOrder, stackConfig });
             } catch (err) {
                 console.error("❌ Habit Error:", err);
             }
@@ -85,6 +79,17 @@ export class HabitController {
                 app.events.broadcast("habitDeleted", { success: true });
             } catch (err) {
                 console.error("❌ HabitController: Delete Failed:", err);
+            }
+        });
+
+        // Save Stack Details
+        app.events.on("updateStackDetails", (payload) => {
+            try {
+                this.repo.saveStackDetails(payload.stackName, payload.icon, payload.color);
+                // We don't need a specific broadcast, usually we just refresh data
+                app.events.broadcast("stackDetailsUpdated", { success: true });
+            } catch (err) {
+                console.error("❌ Error updating stack details:", err);
             }
         });
     }
