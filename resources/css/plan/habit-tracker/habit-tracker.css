@@ -10,6 +10,13 @@
     flex-direction: column;
     height: 100%;
     overflow-y: hidden; /* Main scroll handled by inner container */
+    user-select: none;
+}
+
+/* Ensure inputs remain selectable for editing */
+.habit-container input {
+    user-select: text;
+    -webkit-user-select: text;
 }
 
 @keyframes fadeIn {
