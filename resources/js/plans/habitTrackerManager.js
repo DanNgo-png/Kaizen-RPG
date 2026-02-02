@@ -1,6 +1,7 @@
 import { HabitAPI } from "../api/HabitAPI.js";
 import { HabitUI } from "./habit-tracker/HabitUI.js";
 import { StackDragLogic } from "./habit-tracker/dragLogic.js";
+import { HabitDragLogic } from "./habit-tracker/habitDragLogic.js";
 import { notifier } from "../_global-managers/NotificationManager.js"; 
 
 const COMMON_ICONS = [
@@ -32,6 +33,7 @@ class HabitTrackerManager {
             logs: [],
             stackOrder: [], 
             stackConfig: {}, 
+            habitOrder: [],
             filter: 'all'
         };
 
@@ -129,6 +131,7 @@ class HabitTrackerManager {
         this.state.logs = e.detail.logs || [];
         this.state.stackOrder = e.detail.stackOrder || []; 
         this.state.stackConfig = e.detail.stackConfig || {}; 
+        this.state.habitOrder = e.detail.habitOrder || []; 
         this.render();
     }
 
@@ -214,11 +217,23 @@ class HabitTrackerManager {
             });
         }
         
-        this.ui.render(filteredHabits, this.state.logs, this.state.filter, this.state.stackOrder, this.state.stackConfig);
+        this.ui.render(
+            filteredHabits, 
+            this.state.logs, 
+            this.state.filter, 
+            this.state.stackOrder, 
+            this.state.stackConfig,
+            this.state.habitOrder
+        );
         
         StackDragLogic.init(this.dom.board, (newOrder) => {
             this.state.stackOrder = newOrder; 
             HabitAPI.saveStackOrder(newOrder); 
+        });
+
+        HabitDragLogic.init(this.dom.board, (newOrder) => {
+            this.state.habitOrder = newOrder;
+            HabitAPI.saveHabitOrder(newOrder);
         });
     }
 

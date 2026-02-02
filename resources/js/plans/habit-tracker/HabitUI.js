@@ -13,11 +13,7 @@ export class HabitUI {
         };
     }
 
-    /**
-     * Main Render Function
-     * Now accepts stackConfig to render specific colors and icons.
-     */
-    render(habits, logs, viewMode, stackOrder = [], stackConfig = {}) {
+    render(habits, logs, viewMode, stackOrder = [], stackConfig = {}, habitOrder = []) {
         this.updateHeader();
         this.container.innerHTML = '';
         
@@ -33,12 +29,28 @@ export class HabitUI {
             return;
         }
 
+        // Map for O(1) order lookup
+        const orderMap = new Map();
+        habitOrder.forEach((id, index) => orderMap.set(parseInt(id), index));
+
+        // Helper sort function
+        const sortHabits = (a, b) => {
+            const idxA = orderMap.has(a.id) ? orderMap.get(a.id) : 999999;
+            const idxB = orderMap.has(b.id) ? orderMap.get(b.id) : 999999;
+            return idxA - idxB;
+        };
+
         // Group habits by stack
         const stacks = {};
         habits.forEach(h => {
             const stackName = h.stack_name || 'General';
             if (!stacks[stackName]) stacks[stackName] = [];
             stacks[stackName].push(h);
+        });
+
+        // Sort habits inside each stack
+        Object.keys(stacks).forEach(key => {
+            stacks[key].sort(sortHabits);
         });
 
         const weekDates = this._getWeekDates();
@@ -58,11 +70,8 @@ export class HabitUI {
             stackKeys.sort();
         }
 
-        // Create DOM elements for each stack
         stackKeys.forEach(stackName => {
-            // Get config for this stack (color/icon) or default
             const config = stackConfig[stackName] || { color: null, icon: null };
-            
             const stackEl = this._createStackElement(stackName, stacks[stackName], weekDates, logs, viewMode, config);
             this.container.appendChild(stackEl);
         });
@@ -169,7 +178,8 @@ export class HabitUI {
     _createHabitRow(habit, weekDates, logs, viewMode) {
         const row = document.createElement('div');
         row.className = 'habit-row';
-
+        row.dataset.habitId = habit.id;
+        
         // Context Menu
         row.addEventListener('contextmenu', (e) => {
             handleHabitContextMenu(e, habit, this.callbacks);

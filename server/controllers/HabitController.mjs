@@ -14,10 +14,18 @@ export class HabitController {
                 let habits = (viewMode === 'mastery') ? this.repo.getArchivedHabits() : this.repo.getHabits();
                 const logs = this.repo.getLogs(startDate, endDate);
                 const stackOrder = this.repo.getStackOrder();
-                
                 const stackConfig = this.repo.getStackConfig();
+                
+                // Get Habit Order
+                const habitOrder = this.repo.getGlobalHabitOrder();
 
-                app.events.broadcast("receiveHabitsData", { habits, logs, stackOrder, stackConfig });
+                app.events.broadcast("receiveHabitsData", { 
+                    habits, 
+                    logs, 
+                    stackOrder, 
+                    stackConfig, 
+                    habitOrder // Send to frontend
+                });
             } catch (err) {
                 console.error("❌ Habit Error:", err);
             }
@@ -39,6 +47,14 @@ export class HabitController {
                 app.events.broadcast("habitCreated", { success: true });
             } catch (err) {
                 app.events.broadcast("habitCreated", { success: false, error: err.message });
+            }
+        });
+
+        app.events.on("saveHabitOrder", (payload) => {
+            try {
+                this.repo.saveGlobalHabitOrder(payload.order);
+            } catch (err) {
+                console.error("❌ Error saving habit order:", err);
             }
         });
 

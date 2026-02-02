@@ -31,6 +31,10 @@ export const HabitAPI = {
 
     updateStackDetails: async (stackName, icon, color) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "updateStackDetails", { stackName, icon, color });
+    },
+
+    saveHabitOrder: async (orderArray) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "saveHabitOrder", { order: orderArray });
     }
 
 };

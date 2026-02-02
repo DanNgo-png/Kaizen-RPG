@@ -64,4 +64,16 @@ export class HabitRepository {
         const json = JSON.stringify(config);
         this.statements.setMeta.run({ key: 'stack_config', value: json });
     }
+
+    getGlobalHabitOrder() {
+        const result = this.statements.getMeta.get('global_habit_order');
+        return result ? JSON.parse(result.value) : [];
+    }
+
+    saveGlobalHabitOrder(orderArray) {
+        // Ensure we store integers
+        const cleanOrder = orderArray.map(id => parseInt(id)).filter(id => !isNaN(id));
+        const json = JSON.stringify(cleanOrder);
+        this.statements.setMeta.run({ key: 'global_habit_order', value: json });
+    }
 }
