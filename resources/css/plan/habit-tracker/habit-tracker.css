@@ -51,36 +51,44 @@
 
 .view-controls {
     display: flex;
-    gap: 10px;
-    background-color: var(--surface-color);
+    gap: 4px;
+    background-color: #111827; /* Darker track background */
     padding: 4px;
-    border-radius: 8px;
+    border-radius: 10px;
     border: 1px solid var(--bg-hover);
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.3); /* Inner depth */
 }
 
 .view-btn {
     background: transparent;
-    border: none;
+    border: 1px solid transparent; /* Reserve space for border to prevent layout shift */
     color: var(--text-secondary);
-    padding: 6px 12px;
-    border-radius: 6px;
+    padding: 8px 16px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
     font-weight: 600;
     font-family: var(--font-main);
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.view-btn:hover {
+    color: #e5e7eb;
+    background-color: rgba(255, 255, 255, 0.05);
 }
 
 .view-btn.active {
-    background-color: var(--bg-hover);
+    background-color: var(--bg-hover); /* Popped out look relative to track */
     color: #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.06);
+    border-color: rgba(255,255,255,0.05);
 }
 
-.view-btn.focus-mode-active {
-    color: var(--accent-active-text);
-    background-color: rgba(59, 130, 246, 0.1);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+.view-btn.active i {
+    opacity: 1;
 }
 
 /* --- 2. Main Scroll Area --- */
