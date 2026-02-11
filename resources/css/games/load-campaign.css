@@ -44,7 +44,8 @@
     padding: 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
+    /* justify-content: space-between; */
+    gap: 15px;
     transition: all 0.2s ease;
     position: relative;
     overflow: hidden;
@@ -131,6 +132,7 @@
     display: flex;
     gap: 10px;
     opacity: 0.8;
+    margin-left: auto;
 }
 
 .save-card:hover .slot-actions {
@@ -249,4 +251,61 @@
         transform: scale(1);
         opacity: 1;
     }
+}
+
+/* --- Drag & Drop Enhancements --- */
+
+/* The Drag Handle */
+.drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    color: var(--bg-hover); 
+    cursor: grab;
+    transition: color 0.2s;
+    font-size: 1.2rem;
+    /* margin-right: 10px; */
+}
+
+.save-card:hover .drag-handle {
+    color: var(--text-secondary);
+}
+
+.drag-handle:hover {
+    color: var(--accent-active-text) !important;
+}
+
+.drag-handle:active {
+    cursor: grabbing;
+}
+
+/* Floating Avatar (Class added by DragAndDropManager) */
+.dnd-avatar {
+    z-index: 9999 !important;
+    background-color: var(--surface-color);
+    border: 1px solid var(--accent-active-text);
+    box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+    border-radius: 12px;
+    /* Ensure sizing matches */
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    pointer-events: none; /* Let events pass through */
+    transform: scale(1.02);
+}
+
+/* Placeholder in list */
+.dnd-placeholder {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 2px dashed rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin-bottom: 15px; /* Match grid gap */
+    box-sizing: border-box;
+}
+
+/* Hide original element while dragging */
+.save-card.is-dragging {
+    opacity: 0.3;
 }
