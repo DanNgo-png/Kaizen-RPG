@@ -1,5 +1,5 @@
-import { GLOBAL_SCHEMAS } from "./schemas/GlobalSchema.js";
-import { GAME_SCHEMA_SQL } from "./schemas/GameSchema.js";
+import { GLOBAL_SCHEMAS } from "./schemas/GlobalSchema.mjs";
+import { GAME_SCHEMA_SQL } from "./schemas/GameSchema.mjs";
 
 export function initializeSchema(db, dbName) {
     if (GLOBAL_SCHEMAS[dbName]) {
