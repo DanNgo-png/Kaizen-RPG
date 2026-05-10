@@ -115,9 +115,12 @@ export class WorldMapManager {
                 this.camera.centerOn(data.player.x, data.player.y);
             }
 
-            // ---> NEW: Check if Barebones, boot UI instead
+            // ---> Check if Barebones, boot UI instead
             if (this.state.origin === 'dungeon' && this.state.gameVersion === 'barebones') {
                 this.barebonesUI.show(this.state.nodes);
+                if (data.resources) {
+                    this.barebonesUI.updateStats(data.resources);
+                }
             } else {
                 this.barebonesUI.hide();
             }
@@ -169,9 +172,19 @@ export class WorldMapManager {
             
             if (confirm("Exit to Main Menu?")) {
                 this.stop(); // Stop loop and remove global hook
-                
                 GameAPI.closeGame(); 
-                
+                await loadPage('./pages/games/play-game.html');
+                initMenuButtons();
+            }
+        });
+
+        // Exit Menu Logic (Barebones Overlay)
+        document.getElementById('btn-bb-exit')?.addEventListener('click', async () => {
+            this.save();
+            
+            if (confirm("Exit to Main Menu?")) {
+                this.stop(); 
+                GameAPI.closeGame(); 
                 await loadPage('./pages/games/play-game.html');
                 initMenuButtons();
             }

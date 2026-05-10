@@ -12,13 +12,22 @@ export class BarebonesUIManager {
             activeTitle: document.getElementById('bb-active-title'),
             progressContainer: document.getElementById('bb-progress-container'),
             progressFill: document.getElementById('bb-progress-fill'),
-            progressText: document.getElementById('bb-progress-text')
+            progressText: document.getElementById('bb-progress-text'),
+
+            // Gold Display
+            goldDisplay: document.getElementById('bb-gold-display')
         };
 
         this.nodes = [];
         this.selectedNodeId = null;
 
         this._bindEvents();
+    }
+
+    updateStats(resources) {
+        if (this.dom.goldDisplay && resources) {
+            this.dom.goldDisplay.textContent = resources.gold || 0;
+        }
     }
 
     _bindEvents() {

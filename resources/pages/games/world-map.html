@@ -344,6 +344,20 @@
     <div id="barebones-ui-overlay" class="mgmt-overlay hidden"
       style="background-color: #0f172a; backdrop-filter: none; z-index: 40;">
       <div class="barebones-container">
+        <!-- Barebones Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+          <h2 style="margin: 0; font-size: 1.6rem; color: #fff; text-transform: uppercase; letter-spacing: 2px;">Dungeon Crawler</h2>
+          
+          <div style="display: flex; gap: 15px; align-items: center;">
+            <div style="background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: #facc15; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+              <i class="fa-solid fa-coins"></i> <span id="bb-gold-display">0</span>
+            </div>
+            
+            <button id="btn-bb-exit" style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.color='white'; this.style.backgroundColor='#374151';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">
+              <i class="fa-solid fa-right-from-bracket"></i> Exit
+            </button>
+          </div>
+        </div>
 
         <!-- Active Contract Banner -->
         <div class="bb-active-banner">
