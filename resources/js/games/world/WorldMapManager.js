@@ -132,6 +132,7 @@ export class WorldMapManager {
         const overlay = document.getElementById('management-overlay');
         const openBtn = document.getElementById('btn-open-party-modal');
         const closeBtn = document.getElementById('btn-close-mgmt-modal');
+        const bbOpenBtn = document.getElementById('btn-bb-inventory');
 
         const closeOverlay = () => {
             if (!overlay) return;
@@ -140,19 +141,28 @@ export class WorldMapManager {
             GameAPI.getWorldData(); // Refresh in case money changed
         };
 
-        if (openBtn && overlay) {
-            openBtn.addEventListener('click', () => {
-                // Save before opening management (good practice)
-                this.save();
-                this.stopLoop();
-                overlay.classList.remove('hidden');
+        const openOverlay = () => {
+            if (!overlay) return;
+            // Save before opening management (good practice)
+            this.save();
+            this.stopLoop();
+            overlay.classList.remove('hidden');
 
-                if (!this.managementInstance) {
-                    this.managementInstance = initManagement();
-                } else {
-                    this.managementInstance.refresh();
-                }
-            });
+            if (!this.managementInstance) {
+                this.managementInstance = initManagement();
+            } else {
+                this.managementInstance.refresh();
+            }
+        };
+
+        // Bind standard map button
+        if (openBtn) {
+            openBtn.addEventListener('click', openOverlay);
+        }
+
+        // Bind Barebones stash button
+        if (bbOpenBtn) {
+            bbOpenBtn.addEventListener('click', openOverlay);
         }
 
         if (closeBtn) {
@@ -165,11 +175,9 @@ export class WorldMapManager {
             });
         }
 
-        // Exit Menu Logic 
+        // Exit Menu Logic (Standard)
         document.getElementById('btn-world-menu')?.addEventListener('click', async () => {
-            // Save on Exit
             this.save();
-            
             if (confirm("Exit to Main Menu?")) {
                 this.stop(); // Stop loop and remove global hook
                 GameAPI.closeGame(); 
@@ -181,7 +189,6 @@ export class WorldMapManager {
         // Exit Menu Logic (Barebones Overlay)
         document.getElementById('btn-bb-exit')?.addEventListener('click', async () => {
             this.save();
-            
             if (confirm("Exit to Main Menu?")) {
                 this.stop(); 
                 GameAPI.closeGame(); 
