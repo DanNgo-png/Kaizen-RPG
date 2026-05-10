@@ -3,6 +3,8 @@ export class WorldState {
         this.nodes = [];
         this.player = { x: 400, y: 300, targetX: null, targetY: null };
         this.hoveredNode = null;
+        this.origin = 'sellswords';
+        this.gameVersion = 'standard';
     }
 
     setNodes(nodes) {
@@ -10,6 +12,9 @@ export class WorldState {
     }
 
     updatePlayer(dt) {
+        if (this.origin === 'dungeon' && this.gameVersion === 'barebones') return;
+
+        // Only move if there is a target (and not in barebones dungeon mode)
         if (this.player.targetX !== null) {
             const dx = this.player.targetX - this.player.x;
             const dy = this.player.targetY - this.player.y;
@@ -28,6 +33,8 @@ export class WorldState {
     }
 
     findNodeAt(worldX, worldY, threshold = 20) {
+        if (this.origin === 'dungeon' && this.gameVersion === 'barebones') return null;
+        
         for (const node of this.nodes) {
             const dist = Math.hypot(node.x - worldX, node.y - worldY);
             if (dist < threshold) return node;

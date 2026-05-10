@@ -5,6 +5,7 @@ import { GameLoop } from "./core/GameLoop.js";
 import { RenderSystem } from "./systems/RenderSystem.js";
 import { WorldState } from "./data/WorldState.js";
 import { WorldHUD } from "./ui/WorldHUD.js"; 
+import { BarebonesUIManager } from "./ui/BarebonesUIManager.js";
 import { loadPage } from "../../router.js";
 import { initMenuButtons } from "../playGameManager.js";
 import { GameAPI } from "../../api/GameAPI.js"; 
@@ -18,6 +19,8 @@ export class WorldMapManager {
         this.renderer = new RenderSystem(this.canvas, this.camera);
         this.input = new InputHandler(this.canvas, this.camera);
         this.hud = new WorldHUD(); 
+
+        this.barebonesUI = new BarebonesUIManager();
 
         this.gameLoop = new GameLoop(
             (dt) => this.update(dt),  
@@ -96,6 +99,9 @@ export class WorldMapManager {
         if(data) {
             console.log("🗺️ Loaded World Map Data");
             
+            if (data.origin) this.state.origin = data.origin;
+            if (data.gameVersion) this.state.gameVersion = data.gameVersion;
+            
             // 1. Load Nodes
             if(data.nodes) this.state.setNodes(data.nodes);
             
@@ -106,9 +112,14 @@ export class WorldMapManager {
             if (data.player) {
                 this.state.player.x = data.player.x;
                 this.state.player.y = data.player.y;
-                
-                // Optional: Center camera on player initially
                 this.camera.centerOn(data.player.x, data.player.y);
+            }
+
+            // ---> NEW: Check if Barebones, boot UI instead
+            if (this.state.origin === 'dungeon' && this.state.gameVersion === 'barebones') {
+                this.barebonesUI.show(this.state.nodes);
+            } else {
+                this.barebonesUI.hide();
             }
         }
     }
@@ -158,6 +169,9 @@ export class WorldMapManager {
             
             if (confirm("Exit to Main Menu?")) {
                 this.stop(); // Stop loop and remove global hook
+                
+                GameAPI.closeGame(); 
+                
                 await loadPage('./pages/games/play-game.html');
                 initMenuButtons();
             }

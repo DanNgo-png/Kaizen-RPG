@@ -6,20 +6,14 @@ export class GameRepository {
         this.statements = {};
     }
 
-    // Called by SaveController when explicitly loading/creating a specific slot
     initialize(slotId) {
         this.db = loadGameDatabase(slotId);
         this._prepareStatements();
     }
 
-    // Called by MercenaryController (and others) to ensure they use the currently active game
     ensureConnection() {
-        // 1. Get the globally active connection (throws if none)
         const activeDB = getActiveGameDB();
-
-        // 2. Check if our local reference is stale or null
         if (this.db !== activeDB) {
-            // console.log("🔄 GameRepository: Syncing to active save connection.");
             this.db = activeDB;
             this._prepareStatements();
         }
@@ -32,8 +26,8 @@ export class GameRepository {
             getAll: this.db.prepare('SELECT * FROM mercenaries WHERE is_active = 1'),
             getById: this.db.prepare('SELECT * FROM mercenaries WHERE id = ?'),
             insert: this.db.prepare(`
-                INSERT INTO mercenaries (name, role, level, xp, str, int, spd, daily_wage, is_active) 
-                VALUES (@name, @role, @level, 0, @str, @int, @spd, @wage, 1)
+                INSERT INTO mercenaries (name, role, level, xp, str, int, spd, daily_wage, is_active, max_hp, current_hp) 
+                VALUES (@name, @role, @level, 0, @str, @int, @spd, @wage, 1, @max_hp, @current_hp)
             `),
             addXp: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE is_active = 1`),
             restMercenaries: this.db.prepare(`
@@ -42,19 +36,28 @@ export class GameRepository {
                     current_hp = MIN(max_hp, current_hp + 10) 
                 WHERE is_active = 0
             `),
+            damageMercenary: this.db.prepare(`UPDATE mercenaries SET current_hp = MAX(0, current_hp - @damage) WHERE id = @id`),
             getWages: this.db.prepare(`SELECT SUM(daily_wage) as total FROM mercenaries`),
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
 
-            // World Map Statements
             insertNode: this.db.prepare(`
                 INSERT INTO world_nodes (type, name, x, y, faction_id) 
                 VALUES (@type, @name, @x, @y, @faction_id)
             `),
             getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
 
-            // Settings / Resources
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
-            updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`)
+            updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`),
+
+            getActiveContract: this.db.prepare(`SELECT * FROM contracts WHERE is_active = 1 LIMIT 1`),
+            getNodeContracts: this.db.prepare(`SELECT * FROM contracts WHERE node_id = ? AND is_completed = 0`),
+            insertContract: this.db.prepare(`
+                INSERT INTO contracts (node_id, title, description, required_minutes, gold_reward) 
+                VALUES (@node_id, @title, @desc, @req_mins, @gold)
+            `),
+            setActiveContract: this.db.prepare(`UPDATE contracts SET is_active = CASE WHEN id = ? THEN 1 ELSE 0 END`),
+            addContractProgress: this.db.prepare(`UPDATE contracts SET progress_minutes = progress_minutes + @progress WHERE id = @id`),
+            completeContract: this.db.prepare(`UPDATE contracts SET is_completed = 1, is_active = 0 WHERE id = @id`)
         };
 
         this.statements.insertSetting = this.db.prepare(`
@@ -66,19 +69,67 @@ export class GameRepository {
         `);
     }
 
+    // --- CONTRACT GENERATION ---
+    getOrGenerateContracts(nodeId) {
+        this.ensureConnection();
+        let contracts = this.statements.getNodeContracts.all(nodeId);
+        
+        if (contracts.length === 0) {
+            // Generate 3 random contracts for this node
+            const titles = ["Clear the Rat Cellar", "Hunt the Goblin Raiders", "Escort the Merchant", "Explore the Ruined Tower", "Guard the Caravan"];
+            const descs = [
+                "A simple task, but honest pay.",
+                "They have been harassing the local trade routes.",
+                "The road is dangerous, keep them safe.",
+                "Ancient secrets and hidden dangers await.",
+                "Protect the goods at all costs."
+            ];
+            
+            for(let i=0; i<3; i++) {
+                const reqMins = [15, 30, 45, 60, 120][Math.floor(Math.random() * 5)];
+                // Base gold formula
+                const gold = Math.floor(reqMins * 2.5 * (0.8 + Math.random() * 0.4));
+                
+                this.statements.insertContract.run({
+                    node_id: nodeId,
+                    title: titles[Math.floor(Math.random() * titles.length)],
+                    desc: descs[Math.floor(Math.random() * descs.length)],
+                    req_mins: reqMins,
+                    gold: gold
+                });
+            }
+            contracts = this.statements.getNodeContracts.all(nodeId);
+        }
+        return contracts;
+    }
+
+    acceptContract(contractId) {
+        this.ensureConnection();
+        this.statements.setActiveContract.run(contractId);
+    }
+
+    getActiveContract() {
+        this.ensureConnection();
+        return this.statements.getActiveContract.get();
+    }
+
     // --- WORLD MAP & POSITION ---
     
     getWorldState() {
         this.ensureConnection();
         const nodes = this.statements.getAllNodes.all();
         
-        // Fetch saved player position (default to 400, 300 if missing)
         const px = this.statements.getSetting.get('player_x')?.value || '400';
         const py = this.statements.getSetting.get('player_y')?.value || '300';
+        
+        const origin = this.statements.getSetting.get('origin')?.value || 'sellswords';
+        const gameVersion = this.statements.getSetting.get('game_version')?.value || 'standard';
 
         return {
             nodes,
-            player: { x: parseFloat(px), y: parseFloat(py) }
+            player: { x: parseFloat(px), y: parseFloat(py) },
+            origin,
+            gameVersion
         };
     }
 
@@ -87,7 +138,6 @@ export class GameRepository {
         const db = this.db;
         const insert = this.statements.insertSetting;
         
-        // Transaction ensures atomicity
         const txn = db.transaction(() => {
             insert.run({ key: 'player_x', value: String(x) });
             insert.run({ key: 'player_y', value: String(y) });
@@ -96,15 +146,70 @@ export class GameRepository {
     }
 
     // --- GAMEPLAY LOGIC ---
-
-    distributeSessionXP(focusMinutes) {
+    distributeSessionXP(focusMinutes, ratio = 1.0) {
         this.ensureConnection();
-        // Formula: 1 Minute = 10 XP. 
-        const xpAmount = Math.floor(focusMinutes * 10);
-        const fatigueCost = Math.floor(focusMinutes / 5); // 5 fatigue per 25 mins
+        
+        const origin = this.statements.getSetting.get('origin')?.value || 'sellswords';
+        const gameVersion = this.statements.getSetting.get('game_version')?.value || 'standard';
 
-        this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
-        return { xp: xpAmount, fatigue: fatigueCost };
+        const xpAmount = Math.floor(focusMinutes * 10 * ratio);
+        const fatigueCost = Math.floor(focusMinutes / 5); 
+
+        const logs = [];
+
+        // --- BAREBONES DUNGEON CRAWLER LOGIC ---
+        if (origin === 'dungeon' && gameVersion === 'barebones') {
+            const activeMercs = this.statements.getAll.all();
+            const activeContract = this.getActiveContract();
+
+            if (activeContract) {
+                // Apply progress to contract
+                const newProgress = activeContract.progress_minutes + focusMinutes;
+                
+                if (newProgress >= activeContract.required_minutes) {
+                    // Completed!
+                    this.statements.completeContract.run({ id: activeContract.id });
+                    this.updateGold(activeContract.gold_reward);
+                    
+                    logs.push(`📜 Contract Completed: ${activeContract.title}`);
+                    logs.push(`💰 Earned ${activeContract.gold_reward} crowns!`);
+                    
+                    // Give XP
+                    this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+                } else {
+                    // Partial progress
+                    this.statements.addContractProgress.run({ progress: focusMinutes, id: activeContract.id });
+                    logs.push(`📜 Contract Progress: ${activeContract.title}`);
+                    logs.push(`⏳ ${Math.round(newProgress)} / ${activeContract.required_minutes} minutes completed.`);
+                    
+                    this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+                }
+
+                // Chance to take damage while doing contracts
+                activeMercs.forEach(merc => {
+                    if (Math.random() < 0.25) { 
+                        const dmg = Math.floor(Math.random() * 8 * ratio) + 2;
+                        this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
+                        logs.push(`⚔️ ${merc.name} took ${dmg} damage in a skirmish.`);
+                    }
+                });
+
+            } else {
+                // Idle Delving (No contract selected)
+                const goldFound = Math.floor(focusMinutes * ratio * 1.5); // Lower passive gold
+                this.updateGold(goldFound);
+                
+                logs.push(`🛡️ The party scoured the immediate area for ${Math.round(focusMinutes)} minutes.`);
+                logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
+                this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+            }
+
+        } else {
+            // Standard Modes
+            this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+        }
+
+        return { xp: xpAmount, fatigue: fatigueCost, logs: logs };
     }
 
     processDayEnd() {
@@ -112,22 +217,15 @@ export class GameRepository {
         
         const db = this.db;
         const result = db.transaction(() => {
-            // 1. Get Current Day & Gold
             const currentDay = parseInt(this.statements.getSetting.get('day').value);
             const currentGold = parseInt(this.statements.getSetting.get('gold').value);
-            
-            // 2. Calculate Wages
             const totalWages = this.statements.getWages.get().total || 0;
             
-            // 3. Deduct Gold
             const newGold = currentGold - totalWages;
             this.statements.updateSetting.run({ key: 'gold', value: newGold });
             this.statements.insertLedger.run({ day: currentDay, desc: 'Daily Wages', amount: -totalWages });
 
-            // 4. Heal Reserves
             this.statements.restMercenaries.run();
-
-            // 5. Increment Day
             this.statements.updateSetting.run({ key: 'day', value: currentDay + 1 });
 
             return { newGold, day: currentDay + 1, wagesPaid: totalWages };
@@ -162,7 +260,6 @@ export class GameRepository {
         return this.statements.getAllNodes.all();
     }
 
-    // --- RESOURCE MANAGEMENT ---
     getResources() {
         this.ensureConnection();
         const gold = parseInt(this.statements.getSetting.get('gold')?.value || 0);
@@ -180,7 +277,6 @@ export class GameRepository {
         return newAmount;
     }
 
-    // --- MERCENARY MANAGEMENT ---
     getAllMercenaries() { 
         this.ensureConnection(); 
         return this.statements.getAll.all(); 
@@ -195,6 +291,8 @@ export class GameRepository {
             str: merc.str || 10,
             int: merc.int || 10,
             spd: merc.spd || 10,
+            max_hp: merc.max_hp || 100,
+            current_hp: merc.current_hp || 100,
             wage: merc.wage || 10
         });
     }

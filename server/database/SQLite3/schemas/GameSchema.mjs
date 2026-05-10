@@ -4,7 +4,6 @@ export const GAME_SCHEMA_SQL = `
         value TEXT
     );
 
-    -- [Existing Mercenaries/Inventory Tables Here...] --
     CREATE TABLE IF NOT EXISTS mercenaries ( 
         id INTEGER PRIMARY KEY AUTOINCREMENT, 
         name TEXT NOT NULL, 
@@ -36,7 +35,7 @@ export const GAME_SCHEMA_SQL = `
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- NEW: World Map Data
+    -- World Map Data
     CREATE TABLE IF NOT EXISTS world_nodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         type TEXT NOT NULL, -- 'town', 'village', 'stronghold', 'ruins'
@@ -46,6 +45,21 @@ export const GAME_SCHEMA_SQL = `
         faction_id INTEGER,
         is_visited INTEGER DEFAULT 0
     );
+
+    -- Contracts Table
+    CREATE TABLE IF NOT EXISTS contracts (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        node_id INTEGER NOT NULL,
+        title TEXT NOT NULL,
+        description TEXT,
+        required_minutes INTEGER DEFAULT 30,
+        progress_minutes REAL DEFAULT 0,
+        gold_reward INTEGER DEFAULT 0,
+        is_active INTEGER DEFAULT 0,
+        is_completed INTEGER DEFAULT 0,
+        FOREIGN KEY(node_id) REFERENCES world_nodes(id)
+    );
+
 
     -- Player Position Tracking
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_x', '400');

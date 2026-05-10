@@ -5,6 +5,10 @@ export const GameAPI = {
     createCampaign: async (slotId, campaignData) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "createNewGame", { slotId, campaignData });
     },
+
+    closeGame: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "closeGame", null);
+    },
     
     getWorldData: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getWorldData", null);
@@ -22,5 +26,14 @@ export const GameAPI = {
 
     hireMercenary: async (mercData, cost) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "hireMercenary", { mercData, cost });
+    },
+
+    // --- CONTRACTS ---
+    getContractsForNode: async (nodeId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getContractsForNode", { nodeId });
+    },
+
+    acceptContract: async (contractId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "acceptContract", { contractId });
     }
 };

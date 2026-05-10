@@ -80,6 +80,16 @@ export function getActiveGameDB() {
     return activeGameConnection;
 }
 
+export function closeActiveGameDatabase() {
+    if (activeGameConnection) {
+        try {
+            activeGameConnection.close();
+        } catch(e) {}
+        activeGameConnection = null;
+        console.log("🎮 Game Save Connection Closed.");
+    }
+}
+
 // Helper to delete a save
 export function deleteSaveFile(slotId) {
     const filePath = path.join(SAVE_DATA_DIR, `slot_${slotId}.db`);

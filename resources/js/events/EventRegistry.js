@@ -5,11 +5,10 @@ import { FocusHandler } from "../handlers/FocusHandler.js";
 
 export const EventRegistry = {
     init: () => {
-        // Map backend event names to frontend handler functions
-
         // Mercenaries
         Neutralino.events.on("receiveMercenaries", MercenaryHandler.onReceiveData);
         Neutralino.events.on("mercenaryAdded", MercenaryHandler.onCreated);
+        Neutralino.events.on("xpGained", MercenaryHandler.onXpGained);
 
         // Tasks
         Neutralino.events.on("receiveTasks", TaskHandler.onReceiveData);
@@ -28,7 +27,6 @@ export const EventRegistry = {
 
         // Export/Import Events
         Neutralino.events.on("receiveExportData", (event) => {
-            // Re-dispatch as DOM event for FocusSettingsManager to pick up
             const customEvent = new CustomEvent('kaizen:export-data', { detail: event.detail });
             document.dispatchEvent(customEvent);
         });
@@ -38,9 +36,6 @@ export const EventRegistry = {
             document.dispatchEvent(customEvent);
         });
         
-        // Add other domain handlers here (e.g., InventoryHandler, QuestHandler)
-        // Neutralino.events.on("receiveInventory", InventoryHandler.onUpdate);
-
         console.log("🔌 Event Registry initialized");
     }
 };

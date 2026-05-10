@@ -35,14 +35,11 @@ export class SelectModeStep extends BaseStep {
         this._setupDragAndDrop();
         this._setupProfiles();
         
-        // Initial Selection (Delayed slightly for DOM paint)
         setTimeout(() => {
             const currentId = campaignState.get('modeId') || this.sortedModes[0].id;
             this.selectMode(currentId);
         }, UI_CONFIG.ANIMATION_TIMEOUT_MS);
     }
-
-    // --- SETUP & LISTENERS ---
 
     _setupSettingsListeners() {
         document.addEventListener('kaizen:setting-update', (e) => {
@@ -90,7 +87,6 @@ export class SelectModeStep extends BaseStep {
             this.dom.btnCloseProfiles.addEventListener('click', () => this.dom.modalProfiles.classList.add(CSS_CLASSES.HIDDEN));
         }
 
-        // Close Modal on Outside Click
         if (this.dom.modalProfiles) {
             this.dom.modalProfiles.addEventListener('click', (e) => {
                 if (e.target === this.dom.modalProfiles) {
@@ -104,8 +100,6 @@ export class SelectModeStep extends BaseStep {
 
         ProfileAPI.getProfiles();
     }
-
-    // --- GAME MODES LOGIC ---
 
     _handleModeOrderUpdate(jsonValue) {
         try {
@@ -137,7 +131,6 @@ export class SelectModeStep extends BaseStep {
         const activeId = campaignState.get('modeId');
         this.dom.list.innerHTML = '';
         
-        // Create Glider (Visual Background)
         this.glider = document.createElement('div');
         this.glider.className = 'mode-list-glider';
         this.dom.list.appendChild(this.glider);
@@ -204,7 +197,6 @@ export class SelectModeStep extends BaseStep {
                 </li>
             `).join('');
 
-            // Optional: Version Selector for complex modes
             const versionHtml = mode.hasVersions ? this._buildVersionSelector(mode) : '';
 
             this.dom.details.innerHTML = `
@@ -226,8 +218,6 @@ export class SelectModeStep extends BaseStep {
 
         }, UI_CONFIG.RENDER_DELAY_MS);
     }
-
-    // --- PROFILE LOGIC ---
 
     _handleProfileOrderUpdate(jsonValue) {
         try {
@@ -265,7 +255,6 @@ export class SelectModeStep extends BaseStep {
         } else {
             const profile = this.cachedProfiles.find(p => p.id == profileId);
             if (profile && profile.config) {
-                // Apply all keys from profile to CampaignState
                 Object.entries(profile.config).forEach(([key, val]) => {
                     campaignState.set(key, val);
                 });
@@ -274,8 +263,6 @@ export class SelectModeStep extends BaseStep {
             }
         }
     }
-
-    // --- MANAGE PROFILES MODAL ---
 
     openManageModal() {
         this.dom.modalProfiles.classList.remove(CSS_CLASSES.HIDDEN);
@@ -308,10 +295,9 @@ export class SelectModeStep extends BaseStep {
 
         sorted.forEach(p => {
             const el = document.createElement('div');
-            el.className = 'profile-list-item'; // New class
+            el.className = 'profile-list-item';
             el.dataset.id = p.id;
             
-            // Clean HTML using new classes
             el.innerHTML = `
                 <div class="profile-drag-handle"><i class="fa-solid fa-grip-vertical"></i></div>
                 <div class="profile-name">${p.name}</div>
@@ -353,8 +339,6 @@ export class SelectModeStep extends BaseStep {
         this._renderProfileDropdown();
     }
 
-    // --- HELPERS ---
-
     _buildVersionSelector(mode) {
         return `
             <div class="detail-section-title" style="margin-top: 25px;">Select Version</div>
@@ -370,11 +354,13 @@ export class SelectModeStep extends BaseStep {
     }
 
     _bindVersionButtons(mode) {
-        if (!mode.hasVersions) return;
+        if (!mode.hasVersions) {
+            campaignState.set('version', 'standard');
+            return;
+        }
         
         const btns = this.dom.details.querySelectorAll('.btn-version-select');
         
-        // Helper to reset styles
         const resetBtns = () => {
             btns.forEach(b => {
                 b.style.borderColor = 'var(--bg-hover)';
@@ -383,24 +369,21 @@ export class SelectModeStep extends BaseStep {
             });
         };
 
-        // Helper to activate a button
         const activateBtn = (btn) => {
             resetBtns();
             btn.style.borderColor = mode.color;
             btn.style.color = '#fff';
-            // Slight tint of the mode color for background
-            btn.style.backgroundColor = `${mode.color}15`; // Hex opacity ~10%
+            btn.style.backgroundColor = `${mode.color}15`; 
+            campaignState.set('version', btn.dataset.ver); // Set selected version to Campaign State
         };
 
-        // Select first by default
         if (btns.length > 0) {
-            activateBtn(btns[0]);
+            activateBtn(btns[0]); // Default to first (barebones)
         }
 
         btns.forEach(btn => {
             btn.addEventListener('click', () => {
                 activateBtn(btn);
-                // Save version to state if needed: campaignState.set('version', btn.dataset.ver);
             });
         });
     }

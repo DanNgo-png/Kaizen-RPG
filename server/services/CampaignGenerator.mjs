@@ -16,7 +16,6 @@ export class CampaignGenerator {
 
         // 3. Generate World Map
         if (config.mapSource === 'premade') {
-            // [NEW] Use nodes passed from frontend
             if (config.premadeNodes && Array.isArray(config.premadeNodes)) {
                 this._createPremadeNodes(config.premadeNodes);
             } else {
@@ -35,7 +34,6 @@ export class CampaignGenerator {
     _setupWorld(config) {
         const originData = ORIGIN_CONFIGS[config.modeId] || ORIGIN_CONFIGS['default'];
         
-        // Adjust Gold based on Difficulty setting
         let startingGold = originData.gold;
         if (config.funds === 'low') startingGold *= 0.5;
         if (config.funds === 'high') startingGold *= 1.5;
@@ -43,6 +41,7 @@ export class CampaignGenerator {
         // Save Global Settings
         this.repo.setCampaignSetting('company_name', config.name || "The Nameless");
         this.repo.setCampaignSetting('origin', config.modeId || 'sellswords'); 
+        this.repo.setCampaignSetting('game_version', config.version || 'standard'); // Save Game Version
         this.repo.setCampaignSetting('gold', Math.floor(startingGold));
         this.repo.setCampaignSetting('day', 1);
         this.repo.setCampaignSetting('difficulty_eco', config.economy);
@@ -90,21 +89,6 @@ export class CampaignGenerator {
         });
     }
 
-    _loadPremadeMap() {
-        console.log("🗺️ Loading Premade Map...");
-        const nodes = [
-            { type: 'Stronghold', name: 'Capital City', x: 400, y: 300, faction_id: 1 },
-            { type: 'Village', name: 'Northshire', x: 400, y: 150, faction_id: 1 },
-            { type: 'Town', name: 'Goldshire', x: 200, y: 400, faction_id: 1 },
-            { type: 'Ruins', name: 'Dark Hollow', x: 600, y: 500, faction_id: null },
-            { type: 'Village', name: 'Riverwood', x: 550, y: 350, faction_id: 2 },
-            { type: 'Stronghold', name: 'Ironforge', x: 700, y: 200, faction_id: 2 }
-        ];
-        
-        nodes.forEach(n => this.repo.createWorldNode(n));
-        console.log(`✅ Loaded ${nodes.length} Premade Map nodes.`);
-    }
-
     _generateWorldMap(seed) {
         console.log("🗺️ Generating Persistent World Map...");
         
@@ -133,10 +117,6 @@ export class CampaignGenerator {
         }
         
         console.log(`✅ Created ${nodeCount} permanent world nodes.`);
-    }
-
-    _generateEmpireMap(seed) {
-        console.log("🗺️ Generating Grid Map for seed:", seed);
     }
 
     _rand([min, max]) {

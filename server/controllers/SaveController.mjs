@@ -1,7 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import Database from 'better-sqlite3'; 
-import { deleteSaveFile } from '../database/SQLite3/connection.mjs';
+import { deleteSaveFile, closeActiveGameDatabase } from '../database/SQLite3/connection.mjs';
 import { GameRepository } from '../database/SQLite3/repositories/GameRepository.mjs';
 import { CampaignGenerator } from '../services/CampaignGenerator.mjs'; 
 import { AppSettingsRepository } from '../database/SQLite3/repositories/settings/AppSettingsRepository.mjs';
@@ -132,6 +132,11 @@ export class SaveController {
             } catch (err) {
                 console.error(err);
             }
+        });
+
+        app.events.on("closeGame", () => {
+            closeActiveGameDatabase();
+            app.events.broadcast("gameClosed", { success: true });
         });
 
         app.events.on("updateCampaignSetting", (payload) => {
