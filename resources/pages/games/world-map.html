@@ -346,19 +346,27 @@
       <div class="barebones-container">
         <!-- Barebones Header -->
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-          <h2 style="margin: 0; font-size: 1.6rem; color: #fff; text-transform: uppercase; letter-spacing: 2px;">Dungeon Crawler</h2>
-          
+          <h2 style="margin: 0; font-size: 1.6rem; color: #fff; text-transform: uppercase; letter-spacing: 2px;">Dungeon
+            Crawler</h2>
+
           <div style="display: flex; gap: 15px; align-items: center;">
-            <div style="background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: #facc15; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            <div
+              style="background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: #facc15; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
               <i class="fa-solid fa-coins"></i> <span id="bb-gold-display">0</span>
             </div>
 
             <!-- Barebones Inventory/Stash Button -->
-            <button id="btn-bb-inventory" style="background: rgba(37, 99, 235, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.backgroundColor='rgba(37, 99, 235, 0.4)'; this.style.color='#fff';" onmouseout="this.style.backgroundColor='rgba(37, 99, 235, 0.2)'; this.style.color='#93c5fd';">
+            <button id="btn-bb-inventory"
+              style="background: rgba(37, 99, 235, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;"
+              onmouseover="this.style.backgroundColor='rgba(37, 99, 235, 0.4)'; this.style.color='#fff';"
+              onmouseout="this.style.backgroundColor='rgba(37, 99, 235, 0.2)'; this.style.color='#93c5fd';">
               <i class="fa-solid fa-suitcase"></i> Stash
             </button>
-            
-            <button id="btn-bb-exit" style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;" onmouseover="this.style.color='white'; this.style.backgroundColor='#374151';" onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">
+
+            <button id="btn-bb-exit"
+              style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;"
+              onmouseover="this.style.color='white'; this.style.backgroundColor='#374151';"
+              onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">
               <i class="fa-solid fa-right-from-bracket"></i> Exit
             </button>
           </div>
@@ -388,12 +396,35 @@
 
           <!-- Right: Job Board -->
           <div class="bb-board-panel">
-            <div class="bb-panel-header"><i class="fa-solid fa-clipboard-list"></i> Job Board <span
-                id="bb-selected-node-name"
-                style="color:#9ca3af; font-weight:normal; font-size:0.9rem; margin-left:10px;"></span></div>
+            <div class="bb-panel-header" style="justify-content: space-between; padding: 0;">
+              <div style="display: flex;">
+                <button id="bb-tab-jobs" class="bb-tab-btn active"><i class="fa-solid fa-clipboard-list"></i> Job
+                  Board</button>
+                <button id="bb-tab-market" class="bb-tab-btn"><i class="fa-solid fa-scale-balanced"></i>
+                  Marketplace</button>
+              </div>
+              <span id="bb-selected-node-name"
+                style="color:#9ca3af; font-weight:normal; font-size:0.9rem; margin-right:20px;"></span>
+            </div>
+
+            <!-- Tab 1: Contracts -->
             <div id="bb-contracts-list" class="bb-scroll-list" style="padding: 20px;">
               <div style="text-align: center; color: #64748b; margin-top: 50px;">Select a settlement to view available
                 contracts.</div>
+            </div>
+
+            <!-- Tab 2: Marketplace (Hidden by default) -->
+            <div id="bb-marketplace-container" class="hidden"
+              style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+              <!-- Sub-tabs -->
+              <div
+                style="display:flex; gap:10px; padding:15px 20px; background:rgba(0,0,0,0.2); border-bottom:1px solid #334155;">
+                <button id="bb-subtab-buy" class="bb-subtab active">Buy Items</button>
+                <button id="bb-subtab-sell" class="bb-subtab">Sell Loot</button>
+              </div>
+              <!-- List -->
+              <div id="bb-market-list" class="bb-scroll-list" style="padding: 20px;">
+              </div>
             </div>
           </div>
         </div>

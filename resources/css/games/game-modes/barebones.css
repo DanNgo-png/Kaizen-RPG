@@ -185,3 +185,56 @@
     transition: 0.2s;
 }
 .bb-btn-accept:hover { background: #047857; transform: translateY(-2px); }
+
+/* --- Barebones Tabs --- */
+.bb-tab-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 15px 20px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: var(--font-main);
+}
+
+.bb-tab-btn:hover {
+    color: #fff;
+    background: rgba(255,255,255,0.05);
+}
+
+.bb-tab-btn.active {
+    color: #60a5fa;
+    border-bottom-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.05);
+}
+
+.bb-subtab {
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 6px 16px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.bb-subtab:hover {
+    color: #fff;
+    border-color: #64748b;
+}
+
+.bb-subtab.active {
+    background: #3b82f6;
+    color: #fff;
+    border-color: #3b82f6;
+}
+
+/* Make sure hidden actually hides */
+.hidden {
+    display: none !important;
+}

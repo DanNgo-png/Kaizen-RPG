@@ -57,7 +57,10 @@ export class GameRepository {
             `),
             setActiveContract: this.db.prepare(`UPDATE contracts SET is_active = CASE WHEN id = ? THEN 1 ELSE 0 END`),
             addContractProgress: this.db.prepare(`UPDATE contracts SET progress_minutes = progress_minutes + @progress WHERE id = @id`),
-            completeContract: this.db.prepare(`UPDATE contracts SET is_completed = 1, is_active = 0 WHERE id = @id`)
+            completeContract: this.db.prepare(`UPDATE contracts SET is_completed = 1, is_active = 0 WHERE id = @id`),
+
+            getInventory: this.db.prepare(`SELECT * FROM inventory`),
+            deleteItem: this.db.prepare(`DELETE FROM inventory WHERE id = ?`)
         };
 
         this.statements.insertSetting = this.db.prepare(`
@@ -113,8 +116,18 @@ export class GameRepository {
         return this.statements.getActiveContract.get();
     }
 
+    // --- INVENTORY ---
+    getInventory() {
+        this.ensureConnection();
+        return this.statements.getInventory.all();
+    }
+
+    deleteItemFromInventory(inventoryId) {
+        this.ensureConnection();
+        return this.statements.deleteItem.run(inventoryId);
+    }
+
     // --- WORLD MAP & POSITION ---
-    
     getWorldState() {
         this.ensureConnection();
         const nodes = this.statements.getAllNodes.all();
