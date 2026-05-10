@@ -47,7 +47,7 @@ export const GAME_SCHEMA_SQL = `
         is_visited INTEGER DEFAULT 0
     );
 
-    -- NEW: Player Position Tracking
+    -- Player Position Tracking
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_x', '400');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_y', '300');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('map_generated', 'false');
