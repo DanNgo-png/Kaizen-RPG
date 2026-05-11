@@ -3,15 +3,16 @@ import { GameRepository } from "../database/SQLite3/repositories/GameRepository.
 // Helper to generate mock items for the shop
 const generateMockShop = (nodeType) => {
     const items = [
-        { id: 'iron_sword', name: 'Iron Sword', type: 'Weapon', icon: 'fa-solid fa-khanda', cost: 150 },
-        { id: 'wooden_shield', name: 'Wooden Shield', type: 'Armor', icon: 'fa-solid fa-shield-halved', cost: 80 },
-        { id: 'healing_salve', name: 'Healing Salve', type: 'Consumable', icon: 'fa-solid fa-flask', cost: 50 },
-        { id: 'chainmail', name: 'Chainmail', type: 'Armor', icon: 'fa-solid fa-shirt', cost: 400 },
-        { id: 'warhammer', name: 'Warhammer', type: 'Weapon', icon: 'fa-solid fa-gavel', cost: 250 }
+        { id: 'iron_sword', name: 'Iron Sword', type: 'Weapon', icon: 'fa-solid fa-khanda', cost: 150, rarity: 'common' },
+        { id: 'wooden_shield', name: 'Wooden Shield', type: 'Armor', icon: 'fa-solid fa-shield-halved', cost: 80, rarity: 'common' },
+        { id: 'healing_salve', name: 'Healing Salve', type: 'Consumable', icon: 'fa-solid fa-flask', cost: 50, rarity: 'common' },
+        { id: 'chainmail', name: 'Chainmail', type: 'Armor', icon: 'fa-solid fa-shirt', cost: 400, rarity: 'uncommon' },
+        { id: 'warhammer', name: 'Warhammer', type: 'Weapon', icon: 'fa-solid fa-gavel', cost: 250, rarity: 'rare' }
     ];
+
     // Strongholds get better gear
     if (nodeType === 'Stronghold') {
-        items.push({ id: 'plate_armor', name: 'Heavy Plate', type: 'Armor', icon: 'fa-solid fa-user-shield', cost: 1200 });
+        items.push({ id: 'plate_armor', name: 'Heavy Plate', type: 'Armor', icon: 'fa-solid fa-user-shield', cost: 1200, rarity: 'legendary' });
     }
     return items;
 };
@@ -22,12 +23,34 @@ const getItemDetails = (itemId) => {
     const found = allItems.find(i => i.id === itemId);
     if (found) return found;
     // Fallback for unknown loot
-    return { id: itemId, name: 'Unknown Loot (' + itemId + ')', type: 'Misc', icon: 'fa-solid fa-sack-dollar', cost: 100 };
+    return { id: itemId, name: 'Unknown Loot (' + itemId + ')', type: 'Misc', icon: 'fa-solid fa-sack-dollar', cost: 100, rarity: 'common' };
 };
 
 export class MercenaryController {
     constructor() {
         this.repo = new GameRepository();
+    }
+
+    /**
+     * Maps raw database inventory to rich item objects usable by the UI
+     */
+    _getEnrichedInventory() {
+        const rawInventory = this.repo.getInventory();
+        return rawInventory.map(inv => {
+            const details = getItemDetails(inv.item_id);
+            return {
+                id: inv.id,
+                inventoryId: inv.id, // Mapped for marketplace selling logic
+                itemId: inv.item_id,
+                mercenaryId: inv.mercenary_id,
+                name: details.name,
+                icon: details.icon,
+                type: details.type,
+                rarity: details.rarity || 'common',
+                count: 1, 
+                sellPrice: Math.floor((details.cost || 100) * 0.5) // Sell for 50%
+            };
+        });
     }
 
     register(app) {
@@ -60,7 +83,7 @@ export class MercenaryController {
             try {
                 const mercs = this.repo.getAllMercenaries();
                 const resources = this.repo.getResources();
-                const inventory = this.repo.getInventory();
+                const inventory = this._getEnrichedInventory();
                 app.events.broadcast("receivePartyData", { mercenaries: mercs, resources: resources, inventory: inventory });
             } catch (error) {
                 if (error.message.includes("No active save")) app.events.broadcast("receivePartyData", null);
@@ -144,20 +167,7 @@ export class MercenaryController {
         app.events.on("getMarketData", (payload) => {
             try {
                 const resources = this.repo.getResources();
-                const rawInventory = this.repo.getInventory();
-                
-                // Map raw DB inventory to rich item details for the UI
-                const enrichedInventory = rawInventory.map(inv => {
-                    const details = getItemDetails(inv.item_id);
-                    return {
-                        inventoryId: inv.id,
-                        itemId: inv.item_id,
-                        name: details.name,
-                        icon: details.icon,
-                        sellPrice: Math.floor(details.cost * 0.5) // Sell for 50%
-                    };
-                });
-
+                const enrichedInventory = this._getEnrichedInventory();
                 const shopItems = generateMockShop(payload.nodeType);
 
                 app.events.broadcast("receiveMarketData", { 
@@ -204,7 +214,7 @@ export class MercenaryController {
     _refreshParty(app) {
         const mercs = this.repo.getAllMercenaries();
         const resources = this.repo.getResources();
-        const inventory = this.repo.getInventory();
+        const inventory = this._getEnrichedInventory();
         app.events.broadcast("receivePartyData", { mercenaries: mercs, resources, inventory });
     }
 }
