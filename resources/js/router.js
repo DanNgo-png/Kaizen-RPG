@@ -60,6 +60,20 @@ function handleRouteLogic(url, container) {
 export async function loadPage(pageUrl) {
     const default_page = document.getElementById("default-page");
 
+    // --- TRACK GAME PAGES ---
+    // If navigating to a core game page, remember it in session storage
+    const coreGamePages = [
+        './pages/games/play-game.html',
+        './pages/games/world-map.html',
+        './pages/games/game-modes.html',
+        './pages/games/load-campaign.html',
+        './pages/games/empire-builder.html'
+    ];
+
+    if (coreGamePages.includes(pageUrl)) {
+        sessionStorage.setItem('kaizen_active_game_page', pageUrl);
+    }
+
     // --- SCALABLE LOGIC HANDLER ---
     // Decouples specific UI logic from the fetching mechanism
     handleRouteLogic(pageUrl, default_page);
