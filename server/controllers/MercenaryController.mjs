@@ -1,4 +1,5 @@
 import { GameRepository } from "../database/SQLite3/repositories/GameRepository.mjs";
+import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 
 // Helper to generate mock items for the shop
 const generateMockShop = (nodeType) => {
@@ -28,6 +29,7 @@ const getItemDetails = (itemId) => {
 export class MercenaryController {
     constructor() {
         this.repo = new GameRepository();
+        this.settingsRepo = new AppSettingsRepository();
     }
 
     /**
@@ -104,6 +106,22 @@ export class MercenaryController {
             try {
                 const { focusSeconds, ratio } = payload;
                 const minutes = focusSeconds / 60;
+
+                // Fetch user constraints from settings
+                const minMinutes = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || 10;
+                const maxMinutes = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || 120;
+
+                // Enforce Minimum
+                if (minutes < minMinutes) {
+                    console.log(`⏱️ Session too short for RPG XP (${Math.round(minutes)}m < ${minMinutes}m). Ignoring.`);
+                    return; // Do not distribute XP
+                }
+
+                // Enforce Maximum
+                if (minutes > maxMinutes) {
+                    console.log(`⏱️ Session exceeded max RPG XP time (${Math.round(minutes)}m > ${maxMinutes}m). Clamping.`);
+                    minutes = maxMinutes;
+                }
                 
                 const result = this.repo.distributeSessionXP(minutes, ratio);
                 app.events.broadcast("xpGained", result); 

@@ -2,6 +2,7 @@ import { loadPage } from "../router.js";
 import { initGameModes } from "./GameModesManager.js";
 import { initModsManager } from "../mods/modsManager.js";
 import { initLoadCampaign } from "./LoadCampaignManager.js";
+import { initGameSettings } from "./GameSettingsManager.js";
 
 export function initMenuButtons() {
     const newCampaignBtn = document.getElementById("btn-new-campaign");
@@ -39,6 +40,7 @@ export function initMenuButtons() {
     if (settingsBtn) {
         settingsBtn.addEventListener("click", async () => {
             await loadPage("./pages/games/game-settings.html");
+            initGameSettings();
         });
     }
 }

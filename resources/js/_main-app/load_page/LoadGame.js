@@ -1,5 +1,5 @@
 import { loadPage } from '../../router.js';
-import { initMenuButtons, initManagement } from '../ImportManager.js';
+import { initMenuButtons, initManagement, initGameSettings } from '../ImportManager.js';
 
 export function setupGameNavigation() {
     const playGameButton = document.querySelector(".play-game-button");
@@ -14,6 +14,7 @@ export function setupGameNavigation() {
     if (gameSettingsButton) {
         gameSettingsButton.addEventListener("click", async () => {
             await loadPage('./pages/games/game-settings.html');
+            initGameSettings();
         });
     }
 }

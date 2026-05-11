@@ -29,6 +29,7 @@ export { initCustomAnalytics } from '../analyze/CustomAnalyticsManager.js';
 export { initMenuButtons } from '../games/playGameManager.js';
 export { initWorldMap } from '../games/world/WorldMapManager.js';
 export { initManagement } from '../games/management/ManagementManager.js';
+export { initGameSettings } from '../games/GameSettingsManager.js';
 
 // SETTINGS
 export { initMainSettings } from '../main-settings/mainSettingsManager.js';
