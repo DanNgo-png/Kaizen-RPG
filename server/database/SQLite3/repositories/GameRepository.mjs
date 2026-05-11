@@ -80,7 +80,7 @@ export class GameRepository {
     }
 
     // --- CONTRACT GENERATION ---
-    getOrGenerateContracts(nodeId) {
+    getOrGenerateContracts(nodeId, minMins = 10, maxMins = 120) {
         this.ensureConnection();
         let contracts = this.statements.getNodeContracts.all(nodeId);
         
@@ -95,9 +95,17 @@ export class GameRepository {
                 "Protect the goods at all costs."
             ];
             
+            // Build an array of valid minute intervals (e.g. 10, 15, 20... up to max)
+            let possibleMins = [];
+            for(let m = minMins; m <= maxMins; m += 5) {
+                possibleMins.push(m);
+            }
+            if (possibleMins.length === 0) possibleMins = [minMins]; // Safety fallback
+            
             for(let i=0; i<3; i++) {
-                const reqMins = [15, 30, 45, 60, 120][Math.floor(Math.random() * 5)];
-                // Base gold formula
+                const reqMins = possibleMins[Math.floor(Math.random() * possibleMins.length)];
+                
+                // Base gold formula scales with the time required
                 const gold = Math.floor(reqMins * 2.5 * (0.8 + Math.random() * 0.4));
                 
                 this.statements.insertContract.run({

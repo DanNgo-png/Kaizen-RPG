@@ -106,23 +106,8 @@ export class MercenaryController {
             try {
                 const { focusSeconds, ratio } = payload;
                 const minutes = focusSeconds / 60;
-
-                // Fetch user constraints from settings
-                const minMinutes = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || 10;
-                const maxMinutes = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || 120;
-
-                // Enforce Minimum
-                if (minutes < minMinutes) {
-                    console.log(`⏱️ Session too short for RPG XP (${Math.round(minutes)}m < ${minMinutes}m). Ignoring.`);
-                    return; // Do not distribute XP
-                }
-
-                // Enforce Maximum
-                if (minutes > maxMinutes) {
-                    console.log(`⏱️ Session exceeded max RPG XP time (${Math.round(minutes)}m > ${maxMinutes}m). Clamping.`);
-                    minutes = maxMinutes;
-                }
                 
+                // Allow XP to scale directly with whatever time was focused
                 const result = this.repo.distributeSessionXP(minutes, ratio);
                 app.events.broadcast("xpGained", result); 
             } catch (e) {
@@ -162,8 +147,13 @@ export class MercenaryController {
 
         app.events.on("getContractsForNode", (payload) => {
             try {
-                const contracts = this.repo.getOrGenerateContracts(payload.nodeId);
+                // Fetch settings to dictate contract generation limits
+                const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || 10;
+                const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || 120;
+
+                const contracts = this.repo.getOrGenerateContracts(payload.nodeId, minMins, maxMins);
                 const activeContract = this.repo.getActiveContract();
+                
                 app.events.broadcast("receiveContracts", { contracts, activeContract });
             } catch(e) { console.error(e); }
         });
