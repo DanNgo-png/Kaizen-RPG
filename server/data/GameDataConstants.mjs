@@ -7,6 +7,18 @@ export const TITLES = [
     'the Brave', 'the Coward', 'Ironhead', 'Strongjaw', 'the Wolf', 'Quickhands'
 ];
 
+export const SETTLEMENT_NAMES = [
+    'Harrow', 'Heartland', "Dragon's Hollow", 'Wyvernstone', 'Mirefen', 
+    'Aethelgard', 'Caerleon', 'Estoria', 'Iron-Lung', 'Oakhaven', 
+    'Ironhold', 'Grimwatch', 'Blackwood', 'Stormpeak', "Raven's Roost",
+    'Silverpine', 'Gloomhaven', 'Frostford', 'Emberfall', 'Kingswatch',
+    'Duskhollow', 'Ashbourne', 'Wolfsden', 'Thornbury', "Viper's Run",
+    'Stonehaven', "Crow's Nest", 'Highmount', 'Deepwater', 'Mistveil',
+    'Whitestone', 'Gallowsgate', 'Mournstead', 'Everlight', 'Glimmerbrook',
+    'Briar-Bight', 'North-Cross', 'Skyshelf', 'Rust-Creek', 'Smokefall',
+    'Oldham', 'Hewe', 'Eastbourne', 'Quan Ma', 'Travercraig', 'Bournemouth'
+];
+
 // Definitions for "Origins" (Game Modes)
 export const ORIGIN_CONFIGS = {
     'sellswords': {

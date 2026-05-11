@@ -1,4 +1,4 @@
-import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES } from '../data/GameDataConstants.mjs';
+import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES, SETTLEMENT_NAMES } from '../data/GameDataConstants.mjs';
 
 export class CampaignGenerator {
     constructor(repository) {
@@ -92,22 +92,30 @@ export class CampaignGenerator {
     _generateWorldMap(seed) {
         console.log("🗺️ Generating Persistent World Map...");
         
-        const nodes = [];
         const nodeCount = 15; 
-
         const types = ['Stronghold', 'Village', 'Ruins', 'Town'];
-        const names = ['Oakhaven', 'Ironhold', 'Grimwatch', 'Blackwood', 'Sunnydale', 'Stormpeak'];
+        
+        // 1. Clone the names array so we can safely mutate/shuffle it
+        const availableNames = [...SETTLEMENT_NAMES];
+
+        // 2. Fisher-Yates Shuffle to randomize the names
+        for (let i = availableNames.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [availableNames[i], availableNames[j]] = [availableNames[j], availableNames[i]];
+        }
 
         for (let i = 0; i < nodeCount; i++) {
             const x = Math.floor(Math.random() * 2000);
             const y = Math.floor(Math.random() * 1500);
             
             const type = types[Math.floor(Math.random() * types.length)];
-            const nameBase = names[Math.floor(Math.random() * names.length)];
+            
+            // 3. Pop a unique name from the shuffled list (fallback just in case nodeCount > availableNames length)
+            const settlementName = availableNames.pop() || `Unknown Lands ${i}`;
             
             const nodeData = {
                 type: type,
-                name: `${nameBase} ${i + 1}`,
+                name: settlementName, // No longer appending numbers!
                 x: x,
                 y: y,
                 faction_id: null
