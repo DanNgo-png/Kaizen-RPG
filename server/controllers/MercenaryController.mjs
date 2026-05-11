@@ -129,6 +129,18 @@ export class MercenaryController {
             } catch(e) { console.error(e); }
         });
 
+        app.events.on("abortContract", (payload) => {
+            try {
+                // Delete contract
+                this.repo.cancelContract(payload.contractId);
+                
+                // Issue reputation penalty (-10)
+                this.repo.updateNodeReputation(payload.nodeId, -10);
+                
+                app.events.broadcast("contractAborted", { success: true });
+            } catch(e) { console.error(e); }
+        });
+
         app.events.on("getMarketData", (payload) => {
             try {
                 const resources = this.repo.getResources();

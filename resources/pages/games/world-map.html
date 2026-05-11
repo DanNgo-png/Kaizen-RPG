@@ -357,14 +357,14 @@
 
             <!-- Barebones Inventory/Stash Button -->
             <button id="btn-bb-inventory"
-              style="background: rgba(37, 99, 235, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;"
+              style="background: rgba(37, 99, 235, 0.2); border: 1px solid #3b82f6; color: #93c5fd; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: var(--font-main); transition: 0.2s;"
               onmouseover="this.style.backgroundColor='rgba(37, 99, 235, 0.4)'; this.style.color='#fff';"
               onmouseout="this.style.backgroundColor='rgba(37, 99, 235, 0.2)'; this.style.color='#93c5fd';">
               <i class="fa-solid fa-suitcase"></i> Stash
             </button>
 
             <button id="btn-bb-exit"
-              style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s;"
+              style="background: transparent; border: 1px solid #4b5563; color: #9ca3af; padding: 10px 15px; border-radius: 8px; cursor: pointer; font-weight: bold; font-family: var(--font-main); transition: 0.2s;"
               onmouseover="this.style.color='white'; this.style.backgroundColor='#374151';"
               onmouseout="this.style.color='#9ca3af'; this.style.backgroundColor='transparent';">
               <i class="fa-solid fa-right-from-bracket"></i> Exit
@@ -376,14 +376,20 @@
         <div class="bb-active-banner">
           <div class="bb-banner-icon"><i class="fa-solid fa-scroll"></i></div>
           <div class="bb-banner-info">
-            <span class="bb-label">Active Contract</span>
-            <h3 id="bb-active-title">No Active Contract</h3>
-            <div class="bb-progress-bar hidden" id="bb-progress-container">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+              <div>
+                <span class="bb-label">Active Contract</span>
+                <h3 id="bb-active-title" style="margin: 4px 0 10px 0;">No Active Contract</h3>
+              </div>
+              <button id="bb-btn-abort" class="bb-btn-abort hidden"><i class="fa-solid fa-xmark"></i> Abort</button>
+            </div>
+            <div class="bb-progress-bar hidden" id="bb-progress-container" style="margin-top: 5px;">
               <div id="bb-progress-fill" class="bb-fill"></div>
             </div>
             <span id="bb-progress-text" class="bb-text">Select a contract from a settlement below to begin.</span>
           </div>
         </div>
+
 
         <div class="bb-split-layout">
           <!-- Left: Settlements List -->

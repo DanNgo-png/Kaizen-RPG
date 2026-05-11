@@ -185,6 +185,28 @@
     transition: 0.2s;
 }
 .bb-btn-accept:hover { background: #047857; transform: translateY(-2px); }
+.bb-btn-accept:disabled {
+    background: #374151 !important;
+    color: #9ca3af !important;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.bb-btn-abort {
+    background: transparent;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: 0.2s;
+    font-size: 0.8rem;
+    font-family: var(--font-main);
+}
+.bb-btn-abort:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
 
 /* --- Barebones Tabs --- */
 .bb-tab-btn {
@@ -219,6 +241,7 @@
     border-radius: 6px;
     font-size: 0.85rem;
     font-weight: 600;
+    font-family: var(--font-main);
     cursor: pointer;
     transition: 0.2s;
 }

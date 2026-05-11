@@ -13,6 +13,7 @@ export class BarebonesUIManager {
             progressContainer: document.getElementById('bb-progress-container'),
             progressFill: document.getElementById('bb-progress-fill'),
             progressText: document.getElementById('bb-progress-text'),
+            btnAbort: document.getElementById('bb-btn-abort'),
 
             goldDisplay: document.getElementById('bb-gold-display'),
 
@@ -27,6 +28,7 @@ export class BarebonesUIManager {
 
         this.nodes = [];
         this.selectedNode = null;
+        this.activeContract = null;
         
         // Tab State
         this.activeTab = 'jobs';
@@ -49,6 +51,9 @@ export class BarebonesUIManager {
 
         Neutralino.events.off('contractAccepted', this._onContractAccepted.bind(this));
         Neutralino.events.on('contractAccepted', this._onContractAccepted.bind(this));
+
+        Neutralino.events.off('contractAborted', this._onContractAborted.bind(this));
+        Neutralino.events.on('contractAborted', this._onContractAborted.bind(this));
 
         // Market Events
         Neutralino.events.off('receiveMarketData', this._onReceiveMarketData.bind(this));
@@ -249,6 +254,7 @@ export class BarebonesUIManager {
     // --- Contract Logic ---
     _onReceiveContracts(e) {
         const { contracts, activeContract } = e.detail;
+        this.activeContract = activeContract;
         this.updateActiveBanner(activeContract);
         
         // Only render contracts if we are currently looking at the job board
@@ -259,9 +265,21 @@ export class BarebonesUIManager {
 
     _onContractAccepted(e) {
         const { activeContract } = e.detail;
+        this.activeContract = activeContract;
         this.updateActiveBanner(activeContract);
         if (this.selectedNode && this.activeTab === 'jobs') {
+            // Re-fetch to apply "Busy" lock on the list
             GameAPI.getContractsForNode(this.selectedNode.id);
+        }
+    }
+
+    _onContractAborted(e) {
+        this.activeContract = null;
+        this.updateActiveBanner(null);
+        if (this.selectedNode) {
+            // Re-fetch contracts to remove lock, and fetch world to sync reputation
+            GameAPI.getContractsForNode(this.selectedNode.id);
+            GameAPI.getWorldData();
         }
     }
 
@@ -272,9 +290,12 @@ export class BarebonesUIManager {
             return;
         }
 
+        const isBusy = !!this.activeContract;
+
         contracts.forEach(c => {
             const el = document.createElement('div');
             el.className = 'bb-contract-card';
+            
             el.innerHTML = `
                 <div class="bb-c-left">
                     <h4>${c.title}</h4>
@@ -285,11 +306,16 @@ export class BarebonesUIManager {
                     </div>
                 </div>
                 <div class="bb-c-right">
-                    <button class="bb-btn-accept">Accept Job</button>
+                    <button class="bb-btn-accept" ${isBusy ? 'disabled' : ''}>
+                        ${isBusy ? 'Busy' : 'Accept Job'}
+                    </button>
                 </div>
             `;
 
-            el.querySelector('.bb-btn-accept').addEventListener('click', () => GameAPI.acceptContract(c.id));
+            if (!isBusy) {
+                el.querySelector('.bb-btn-accept').addEventListener('click', () => GameAPI.acceptContract(c.id));
+            }
+            
             this.dom.contractList.appendChild(el);
         });
     }
@@ -303,10 +329,27 @@ export class BarebonesUIManager {
             const pct = Math.min((progress / target) * 100, 100);
             this.dom.progressFill.style.width = `${pct}%`;
             this.dom.progressText.textContent = `Invest Focus Time to progress (${Math.round(progress)}/${target}m).`;
+            
+            if (this.dom.btnAbort) {
+                this.dom.btnAbort.classList.remove('hidden');
+                
+                // Clone to clear old listeners safely
+                const newBtn = this.dom.btnAbort.cloneNode(true);
+                this.dom.btnAbort.parentNode.replaceChild(newBtn, this.dom.btnAbort);
+                this.dom.btnAbort = newBtn;
+                
+                this.dom.btnAbort.addEventListener('click', () => {
+                    if (confirm("Abort this contract? You will lose reputation (-10) with the settlement.")) {
+                        GameAPI.abortContract(activeContract.id, activeContract.node_id);
+                    }
+                });
+            }
+
         } else {
             this.dom.activeTitle.textContent = "No Active Contract";
             this.dom.progressContainer.classList.add('hidden');
             this.dom.progressText.textContent = "Select a contract from a settlement below to begin.";
+            if (this.dom.btnAbort) this.dom.btnAbort.classList.add('hidden');
         }
     }
 }
