@@ -177,29 +177,42 @@ export class WorldMapManager {
             });
         }
 
-        // Exit Menu Logic (Standard)
-        document.getElementById('btn-world-menu')?.addEventListener('click', async () => {
-            this.save();
-            if (confirm("Exit to Main Menu?")) {
+        const exitModal = document.getElementById('exit-game-modal');
+        const btnCancelExit = document.getElementById('btn-cancel-exit');
+        const btnConfirmExit = document.getElementById('btn-confirm-exit');
+
+        const handleExitRequest = () => {
+            this.save(); // Save game state before showing prompt
+            if (exitModal) exitModal.classList.remove('hidden');
+        };
+
+        // Bind Standard HUD Exit Button
+        document.getElementById('btn-world-menu')?.addEventListener('click', handleExitRequest);
+        
+        // Bind Barebones HUD Exit Button
+        document.getElementById('btn-bb-exit')?.addEventListener('click', handleExitRequest);
+
+        // Cancel Exit
+        if (btnCancelExit) {
+            btnCancelExit.addEventListener('click', () => {
+                exitModal.classList.add('hidden');
+            });
+        }
+
+        // Confirm Exit
+        if (btnConfirmExit) {
+            btnConfirmExit.addEventListener('click', async () => {
+                exitModal.classList.add('hidden');
+                
                 this.stop(); // Stop loop and remove global hook
                 GameAPI.closeGame(); 
+                
                 await loadPage('./pages/games/play-game.html');
                 initMenuButtons();
-            }
-        });
-
-        // Exit Menu Logic (Barebones Overlay)
-        document.getElementById('btn-bb-exit')?.addEventListener('click', async () => {
-            this.save();
-            if (confirm("Exit to Main Menu?")) {
-                this.stop(); 
-                GameAPI.closeGame(); 
-                await loadPage('./pages/games/play-game.html');
-                initMenuButtons();
-            }
-        });
+            });
+        }
     }
-
+    
     resize() {
         this.canvas.width = window.innerWidth;
         this.canvas.height = window.innerHeight;

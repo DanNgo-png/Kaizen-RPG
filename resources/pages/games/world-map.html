@@ -187,6 +187,76 @@
         transform: scale(1);
       }
     }
+
+    /* --- Exit Modal Styles --- */
+    .exit-modal-content {
+      background-color: var(--surface-color, #1f2937);
+      border: 1px solid var(--bg-hover, #374151);
+      border-radius: 16px;
+      padding: 30px;
+      width: 400px;
+      max-width: 90%;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      transform: scale(1);
+      animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes popIn {
+      from { transform: scale(0.95); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .exit-modal-icon {
+      font-size: 2.5rem;
+      margin-bottom: 20px;
+      background: rgba(239, 68, 68, 0.1);
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ef4444;
+    }
+
+    .exit-btn-cancel {
+      background: transparent;
+      border: 1px solid #4b5563;
+      color: #9ca3af;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+
+    .exit-btn-cancel:hover {
+      color: #fff;
+      border-color: #fff;
+    }
+
+    .exit-btn-confirm {
+      background: #ef4444;
+      border: 1px solid #ef4444;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: var(--font-main);
+      font-weight: 600;
+      font-size: 0.95rem;
+      transition: 0.2s;
+    }
+
+    .exit-btn-confirm:hover {
+      background-color: #dc2626;
+    }
   </style>
 </head>
 
@@ -390,7 +460,6 @@
           </div>
         </div>
 
-
         <div class="bb-split-layout">
           <!-- Left: Settlements List -->
           <div class="bb-list-panel">
@@ -437,6 +506,24 @@
 
       </div>
     </div>
+
+    <!-- EXIT CONFIRMATION MODAL -->
+    <div id="exit-game-modal" class="mgmt-overlay hidden" style="z-index: 9999;">
+      <div class="exit-modal-content">
+        <div class="exit-modal-icon">
+          <i class="fa-solid fa-person-running"></i>
+        </div>
+        <h2 style="margin: 0 0 10px 0; color: #fff; font-size: 1.5rem;">Retreat to Menu?</h2>
+        <p style="color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+          Your progress is automatically saved. Are you sure you want to exit to the main menu?
+        </p>
+        <div style="display: flex; gap: 15px; width: 100%; justify-content: center;">
+          <button id="btn-cancel-exit" class="exit-btn-cancel">Cancel</button>
+          <button id="btn-confirm-exit" class="exit-btn-confirm">Yes, Exit</button>
+        </div>
+      </div>
+    </div>
+    
   </div>
 </body>
 
