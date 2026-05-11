@@ -70,7 +70,12 @@ export class GameRepository {
         `);
 
         this.statements.insertItem = this.db.prepare(`
-            INSERT INTO inventory (item_id, mercenary_id, durability) VALUES (@itemId, @mercId, 100)
+            INSERT INTO inventory (item_id, mercenary_id, durability, stash_slot) 
+            VALUES (@itemId, @mercId, 100, @stashSlot)
+        `);
+
+        this.statements.updateItemSlot = this.db.prepare(`
+            UPDATE inventory SET stash_slot = @slot WHERE id = @id
         `);
     }
 
@@ -271,7 +276,37 @@ export class GameRepository {
 
     addItemToInventory(itemId, mercId = null) {
         this.ensureConnection();
-        return this.statements.insertItem.run({ itemId, mercId });
+        
+        let stashSlot = null;
+        
+        // If placing into the stash, find the first available empty slot
+        if (mercId === null) {
+            const currentItems = this.statements.getInventory.all().filter(i => i.mercenary_id === null && i.stash_slot !== null);
+            const occupied = new Set(currentItems.map(i => i.stash_slot));
+            stashSlot = 0;
+            while(occupied.has(stashSlot)) stashSlot++; // Scans until an empty integer is found
+        }
+        
+        return this.statements.insertItem.run({ itemId, mercId, stashSlot });
+    }
+
+    moveItemInStash(inventoryId, newSlot) {
+        this.ensureConnection();
+        const draggedItem = this.db.prepare('SELECT stash_slot FROM inventory WHERE id = ?').get(inventoryId);
+        if (!draggedItem) return;
+
+        const existingItem = this.db.prepare('SELECT id FROM inventory WHERE stash_slot = ? AND mercenary_id IS NULL').get(newSlot);
+        
+        const db = this.db;
+        const txn = db.transaction(() => {
+            // If the target slot has an item, swap it into the dragged item's old slot
+            if (existingItem) {
+                this.statements.updateItemSlot.run({ slot: draggedItem.stash_slot, id: existingItem.id });
+            }
+            // Move the dragged item into the new slot
+            this.statements.updateItemSlot.run({ slot: newSlot, id: inventoryId });
+        });
+        txn();
     }
 
     createWorldNode(node) {

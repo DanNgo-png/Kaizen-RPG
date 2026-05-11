@@ -24,6 +24,7 @@ export const GAME_SCHEMA_SQL = `
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         item_id TEXT NOT NULL,
         mercenary_id INTEGER, 
+        stash_slot INTEGER,
         durability INTEGER DEFAULT 100
     );
     

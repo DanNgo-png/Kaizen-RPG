@@ -9,7 +9,6 @@ const generateMockShop = (nodeType) => {
         { id: 'chainmail', name: 'Chainmail', type: 'Armor', icon: 'fa-solid fa-shirt', cost: 400, rarity: 'uncommon' },
         { id: 'warhammer', name: 'Warhammer', type: 'Weapon', icon: 'fa-solid fa-gavel', cost: 250, rarity: 'rare' }
     ];
-
     // Strongholds get better gear
     if (nodeType === 'Stronghold') {
         items.push({ id: 'plate_armor', name: 'Heavy Plate', type: 'Armor', icon: 'fa-solid fa-user-shield', cost: 1200, rarity: 'legendary' });
@@ -43,6 +42,7 @@ export class MercenaryController {
                 inventoryId: inv.id, // Mapped for marketplace selling logic
                 itemId: inv.item_id,
                 mercenaryId: inv.mercenary_id,
+                stashSlot: inv.stash_slot, 
                 name: details.name,
                 icon: details.icon,
                 type: details.type,
@@ -102,13 +102,10 @@ export class MercenaryController {
 
         app.events.on("internal:sessionCompleted", (payload) => {
             try {
-                // Ensure ratio is extracted and passed
                 const { focusSeconds, ratio } = payload;
                 const minutes = focusSeconds / 60;
                 
                 const result = this.repo.distributeSessionXP(minutes, ratio);
-                
-                // Notify frontend to show an RPG toast/logs
                 app.events.broadcast("xpGained", result); 
             } catch (e) {
                 if (!e.message.includes("No game save is currently loaded")) {
@@ -130,9 +127,18 @@ export class MercenaryController {
                 });
 
                 this._refreshParty(app);
-
             } catch (error) {
                 app.events.broadcast("mercenaryHired", { success: false, error: error.message });
+            }
+        });
+
+        // --- Inventory Sorting ---
+        app.events.on("moveInventoryItem", (payload) => {
+            try {
+                this.repo.moveItemInStash(payload.inventoryId, payload.newSlotIndex);
+                this._refreshParty(app);
+            } catch(e) {
+                console.error("Failed to move item:", e);
             }
         });
 
@@ -154,12 +160,8 @@ export class MercenaryController {
 
         app.events.on("abortContract", (payload) => {
             try {
-                // Delete contract
                 this.repo.cancelContract(payload.contractId);
-                
-                // Issue reputation penalty (-10)
                 this.repo.updateNodeReputation(payload.nodeId, -10);
-                
                 app.events.broadcast("contractAborted", { success: true });
             } catch(e) { console.error(e); }
         });
