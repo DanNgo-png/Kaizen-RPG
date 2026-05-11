@@ -117,9 +117,11 @@ export class WorldMapManager {
 
             // ---> Check if Barebones, boot UI instead
             if (this.state.origin === 'dungeon' && this.state.gameVersion === 'barebones') {
-                this.barebonesUI.show(this.state.nodes);
-                if (data.resources) {
-                    this.barebonesUI.updateStats(data.resources);
+                if (this.barebonesUI.dom.overlay.classList.contains('hidden')) {
+                    this.barebonesUI.show(this.state.nodes);
+                    if (data.resources) this.barebonesUI.updateStats(data.resources);
+                } else {
+                    this.barebonesUI.updateData(this.state.nodes, data.resources);
                 }
             } else {
                 this.barebonesUI.hide();

@@ -42,11 +42,11 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getMarketData", { nodeType });
     },
 
-    buyItem: async (itemId, cost) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "buyItem", { itemId, cost });
+    buyItem: async (itemId, cost, nodeId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "buyItem", { itemId, cost, nodeId });
     },
 
-    sellItem: async (inventoryId, price) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "sellItem", { inventoryId, price });
+    sellItem: async (inventoryId, price, nodeId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "sellItem", { inventoryId, price, nodeId });
     }
 };

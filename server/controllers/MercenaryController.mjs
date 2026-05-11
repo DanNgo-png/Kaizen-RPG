@@ -160,6 +160,12 @@ export class MercenaryController {
             try {
                 this.repo.updateGold(-payload.cost);
                 this.repo.addItemToInventory(payload.itemId);
+                
+                if (payload.nodeId) {
+                    const repGain = Math.max(1, Math.floor(payload.cost / 100)); // Minimum 1 rep, scales with cost
+                    this.repo.updateNodeReputation(payload.nodeId, repGain);
+                }
+                
                 app.events.broadcast("transactionComplete", { success: true });
             } catch(e) {
                 app.events.broadcast("transactionComplete", { success: false, error: e.message });
@@ -170,6 +176,12 @@ export class MercenaryController {
             try {
                 this.repo.updateGold(payload.price);
                 this.repo.deleteItemFromInventory(payload.inventoryId);
+                
+                if (payload.nodeId) {
+                    const repGain = Math.max(1, Math.floor(payload.price / 100));
+                    this.repo.updateNodeReputation(payload.nodeId, repGain);
+                }
+                
                 app.events.broadcast("transactionComplete", { success: true });
             } catch(e) {
                 app.events.broadcast("transactionComplete", { success: false, error: e.message });

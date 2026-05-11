@@ -41,10 +41,11 @@ export class GameRepository {
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
 
             insertNode: this.db.prepare(`
-                INSERT INTO world_nodes (type, name, x, y, faction_id) 
-                VALUES (@type, @name, @x, @y, @faction_id)
+                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation) 
+                VALUES (@type, @name, @x, @y, @faction_id, 0)
             `),
             getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
+            updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
 
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`),
@@ -127,6 +128,12 @@ export class GameRepository {
         return this.statements.deleteItem.run(inventoryId);
     }
 
+    // --- REPUTATION ---
+    updateNodeReputation(nodeId, amount) {
+        this.ensureConnection();
+        if(nodeId) this.statements.updateReputation.run(amount, nodeId);
+    }
+
     // --- WORLD MAP & POSITION ---
     getWorldState() {
         this.ensureConnection();
@@ -183,9 +190,13 @@ export class GameRepository {
                     // Completed!
                     this.statements.completeContract.run({ id: activeContract.id });
                     this.updateGold(activeContract.gold_reward);
+
+                    const contractRepReward = 15;
+                    this.updateNodeReputation(activeContract.node_id, contractRepReward);
                     
                     logs.push(`📜 Contract Completed: ${activeContract.title}`);
                     logs.push(`💰 Earned ${activeContract.gold_reward} crowns!`);
+                    logs.push(`🤝 Reputation with settlement increased by ${contractRepReward}.`);
                     
                     // Give XP
                     this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });

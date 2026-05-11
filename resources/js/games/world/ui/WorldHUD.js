@@ -47,6 +47,7 @@ export class WorldHUD {
         this.tooltip.innerHTML = `
             <div style="font-weight:700; font-size:1rem; margin-bottom:2px;">${node.name}</div>
             <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${node.type}</div>
+            <div style="color:#fbbf24; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${node.reputation || 0}</div>
             ${node.faction ? `<div style="color:#60a5fa; font-size:0.75rem; margin-top:4px;">${node.faction}</div>` : ''}
         `;
 

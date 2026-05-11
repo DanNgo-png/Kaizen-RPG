@@ -43,6 +43,7 @@ export const GAME_SCHEMA_SQL = `
         x INTEGER,
         y INTEGER,
         faction_id INTEGER,
+        reputation INTEGER DEFAULT 0,
         is_visited INTEGER DEFAULT 0
     );
 
@@ -59,7 +60,6 @@ export const GAME_SCHEMA_SQL = `
         is_completed INTEGER DEFAULT 0,
         FOREIGN KEY(node_id) REFERENCES world_nodes(id)
     );
-
 
     -- Player Position Tracking
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_x', '400');

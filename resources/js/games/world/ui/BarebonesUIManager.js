@@ -115,6 +115,22 @@ export class BarebonesUIManager {
         this.switchTab('jobs');
     }
 
+    updateData(nodes, resources) {
+        this.nodes = nodes;
+        if (resources) this.updateStats(resources);
+
+        // Update selectedNode reference so UI fields (like reputation) refresh
+        if (this.selectedNode) {
+            const updatedNode = this.nodes.find(n => n.id === this.selectedNode.id);
+            if (updatedNode) {
+                this.selectedNode = updatedNode;
+                this.dom.selectedNodeName.innerHTML = `— ${this.selectedNode.name} <span style="color:#fbbf24; font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-handshake"></i> Rep: ${this.selectedNode.reputation || 0}</span>`;
+            }
+        }
+        
+        this.renderNodeList();
+    }
+
     hide() {
         if (this.dom.overlay) this.dom.overlay.classList.add('hidden');
     }
@@ -142,7 +158,7 @@ export class BarebonesUIManager {
 
     selectNode(node) {
         this.selectedNode = node;
-        this.dom.selectedNodeName.textContent = `— ${node.name}`;
+        this.dom.selectedNodeName.innerHTML = `— ${node.name} <span style="color:#fbbf24; font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-handshake"></i> Rep: ${node.reputation || 0}</span>`;
         this.renderNodeList(); 
         
         // If on Jobs, fetch jobs. If on Market, fetch market.
@@ -216,9 +232,9 @@ export class BarebonesUIManager {
             if (canAfford) {
                 el.querySelector('.bb-btn-accept').addEventListener('click', () => {
                     if (isBuying) {
-                        GameAPI.buyItem(item.id, item.cost);
+                        GameAPI.buyItem(item.id, item.cost, this.selectedNode.id);
                     } else {
-                        GameAPI.sellItem(item.inventoryId, item.sellPrice);
+                        GameAPI.sellItem(item.inventoryId, item.sellPrice, this.selectedNode.id);
                     }
                 });
             } else {
