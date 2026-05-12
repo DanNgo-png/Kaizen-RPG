@@ -12,5 +12,10 @@ export function initializeGameSchema(db) {
     db.prepare(`INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('gold', '500')`).run();
     db.prepare(`INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('renown', '0')`).run();
     db.prepare(`INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('day', '1')`).run();
+
+    // Ensure seamless update for older save files that don't have the economy columns
+    try { db.exec("ALTER TABLE world_nodes ADD COLUMN buy_modifier REAL DEFAULT 1.0;"); } catch(e) {}
+    try { db.exec("ALTER TABLE world_nodes ADD COLUMN sell_modifier REAL DEFAULT 0.5;"); } catch(e) {}
+
     console.log("⚔️ Game Schema Initialized for Save Slot");
 }

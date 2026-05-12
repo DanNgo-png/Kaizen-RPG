@@ -65,7 +65,11 @@ export class RenderSystem {
 
     _drawNodes(nodes, hoveredNode) {
         nodes.forEach(node => {
-            const baseSize = node.type === 'Stronghold' ? 15 : 8;
+            // DYNAMIC SCALE: Map nodes get visually bigger based on new Tiers
+            let baseSize = 8;
+            if (['City', 'City-State'].includes(node.type)) baseSize = 10;
+            if (['Province', 'Kingdom'].includes(node.type)) baseSize = 12;
+            if (['High Kingdom', 'Empire', 'Stronghold'].includes(node.type)) baseSize = 15;
             
             this.ctx.fillStyle = (hoveredNode === node) ? this.theme.hover : this.theme.town;
             this.ctx.beginPath();

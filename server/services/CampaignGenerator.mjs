@@ -1,4 +1,4 @@
-import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES, SETTLEMENT_NAMES } from '../data/GameDataConstants.mjs';
+import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES, SETTLEMENT_NAMES, SETTLEMENT_TIERS } from '../data/GameDataConstants.mjs';
 
 export class CampaignGenerator {
     constructor(repository) {
@@ -28,7 +28,12 @@ export class CampaignGenerator {
 
     _createPremadeNodes(nodes) {
         console.log(`🗺️ Importing ${nodes.length} Premade Nodes...`);
-        nodes.forEach(n => this.repo.createWorldNode(n));
+        nodes.forEach(n => {
+            const tierInfo = SETTLEMENT_TIERS[n.type] || { buyMult: 1.0, sellMult: 0.5 };
+            n.buy_modifier = n.buy_modifier || tierInfo.buyMult;
+            n.sell_modifier = n.sell_modifier || tierInfo.sellMult;
+            this.repo.createWorldNode(n);
+        });
     }
 
     _setupWorld(config) {
@@ -93,12 +98,24 @@ export class CampaignGenerator {
         console.log("🗺️ Generating Persistent World Map...");
         
         const nodeCount = 15; 
-        const types = ['Stronghold', 'Village', 'Ruins', 'Town'];
         
-        // 1. Clone the names array so we can safely mutate/shuffle it
+        // Weighted tiers - more hamlets and villages, very few empires
+        const weightedTypes = [
+            'Hamlet', 'Hamlet', 'Hamlet', 'Hamlet',
+            'Village', 'Village', 'Village',
+            'Town', 'Town',
+            'City', 'City',
+            'City-State',
+            'Province',
+            'Kingdom',
+            'High Kingdom',
+            'Empire',
+            'Stronghold', 'Stronghold',
+            'Ruins', 'Ruins'
+        ];
+        
         const availableNames = [...SETTLEMENT_NAMES];
 
-        // 2. Fisher-Yates Shuffle to randomize the names
         for (let i = availableNames.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [availableNames[i], availableNames[j]] = [availableNames[j], availableNames[i]];
@@ -108,17 +125,18 @@ export class CampaignGenerator {
             const x = Math.floor(Math.random() * 2000);
             const y = Math.floor(Math.random() * 1500);
             
-            const type = types[Math.floor(Math.random() * types.length)];
-            
-            // 3. Pop a unique name from the shuffled list (fallback just in case nodeCount > availableNames length)
+            const type = weightedTypes[Math.floor(Math.random() * weightedTypes.length)];
             const settlementName = availableNames.pop() || `Unknown Lands ${i}`;
+            const tierInfo = SETTLEMENT_TIERS[type] || { buyMult: 1.0, sellMult: 0.5 };
             
             const nodeData = {
                 type: type,
-                name: settlementName, // No longer appending numbers!
+                name: settlementName,
                 x: x,
                 y: y,
-                faction_id: null
+                faction_id: null,
+                buy_modifier: tierInfo.buyMult,
+                sell_modifier: tierInfo.sellMult
             };
 
             this.repo.createWorldNode(nodeData);

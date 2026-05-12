@@ -42,10 +42,13 @@ export class GameRepository {
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
 
             insertNode: this.db.prepare(`
-                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation) 
-                VALUES (@type, @name, @x, @y, @faction_id, 0)
+                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier) 
+                VALUES (@type, @name, @x, @y, @faction_id, 0, @buy_modifier, @sell_modifier)
             `),
             getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
+            
+            getNodeById: this.db.prepare(`SELECT * FROM world_nodes WHERE id = ?`),
+            
             updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
 
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
@@ -175,6 +178,11 @@ export class GameRepository {
     }
 
     // --- WORLD MAP & POSITION ---
+    getNodeById(id) {
+        this.ensureConnection();
+        return this.statements.getNodeById.get(id); 
+    }
+    
     getWorldState() {
         this.ensureConnection();
         const nodes = this.statements.getAllNodes.all();
@@ -359,7 +367,9 @@ export class GameRepository {
             name: node.name,
             x: node.x,
             y: node.y,
-            faction_id: node.faction_id || null
+            faction_id: node.faction_id || null,
+            buy_modifier: node.buy_modifier || 1.0,
+            sell_modifier: node.sell_modifier || 0.5
         });
     }
 

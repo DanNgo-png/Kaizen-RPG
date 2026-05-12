@@ -223,7 +223,7 @@ export class BarebonesUIManager {
                 const loader = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
                 this.dom.marketStashList.innerHTML = loader;
                 this.dom.marketShopList.innerHTML = loader;
-                GameAPI.getMarketData(this.selectedNode.type);
+                GameAPI.getMarketData(this.selectedNode.id);
             }
         }
     }
@@ -266,7 +266,13 @@ export class BarebonesUIManager {
             el.className = 'bb-node-card';
             if (this.selectedNode && node.id === this.selectedNode.id) el.classList.add('selected');
             
-            const icon = node.type === 'Stronghold' ? 'fa-chess-rook' : (node.type === 'Town' ? 'fa-house-chimney' : 'fa-campground');
+            // DYNAMIC ICON: Support the new Tier Types visually
+            let icon = 'fa-campground'; 
+            if (['Town', 'City'].includes(node.type)) icon = 'fa-house-chimney';
+            if (['City-State', 'Province'].includes(node.type)) icon = 'fa-city';
+            if (['Kingdom', 'High Kingdom', 'Empire'].includes(node.type)) icon = 'fa-chess-rook';
+            if (node.type === 'Stronghold') icon = 'fa-shield-halved';
+            if (node.type === 'Ruins') icon = 'fa-skull';
             
             el.innerHTML = `
                 <div style="font-size:1.5rem; color:#94a3b8; width:30px; text-align:center;"><i class="fa-solid ${icon}"></i></div>
@@ -291,7 +297,7 @@ export class BarebonesUIManager {
         } else {
             this.dom.marketStashList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
             this.dom.marketShopList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
-            GameAPI.getMarketData(node.type);
+            GameAPI.getMarketData(node.id);
         }
     }
 
@@ -305,7 +311,7 @@ export class BarebonesUIManager {
 
     _onTransactionComplete(e) {
         if (e.detail.success) {
-            if (this.selectedNode) GameAPI.getMarketData(this.selectedNode.type);
+            if (this.selectedNode) GameAPI.getMarketData(this.selectedNode.id);
             GameAPI.getWorldData(); 
         } else {
             alert(e.detail.error || "Transaction failed.");

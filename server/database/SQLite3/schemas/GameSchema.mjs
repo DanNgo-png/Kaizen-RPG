@@ -39,13 +39,15 @@ export const GAME_SCHEMA_SQL = `
     -- World Map Data
     CREATE TABLE IF NOT EXISTS world_nodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL, -- 'town', 'village', 'stronghold', 'ruins'
+        type TEXT NOT NULL, -- 'Hamlet', 'Town', 'Empire', etc.
         name TEXT,
         x INTEGER,
         y INTEGER,
         faction_id INTEGER,
         reputation INTEGER DEFAULT 0,
-        is_visited INTEGER DEFAULT 0
+        is_visited INTEGER DEFAULT 0,
+        buy_modifier REAL DEFAULT 1.0,
+        sell_modifier REAL DEFAULT 0.5
     );
 
     -- Contracts Table

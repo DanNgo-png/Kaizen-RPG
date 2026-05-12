@@ -1,6 +1,7 @@
 import { WEAPONS } from '../data/items/Weapons.mjs';
 import { ARMOR } from '../data/items/Armor.mjs';
 import { CONSUMABLES } from '../data/items/Consumables.mjs';
+import { SETTLEMENT_TIERS } from '../data/GameDataConstants.mjs';
 
 class ItemFactoryClass {
     constructor() {
@@ -27,11 +28,31 @@ class ItemFactoryClass {
         };
     }
 
-    getShopInventory(nodeType) {
+    getShopInventory(nodeType, buyModifier = 1.0) {
         const inventory = [];
+        if (nodeType === 'Ruins') return inventory; // Ruins have no active shops
+
+        const tierConfig = SETTLEMENT_TIERS[nodeType] || { shopLevel: 1 };
+        const shopLevel = tierConfig.shopLevel;
+
         this.templates.forEach(template => {
-            if (template.availableIn.includes(nodeType) || template.availableIn.includes('All')) {
-                inventory.push(this.createItem(template.id));
+            let available = false;
+
+            // Direct match or global
+            if (template.availableIn.includes('All') || template.availableIn.includes(nodeType)) {
+                available = true;
+            } else {
+                // Backward compatibility & hierarchical shop access mapped to legacy tags
+                if (template.availableIn.includes('Village') && shopLevel >= 1) available = true;
+                if (template.availableIn.includes('Town') && shopLevel >= 2) available = true;
+                if (template.availableIn.includes('Stronghold') && nodeType === 'Stronghold') available = true;
+            }
+
+            if (available) {
+                const item = this.createItem(template.id);
+                // Apply the exact settlement markup
+                item.cost = Math.max(1, Math.ceil(item.cost * buyModifier));
+                inventory.push(item);
             }
         });
         return inventory;

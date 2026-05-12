@@ -19,6 +19,22 @@ export const SETTLEMENT_NAMES = [
     'Oldham', 'Hewe', 'Eastbourne', 'Quan Ma', 'Travercraig', 'Bournemouth'
 ];
 
+// --- NEW: Settlement Tiers & Economy ---
+// Order of Development with isolated economies to prevent infinite money glitches
+export const SETTLEMENT_TIERS = {
+    'Hamlet':       { buyMult: 1.20, sellMult: 0.30, shopLevel: 1 },
+    'Village':      { buyMult: 1.15, sellMult: 0.35, shopLevel: 1 },
+    'Town':         { buyMult: 1.10, sellMult: 0.40, shopLevel: 2 },
+    'City':         { buyMult: 1.05, sellMult: 0.45, shopLevel: 2 },
+    'City-State':   { buyMult: 1.00, sellMult: 0.50, shopLevel: 3 },
+    'Province':     { buyMult: 0.95, sellMult: 0.55, shopLevel: 3 },
+    'Kingdom':      { buyMult: 0.90, sellMult: 0.60, shopLevel: 4 },
+    'High Kingdom': { buyMult: 0.85, sellMult: 0.65, shopLevel: 4 },
+    'Empire':       { buyMult: 0.80, sellMult: 0.70, shopLevel: 5 },
+    'Stronghold':   { buyMult: 1.30, sellMult: 0.60, shopLevel: 3 }, // Military: charges premium, pays well for gear
+    'Ruins':        { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 }
+};
+
 // Definitions for "Origins" (Game Modes)
 export const ORIGIN_CONFIGS = {
     'sellswords': {

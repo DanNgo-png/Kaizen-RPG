@@ -8,7 +8,7 @@ export class MercenaryController {
         this.settingsRepo = new AppSettingsRepository();
     }
 
-    _getEnrichedInventory() {
+    _getEnrichedInventory(sellModifier = 0.5) {
         const rawInventory = this.repo.getInventory();
         return rawInventory.map(inv => {
             const itemInstance = ItemFactory.createItem(inv.item_id); 
@@ -24,7 +24,7 @@ export class MercenaryController {
                 type: itemInstance.type,
                 rarity: itemInstance.rarity,
                 count: 1, 
-                sellPrice: Math.floor((itemInstance.cost) * 0.5) 
+                sellPrice: Math.max(1, Math.floor(itemInstance.cost * sellModifier)) 
             };
         });
     }
@@ -48,7 +48,7 @@ export class MercenaryController {
             }
         });
 
-        // --- NEW: Toggle Delving State ---
+        // --- Toggle Delving State ---
         app.events.on("setDelvingStatus", (payload) => {
             try {
                 this.repo.setCampaignSetting('is_delving', payload.isDelving ? 'true' : 'false');
@@ -174,16 +174,33 @@ export class MercenaryController {
 
         app.events.on("getMarketData", (payload) => {
             try {
+                let buyMod = 1.0;
+                let sellMod = 0.5;
+                let nodeType = 'Town';
+
+                // Look up specific economy via Database Node lookup
+                if (payload.nodeId) {
+                    const node = this.repo.getNodeById(payload.nodeId);
+                    if (node) {
+                        buyMod = node.buy_modifier || 1.0;
+                        sellMod = node.sell_modifier || 0.5;
+                        nodeType = node.type;
+                    }
+                }
+
                 const resources = this.repo.getResources();
-                const enrichedInventory = this._getEnrichedInventory();
-                const shopItems = ItemFactory.getShopInventory(payload.nodeType);
+                const enrichedInventory = this._getEnrichedInventory(sellMod);
+                const shopItems = ItemFactory.getShopInventory(nodeType, buyMod);
 
                 app.events.broadcast("receiveMarketData", { 
                     gold: resources.gold,
                     inventory: enrichedInventory,
                     shopItems: shopItems
                 });
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                console.error("❌ Error fetching market data:", e); 
+                app.events.broadcast("receiveMarketData", { gold: 0, inventory: [], shopItems: [] });
+            }
         });
 
         app.events.on("buyItem", (payload) => {
