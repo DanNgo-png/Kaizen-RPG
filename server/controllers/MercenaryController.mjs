@@ -1,30 +1,6 @@
 import { GameRepository } from "../database/SQLite3/repositories/GameRepository.mjs";
 import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
-
-// Helper to generate mock items for the shop
-const generateMockShop = (nodeType) => {
-    const items = [
-        { id: 'iron_sword', name: 'Iron Sword', type: 'Weapon', icon: 'fa-solid fa-khanda', cost: 150, rarity: 'common' },
-        { id: 'wooden_shield', name: 'Wooden Shield', type: 'Armor', icon: 'fa-solid fa-shield-halved', cost: 80, rarity: 'common' },
-        { id: 'healing_salve', name: 'Healing Salve', type: 'Consumable', icon: 'fa-solid fa-flask', cost: 50, rarity: 'common' },
-        { id: 'chainmail', name: 'Chainmail', type: 'Armor', icon: 'fa-solid fa-shirt', cost: 400, rarity: 'uncommon' },
-        { id: 'warhammer', name: 'Warhammer', type: 'Weapon', icon: 'fa-solid fa-gavel', cost: 250, rarity: 'rare' }
-    ];
-    // Strongholds get better gear
-    if (nodeType === 'Stronghold') {
-        items.push({ id: 'plate_armor', name: 'Heavy Plate', type: 'Armor', icon: 'fa-solid fa-user-shield', cost: 1200, rarity: 'legendary' });
-    }
-    return items;
-};
-
-// MOCK ITEM LOOKUP (To resolve player inventory IDs to readable names/prices)
-const getItemDetails = (itemId) => {
-    const allItems = generateMockShop('Stronghold');
-    const found = allItems.find(i => i.id === itemId);
-    if (found) return found;
-    // Fallback for unknown loot
-    return { id: itemId, name: 'Unknown Loot (' + itemId + ')', type: 'Misc', icon: 'fa-solid fa-sack-dollar', cost: 100, rarity: 'common' };
-};
+import { ItemFactory } from "../factories/ItemFactory.mjs";
 
 export class MercenaryController {
     constructor() {
@@ -38,19 +14,20 @@ export class MercenaryController {
     _getEnrichedInventory() {
         const rawInventory = this.repo.getInventory();
         return rawInventory.map(inv => {
-            const details = getItemDetails(inv.item_id);
+            const itemInstance = ItemFactory.createItem(inv.item_id); 
+            
             return {
                 id: inv.id,
-                inventoryId: inv.id, // Mapped for marketplace selling logic
+                inventoryId: inv.id, 
                 itemId: inv.item_id,
                 mercenaryId: inv.mercenary_id,
                 stashSlot: inv.stash_slot, 
-                name: details.name,
-                icon: details.icon,
-                type: details.type,
-                rarity: details.rarity || 'common',
+                name: itemInstance.name,
+                icon: itemInstance.icon,
+                type: itemInstance.type,
+                rarity: itemInstance.rarity,
                 count: 1, 
-                sellPrice: Math.floor((details.cost || 100) * 0.5) // Sell for 50%
+                sellPrice: Math.floor((itemInstance.cost) * 0.5) // Sell for 50%
             };
         });
     }
@@ -178,7 +155,8 @@ export class MercenaryController {
             try {
                 const resources = this.repo.getResources();
                 const enrichedInventory = this._getEnrichedInventory();
-                const shopItems = generateMockShop(payload.nodeType);
+                
+                const shopItems = ItemFactory.getShopInventory(payload.nodeType);
 
                 app.events.broadcast("receiveMarketData", { 
                     gold: resources.gold,
