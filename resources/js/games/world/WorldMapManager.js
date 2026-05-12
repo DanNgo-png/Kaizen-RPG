@@ -102,23 +102,23 @@ export class WorldMapManager {
             if (data.origin) this.state.origin = data.origin;
             if (data.gameVersion) this.state.gameVersion = data.gameVersion;
             
-            // 1. Load Nodes
             if(data.nodes) this.state.setNodes(data.nodes);
-            
-            // 2. Load Resources
             if(data.resources) this.hud.updateStats(data.resources);
 
-            // 3. Load Player Position
             if (data.player) {
                 this.state.player.x = data.player.x;
                 this.state.player.y = data.player.y;
                 this.camera.centerOn(data.player.x, data.player.y);
             }
 
-            // ---> Check if Barebones, boot UI instead
+            // Sync Delving Status
+            if (data.isDelving !== undefined) this.barebonesUI.isDelving = data.isDelving;
+
             if (this.state.origin === 'dungeon' && this.state.gameVersion === 'barebones') {
                 if (this.barebonesUI.dom.overlay.classList.contains('hidden')) {
                     this.barebonesUI.show(this.state.nodes);
+                    // Force refresh active banner right away
+                    this.barebonesUI.updateActiveBanner(this.barebonesUI.activeContract);
                     if (data.resources) this.barebonesUI.updateStats(data.resources);
                 } else {
                     this.barebonesUI.updateData(this.state.nodes, data.resources);

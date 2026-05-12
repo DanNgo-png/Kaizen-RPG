@@ -1,7 +1,6 @@
 import { EXTENSION_ID } from "./_extension_id.js";
 
 export const GameAPI = {
-    // --- CAMPAIGN ---
     createCampaign: async (slotId, campaignData) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "createNewGame", { slotId, campaignData });
     },
@@ -15,11 +14,14 @@ export const GameAPI = {
     },
 
     saveWorldData: async (playerData) => {
-        // playerData: { x: number, y: number }
         await Neutralino.extensions.dispatch(EXTENSION_ID, "saveWorldData", playerData);
     },
 
-    // --- PARTY & RESOURCES ---
+    // --- DELVING ---
+    setDelvingStatus: async (isDelving) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "setDelvingStatus", { isDelving });
+    },
+
     getPartyData: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getPartyData", null);
     },
@@ -28,7 +30,6 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "hireMercenary", { mercData, cost });
     },
 
-    // --- CONTRACTS ---
     getActiveContract: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getActiveContract", null);
     },
@@ -49,7 +50,6 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "abortContract", { contractId, nodeId });
     },
 
-    // --- MARKET ---
     getMarketData: async (nodeType) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getMarketData", { nodeType });
     },

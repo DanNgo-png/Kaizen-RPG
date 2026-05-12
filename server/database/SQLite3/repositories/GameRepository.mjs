@@ -85,7 +85,6 @@ export class GameRepository {
         let contracts = this.statements.getNodeContracts.all(nodeId);
         
         if (contracts.length === 0) {
-            // Generate 3 random contracts for this node
             const titles = ["Clear the Rat Cellar", "Hunt the Goblin Raiders", "Escort the Merchant", "Explore the Ruined Tower", "Guard the Caravan"];
             const descs = [
                 "A simple task, but honest pay.",
@@ -95,17 +94,14 @@ export class GameRepository {
                 "Protect the goods at all costs."
             ];
             
-            // Build an array of valid minute intervals (e.g. 10, 15, 20... up to max)
             let possibleMins = [];
             for(let m = minMins; m <= maxMins; m += 5) {
                 possibleMins.push(m);
             }
-            if (possibleMins.length === 0) possibleMins = [minMins]; // Safety fallback
+            if (possibleMins.length === 0) possibleMins = [minMins]; 
             
             for(let i=0; i<3; i++) {
                 const reqMins = possibleMins[Math.floor(Math.random() * possibleMins.length)];
-                
-                // Base gold formula scales with the time required
                 const gold = Math.floor(reqMins * 2.5 * (0.8 + Math.random() * 0.4));
                 
                 this.statements.insertContract.run({
@@ -124,6 +120,9 @@ export class GameRepository {
     acceptContract(contractId) {
         this.ensureConnection();
         this.statements.setActiveContract.run(contractId);
+        
+        // Force the party out of Delve Mode when accepting a strict contract
+        this.setCampaignSetting('is_delving', 'false');
     }
 
     getActiveContract() {
@@ -136,6 +135,7 @@ export class GameRepository {
         this.statements.abortContract.run(contractId);
     }
 
+    // Real-Time Contract Completion
     completeActiveContract() {
         this.ensureConnection();
         const activeContract = this.getActiveContract();
@@ -183,12 +183,14 @@ export class GameRepository {
         
         const origin = this.statements.getSetting.get('origin')?.value || 'sellswords';
         const gameVersion = this.statements.getSetting.get('game_version')?.value || 'standard';
+        const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
 
         return {
             nodes,
             player: { x: parseFloat(px), y: parseFloat(py) },
             origin,
-            gameVersion
+            gameVersion,
+            isDelving
         };
     }
 
@@ -218,53 +220,41 @@ export class GameRepository {
 
         // --- BAREBONES DUNGEON CRAWLER LOGIC ---
         if (origin === 'dungeon' && gameVersion === 'barebones') {
-            const activeMercs = this.statements.getAll.all();
             const activeContract = this.getActiveContract();
+            const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
+            const activeMercs = this.statements.getAll.all();
 
             if (activeContract) {
-                // Apply progress to contract
-                const newProgress = activeContract.progress_minutes + focusMinutes;
-                
-                if (newProgress >= activeContract.required_minutes) {
-                    // Completed!
-                    this.statements.completeContract.run({ id: activeContract.id });
-                    this.updateGold(activeContract.gold_reward);
-
-                    const contractRepReward = 15;
-                    this.updateNodeReputation(activeContract.node_id, contractRepReward);
-                    
-                    logs.push(`📜 Contract Completed: ${activeContract.title}`);
-                    logs.push(`💰 Earned ${activeContract.gold_reward} crowns!`);
-                    logs.push(`🤝 Reputation with settlement increased by ${contractRepReward}.`);
-                    
-                    // Give XP
-                    this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
-                } else {
-                    // Partial progress
-                    this.statements.addContractProgress.run({ progress: focusMinutes, id: activeContract.id });
-                    logs.push(`📜 Contract Progress: ${activeContract.title}`);
-                    logs.push(`⏳ ${Math.round(newProgress)} / ${activeContract.required_minutes} minutes completed.`);
-                    
-                    this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
-                }
-
-                // Chance to take damage while doing contracts
+                // Party is working on a contract. Give safe XP and minor chance of damage.
+                this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
                 activeMercs.forEach(merc => {
                     if (Math.random() < 0.25) { 
                         const dmg = Math.floor(Math.random() * 8 * ratio) + 2;
                         this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
-                        logs.push(`⚔️ ${merc.name} took ${dmg} damage in a skirmish.`);
+                        logs.push(`⚔️ ${merc.name} took ${dmg} damage during the contract mission.`);
                     }
                 });
+                if (logs.length === 0) logs.push(`🛡️ The party safely gained experience while working on: ${activeContract.title}`);
 
-            } else {
-                // Idle Delving (No contract selected)
-                const goldFound = Math.floor(focusMinutes * ratio * 1.5); // Lower passive gold
+            } else if (isDelving) {
+                // Party is freely exploring the dungeon. Grants Gold, XP, but high damage risk.
+                const goldFound = Math.floor(focusMinutes * ratio * 1.5); 
                 this.updateGold(goldFound);
-                
-                logs.push(`🛡️ The party scoured the immediate area for ${Math.round(focusMinutes)} minutes.`);
-                logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+                
+                logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
+                logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
+                
+                activeMercs.forEach(merc => {
+                    if (Math.random() < 0.35) { // Higher damage chance
+                        const dmg = Math.floor(Math.random() * 12 * ratio) + 2;
+                        this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
+                        logs.push(`⚔️ ${merc.name} took ${dmg} damage from a trap/monster.`);
+                    }
+                });
+            } else {
+                // Idle. No contract and Not Delving. Do nothing.
+                return { xp: 0, fatigue: 0, logs: [] };
             }
 
         } else {
@@ -304,17 +294,13 @@ export class GameRepository {
 
     addItemToInventory(itemId, mercId = null) {
         this.ensureConnection();
-        
         let stashSlot = null;
-        
-        // If placing into the stash, find the first available empty slot
         if (mercId === null) {
             const currentItems = this.statements.getInventory.all().filter(i => i.mercenary_id === null && i.stash_slot !== null);
             const occupied = new Set(currentItems.map(i => i.stash_slot));
             stashSlot = 0;
-            while(occupied.has(stashSlot)) stashSlot++; // Scans until an empty integer is found
+            while(occupied.has(stashSlot)) stashSlot++; 
         }
-        
         return this.statements.insertItem.run({ itemId, mercId, stashSlot });
     }
 
@@ -327,11 +313,9 @@ export class GameRepository {
         
         const db = this.db;
         const txn = db.transaction(() => {
-            // If the target slot has an item, swap it into the dragged item's old slot
             if (existingItem) {
                 this.statements.updateItemSlot.run({ slot: draggedItem.stash_slot, id: existingItem.id });
             }
-            // Move the dragged item into the new slot
             this.statements.updateItemSlot.run({ slot: newSlot, id: inventoryId });
         });
         txn();
@@ -355,8 +339,6 @@ export class GameRepository {
 
     getResources() {
         this.ensureConnection();
-        
-        // Helper to safely parse settings
         const getSet = (k, def) => parseInt(this.statements.getSetting.get(k)?.value || def);
 
         const gold = getSet('gold', 0);
@@ -366,21 +348,11 @@ export class GameRepository {
         const ammo = getSet('ammo', 100);
         const medicine = getSet('medicine', 15);
 
-        // Calculate dynamic consumption
         const totalWages = this.statements.getWages.get().total || 0;
         const mercCount = this.statements.getAll.all().length;
-        const foodPerDay = mercCount * 2; // "The average person requires 2 provisions"
+        const foodPerDay = mercCount * 2; 
 
-        return { 
-            gold, 
-            renown, 
-            provisions, 
-            tools, 
-            ammo, 
-            medicine, 
-            dailyWages: totalWages, 
-            foodPerDay 
-        };
+        return { gold, renown, provisions, tools, ammo, medicine, dailyWages: totalWages, foodPerDay };
     }
 
     updateGold(amount) {

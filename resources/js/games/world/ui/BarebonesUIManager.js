@@ -13,7 +13,11 @@ export class BarebonesUIManager {
             progressContainer: document.getElementById('bb-progress-container'),
             progressFill: document.getElementById('bb-progress-fill'),
             progressText: document.getElementById('bb-progress-text'),
+            
+            // Interaction Buttons
             btnAbort: document.getElementById('bb-btn-abort'),
+            btnStartDelve: document.getElementById('bb-btn-start-delve'),
+            btnStopDelve: document.getElementById('bb-btn-stop-delve'),
 
             // Resources Displays
             goldDisplay: document.getElementById('bb-gold-display'),
@@ -42,11 +46,11 @@ export class BarebonesUIManager {
         this.nodes = [];
         this.selectedNode = null;
         this.activeContract = null;
-        this.currentResources = null; // Cache to pass to tooltips
+        this.currentResources = null; 
         
-        // Tab State
         this.activeTab = 'jobs';
         this.marketData = { inventory: [], shopItems: [], gold: 0 };
+        this.isDelving = false;
 
         this.tooltip = document.createElement('div');
         this.tooltip.className = 'bb-item-tooltip hidden';
@@ -62,7 +66,6 @@ export class BarebonesUIManager {
         let x = e.clientX + 15;
         let y = e.clientY + 15;
 
-        // Keep within viewport boundaries
         if (x + rect.width > window.innerWidth) {
             x = e.clientX - rect.width - 15;
         }
@@ -74,7 +77,6 @@ export class BarebonesUIManager {
         this.tooltip.style.top = `${y}px`;
     }
 
-    // --- NEW: Resource Hover Tooltips ---
     _showResourceTooltip(type, e) {
         if (!this.currentResources) return;
         let html = '';
@@ -129,15 +131,13 @@ export class BarebonesUIManager {
     }
 
     updateStats(resources) {
-        this.currentResources = resources; // Cache for hover logic
-        
+        this.currentResources = resources; 
         if (resources) {
             if (this.dom.goldDisplay) this.dom.goldDisplay.textContent = resources.gold || 0;
             if (this.dom.provisionsDisplay) this.dom.provisionsDisplay.textContent = resources.provisions || 0;
             if (this.dom.toolsDisplay) this.dom.toolsDisplay.textContent = resources.tools || 0;
             if (this.dom.ammoDisplay) this.dom.ammoDisplay.textContent = resources.ammo || 0;
             if (this.dom.medsDisplay) this.dom.medsDisplay.textContent = resources.medicine || 0;
-
             this.marketData.gold = resources.gold || 0;
         }
     }
@@ -147,19 +147,17 @@ export class BarebonesUIManager {
             const contract = e.detail;
             if (this.activeContract && this.activeContract.id === contract.id) {
                 this.activeContract.progress_minutes = contract.progress_minutes;
-
-                // Sync the bar smoothly
                 if (this.dom.progressFill && this.dom.progressText) {
                     const progress = this.activeContract.progress_minutes;
                     const target = this.activeContract.required_minutes;
                     const pct = Math.min((progress / target) * 100, 100);
-
                     this.dom.progressFill.style.width = `${pct}%`;
                     this.dom.progressText.textContent = `Invest Focus Time to progress (${Math.floor(progress)}/${target}m).`;
                 }
             }
         });
 
+        // Backend Sync Events
         Neutralino.events.off('contractCompletedRealtime', this._onContractCompletedRealtime.bind(this));
         Neutralino.events.on('contractCompletedRealtime', this._onContractCompletedRealtime.bind(this));
 
@@ -172,18 +170,27 @@ export class BarebonesUIManager {
         Neutralino.events.off('contractAborted', this._onContractAborted.bind(this));
         Neutralino.events.on('contractAborted', this._onContractAborted.bind(this));
 
-        // Market Events
         Neutralino.events.off('receiveMarketData', this._onReceiveMarketData.bind(this));
         Neutralino.events.on('receiveMarketData', this._onReceiveMarketData.bind(this));
 
         Neutralino.events.off('transactionComplete', this._onTransactionComplete.bind(this));
         Neutralino.events.on('transactionComplete', this._onTransactionComplete.bind(this));
 
-        // Tab Listeners
+        Neutralino.events.off('delvingStatusUpdated', this._onDelvingStatusUpdated.bind(this));
+        Neutralino.events.on('delvingStatusUpdated', this._onDelvingStatusUpdated.bind(this));
+
+        // Interaction Buttons
+        if (this.dom.btnStartDelve) {
+            this.dom.btnStartDelve.addEventListener('click', () => GameAPI.setDelvingStatus(true));
+        }
+        
+        if (this.dom.btnStopDelve) {
+            this.dom.btnStopDelve.addEventListener('click', () => GameAPI.setDelvingStatus(false));
+        }
+
         if(this.dom.tabJobs) this.dom.tabJobs.addEventListener('click', () => this.switchTab('jobs'));
         if(this.dom.tabMarket) this.dom.tabMarket.addEventListener('click', () => this.switchTab('market'));
 
-        // Resource Tooltips Listeners
         Object.entries(this.dom.resContainers).forEach(([type, el]) => {
             if (el) {
                 el.addEventListener('mouseenter', (e) => this._showResourceTooltip(type, e));
@@ -193,21 +200,11 @@ export class BarebonesUIManager {
         });
     }
 
-    // --- Cleanup UI ---
-    _onContractCompletedRealtime(e) {
-        this.activeContract = null;
-        this.updateActiveBanner(null);
-
-        // Refresh job board if a node is currently selected
-        if (this.selectedNode && this.activeTab === 'jobs') {
-            GameAPI.getContractsForNode(this.selectedNode.id);
-        }
-
-        // Refresh world data to update header gold/stats
-        GameAPI.getWorldData();
+    _onDelvingStatusUpdated(e) {
+        this.isDelving = e.detail.isDelving;
+        this.updateActiveBanner(this.activeContract);
     }
 
-    // --- Tab Management ---
     switchTab(tabName) {
         this.activeTab = tabName;
         
@@ -222,7 +219,6 @@ export class BarebonesUIManager {
             this.dom.marketContainer.classList.remove('hidden');
             this.dom.contractList.classList.add('hidden');
             
-            // Fetch market data when opening tab
             if (this.selectedNode) {
                 const loader = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
                 this.dom.marketStashList.innerHTML = loader;
@@ -232,7 +228,6 @@ export class BarebonesUIManager {
         }
     }
 
-    // --- General ---
     show(nodes) {
         if (!this.dom.overlay) return;
         this.nodes = nodes;
@@ -243,7 +238,6 @@ export class BarebonesUIManager {
             this.selectNode(this.nodes[0]);
         }
         
-        // Reset to Jobs tab on show
         this.switchTab('jobs');
     }
 
@@ -304,11 +298,8 @@ export class BarebonesUIManager {
     // --- Market Logic ---
     _onReceiveMarketData(e) {
         this.marketData = e.detail;
-        
-        // Use existing function but preserve other cached resources
         const updatedResources = { ...this.currentResources, gold: this.marketData.gold };
         this.updateStats(updatedResources);
-        
         this.renderMarketList();
     }
 
@@ -322,7 +313,6 @@ export class BarebonesUIManager {
     }
 
     renderMarketList() {
-        // Render Stash (Sell)
         this.dom.marketStashList.innerHTML = '';
         if (!this.marketData.inventory || this.marketData.inventory.length === 0) {
             this.dom.marketStashList.innerHTML = `<div style="text-align:center; color:#64748b; padding: 30px 20px;">Your company stash is empty.</div>`;
@@ -335,7 +325,6 @@ export class BarebonesUIManager {
             this.dom.marketStashList.appendChild(stashGrid);
         }
 
-        // Render Shop (Buy)
         this.dom.marketShopList.innerHTML = '';
         if (!this.marketData.shopItems || this.marketData.shopItems.length === 0) {
             this.dom.marketShopList.innerHTML = `<div style="text-align:center; color:#64748b; padding: 30px 20px;">The merchant has nothing to sell today.</div>`;
@@ -359,7 +348,6 @@ export class BarebonesUIManager {
         
         const priceClass = isBuying ? 'buy' : 'sell';
 
-        // Inner HTML (Icon + Tiny Price Tag)
         el.innerHTML = `
             <i class="${item.icon || 'fa-solid fa-cube'}"></i>
             <div class="bb-slot-price ${priceClass}">${price}</div>
@@ -377,13 +365,8 @@ export class BarebonesUIManager {
             this._positionTooltip(e);
         });
 
-        el.addEventListener('mousemove', (e) => {
-            this._positionTooltip(e);
-        });
-
-        el.addEventListener('mouseleave', () => {
-            this.tooltip.classList.add('hidden');
-        });
+        el.addEventListener('mousemove', (e) => this._positionTooltip(e));
+        el.addEventListener('mouseleave', () => this.tooltip.classList.add('hidden'));
 
         if (canAfford) {
             el.addEventListener('click', () => {
@@ -396,7 +379,17 @@ export class BarebonesUIManager {
         return el;
     }
 
-    // --- Contract Logic ---
+    // --- Contract & Delving Logic ---
+    _onContractCompletedRealtime(e) {
+        this.activeContract = null;
+        this.updateActiveBanner(null);
+
+        if (this.selectedNode && this.activeTab === 'jobs') {
+            GameAPI.getContractsForNode(this.selectedNode.id);
+        }
+        GameAPI.getWorldData();
+    }
+
     _onReceiveContracts(e) {
         const { contracts, activeContract } = e.detail;
         this.activeContract = activeContract;
@@ -463,17 +456,25 @@ export class BarebonesUIManager {
     }
 
     updateActiveBanner(activeContract) {
+        if (this.dom.btnAbort) this.dom.btnAbort.classList.add('hidden');
+        if (this.dom.btnStartDelve) this.dom.btnStartDelve.classList.add('hidden');
+        if (this.dom.btnStopDelve) this.dom.btnStopDelve.classList.add('hidden');
+        if (this.dom.progressContainer) this.dom.progressContainer.classList.add('hidden');
+
         if (activeContract) {
+            // Actively doing a contract
             this.dom.activeTitle.textContent = activeContract.title;
             this.dom.progressContainer.classList.remove('hidden');
             const progress = activeContract.progress_minutes || 0;
             const target = activeContract.required_minutes;
             const pct = Math.min((progress / target) * 100, 100);
             this.dom.progressFill.style.width = `${pct}%`;
-            this.dom.progressText.textContent = `Invest Focus Time to progress (${Math.round(progress)}/${target}m).`;
+            this.dom.progressText.textContent = `Invest Focus Time to progress (${Math.floor(progress)}/${target}m).`;
             
             if (this.dom.btnAbort) {
                 this.dom.btnAbort.classList.remove('hidden');
+                
+                // Clear old listener
                 const newBtn = this.dom.btnAbort.cloneNode(true);
                 this.dom.btnAbort.parentNode.replaceChild(newBtn, this.dom.btnAbort);
                 this.dom.btnAbort = newBtn;
@@ -484,11 +485,16 @@ export class BarebonesUIManager {
                     }
                 });
             }
+        } else if (this.isDelving) {
+            // Active Free-Delve Mode
+            this.dom.activeTitle.textContent = "Delving the Depths";
+            this.dom.progressText.textContent = "Your party is exploring the dungeon. Complete focus sessions to extract loot.";
+            if (this.dom.btnStopDelve) this.dom.btnStopDelve.classList.remove('hidden');
         } else {
-            this.dom.activeTitle.textContent = "No Active Contract";
-            this.dom.progressContainer.classList.add('hidden');
-            this.dom.progressText.textContent = "Select a contract from a settlement below to begin.";
-            if (this.dom.btnAbort) this.dom.btnAbort.classList.add('hidden');
+            // Idle State
+            this.dom.activeTitle.textContent = "Party is Idle";
+            this.dom.progressText.textContent = "Select a contract below, or freely delve into the dungeon.";
+            if (this.dom.btnStartDelve) this.dom.btnStartDelve.classList.remove('hidden');
         }
     }
 }

@@ -485,10 +485,15 @@
           <div class="bb-banner-info">
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
               <div>
-                <span class="bb-label">Active Contract</span>
-                <h3 id="bb-active-title" style="margin: 4px 0 10px 0;">No Active Contract</h3>
+                <span class="bb-label">Active Status</span>
+                <h3 id="bb-active-title" style="margin: 4px 0 10px 0;">Idle</h3>
               </div>
-              <button id="bb-btn-abort" class="bb-btn-abort hidden"><i class="fa-solid fa-xmark"></i> Abort</button>
+              <div style="display: flex; gap: 10px;">
+                  <button id="bb-btn-abort" class="bb-btn-abort hidden"><i class="fa-solid fa-xmark"></i> Abort</button>
+                  <!-- Purple button for delving -->
+                  <button id="bb-btn-start-delve" class="bb-btn-accept hidden" style="background:#8b5cf6;"><i class="fa-solid fa-dungeon"></i> Delve Dungeon</button>
+                  <button id="bb-btn-stop-delve" class="bb-btn-abort hidden"><i class="fa-solid fa-hand-paper"></i> Stop Delving</button>
+              </div>
             </div>
             <div class="bb-progress-bar hidden" id="bb-progress-container" style="margin-top: 5px;">
               <div id="bb-progress-fill" class="bb-fill"></div>

@@ -8,9 +8,6 @@ export class MercenaryController {
         this.settingsRepo = new AppSettingsRepository();
     }
 
-    /**
-     * Maps raw database inventory to rich item objects usable by the UI
-     */
     _getEnrichedInventory() {
         const rawInventory = this.repo.getInventory();
         return rawInventory.map(inv => {
@@ -27,7 +24,7 @@ export class MercenaryController {
                 type: itemInstance.type,
                 rarity: itemInstance.rarity,
                 count: 1, 
-                sellPrice: Math.floor((itemInstance.cost) * 0.5) // Sell for 50%
+                sellPrice: Math.floor((itemInstance.cost) * 0.5) 
             };
         });
     }
@@ -43,11 +40,20 @@ export class MercenaryController {
                     nodes: worldState.nodes,
                     player: worldState.player, 
                     origin: worldState.origin,
-                    gameVersion: worldState.gameVersion
+                    gameVersion: worldState.gameVersion,
+                    isDelving: worldState.isDelving // Broadcast back to UI
                 });
             } catch (error) {
                 app.events.broadcast("receiveWorldData", { nodes: [], player: {x: 400, y: 300}, origin: 'default', gameVersion: 'standard' });
             }
+        });
+
+        // --- NEW: Toggle Delving State ---
+        app.events.on("setDelvingStatus", (payload) => {
+            try {
+                this.repo.setCampaignSetting('is_delving', payload.isDelving ? 'true' : 'false');
+                app.events.broadcast("delvingStatusUpdated", { isDelving: payload.isDelving });
+            } catch(e) { console.error(e); }
         });
 
         app.events.on("saveWorldData", (payload) => {
@@ -112,7 +118,6 @@ export class MercenaryController {
             }
         });
 
-        // --- Inventory Sorting ---
         app.events.on("moveInventoryItem", (payload) => {
             try {
                 this.repo.moveItemInStash(payload.inventoryId, payload.newSlotIndex);
@@ -120,19 +125,6 @@ export class MercenaryController {
             } catch(e) {
                 console.error("Failed to move item:", e);
             }
-        });
-
-        app.events.on("getContractsForNode", (payload) => {
-            try {
-                // Fetch settings to dictate contract generation limits
-                const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || 10;
-                const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || 120;
-
-                const contracts = this.repo.getOrGenerateContracts(payload.nodeId, minMins, maxMins);
-                const activeContract = this.repo.getActiveContract();
-                
-                app.events.broadcast("receiveContracts", { contracts, activeContract });
-            } catch(e) { console.error(e); }
         });
 
         app.events.on("getActiveContract", () => {
@@ -149,6 +141,18 @@ export class MercenaryController {
                     app.events.broadcast("contractCompletedRealtime", result);
                     this._refreshParty(app);
                 }
+            } catch(e) { console.error(e); }
+        });
+
+        app.events.on("getContractsForNode", (payload) => {
+            try {
+                const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || 10;
+                const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || 120;
+
+                const contracts = this.repo.getOrGenerateContracts(payload.nodeId, minMins, maxMins);
+                const activeContract = this.repo.getActiveContract();
+                
+                app.events.broadcast("receiveContracts", { contracts, activeContract });
             } catch(e) { console.error(e); }
         });
 
@@ -172,7 +176,6 @@ export class MercenaryController {
             try {
                 const resources = this.repo.getResources();
                 const enrichedInventory = this._getEnrichedInventory();
-                
                 const shopItems = ItemFactory.getShopInventory(payload.nodeType);
 
                 app.events.broadcast("receiveMarketData", { 
@@ -189,7 +192,7 @@ export class MercenaryController {
                 this.repo.addItemToInventory(payload.itemId);
                 
                 if (payload.nodeId) {
-                    const repGain = Math.max(1, Math.floor(payload.cost / 100)); // Minimum 1 rep, scales with cost
+                    const repGain = Math.max(1, Math.floor(payload.cost / 100));
                     this.repo.updateNodeReputation(payload.nodeId, repGain);
                 }
                 
