@@ -1,4 +1,6 @@
 import { GameAPI } from "../../../api/GameAPI.js";
+import { CustomMenuManager } from "../../../components/CustomMenuManager.js";
+import { notifier } from "../../../_global-managers/NotificationManager.js"; 
 
 export class BarebonesUIManager {
     constructor() {
@@ -52,11 +54,66 @@ export class BarebonesUIManager {
         this.marketData = { inventory: [], shopItems: [], gold: 0 };
         this.isDelving = false;
 
+        this.menuManager = new CustomMenuManager();
+
         this.tooltip = document.createElement('div');
         this.tooltip.className = 'bb-item-tooltip hidden';
         document.body.appendChild(this.tooltip);
 
+        this._createChroniclesModal();
+
         this._bindEvents();
+    }
+
+    _createChroniclesModal() {
+        this.chroniclesModal = document.createElement('div');
+        this.chroniclesModal.className = 'mgmt-overlay hidden';
+        this.chroniclesModal.style.zIndex = '60'; // Above other overlays
+        this.chroniclesModal.innerHTML = `
+            <div class="exit-modal-content" style="width: 500px; text-align: left; align-items: flex-start; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
+                <div style="display:flex; justify-content:space-between; width:100%; border-bottom: 1px solid #374151; padding-bottom: 15px; margin-bottom: 15px;">
+                    <h2 style="margin: 0; color: #fff; font-size: 1.3rem;"><i class="fa-solid fa-book-open" style="color: #a78bfa;"></i> Local Chronicles</h2>
+                    <button id="btn-close-chronicles" style="background:transparent; border:none; color:#9ca3af; cursor:pointer; font-size:1.2rem;"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                <div id="chronicles-list" style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
+                    <!-- Logs injected here -->
+                </div>
+            </div>
+        `;
+        document.body.appendChild(this.chroniclesModal);
+
+        this.chroniclesModal.querySelector('#btn-close-chronicles').addEventListener('click', () => {
+            this.chroniclesModal.classList.add('hidden');
+        });
+    }
+    
+    _onReceiveNodeHistory(e) {
+        const { nodeId, history } = e.detail;
+        const listEl = this.chroniclesModal.querySelector('#chronicles-list');
+        listEl.innerHTML = '';
+
+        if (!history || history.length === 0) {
+            listEl.innerHTML = `<div style="text-align:center; color:#64748b; padding: 20px; font-style: italic;">The archives are empty. Nothing of note has happened here recently.</div>`;
+            return;
+        }
+
+        history.forEach(log => {
+            // Differentiate colors based on event type
+            let icon = '<i class="fa-solid fa-earth-americas" style="color:#60a5fa;"></i>'; // World
+            if (log.event_type === 'player') icon = '<i class="fa-solid fa-user-shield" style="color:#10b981;"></i>';
+            if (log.event_type === 'mechanic') icon = '<i class="fa-solid fa-triangle-exclamation" style="color:#f59e0b;"></i>';
+
+            const logEl = document.createElement('div');
+            logEl.style.cssText = "background: rgba(0,0,0,0.2); border: 1px solid #374151; padding: 12px; border-radius: 8px; display: flex; gap: 12px; align-items: flex-start;";
+            logEl.innerHTML = `
+                <div style="font-size: 1.2rem; margin-top: 2px;">${icon}</div>
+                <div>
+                    <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase; font-weight: 700;">Day ${log.day}</div>
+                    <div style="color: #e5e7eb; font-size: 0.95rem; line-height: 1.4;">${log.event_text}</div>
+                </div>
+            `;
+            listEl.appendChild(logEl);
+        });
     }
 
     _positionTooltip(e) {
@@ -179,6 +236,12 @@ export class BarebonesUIManager {
         Neutralino.events.off('delvingStatusUpdated', this._onDelvingStatusUpdated.bind(this));
         Neutralino.events.on('delvingStatusUpdated', this._onDelvingStatusUpdated.bind(this));
 
+        Neutralino.events.off('receiveNodeHistory', this._onReceiveNodeHistory.bind(this));
+        Neutralino.events.on('receiveNodeHistory', this._onReceiveNodeHistory.bind(this));
+
+        Neutralino.events.off('nodePinToggled', () => GameAPI.getWorldData());
+        Neutralino.events.on('nodePinToggled', () => GameAPI.getWorldData());
+
         // Interaction Buttons
         if (this.dom.btnStartDelve) {
             this.dom.btnStartDelve.addEventListener('click', () => GameAPI.setDelvingStatus(true));
@@ -261,27 +324,100 @@ export class BarebonesUIManager {
 
     renderNodeList() {
         this.dom.nodeList.innerHTML = '';
-        this.nodes.forEach(node => {
+
+        // 1. Sort Nodes: Pinned first, then by Name
+        const sortedNodes = [...this.nodes].sort((a, b) => {
+            if (b.is_pinned !== a.is_pinned) return b.is_pinned - a.is_pinned;
+            return a.name.localeCompare(b.name);
+        });
+
+        sortedNodes.forEach(node => {
             const el = document.createElement('div');
             el.className = 'bb-node-card';
             if (this.selectedNode && node.id === this.selectedNode.id) el.classList.add('selected');
             
-            // DYNAMIC ICON: Support the new Tier Types visually
             let icon = 'fa-campground'; 
             if (['Town', 'City'].includes(node.type)) icon = 'fa-house-chimney';
             if (['City-State', 'Province'].includes(node.type)) icon = 'fa-city';
             if (['Kingdom', 'High Kingdom', 'Empire'].includes(node.type)) icon = 'fa-chess-rook';
             if (node.type === 'Stronghold') icon = 'fa-shield-halved';
             if (node.type === 'Ruins') icon = 'fa-skull';
+
+            // Show pin icon if pinned
+            const pinHtml = node.is_pinned 
+                ? `<i class="fa-solid fa-thumbtack" style="color: #60a5fa; font-size: 0.8rem; margin-left: auto;"></i>` 
+                : ``;
             
             el.innerHTML = `
                 <div style="font-size:1.5rem; color:#94a3b8; width:30px; text-align:center;"><i class="fa-solid ${icon}"></i></div>
-                <div>
-                    <div style="font-weight:700;">${node.name}</div>
+                <div style="display: flex; flex-direction: column; flex: 1;">
+                    <div style="font-weight:700; display: flex; align-items: center;">${node.name} ${pinHtml}</div>
                     <div style="font-size:0.8rem; color:#64748b;">${node.type}</div>
                 </div>
             `;
+            
+            // Left Click
             el.addEventListener('click', () => this.selectNode(node));
+
+            // Right Click (Context Menu)
+            el.addEventListener('contextmenu', (e) => {
+                this.menuManager.show(e, [
+                    {
+                        label: "Inspect Settlement",
+                        icon: '<i class="fa-solid fa-magnifying-glass"></i>',
+                        action: () => {
+                            // Simple notifier for now, we can upgrade to a modal later
+                            notifier.show(
+                                `${node.name} Economy`, 
+                                `Prices: ${Math.round(node.buy_modifier * 100)}% | Payouts: ${Math.round(node.sell_modifier * 100)}%`,
+                                'fa-solid fa-scale-balanced'
+                            );
+                        }
+                    },
+                    {
+                        label: "View Local Chronicles",
+                        icon: '<i class="fa-solid fa-scroll"></i>',
+                        action: () => {
+                            this.chroniclesModal.classList.remove('hidden');
+                            this.chroniclesModal.querySelector('#chronicles-list').innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Reading archives...</div>';
+                            GameAPI.getNodeHistory(node.id);
+                        }
+                    },
+                    {
+                        label: "View Reputation",
+                        icon: '<i class="fa-solid fa-handshake"></i>',
+                        action: () => {
+                            notifier.show("Reputation", `Your standing with ${node.name} is ${node.reputation || 0}.`, 'fa-solid fa-handshake');
+                        }
+                    },
+                    { separator: true },
+                    {
+                        label: node.is_pinned ? "Unpin Settlement" : "Pin to Top",
+                        icon: '<i class="fa-solid fa-thumbtack"></i>',
+                        action: () => {
+                            GameAPI.toggleNodePin(node.id);
+                        }
+                    },
+                    { separator: true },
+                    {
+                        label: "Visit Marketplace",
+                        icon: '<i class="fa-solid fa-coins"></i>',
+                        action: () => {
+                            this.selectNode(node);
+                            this.switchTab('market');
+                        }
+                    },
+                    {
+                        label: "View Job Board",
+                        icon: '<i class="fa-solid fa-clipboard-list"></i>',
+                        action: () => {
+                            this.selectNode(node);
+                            this.switchTab('jobs');
+                        }
+                    }
+                ]);
+            });
+
             this.dom.nodeList.appendChild(el);
         });
     }

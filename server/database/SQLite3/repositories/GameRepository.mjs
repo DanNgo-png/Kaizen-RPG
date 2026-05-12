@@ -51,6 +51,10 @@ export class GameRepository {
             
             updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
 
+            togglePin: this.db.prepare(`UPDATE world_nodes SET is_pinned = CASE WHEN is_pinned = 1 THEN 0 ELSE 1 END WHERE id = ?`),
+            getNodeHistory: this.db.prepare(`SELECT * FROM node_history WHERE node_id = ? ORDER BY day DESC, id DESC`),
+            insertNodeHistory: this.db.prepare(`INSERT INTO node_history (node_id, day, event_text, event_type) VALUES (@node_id, @day, @text, @type)`),
+
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`),
 
@@ -81,6 +85,23 @@ export class GameRepository {
         this.statements.updateItemSlot = this.db.prepare(`
             UPDATE inventory SET stash_slot = @slot WHERE id = @id
         `);
+    }
+
+    // --- NODE HISTORY & PINNING ---
+    toggleNodePin(nodeId) {
+        this.ensureConnection();
+        this.statements.togglePin.run(nodeId);
+    }
+
+    getNodeHistory(nodeId) {
+        this.ensureConnection();
+        return this.statements.getNodeHistory.all(nodeId);
+    }
+
+    logNodeHistory(nodeId, text, type = 'world') {
+        this.ensureConnection();
+        const currentDay = parseInt(this.statements.getSetting.get('day').value) || 1;
+        this.statements.insertNodeHistory.run({ node_id: nodeId, day: currentDay, text: text, type: type });
     }
 
     // --- CONTRACT GENERATION ---
@@ -150,6 +171,10 @@ export class GameRepository {
         
         const contractRepReward = 15;
         this.updateNodeReputation(activeContract.node_id, contractRepReward);
+
+        const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
+
+        this.logNodeHistory(activeContract.node_id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
 
         const logs = [
             `📜 Contract Completed: ${activeContract.title}`,

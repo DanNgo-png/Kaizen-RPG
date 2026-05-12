@@ -60,5 +60,13 @@ export const GameAPI = {
 
     sellItem: async (inventoryId, price, nodeId) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "sellItem", { inventoryId, price, nodeId });
+    },
+
+    toggleNodePin: async (nodeId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "toggleNodePin", { nodeId });
+    },
+
+    getNodeHistory: async (nodeId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getNodeHistory", { nodeId });
     }
 };

@@ -47,7 +47,8 @@ export const GAME_SCHEMA_SQL = `
         reputation INTEGER DEFAULT 0,
         is_visited INTEGER DEFAULT 0,
         buy_modifier REAL DEFAULT 1.0,
-        sell_modifier REAL DEFAULT 0.5
+        sell_modifier REAL DEFAULT 0.5,
+        is_pinned INTEGER DEFAULT 0
     );
 
     -- Contracts Table
@@ -62,6 +63,17 @@ export const GAME_SCHEMA_SQL = `
         is_active INTEGER DEFAULT 0,
         is_completed INTEGER DEFAULT 0,
         FOREIGN KEY(node_id) REFERENCES world_nodes(id)
+    );
+
+    -- Settlement History
+    CREATE TABLE IF NOT EXISTS node_history (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        node_id INTEGER NOT NULL,
+        day INTEGER NOT NULL,
+        event_text TEXT NOT NULL,
+        event_type TEXT DEFAULT 'world', -- 'world', 'player', 'mechanic'
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY(node_id) REFERENCES world_nodes(id) ON DELETE CASCADE
     );
 
     -- Default Resource Tracking

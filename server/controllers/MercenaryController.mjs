@@ -234,6 +234,20 @@ export class MercenaryController {
                 app.events.broadcast("transactionComplete", { success: false, error: e.message });
             }
         });
+
+        app.events.on("toggleNodePin", (payload) => {
+            try {
+                this.repo.toggleNodePin(payload.nodeId);
+                app.events.broadcast("nodePinToggled", { success: true });
+            } catch(e) { console.error(e); }
+        });
+
+        app.events.on("getNodeHistory", (payload) => {
+            try {
+                const history = this.repo.getNodeHistory(payload.nodeId);
+                app.events.broadcast("receiveNodeHistory", { nodeId: payload.nodeId, history });
+            } catch(e) { console.error(e); }
+        });
     }
 
     _refreshParty(app) {
