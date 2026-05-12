@@ -135,6 +135,23 @@ export class MercenaryController {
             } catch(e) { console.error(e); }
         });
 
+        app.events.on("getActiveContract", () => {
+            try {
+                const contract = this.repo.getActiveContract();
+                app.events.broadcast("receiveActiveContract", contract);
+            } catch(e) { console.error(e); }
+        });
+
+        app.events.on("completeActiveContract", (payload) => {
+            try {
+                const result = this.repo.completeActiveContract();
+                if (result) {
+                    app.events.broadcast("contractCompletedRealtime", result);
+                    this._refreshParty(app);
+                }
+            } catch(e) { console.error(e); }
+        });
+
         app.events.on("acceptContract", (payload) => {
             try {
                 this.repo.acceptContract(payload.contractId);

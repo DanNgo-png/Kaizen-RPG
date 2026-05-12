@@ -8,6 +8,7 @@ import { notifier } from "./js/_global-managers/NotificationManager.js";
 import { standardManager } from './js/focus/standard/StandardFocusManager.js';
 import { flexManager } from './js/focus/flexible/FlexibleFocusManager.js';
 import { initGlobalFocusListener } from './js/focus/GlobalFocusListener.js';
+import './js/games/GlobalGameManager.js';
 
 // UI Managers
 import { handleDropdowns } from './js/dropdown.js';

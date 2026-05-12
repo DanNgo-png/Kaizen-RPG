@@ -270,9 +270,16 @@ class StandardFocusManager {
     tick(delta) {
         if (this.isStopwatch) {
             this.secondsElapsed += delta;
+            if (this.mode === 'focus') {
+                document.dispatchEvent(new CustomEvent('kaizen:game-focus-tick', { detail: { seconds: delta } }));
+            }
         } else {
             this.secondsRemaining -= delta;
             
+            if (this.mode === 'focus') {
+                document.dispatchEvent(new CustomEvent('kaizen:game-focus-tick', { detail: { seconds: delta } }));
+            }
+
             if (this.secondsRemaining <= 0) {
                 this.secondsRemaining = 0;
                 this.completePhase();

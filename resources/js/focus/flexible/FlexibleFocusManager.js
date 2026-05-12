@@ -20,6 +20,7 @@ class FlexibleFocusManager {
         this.lastWarnedMinute = 0; 
 
         this.persistBalance = false; 
+        this.lastNotifiedFocusMs = 0;
     }
 
     initialize() {
@@ -80,6 +81,7 @@ class FlexibleFocusManager {
 
         this.state.ratio = saved.ratio || 3.0;
         this.state.accumulatedFocus = saved.focusMs || 0;
+        this.lastNotifiedFocusMs = this.state.accumulatedFocus;
         this.state.accumulatedBreak = saved.breakMs || 0;
         this.state.currentTag = saved.tag || "No Tag";
         this.state.carriedBalance = saved.carriedBalance || 0; // Restore separate balance
@@ -105,6 +107,17 @@ class FlexibleFocusManager {
     tick() {
         const stats = this.state.getStats();
         this.checkBalanceWarning(stats.balanceMs);
+
+        if (stats.status === 'focus') {
+            const deltaMs = stats.focusMs - (this.lastNotifiedFocusMs || 0);
+            if (deltaMs > 0) {
+                document.dispatchEvent(new CustomEvent('kaizen:game-focus-tick', { detail: { seconds: deltaMs / 1000 } }));
+                this.lastNotifiedFocusMs = stats.focusMs;
+            }
+        } else {
+            this.lastNotifiedFocusMs = stats.focusMs;
+        }
+
         const event = new CustomEvent('kaizen:flex-tick', { detail: stats });
         document.dispatchEvent(event);
     }
@@ -161,9 +174,6 @@ class FlexibleFocusManager {
     }
 
     commitSession(focusSeconds, breakSeconds) {
-        // 1. Save to DB (History)
-        // With the new logic, focusSeconds/breakSeconds ONLY come from the current session's accumulation.
-        // They do NOT include previous carried balance, so analytics will be correct (no duplication).
         const payload = {
             tag: this.state.currentTag,
             focusSeconds: focusSeconds,
@@ -175,29 +185,20 @@ class FlexibleFocusManager {
         FocusAPI.saveFocusSession(payload);
         this.stopTicker();
 
-        // 2. Calculate Carry-Over Balance
-        // We calculate what the balance SHOULD be after this session
         const committedFocusMs = focusSeconds * 1000;
         const committedBreakMs = breakSeconds * 1000;
         
-        // Earned break from THIS session
         const sessionEarnedBreak = committedFocusMs / this.state.ratio;
-        
-        // Net result of THIS session
         const sessionNetBalance = sessionEarnedBreak - committedBreakMs;
 
-        // Total new balance = Previous Carried + Session Net
         const newCarriedBalance = this.state.carriedBalance + sessionNetBalance;
 
-        // 3. Reset Session
         this.state.reset(); 
+        this.lastNotifiedFocusMs = 0; 
 
-        // 4. Apply Persistence Logic
         if (this.persistBalance) {
-            // Set the carried balance for the NEXT session
             this.state.setCarriedBalance(newCarriedBalance);
         } else {
-            // Wipe balance if persistence is off
             this.state.setCarriedBalance(0);
         }
 

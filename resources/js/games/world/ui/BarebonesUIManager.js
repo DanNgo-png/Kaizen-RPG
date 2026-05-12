@@ -143,6 +143,26 @@ export class BarebonesUIManager {
     }
 
     _bindEvents() {
+        document.addEventListener('kaizen:contract-progress-updated', (e) => {
+            const contract = e.detail;
+            if (this.activeContract && this.activeContract.id === contract.id) {
+                this.activeContract.progress_minutes = contract.progress_minutes;
+
+                // Sync the bar smoothly
+                if (this.dom.progressFill && this.dom.progressText) {
+                    const progress = this.activeContract.progress_minutes;
+                    const target = this.activeContract.required_minutes;
+                    const pct = Math.min((progress / target) * 100, 100);
+
+                    this.dom.progressFill.style.width = `${pct}%`;
+                    this.dom.progressText.textContent = `Invest Focus Time to progress (${Math.floor(progress)}/${target}m).`;
+                }
+            }
+        });
+
+        Neutralino.events.off('contractCompletedRealtime', this._onContractCompletedRealtime.bind(this));
+        Neutralino.events.on('contractCompletedRealtime', this._onContractCompletedRealtime.bind(this));
+
         Neutralino.events.off('receiveContracts', this._onReceiveContracts.bind(this));
         Neutralino.events.on('receiveContracts', this._onReceiveContracts.bind(this));
 
@@ -171,6 +191,20 @@ export class BarebonesUIManager {
                 el.addEventListener('mouseleave', () => this.tooltip.classList.add('hidden'));
             }
         });
+    }
+
+    // --- Cleanup UI ---
+    _onContractCompletedRealtime(e) {
+        this.activeContract = null;
+        this.updateActiveBanner(null);
+
+        // Refresh job board if a node is currently selected
+        if (this.selectedNode && this.activeTab === 'jobs') {
+            GameAPI.getContractsForNode(this.selectedNode.id);
+        }
+
+        // Refresh world data to update header gold/stats
+        GameAPI.getWorldData();
     }
 
     // --- Tab Management ---

@@ -136,6 +136,26 @@ export class GameRepository {
         this.statements.abortContract.run(contractId);
     }
 
+    completeActiveContract() {
+        this.ensureConnection();
+        const activeContract = this.getActiveContract();
+        if (!activeContract) return null;
+
+        this.statements.completeContract.run({ id: activeContract.id });
+        this.updateGold(activeContract.gold_reward);
+        
+        const contractRepReward = 15;
+        this.updateNodeReputation(activeContract.node_id, contractRepReward);
+
+        const logs = [
+            `📜 Contract Completed: ${activeContract.title}`,
+            `💰 Earned ${activeContract.gold_reward} crowns!`,
+            `🤝 Reputation with settlement increased by ${contractRepReward}.`
+        ];
+
+        return { contract: activeContract, logs };
+    }
+
     // --- INVENTORY ---
     getInventory() {
         this.ensureConnection();

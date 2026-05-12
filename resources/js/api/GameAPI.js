@@ -29,6 +29,14 @@ export const GameAPI = {
     },
 
     // --- CONTRACTS ---
+    getActiveContract: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getActiveContract", null);
+    },
+
+    completeActiveContract: async (contractId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "completeActiveContract", { contractId });
+    },
+
     getContractsForNode: async (nodeId) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getContractsForNode", { nodeId });
     },
