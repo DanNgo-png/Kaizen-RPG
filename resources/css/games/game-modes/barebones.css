@@ -352,32 +352,45 @@
 .bb-slot-price.buy { color: #93c5fd; } /* Light Blue for Buying */
 .bb-slot-price.sell { color: #fcd34d; } /* Light Gold for Selling */
 
-/* Custom CSS Tooltip on Hover */
-.bb-market-slot::after {
-    content: attr(data-tooltip);
-    position: absolute;
-    bottom: 105%;
-    left: 50%;
-    transform: translateX(-50%);
+/* --- Floating JS Tooltip --- */
+.bb-item-tooltip {
+    position: fixed;
     background: rgba(15, 23, 42, 0.98);
     border: 1px solid #475569;
-    padding: 8px 12px;
+    padding: 10px 15px;
     border-radius: 6px;
-    font-size: 0.85rem;
-    color: #f8fafc;
-    white-space: pre-wrap; /* Allows line breaks from \n */
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
     text-align: center;
     min-width: 140px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.2s;
-    z-index: 100;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
 }
 
-.bb-market-slot:hover::after {
-    opacity: 1;
+.bb-item-tooltip.hidden {
+    display: none;
 }
+
+.bb-item-tooltip .tt-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f8fafc;
+    margin-bottom: 2px;
+}
+
+.bb-item-tooltip .tt-type {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.bb-item-tooltip .tt-action {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.bb-item-tooltip .tt-action.buy { color: #60a5fa; }
+.bb-item-tooltip .tt-action.sell { color: #fbbf24; }
 
 /* --- Hide Market Scrollbars --- */
 .bb-market-panel .bb-scroll-list {

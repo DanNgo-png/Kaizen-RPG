@@ -33,7 +33,30 @@ export class BarebonesUIManager {
         this.activeTab = 'jobs';
         this.marketData = { inventory: [], shopItems: [], gold: 0 };
 
+        this.tooltip = document.createElement('div');
+        this.tooltip.className = 'bb-item-tooltip hidden';
+        document.body.appendChild(this.tooltip);
+
         this._bindEvents();
+    }
+
+    _positionTooltip(e) {
+        if (this.tooltip.classList.contains('hidden')) return;
+        
+        const rect = this.tooltip.getBoundingClientRect();
+        let x = e.clientX + 15;
+        let y = e.clientY + 15;
+
+        // Keep within viewport boundaries
+        if (x + rect.width > window.innerWidth) {
+            x = e.clientX - rect.width - 15;
+        }
+        if (y + rect.height > window.innerHeight) {
+            y = e.clientY - rect.height - 15;
+        }
+
+        this.tooltip.style.left = `${x}px`;
+        this.tooltip.style.top = `${y}px`;
     }
 
     updateStats(resources) {
@@ -208,15 +231,9 @@ export class BarebonesUIManager {
         const price = isBuying ? item.cost : item.sellPrice;
         const canAfford = isBuying ? this.marketData.gold >= price : true;
         
-        // Base classes including Rarity and Affordability
         const rarityClass = item.rarity ? `rarity-${item.rarity}` : 'rarity-common';
         el.className = `bb-market-slot ${rarityClass} ${!canAfford ? 'disabled' : ''}`;
         
-        // Tooltip generation
-        const actionText = isBuying ? 'Left Click to Buy' : 'Left Click to Sell';
-        // \n creates the line breaks safely in the CSS 'white-space: pre-wrap'
-        el.dataset.tooltip = `${item.name}\n[${item.type}]\n\n${actionText}\n${price} Gold`;
-
         const priceClass = isBuying ? 'buy' : 'sell';
 
         // Inner HTML (Icon + Tiny Price Tag)
@@ -225,8 +242,31 @@ export class BarebonesUIManager {
             <div class="bb-slot-price ${priceClass}">${price}</div>
         `;
 
+        // --- NEW: Tooltip Mouse Events ---
+        const actionText = isBuying ? 'Left Click to Buy' : 'Left Click to Sell';
+        
+        el.addEventListener('mouseenter', (e) => {
+            this.tooltip.innerHTML = `
+                <div class="tt-name">${item.name}</div>
+                <div class="tt-type">[${item.type || 'Misc'}]</div>
+                <div class="tt-action ${priceClass}">${actionText} <i class="fa-solid fa-coins"></i> ${price}</div>
+            `;
+            this.tooltip.classList.remove('hidden');
+            this._positionTooltip(e);
+        });
+
+        el.addEventListener('mousemove', (e) => {
+            this._positionTooltip(e);
+        });
+
+        el.addEventListener('mouseleave', () => {
+            this.tooltip.classList.add('hidden');
+        });
+        // ---------------------------------
+
         if (canAfford) {
             el.addEventListener('click', () => {
+                this.tooltip.classList.add('hidden'); // Hide tooltip on click to refresh cleanly
                 if (isBuying) GameAPI.buyItem(item.id, price, this.selectedNode.id);
                 else GameAPI.sellItem(item.inventoryId, price, this.selectedNode.id);
             });
@@ -234,7 +274,7 @@ export class BarebonesUIManager {
 
         return el;
     }
-    
+
     // --- Contract Logic ---
     _onReceiveContracts(e) {
         const { contracts, activeContract } = e.detail;
