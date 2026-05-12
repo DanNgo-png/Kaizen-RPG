@@ -490,16 +490,26 @@
 
             <!-- Tab 2: Marketplace (Hidden by default) -->
             <div id="bb-marketplace-container" class="hidden"
-              style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
-              <!-- Sub-tabs -->
-              <div
-                style="display:flex; gap:10px; padding:15px 20px; background:rgba(0,0,0,0.2); border-bottom:1px solid #334155;">
-                <button id="bb-subtab-buy" class="bb-subtab active">Buy Items</button>
-                <button id="bb-subtab-sell" class="bb-subtab">Sell Loot</button>
+              style="display: flex; flex-direction: column; flex: 1; overflow: hidden; padding: 15px;">
+              
+              <div class="bb-market-split">
+                <!-- Left: Company Stash (Sell) -->
+                <div class="bb-market-panel">
+                  <div class="bb-market-header">Company Stash</div>
+                  <div id="bb-market-stash-list" class="bb-scroll-list" style="padding: 0;">
+                    <!-- Stash items injected here -->
+                  </div>
+                </div>
+
+                <!-- Right: Merchant Shop (Buy) -->
+                <div class="bb-market-panel">
+                  <div class="bb-market-header">Merchant Shop</div>
+                  <div id="bb-market-shop-list" class="bb-scroll-list" style="padding: 0;">
+                    <!-- Shop items injected here -->
+                  </div>
+                </div>
               </div>
-              <!-- List -->
-              <div id="bb-market-list" class="bb-scroll-list" style="padding: 20px;">
-              </div>
+
             </div>
           </div>
         </div>

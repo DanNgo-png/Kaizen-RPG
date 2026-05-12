@@ -17,13 +17,12 @@ export class BarebonesUIManager {
 
             goldDisplay: document.getElementById('bb-gold-display'),
 
-            // NEW: Market DOM
+            // Market DOM
             marketContainer: document.getElementById('bb-marketplace-container'),
-            marketList: document.getElementById('bb-market-list'),
+            marketStashList: document.getElementById('bb-market-stash-list'),
+            marketShopList: document.getElementById('bb-market-shop-list'),
             tabJobs: document.getElementById('bb-tab-jobs'),
-            tabMarket: document.getElementById('bb-tab-market'),
-            subTabBuy: document.getElementById('bb-subtab-buy'),
-            subTabSell: document.getElementById('bb-subtab-sell')
+            tabMarket: document.getElementById('bb-tab-market')
         };
 
         this.nodes = [];
@@ -32,7 +31,6 @@ export class BarebonesUIManager {
         
         // Tab State
         this.activeTab = 'jobs';
-        this.activeSubTab = 'buy';
         this.marketData = { inventory: [], shopItems: [], gold: 0 };
 
         this._bindEvents();
@@ -65,8 +63,6 @@ export class BarebonesUIManager {
         // Tab Listeners
         if(this.dom.tabJobs) this.dom.tabJobs.addEventListener('click', () => this.switchTab('jobs'));
         if(this.dom.tabMarket) this.dom.tabMarket.addEventListener('click', () => this.switchTab('market'));
-        if(this.dom.subTabBuy) this.dom.subTabBuy.addEventListener('click', () => this.switchSubTab('buy'));
-        if(this.dom.subTabSell) this.dom.subTabSell.addEventListener('click', () => this.switchSubTab('sell'));
     }
 
     // --- Tab Management ---
@@ -86,23 +82,12 @@ export class BarebonesUIManager {
             
             // Fetch market data when opening tab
             if (this.selectedNode) {
-                this.dom.marketList.innerHTML = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading wares...</div>';
+                const loader = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
+                this.dom.marketStashList.innerHTML = loader;
+                this.dom.marketShopList.innerHTML = loader;
                 GameAPI.getMarketData(this.selectedNode.type);
             }
         }
-    }
-
-    switchSubTab(subTabName) {
-        this.activeSubTab = subTabName;
-        
-        if (subTabName === 'buy') {
-            this.dom.subTabBuy.classList.add('active');
-            this.dom.subTabSell.classList.remove('active');
-        } else {
-            this.dom.subTabSell.classList.add('active');
-            this.dom.subTabBuy.classList.remove('active');
-        }
-        this.renderMarketList();
     }
 
     // --- General ---
@@ -124,7 +109,6 @@ export class BarebonesUIManager {
         this.nodes = nodes;
         if (resources) this.updateStats(resources);
 
-        // Update selectedNode reference so UI fields (like reputation) refresh
         if (this.selectedNode) {
             const updatedNode = this.nodes.find(n => n.id === this.selectedNode.id);
             if (updatedNode) {
@@ -132,7 +116,6 @@ export class BarebonesUIManager {
                 this.dom.selectedNodeName.innerHTML = `— ${this.selectedNode.name} <span style="color:#fbbf24; font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-handshake"></i> Rep: ${this.selectedNode.reputation || 0}</span>`;
             }
         }
-        
         this.renderNodeList();
     }
 
@@ -166,12 +149,12 @@ export class BarebonesUIManager {
         this.dom.selectedNodeName.innerHTML = `— ${node.name} <span style="color:#fbbf24; font-size:0.8rem; margin-left:10px;"><i class="fa-solid fa-handshake"></i> Rep: ${node.reputation || 0}</span>`;
         this.renderNodeList(); 
         
-        // If on Jobs, fetch jobs. If on Market, fetch market.
         if (this.activeTab === 'jobs') {
             this.dom.contractList.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
             GameAPI.getContractsForNode(node.id);
         } else {
-            this.dom.marketList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
+            this.dom.marketStashList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
+            this.dom.marketShopList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
             GameAPI.getMarketData(node.type);
         }
     }
@@ -185,9 +168,7 @@ export class BarebonesUIManager {
 
     _onTransactionComplete(e) {
         if (e.detail.success) {
-            // Re-fetch to update inventory and gold perfectly
             if (this.selectedNode) GameAPI.getMarketData(this.selectedNode.type);
-            // Also tell background world to update so standard HUD catches the new gold
             GameAPI.getWorldData(); 
         } else {
             alert(e.detail.error || "Transaction failed.");
@@ -195,69 +176,71 @@ export class BarebonesUIManager {
     }
 
     renderMarketList() {
-        this.dom.marketList.innerHTML = '';
-        const isBuying = this.activeSubTab === 'buy';
-        const items = isBuying ? this.marketData.shopItems : this.marketData.inventory;
-
-        if (!items || items.length === 0) {
-            const msg = isBuying ? "The merchant has nothing to sell today." : "Your company stash is empty.";
-            this.dom.marketList.innerHTML = `<div style="text-align:center; color:#64748b; padding: 20px;">${msg}</div>`;
-            return;
+        // Render Stash (Sell)
+        this.dom.marketStashList.innerHTML = '';
+        if (!this.marketData.inventory || this.marketData.inventory.length === 0) {
+            this.dom.marketStashList.innerHTML = `<div style="text-align:center; color:#64748b; padding: 30px 20px;">Your company stash is empty.</div>`;
+        } else {
+            const stashGrid = document.createElement('div');
+            stashGrid.className = 'bb-market-grid';
+            this.marketData.inventory.forEach(item => {
+                stashGrid.appendChild(this._createMarketSlot(item, false));
+            });
+            this.dom.marketStashList.appendChild(stashGrid);
         }
 
-        items.forEach(item => {
-            const el = document.createElement('div');
-            el.className = 'bb-contract-card'; // Reuse contract styling for simplicity
-            
-            const costText = isBuying ? item.cost : item.sellPrice;
-            const canAfford = isBuying ? this.marketData.gold >= item.cost : true;
-            const btnColor = isBuying ? '#3b82f6' : '#f59e0b'; // Blue for buy, Orange for sell
-            const btnText = isBuying ? 'Buy' : 'Sell';
-
-            el.innerHTML = `
-                <div class="bb-c-left" style="display:flex; gap:15px; align-items:center;">
-                    <div style="font-size:2rem; color:#9ca3af; background:#1e293b; width:50px; height:50px; display:flex; align-items:center; justify-content:center; border-radius:8px; border:1px solid #334155;">
-                        <i class="${item.icon || 'fa-solid fa-cube'}"></i>
-                    </div>
-                    <div>
-                        <h4 style="margin:0 0 5px 0; color:#e2e8f0; font-size:1.1rem;">${item.name}</h4>
-                        <div style="font-size:0.85rem; color:#94a3b8;">${isBuying ? 'Merchant Item' : 'In Stash'}</div>
-                    </div>
-                </div>
-                <div class="bb-c-right" style="display:flex; align-items:center; gap:15px;">
-                    <span style="color:${canAfford ? '#facc15' : '#ef4444'}; font-weight:700; font-size:1.1rem;">
-                        <i class="fa-solid fa-coins"></i> ${costText}g
-                    </span>
-                    <button class="bb-btn-accept" style="background:${btnColor};" ${!canAfford ? 'disabled' : ''}>
-                        ${btnText}
-                    </button>
-                </div>
-            `;
-
-            if (canAfford) {
-                el.querySelector('.bb-btn-accept').addEventListener('click', () => {
-                    if (isBuying) {
-                        GameAPI.buyItem(item.id, item.cost, this.selectedNode.id);
-                    } else {
-                        GameAPI.sellItem(item.inventoryId, item.sellPrice, this.selectedNode.id);
-                    }
-                });
-            } else {
-                el.querySelector('.bb-btn-accept').style.opacity = '0.5';
-                el.querySelector('.bb-btn-accept').style.cursor = 'not-allowed';
-            }
-
-            this.dom.marketList.appendChild(el);
-        });
+        // Render Shop (Buy)
+        this.dom.marketShopList.innerHTML = '';
+        if (!this.marketData.shopItems || this.marketData.shopItems.length === 0) {
+            this.dom.marketShopList.innerHTML = `<div style="text-align:center; color:#64748b; padding: 30px 20px;">The merchant has nothing to sell today.</div>`;
+        } else {
+            const shopGrid = document.createElement('div');
+            shopGrid.className = 'bb-market-grid';
+            this.marketData.shopItems.forEach(item => {
+                shopGrid.appendChild(this._createMarketSlot(item, true));
+            });
+            this.dom.marketShopList.appendChild(shopGrid);
+        }
     }
 
+    _createMarketSlot(item, isBuying) {
+        const el = document.createElement('div');
+        const price = isBuying ? item.cost : item.sellPrice;
+        const canAfford = isBuying ? this.marketData.gold >= price : true;
+        
+        // Base classes including Rarity and Affordability
+        const rarityClass = item.rarity ? `rarity-${item.rarity}` : 'rarity-common';
+        el.className = `bb-market-slot ${rarityClass} ${!canAfford ? 'disabled' : ''}`;
+        
+        // Tooltip generation
+        const actionText = isBuying ? 'Left Click to Buy' : 'Left Click to Sell';
+        // \n creates the line breaks safely in the CSS 'white-space: pre-wrap'
+        el.dataset.tooltip = `${item.name}\n[${item.type}]\n\n${actionText}\n${price} Gold`;
+
+        const priceClass = isBuying ? 'buy' : 'sell';
+
+        // Inner HTML (Icon + Tiny Price Tag)
+        el.innerHTML = `
+            <i class="${item.icon || 'fa-solid fa-cube'}"></i>
+            <div class="bb-slot-price ${priceClass}">${price}</div>
+        `;
+
+        if (canAfford) {
+            el.addEventListener('click', () => {
+                if (isBuying) GameAPI.buyItem(item.id, price, this.selectedNode.id);
+                else GameAPI.sellItem(item.inventoryId, price, this.selectedNode.id);
+            });
+        }
+
+        return el;
+    }
+    
     // --- Contract Logic ---
     _onReceiveContracts(e) {
         const { contracts, activeContract } = e.detail;
         this.activeContract = activeContract;
         this.updateActiveBanner(activeContract);
         
-        // Only render contracts if we are currently looking at the job board
         if(this.activeTab === 'jobs') {
             this.renderContracts(contracts);
         }
@@ -268,7 +251,6 @@ export class BarebonesUIManager {
         this.activeContract = activeContract;
         this.updateActiveBanner(activeContract);
         if (this.selectedNode && this.activeTab === 'jobs') {
-            // Re-fetch to apply "Busy" lock on the list
             GameAPI.getContractsForNode(this.selectedNode.id);
         }
     }
@@ -277,7 +259,6 @@ export class BarebonesUIManager {
         this.activeContract = null;
         this.updateActiveBanner(null);
         if (this.selectedNode) {
-            // Re-fetch contracts to remove lock, and fetch world to sync reputation
             GameAPI.getContractsForNode(this.selectedNode.id);
             GameAPI.getWorldData();
         }
@@ -332,8 +313,6 @@ export class BarebonesUIManager {
             
             if (this.dom.btnAbort) {
                 this.dom.btnAbort.classList.remove('hidden');
-                
-                // Clone to clear old listeners safely
                 const newBtn = this.dom.btnAbort.cloneNode(true);
                 this.dom.btnAbort.parentNode.replaceChild(newBtn, this.dom.btnAbort);
                 this.dom.btnAbort = newBtn;
@@ -344,7 +323,6 @@ export class BarebonesUIManager {
                     }
                 });
             }
-
         } else {
             this.dom.activeTitle.textContent = "No Active Contract";
             this.dom.progressContainer.classList.add('hidden');
