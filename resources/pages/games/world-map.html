@@ -206,8 +206,15 @@
     }
 
     @keyframes popIn {
-      from { transform: scale(0.95); opacity: 0; }
-      to { transform: scale(1); opacity: 1; }
+      from {
+        transform: scale(0.95);
+        opacity: 0;
+      }
+
+      to {
+        transform: scale(1);
+        opacity: 1;
+      }
     }
 
     .exit-modal-icon {
@@ -271,13 +278,25 @@
     <!-- Top HUD -->
     <div class="world-hud-top">
       <div class="hud-stat-group">
-        <div class="hud-stat">
+        <div class="hud-stat" id="res-gold-container">
           <i class="fa-solid fa-coins text-gold"></i>
           <span id="hud-gold">0</span>
         </div>
-        <div class="hud-stat">
+        <div class="hud-stat" id="res-provisions-container">
           <i class="fa-solid fa-drumstick-bite text-supplies"></i>
-          <span id="hud-supplies">14 days</span>
+          <span id="hud-provisions">0</span>
+        </div>
+        <div class="hud-stat" id="res-tools-container">
+          <i class="fa-solid fa-hammer" style="color: #9ca3af;"></i>
+          <span id="hud-tools">0</span>
+        </div>
+        <div class="hud-stat" id="res-ammo-container">
+          <i class="fa-solid fa-bullseye" style="color: #d1d5db;"></i>
+          <span id="hud-ammo">0</span>
+        </div>
+        <div class="hud-stat" id="res-meds-container">
+          <i class="fa-solid fa-band-aid" style="color: #f87171;"></i>
+          <span id="hud-meds">0</span>
         </div>
       </div>
 
@@ -420,9 +439,27 @@
             Crawler</h2>
 
           <div style="display: flex; gap: 15px; align-items: center;">
-            <div
-              style="background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; font-weight: bold; color: #facc15; font-size: 1.1rem; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-              <i class="fa-solid fa-coins"></i> <span id="bb-gold-display">0</span>
+            <div style="display: flex; gap: 15px; background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+              <!-- Gold -->
+              <div id="bb-res-gold-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#facc15; font-weight:bold; font-size:1.1rem;">
+                <i class="fa-solid fa-coins"></i> <span id="bb-gold-display">0</span>
+              </div>
+              <!-- Provisions -->
+              <div id="bb-res-provisions-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#d97706; font-weight:bold; font-size:1.1rem;">
+                <i class="fa-solid fa-drumstick-bite"></i> <span id="bb-provisions-display">0</span>
+              </div>
+              <!-- Tools -->
+              <div id="bb-res-tools-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#9ca3af; font-weight:bold; font-size:1.1rem;">
+                <i class="fa-solid fa-hammer"></i> <span id="bb-tools-display">0</span>
+              </div>
+              <!-- Ammo -->
+              <div id="bb-res-ammo-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#d1d5db; font-weight:bold; font-size:1.1rem;">
+                <i class="fa-solid fa-bullseye"></i> <span id="bb-ammo-display">0</span>
+              </div>
+              <!-- Meds -->
+              <div id="bb-res-meds-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#f87171; font-weight:bold; font-size:1.1rem;">
+                <i class="fa-solid fa-band-aid"></i> <span id="bb-meds-display">0</span>
+              </div>
             </div>
 
             <!-- Barebones Inventory/Stash Button -->
@@ -491,7 +528,7 @@
             <!-- Tab 2: Marketplace (Hidden by default) -->
             <div id="bb-marketplace-container" class="hidden"
               style="display: flex; flex-direction: column; flex: 1; overflow: hidden; padding: 15px;">
-              
+
               <div class="bb-market-split">
                 <!-- Left: Company Stash (Sell) -->
                 <div class="bb-market-panel">
@@ -533,7 +570,7 @@
         </div>
       </div>
     </div>
-    
+
   </div>
 </body>
 

@@ -15,7 +15,21 @@ export class BarebonesUIManager {
             progressText: document.getElementById('bb-progress-text'),
             btnAbort: document.getElementById('bb-btn-abort'),
 
+            // Resources Displays
             goldDisplay: document.getElementById('bb-gold-display'),
+            provisionsDisplay: document.getElementById('bb-provisions-display'),
+            toolsDisplay: document.getElementById('bb-tools-display'),
+            ammoDisplay: document.getElementById('bb-ammo-display'),
+            medsDisplay: document.getElementById('bb-meds-display'),
+
+            // Resource Containers (for hover events)
+            resContainers: {
+                gold: document.getElementById('bb-res-gold-container'),
+                provisions: document.getElementById('bb-res-provisions-container'),
+                tools: document.getElementById('bb-res-tools-container'),
+                ammo: document.getElementById('bb-res-ammo-container'),
+                meds: document.getElementById('bb-res-meds-container')
+            },
 
             // Market DOM
             marketContainer: document.getElementById('bb-marketplace-container'),
@@ -28,6 +42,7 @@ export class BarebonesUIManager {
         this.nodes = [];
         this.selectedNode = null;
         this.activeContract = null;
+        this.currentResources = null; // Cache to pass to tooltips
         
         // Tab State
         this.activeTab = 'jobs';
@@ -59,9 +74,70 @@ export class BarebonesUIManager {
         this.tooltip.style.top = `${y}px`;
     }
 
+    // --- NEW: Resource Hover Tooltips ---
+    _showResourceTooltip(type, e) {
+        if (!this.currentResources) return;
+        let html = '';
+        const d = this.currentResources;
+
+        switch(type) {
+            case 'gold':
+                const daysGold = d.dailyWages > 0 ? Math.floor(d.gold / d.dailyWages) : '∞';
+                html = `
+                    <div style="font-weight:700; color:#facc15; margin-bottom:5px; font-size:1.05rem; text-align:left;">Crowns</div>
+                    <div style="max-width: 250px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">You pay out <b style="color:#fff;">${d.dailyWages || 0}</b> crowns per day.</div>
+                    <div style="margin-top:8px; max-width: 250px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">Your <b style="color:#fff;">${d.gold}</b> crowns will last you for <b style="color:#fff;">${daysGold}</b> more days.</div>
+                `;
+                break;
+            case 'provisions':
+                const daysFood = d.foodPerDay > 0 ? Math.floor(d.provisions / d.foodPerDay) : '∞';
+                html = `
+                    <div style="font-weight:700; color:#d97706; margin-bottom:5px; font-size:1.05rem; text-align:left;">Provisions</div>
+                    <div style="max-width: 260px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">The average person requires 2 provisions per day.</div>
+                    <div style="margin-top:8px; max-width: 260px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">You use <b style="color:#fff;">${d.foodPerDay || 0}</b> provisions per day.</div>
+                    <div style="margin-top:4px; max-width: 260px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">Your <b style="color:#fff;">${d.provisions}</b> provisions will last you for <b style="color:#fff;">${daysFood}</b> more days.</div>
+                `;
+                break;
+            case 'tools':
+                html = `
+                    <div style="font-weight:700; color:#9ca3af; margin-bottom:5px; font-size:1.05rem; text-align:left;">Tools and Supplies</div>
+                    <div style="max-width: 280px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">One point is required to repair 15 points of item condition. Running out of supplies may result in weapons breaking in combat and will leave your armor damaged and useless.</div>
+                    <div style="margin-top:8px; color:#9ca3af; text-align:left; font-weight:normal;">You can carry 200 units at most.</div>
+                `;
+                break;
+            case 'ammo':
+                html = `
+                    <div style="font-weight:700; color:#d1d5db; margin-bottom:5px; font-size:1.05rem; text-align:left;">Ammunition</div>
+                    <div style="max-width: 320px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">Replacing one arrow or bolt will take up one point of ammunition, replacing one shot of a Handgonne will take up two points, and replacing one throwing weapon or charge of a Fire Lance will take up three.</div>
+                    <div style="margin-top:8px; max-width: 320px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">Running out of ammunition will leave your quivers empty and your people with nothing to shoot with.</div>
+                    <div style="margin-top:8px; color:#9ca3af; text-align:left; font-weight:normal;">You can carry no more than 500 units at a time.</div>
+                `;
+                break;
+            case 'meds':
+                html = `
+                    <div style="font-weight:700; color:#f87171; margin-bottom:5px; font-size:1.05rem; text-align:left;">Medical Supplies</div>
+                    <div style="max-width: 280px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">One point of medical is required each day for every injury to improve and heal. Lost hitpoints heal on their own.</div>
+                    <div style="margin-top:8px; max-width: 280px; line-height:1.4; text-align:left; color:#9ca3af; font-weight:normal;">Running out of medical supplies will leave your group unable to recover from severe injuries.</div>
+                    <div style="margin-top:8px; color:#9ca3af; text-align:left; font-weight:normal;">You can carry 150 units at most.</div>
+                `;
+                break;
+        }
+
+        this.tooltip.innerHTML = html;
+        this.tooltip.classList.remove('hidden');
+        this._positionTooltip(e);
+    }
+
     updateStats(resources) {
-        if (this.dom.goldDisplay && resources) {
-            this.dom.goldDisplay.textContent = resources.gold || 0;
+        this.currentResources = resources; // Cache for hover logic
+        
+        if (resources) {
+            if (this.dom.goldDisplay) this.dom.goldDisplay.textContent = resources.gold || 0;
+            if (this.dom.provisionsDisplay) this.dom.provisionsDisplay.textContent = resources.provisions || 0;
+            if (this.dom.toolsDisplay) this.dom.toolsDisplay.textContent = resources.tools || 0;
+            if (this.dom.ammoDisplay) this.dom.ammoDisplay.textContent = resources.ammo || 0;
+            if (this.dom.medsDisplay) this.dom.medsDisplay.textContent = resources.medicine || 0;
+
             this.marketData.gold = resources.gold || 0;
         }
     }
@@ -86,6 +162,15 @@ export class BarebonesUIManager {
         // Tab Listeners
         if(this.dom.tabJobs) this.dom.tabJobs.addEventListener('click', () => this.switchTab('jobs'));
         if(this.dom.tabMarket) this.dom.tabMarket.addEventListener('click', () => this.switchTab('market'));
+
+        // Resource Tooltips Listeners
+        Object.entries(this.dom.resContainers).forEach(([type, el]) => {
+            if (el) {
+                el.addEventListener('mouseenter', (e) => this._showResourceTooltip(type, e));
+                el.addEventListener('mousemove', (e) => this._positionTooltip(e));
+                el.addEventListener('mouseleave', () => this.tooltip.classList.add('hidden'));
+            }
+        });
     }
 
     // --- Tab Management ---
@@ -185,7 +270,11 @@ export class BarebonesUIManager {
     // --- Market Logic ---
     _onReceiveMarketData(e) {
         this.marketData = e.detail;
-        this.updateStats({ gold: this.marketData.gold });
+        
+        // Use existing function but preserve other cached resources
+        const updatedResources = { ...this.currentResources, gold: this.marketData.gold };
+        this.updateStats(updatedResources);
+        
         this.renderMarketList();
     }
 
@@ -242,7 +331,6 @@ export class BarebonesUIManager {
             <div class="bb-slot-price ${priceClass}">${price}</div>
         `;
 
-        // --- NEW: Tooltip Mouse Events ---
         const actionText = isBuying ? 'Left Click to Buy' : 'Left Click to Sell';
         
         el.addEventListener('mouseenter', (e) => {
@@ -262,11 +350,10 @@ export class BarebonesUIManager {
         el.addEventListener('mouseleave', () => {
             this.tooltip.classList.add('hidden');
         });
-        // ---------------------------------
 
         if (canAfford) {
             el.addEventListener('click', () => {
-                this.tooltip.classList.add('hidden'); // Hide tooltip on click to refresh cleanly
+                this.tooltip.classList.add('hidden'); 
                 if (isBuying) GameAPI.buyItem(item.id, price, this.selectedNode.id);
                 else GameAPI.sellItem(item.inventoryId, price, this.selectedNode.id);
             });

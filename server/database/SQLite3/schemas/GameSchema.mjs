@@ -62,7 +62,14 @@ export const GAME_SCHEMA_SQL = `
         FOREIGN KEY(node_id) REFERENCES world_nodes(id)
     );
 
-    -- Player Position Tracking
+    -- Default Resource Tracking
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('gold', '500');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('provisions', '50');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('tools', '20');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('ammo', '100');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('medicine', '15');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('renown', '0');
+    INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('day', '1');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_x', '400');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('player_y', '300');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('map_generated', 'false');

@@ -335,9 +335,32 @@ export class GameRepository {
 
     getResources() {
         this.ensureConnection();
-        const gold = parseInt(this.statements.getSetting.get('gold')?.value || 0);
-        const renown = parseInt(this.statements.getSetting.get('renown')?.value || 0);
-        return { gold, renown };
+        
+        // Helper to safely parse settings
+        const getSet = (k, def) => parseInt(this.statements.getSetting.get(k)?.value || def);
+
+        const gold = getSet('gold', 0);
+        const renown = getSet('renown', 0);
+        const provisions = getSet('provisions', 50);
+        const tools = getSet('tools', 20);
+        const ammo = getSet('ammo', 100);
+        const medicine = getSet('medicine', 15);
+
+        // Calculate dynamic consumption
+        const totalWages = this.statements.getWages.get().total || 0;
+        const mercCount = this.statements.getAll.all().length;
+        const foodPerDay = mercCount * 2; // "The average person requires 2 provisions"
+
+        return { 
+            gold, 
+            renown, 
+            provisions, 
+            tools, 
+            ammo, 
+            medicine, 
+            dailyWages: totalWages, 
+            foodPerDay 
+        };
     }
 
     updateGold(amount) {
