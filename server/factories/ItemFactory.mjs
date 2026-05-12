@@ -37,6 +37,12 @@ class ItemFactoryClass {
         return inventory;
     }
 
+    getRandomItem() {
+        const items = Array.from(this.templates.values());
+        const randomTemplate = items[Math.floor(Math.random() * items.length)];
+        return this.createItem(randomTemplate.id);
+    }
+
     _createFallbackItem(id) {
         return { 
             id, 

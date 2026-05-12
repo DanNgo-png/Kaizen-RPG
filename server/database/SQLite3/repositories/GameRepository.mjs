@@ -1,4 +1,5 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
+import { ItemFactory } from '../../../factories/ItemFactory.mjs';
 
 export class GameRepository {
     constructor() {
@@ -217,6 +218,17 @@ export class GameRepository {
         const fatigueCost = Math.floor(focusMinutes / 5); 
 
         const logs = [];
+        const foundLoot = []; 
+
+        // Helper to roll for loot
+        const rollForLoot = (chancePercentage) => {
+            if (Math.random() < chancePercentage) {
+                const newItem = ItemFactory.getRandomItem();
+                this.addItemToInventory(newItem.id); // Add to DB stash
+                foundLoot.push(newItem); // Send to UI
+                logs.push(`✨ Found loot: ${newItem.name}`);
+            }
+        };
 
         // --- BAREBONES DUNGEON CRAWLER LOGIC ---
         if (origin === 'dungeon' && gameVersion === 'barebones') {
@@ -225,36 +237,55 @@ export class GameRepository {
             const activeMercs = this.statements.getAll.all();
 
             if (activeContract) {
-                // Party is working on a contract. Give safe XP and minor chance of damage.
+                // --- ON A CONTRACT ---
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+                
+                // Narrative Events
+                if (Math.random() < 0.3) {
+                    logs.push(`🏕️ The party encountered travelers on the road during the contract.`);
+                }
+                
                 activeMercs.forEach(merc => {
-                    if (Math.random() < 0.25) { 
+                    if (Math.random() < 0.20) { 
                         const dmg = Math.floor(Math.random() * 8 * ratio) + 2;
                         this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
-                        logs.push(`⚔️ ${merc.name} took ${dmg} damage during the contract mission.`);
+                        logs.push(`⚔️ ${merc.name} took ${dmg} damage fending off a wandering beast.`);
                     }
                 });
-                if (logs.length === 0) logs.push(`🛡️ The party safely gained experience while working on: ${activeContract.title}`);
+
+                // Small chance for contract bonus loot (15% per 25 mins)
+                const lootChance = 0.15 * (focusMinutes / 25);
+                rollForLoot(lootChance);
+
+                if (logs.length === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
-                // Party is freely exploring the dungeon. Grants Gold, XP, but high damage risk.
-                const goldFound = Math.floor(focusMinutes * ratio * 1.5); 
+                // --- FREE DELVING ---
+                const goldFound = Math.floor(focusMinutes * ratio * 2.0); // Slightly boosted passive gold
                 this.updateGold(goldFound);
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
                 
                 logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
                 logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 
+                // High chance of damage
                 activeMercs.forEach(merc => {
-                    if (Math.random() < 0.35) { // Higher damage chance
+                    if (Math.random() < 0.40) { 
                         const dmg = Math.floor(Math.random() * 12 * ratio) + 2;
                         this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
-                        logs.push(`⚔️ ${merc.name} took ${dmg} damage from a trap/monster.`);
+                        logs.push(`🩸 ${merc.name} took ${dmg} damage from a trap/monster.`);
                     }
                 });
+
+                // High chance for loot (40% per 25 mins)
+                const lootChance = 0.40 * (focusMinutes / 25);
+                rollForLoot(lootChance);
+                // Roll again for a second item if it was a long session
+                if (focusMinutes >= 45) rollForLoot(0.20);
+
             } else {
-                // Idle. No contract and Not Delving. Do nothing.
-                return { xp: 0, fatigue: 0, logs: [] };
+                // --- IDLE ---
+                return { xp: 0, fatigue: 0, logs: [], loot: [] };
             }
 
         } else {
@@ -262,7 +293,7 @@ export class GameRepository {
             this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
         }
 
-        return { xp: xpAmount, fatigue: fatigueCost, logs: logs };
+        return { xp: xpAmount, fatigue: fatigueCost, logs: logs, loot: foundLoot };
     }
 
     processDayEnd() {

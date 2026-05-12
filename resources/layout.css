@@ -1,6 +1,7 @@
 /* === GLOBAL COMPONENTS === */
 @import url('css/toast.css');
 @import url('css/components/tag-component.css');
+@import url('css/components/aftermath-modal.css');
 
 /* === MAIN PAGE === */
 @import url('css/variables.css');
