@@ -490,7 +490,7 @@ export class BarebonesUIManager {
         
         const priceClass = isBuying ? 'buy' : 'sell';
 
-        // Extract Quantity (Shop uses 'amount' for resources, Inventory uses 'count')
+        // Extract Quantity (Shop uses 'amount', Inventory uses 'count')
         const qty = item.amount || item.count;
         let qtyHtml = '';
         if (qty && qty > 1) {

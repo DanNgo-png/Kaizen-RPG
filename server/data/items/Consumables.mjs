@@ -4,7 +4,7 @@ export const CONSUMABLES = [
         name: 'Healing Salve', 
         type: 'Consumable', 
         icon: 'fa-solid fa-flask', 
-        baseValue: 200, 
+        baseValue: 450, 
         rarity: 'common',
         stats: { heal_amount: 30 },
         availableIn: ['All'] 

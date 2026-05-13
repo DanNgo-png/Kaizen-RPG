@@ -177,6 +177,31 @@ export class WorldMapManager {
             });
         }
 
+        // Setup Manual Camping (Instantly skip a day to heal)
+        const campBtn = document.getElementById('btn-world-camp');
+        if (campBtn) {
+            campBtn.addEventListener('click', () => {
+                if (confirm("Rest at camp for the day? This will pay daily wages and instantly heal injured party members if you have medical supplies.")) {
+                    Neutralino.extensions.dispatch("js.node-neutralino.projectRunner", "processDayEnd");
+                }
+            });
+        }
+
+        // Listen for the Camp Day Ended event to refresh the UI and show a toast
+        Neutralino.events.off('dayEnded', this._onDayEndedBound);
+        this._onDayEndedBound = (e) => {
+            if (e.detail.success) {
+                const { wagesPaid, medicineUsed, totalHealed } = e.detail;
+                let msg = `Paid ${wagesPaid}g. `;
+                if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds.`;
+                else msg += "Party is fully rested.";
+                
+                notifier.show("Rested at Camp", msg, "fa-solid fa-campground");
+                GameAPI.getWorldData(); // Refresh HUD
+            }
+        };
+        Neutralino.events.on('dayEnded', this._onDayEndedBound);
+
         const exitModal = document.getElementById('exit-game-modal');
         const btnCancelExit = document.getElementById('btn-cancel-exit');
         const btnConfirmExit = document.getElementById('btn-confirm-exit');

@@ -276,6 +276,27 @@ export class GameRepository {
             }
         };
 
+        // --- IN-GAME TIME PROGRESSION ---
+        let daysPassed = 0;
+        const MINUTES_PER_DAY = 30; // 1m 45s real-time = 1.75 minutes = 1 in-game day
+        // OPTIONAL: 1 hour of real focus = 1 in-game day
+        
+        const currentAccumulated = parseFloat(this.statements.getSetting.get('accumulated_time')?.value || '0');
+        let newAccumulated = currentAccumulated + focusMinutes;
+
+        while (newAccumulated >= MINUTES_PER_DAY) {
+            newAccumulated -= MINUTES_PER_DAY;
+            daysPassed++;
+            const dayResult = this.processDayEnd();
+            
+            logs.push(`🌙 A day passed. Paid ${dayResult.wagesPaid}g in wages.`);
+            if (dayResult.medicineUsed > 0 || dayResult.totalHealed > 0) {
+                logs.push(`⚕️ Recovered ${dayResult.totalHealed} HP using ${dayResult.medicineUsed} meds.`);
+            }
+        }
+        this.setCampaignSetting('accumulated_time', newAccumulated);
+
+        // --- XP & DUNGEON LOGIC ---
         if (origin === 'dungeon' && gameVersion === 'barebones') {
             const activeContract = this.getActiveContract();
             const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
@@ -299,15 +320,17 @@ export class GameRepository {
                 const lootChance = 0.15 * (focusMinutes / 25);
                 rollForLoot(lootChance);
 
-                if (logs.length === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
+                if (logs.length === 0 && daysPassed === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
                 const goldFound = Math.floor(focusMinutes * ratio * 2.0); 
                 this.updateGold(goldFound);
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
                 
-                logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
-                logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
+                if (focusMinutes >= 1) { 
+                    logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
+                    logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
+                }
                 
                 activeMercs.forEach(merc => {
                     if (Math.random() < 0.40) { 
@@ -322,7 +345,8 @@ export class GameRepository {
                 if (focusMinutes >= 45) rollForLoot(0.20);
 
             } else {
-                return { xp: 0, fatigue: 0, logs: [], loot: [] };
+                // If totally idle and 0 days passed, just return empty
+                return { xp: 0, fatigue: 0, logs: logs, loot: [] };
             }
 
         } else {
@@ -346,19 +370,19 @@ export class GameRepository {
             this.statements.updateSetting.run({ key: 'gold', value: newGold });
             this.statements.insertLedger.run({ day: currentDay, desc: 'Daily Wages', amount: -totalWages });
 
-            // Heal and Rest Mercenaries (Loop allows medicine logic)
-            const restingMercs = this.db.prepare('SELECT * FROM mercenaries WHERE is_active = 0').all();
+            // Heal ALL Mercenaries, removing the active/rest requirement
+            const allMercs = this.db.prepare('SELECT * FROM mercenaries').all();
             let medicineUsed = 0;
             let totalHealed = 0;
 
-            for (const merc of restingMercs) {
-                let healAmount = 2; // Base slow healing without meds
+            for (const merc of allMercs) {
+                let healAmount = 5; // Base natural healing without meds
                 
                 if (merc.current_hp < merc.max_hp) {
-                    if (currentMedicine >= 2) {
-                        currentMedicine -= 2;
-                        medicineUsed += 2;
-                        healAmount = 15; // Medicated healing
+                    if (currentMedicine >= 1) { // 1 med per merc per day
+                        currentMedicine -= 1;
+                        medicineUsed += 1;
+                        healAmount = 25; // Medicated healing
                     }
                     const newHp = Math.min(merc.max_hp, merc.current_hp + healAmount);
                     totalHealed += (newHp - merc.current_hp);
@@ -366,7 +390,7 @@ export class GameRepository {
                 }
                 
                 // Fatigue heals normally without resources
-                this.db.prepare('UPDATE mercenaries SET fatigue = MAX(0, fatigue - 20) WHERE id = ?').run(merc.id);
+                this.db.prepare('UPDATE mercenaries SET fatigue = MAX(0, fatigue - 25) WHERE id = ?').run(merc.id);
             }
 
             this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
