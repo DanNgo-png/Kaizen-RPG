@@ -106,7 +106,18 @@ export class PartyManager {
 
     _onDayEnded(e) {
         if (e.detail.success) {
-            notifier.show("Day Ended", `Paid ${e.detail.wagesPaid}g wages. Party rested.`, "fa-solid fa-moon");
+            const { wagesPaid, medicineUsed, totalHealed } = e.detail;
+            let msg = `Paid ${wagesPaid}g wages.`;
+            
+            if (medicineUsed > 0) {
+                msg += ` Used ${medicineUsed} Meds to heal ${totalHealed} HP.`;
+            } else if (totalHealed > 0) {
+                msg += ` Slowly healed ${totalHealed} HP (No Meds).`;
+            } else {
+                msg += ` Party is fully rested.`;
+            }
+
+            notifier.show("Day Ended", msg, "fa-solid fa-moon");
             // Data refresh is automatic via controller
         } else {
             alert("Failed to end day: " + e.detail.error);

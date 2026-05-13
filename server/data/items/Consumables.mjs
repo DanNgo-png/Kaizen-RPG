@@ -1,17 +1,24 @@
-/**
- * Consumable Definitions
- * Items that provide immediate or temporary effects.
- */
 export const CONSUMABLES = [
     { 
         id: 'healing_salve', 
         name: 'Healing Salve', 
         type: 'Consumable', 
         icon: 'fa-solid fa-flask', 
-        baseValue: 50, 
+        baseValue: 200, 
         rarity: 'common',
         stats: { heal_amount: 30 },
         availableIn: ['All'] 
+    },
+    {
+        id: 'med_supplies_bundle',
+        name: 'Medical Supplies',
+        type: 'Resource',
+        resourceType: 'medicine',
+        amount: 25,
+        icon: 'fa-solid fa-band-aid',
+        baseValue: 150,
+        rarity: 'common',
+        availableIn: ['All']
     },
     { 
         id: 'stamina_potion', 

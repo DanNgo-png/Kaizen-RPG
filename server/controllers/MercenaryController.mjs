@@ -206,7 +206,16 @@ export class MercenaryController {
         app.events.on("buyItem", (payload) => {
             try {
                 this.repo.updateGold(-payload.cost);
-                this.repo.addItemToInventory(payload.itemId);
+                
+                // Intercept 'Resource' items (like medicine, ammo) so they go to the top bar, not the stash
+                const template = ItemFactory.createItem(payload.itemId);
+                if (template && template.type === 'Resource') {
+                    const resources = this.repo.getResources();
+                    const currentAmount = resources[template.resourceType] || 0;
+                    this.repo.setCampaignSetting(template.resourceType, currentAmount + template.amount);
+                } else {
+                    this.repo.addItemToInventory(payload.itemId);
+                }
                 
                 if (payload.nodeId) {
                     const repGain = Math.max(1, Math.floor(payload.cost / 100));

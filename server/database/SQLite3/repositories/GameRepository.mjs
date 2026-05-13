@@ -31,12 +31,7 @@ export class GameRepository {
                 VALUES (@name, @role, @level, 0, @str, @int, @spd, @wage, 1, @max_hp, @current_hp)
             `),
             addXp: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE is_active = 1`),
-            restMercenaries: this.db.prepare(`
-                UPDATE mercenaries 
-                SET fatigue = MAX(0, fatigue - 20), 
-                    current_hp = MIN(max_hp, current_hp + 10) 
-                WHERE is_active = 0
-            `),
+            
             damageMercenary: this.db.prepare(`UPDATE mercenaries SET current_hp = MAX(0, current_hp - @damage) WHERE id = @id`),
             getWages: this.db.prepare(`SELECT SUM(daily_wage) as total FROM mercenaries`),
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
@@ -184,15 +179,13 @@ export class GameRepository {
 
         // --- LOOT LOGIC ---
         const foundLoot = [];
-        let lootChance = 0.20; // 20% base chance for normal jobs
+        let lootChance = 0.20; 
         const titleLower = activeContract.title.toLowerCase();
         
-        // Boost loot drop chance significantly if it's a combat or exploration contract
         if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
             lootChance = 0.65; 
         }
 
-        // Contracts requiring more focus time get extra loot rolls
         const rolls = Math.max(1, Math.floor(activeContract.required_minutes / 25)); 
         for(let i = 0; i < rolls; i++) {
             if (Math.random() < lootChance) {
@@ -274,27 +267,23 @@ export class GameRepository {
         const logs = [];
         const foundLoot = []; 
 
-        // Helper to roll for loot
         const rollForLoot = (chancePercentage) => {
             if (Math.random() < chancePercentage) {
                 const newItem = ItemFactory.getRandomItem();
-                this.addItemToInventory(newItem.id); // Add to DB stash
-                foundLoot.push(newItem); // Send to UI
+                this.addItemToInventory(newItem.id); 
+                foundLoot.push(newItem); 
                 logs.push(`✨ Found loot: ${newItem.name}`);
             }
         };
 
-        // --- BAREBONES DUNGEON CRAWLER LOGIC ---
         if (origin === 'dungeon' && gameVersion === 'barebones') {
             const activeContract = this.getActiveContract();
             const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
             const activeMercs = this.statements.getAll.all();
 
             if (activeContract) {
-                // --- ON A CONTRACT ---
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
                 
-                // Narrative Events
                 if (Math.random() < 0.3) {
                     logs.push(`🏕️ The party encountered travelers on the road during the contract.`);
                 }
@@ -307,22 +296,19 @@ export class GameRepository {
                     }
                 });
 
-                // Small chance for contract bonus loot (15% per 25 mins)
                 const lootChance = 0.15 * (focusMinutes / 25);
                 rollForLoot(lootChance);
 
                 if (logs.length === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
-                // --- FREE DELVING ---
-                const goldFound = Math.floor(focusMinutes * ratio * 2.0); // Slightly boosted passive gold
+                const goldFound = Math.floor(focusMinutes * ratio * 2.0); 
                 this.updateGold(goldFound);
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
                 
                 logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
                 logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 
-                // High chance of damage
                 activeMercs.forEach(merc => {
                     if (Math.random() < 0.40) { 
                         const dmg = Math.floor(Math.random() * 12 * ratio) + 2;
@@ -331,19 +317,15 @@ export class GameRepository {
                     }
                 });
 
-                // High chance for loot (40% per 25 mins)
                 const lootChance = 0.40 * (focusMinutes / 25);
                 rollForLoot(lootChance);
-                // Roll again for a second item if it was a long session
                 if (focusMinutes >= 45) rollForLoot(0.20);
 
             } else {
-                // --- IDLE ---
                 return { xp: 0, fatigue: 0, logs: [], loot: [] };
             }
 
         } else {
-            // Standard Modes
             this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
         }
 
@@ -357,16 +339,40 @@ export class GameRepository {
         const result = db.transaction(() => {
             const currentDay = parseInt(this.statements.getSetting.get('day').value);
             const currentGold = parseInt(this.statements.getSetting.get('gold').value);
+            let currentMedicine = parseInt(this.statements.getSetting.get('medicine').value || '0');
             const totalWages = this.statements.getWages.get().total || 0;
             
             const newGold = currentGold - totalWages;
             this.statements.updateSetting.run({ key: 'gold', value: newGold });
             this.statements.insertLedger.run({ day: currentDay, desc: 'Daily Wages', amount: -totalWages });
 
-            this.statements.restMercenaries.run();
+            // Heal and Rest Mercenaries (Loop allows medicine logic)
+            const restingMercs = this.db.prepare('SELECT * FROM mercenaries WHERE is_active = 0').all();
+            let medicineUsed = 0;
+            let totalHealed = 0;
+
+            for (const merc of restingMercs) {
+                let healAmount = 2; // Base slow healing without meds
+                
+                if (merc.current_hp < merc.max_hp) {
+                    if (currentMedicine >= 2) {
+                        currentMedicine -= 2;
+                        medicineUsed += 2;
+                        healAmount = 15; // Medicated healing
+                    }
+                    const newHp = Math.min(merc.max_hp, merc.current_hp + healAmount);
+                    totalHealed += (newHp - merc.current_hp);
+                    this.db.prepare('UPDATE mercenaries SET current_hp = ? WHERE id = ?').run(newHp, merc.id);
+                }
+                
+                // Fatigue heals normally without resources
+                this.db.prepare('UPDATE mercenaries SET fatigue = MAX(0, fatigue - 20) WHERE id = ?').run(merc.id);
+            }
+
+            this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
             this.statements.updateSetting.run({ key: 'day', value: currentDay + 1 });
 
-            return { newGold, day: currentDay + 1, wagesPaid: totalWages };
+            return { newGold, day: currentDay + 1, wagesPaid: totalWages, medicineUsed, totalHealed };
         })();
 
         return result;
