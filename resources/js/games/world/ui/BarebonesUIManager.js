@@ -490,16 +490,25 @@ export class BarebonesUIManager {
         
         const priceClass = isBuying ? 'buy' : 'sell';
 
+        // Extract Quantity (Shop uses 'amount' for resources, Inventory uses 'count')
+        const qty = item.amount || item.count;
+        let qtyHtml = '';
+        if (qty && qty > 1) {
+            qtyHtml = `<div class="bb-slot-qty">x${qty}</div>`;
+        }
+
         el.innerHTML = `
+            ${qtyHtml}
             <i class="${item.icon || 'fa-solid fa-cube'}"></i>
             <div class="bb-slot-price ${priceClass}">${price}</div>
         `;
 
         const actionText = isBuying ? 'Left Click to Buy' : 'Left Click to Sell';
+        const qtyText = (qty && qty > 1) ? ` (x${qty})` : '';
         
         el.addEventListener('mouseenter', (e) => {
             this.tooltip.innerHTML = `
-                <div class="tt-name">${item.name}</div>
+                <div class="tt-name">${item.name}${qtyText}</div>
                 <div class="tt-type">[${item.type || 'Misc'}]</div>
                 <div class="tt-action ${priceClass}">${actionText} <i class="fa-solid fa-coins"></i> ${price}</div>
             `;
