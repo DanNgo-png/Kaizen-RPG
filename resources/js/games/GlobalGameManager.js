@@ -1,5 +1,6 @@
 import { GameAPI } from "../api/GameAPI.js";
 import { notifier } from "../_global-managers/NotificationManager.js";
+import { buildAftermathModal } from "../handlers/MercenaryHandler.js";
 
 class GlobalGameManager {
     constructor() {
@@ -24,12 +25,17 @@ class GlobalGameManager {
         Neutralino.events.on('contractCompletedRealtime', (e) => {
             this.activeContract = null;
             const result = e.detail;
+            
             if (result && result.contract) {
+                // OS Level Notification
                 notifier.show(
                     "Contract Completed!",
                     `You earned ${result.contract.gold_reward} crowns.`,
                     "fa-solid fa-scroll"
                 );
+                
+                // Show the immersive RPG Loot screen
+                buildAftermathModal(result);
             }
         });
 

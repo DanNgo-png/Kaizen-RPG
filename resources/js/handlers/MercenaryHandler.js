@@ -2,7 +2,7 @@ import { GameAPI } from "../api/GameAPI.js";
 import { notifier } from "../_global-managers/NotificationManager.js";
 import { audioManager } from "../_global-managers/AudioManager.js";
 
-function buildAftermathModal(result) {
+export function buildAftermathModal(result) {
     // Prevent duplicates
     const existing = document.getElementById('global-aftermath-overlay');
     if (existing) existing.remove();

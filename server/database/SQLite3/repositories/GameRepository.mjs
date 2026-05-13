@@ -182,7 +182,28 @@ export class GameRepository {
             `🤝 Reputation with settlement increased by ${contractRepReward}.`
         ];
 
-        return { contract: activeContract, logs };
+        // --- LOOT LOGIC ---
+        const foundLoot = [];
+        let lootChance = 0.20; // 20% base chance for normal jobs
+        const titleLower = activeContract.title.toLowerCase();
+        
+        // Boost loot drop chance significantly if it's a combat or exploration contract
+        if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
+            lootChance = 0.65; 
+        }
+
+        // Contracts requiring more focus time get extra loot rolls
+        const rolls = Math.max(1, Math.floor(activeContract.required_minutes / 25)); 
+        for(let i = 0; i < rolls; i++) {
+            if (Math.random() < lootChance) {
+                const newItem = ItemFactory.getRandomItem();
+                this.addItemToInventory(newItem.id);
+                foundLoot.push(newItem);
+                logs.push(`✨ You recovered loot: ${newItem.name}`);
+            }
+        }
+
+        return { contract: activeContract, logs, loot: foundLoot };
     }
 
     // --- INVENTORY ---
