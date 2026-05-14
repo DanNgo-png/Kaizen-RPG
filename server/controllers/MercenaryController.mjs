@@ -103,6 +103,12 @@ export class MercenaryController {
         app.events.on("hireMercenary", (payload) => {
             try {
                 const cost = payload.cost || 100; 
+                const rosterLimit = 12;
+                const currentRoster = this.repo.getAllMercenaries();
+                if (currentRoster.length >= rosterLimit) {
+                    throw new Error(`Roster is full (${rosterLimit}/${rosterLimit}).`);
+                }
+
                 const newGoldBalance = this.repo.updateGold(-cost);
                 const result = this.repo.addMercenary(payload.mercData);
 
