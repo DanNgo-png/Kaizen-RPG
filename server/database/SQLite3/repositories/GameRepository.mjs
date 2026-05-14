@@ -43,6 +43,7 @@ export class GameRepository {
             getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
 
             getNodeById: this.db.prepare(`SELECT * FROM world_nodes WHERE id = ?`),
+            updateNodeShop: this.db.prepare(`UPDATE world_nodes SET shop_inventory = @inv, last_restock_day = @lastRestock, next_trade_restock_day = @nextTrade WHERE id = @id`),
 
             updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
 
@@ -214,6 +215,17 @@ export class GameRepository {
     updateNodeReputation(nodeId, amount) {
         this.ensureConnection();
         if (nodeId) this.statements.updateReputation.run(amount, nodeId);
+    }
+    
+    // --- NODE HISTORY, SHOP, & PINNING ---
+    updateNodeShopData(nodeId, inventoryJson, lastRestock, nextTrade) {
+        this.ensureConnection();
+        this.statements.updateNodeShop.run({
+            id: nodeId,
+            inv: inventoryJson,
+            lastRestock: lastRestock,
+            nextTrade: nextTrade
+        });
     }
 
     // --- WORLD MAP & POSITION ---

@@ -7,12 +7,6 @@ export function initializeSchema(db, dbName) {
     }
 }
 
-// ---------------------------------------------------------
-// DATABASE MIGRATIONS (Scalable)
-// Array index corresponds to the version we are migrating TO.
-// Index 0 -> Migrates DB from v0 to v1 (Initial Setup)
-// Index 1 -> Migrates DB from v1 to v2 (Economy Update)
-// ---------------------------------------------------------
 const migrations = [
     // --- Version 1: Base Game Schema ---
     (db) => {
@@ -25,46 +19,36 @@ const migrations = [
 
     // --- Version 2: Settlement Economy & Specializations ---
     (db) => {
-        // Safe check included here JUST IN CASE you have old save files 
-        // that already got these columns added before we implemented versioning.
         const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
 
-        if (!nodeColumns.includes('buy_modifier')) {
-            db.exec("ALTER TABLE world_nodes ADD COLUMN buy_modifier REAL DEFAULT 1.0;");
-        }
-        if (!nodeColumns.includes('sell_modifier')) {
-            db.exec("ALTER TABLE world_nodes ADD COLUMN sell_modifier REAL DEFAULT 0.5;");
-        }
-        if (!nodeColumns.includes('specialization')) {
-            db.exec("ALTER TABLE world_nodes ADD COLUMN specialization TEXT;");
-        }
-    }
+        if (!nodeColumns.includes('buy_modifier')) db.exec("ALTER TABLE world_nodes ADD COLUMN buy_modifier REAL DEFAULT 1.0;");
+        if (!nodeColumns.includes('sell_modifier')) db.exec("ALTER TABLE world_nodes ADD COLUMN sell_modifier REAL DEFAULT 0.5;");
+        if (!nodeColumns.includes('specialization')) db.exec("ALTER TABLE world_nodes ADD COLUMN specialization TEXT;");
+    },
+    
+    // --- Version 3: Shop Inventory Persistence ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
 
-    // --- Version 3: Future Update Example ---
-    // (db) => {
-    //     db.exec("CREATE TABLE pets (id INTEGER PRIMARY KEY, name TEXT);");
-    //     db.exec("ALTER TABLE mercenaries ADD COLUMN pet_id INTEGER;");
-    // }
+        if (!nodeColumns.includes('shop_inventory')) db.exec("ALTER TABLE world_nodes ADD COLUMN shop_inventory TEXT DEFAULT '[]';");
+        if (!nodeColumns.includes('last_restock_day')) db.exec("ALTER TABLE world_nodes ADD COLUMN last_restock_day INTEGER DEFAULT 0;");
+        if (!nodeColumns.includes('next_trade_restock_day')) db.exec("ALTER TABLE world_nodes ADD COLUMN next_trade_restock_day INTEGER DEFAULT 0;");
+    }
 ];
 
 export function initializeGameSchema(db) {
-    // Get the current version of the save file (Defaults to 0 for new files)
     const currentVersion = db.pragma('user_version', { simple: true });
     const targetVersion = migrations.length;
 
-    // If the database is already fully updated, skip everything. (Highly performant)
     if (currentVersion === targetVersion) {
         return; 
     }
 
-    // Apply necessary migrations inside a transaction
     const runMigrations = db.transaction(() => {
         for (let i = currentVersion; i < targetVersion; i++) {
             console.log(`⬆️ Migrating Game Save from v${i} to v${i + 1}...`);
-            migrations[i](db); // Execute the specific migration block
+            migrations[i](db);
         }
-        
-        // Update the SQLite file to remember its new version
         db.pragma(`user_version = ${targetVersion}`);
     });
 

@@ -27,16 +27,15 @@ class ItemFactoryClass {
         };
     }
 
-    getShopInventory(nodeType, buyModifier = 1.0, specialization = null) {
+    getStandardInventory(nodeType, buyModifier = 1.0) {
         const inventory = [];
         if (nodeType === 'Ruins') return inventory;
 
         const tierConfig = SETTLEMENT_TIERS[nodeType] || { shopLevel: 1 };
         const shopLevel = tierConfig.shopLevel;
 
-        // 1. Generate Standard Equipment
         this.templates.forEach(template => {
-            if (template.type === 'Trade Good') return; // Skip trade goods in generic generation
+            if (template.type === 'Trade Good') return;
 
             let available = false;
             if (template.availableIn.includes('All') || template.availableIn.includes(nodeType)) {
@@ -54,15 +53,18 @@ class ItemFactoryClass {
             }
         });
 
-        // 2. Generate Trade Goods based on Specialization
+        return inventory;
+    }
+
+    getTradeInventory(buyModifier = 1.0, specialization = null) {
+        const inventory = [];
+        
         if (specialization && SPECIALIZATIONS[specialization]) {
             const tradeGoodIds = SPECIALIZATIONS[specialization];
             tradeGoodIds.forEach(id => {
-                // Generate 2 to 6 of the specialized item
                 const qty = Math.floor(Math.random() * 5) + 2; 
                 for (let i = 0; i < qty; i++) {
                     const item = this.createItem(id);
-                    
                     item.cost = Math.max(1, Math.floor(item.cost * buyModifier)); 
                     inventory.push(item);
                 }

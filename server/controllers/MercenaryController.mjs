@@ -186,22 +186,61 @@ export class MercenaryController {
                 let sellMod = 0.5;
                 let nodeType = 'Town';
                 let specialization = null;
+                let shopItems = [];
 
-                // Look up specific economy via Database Node lookup
                 if (payload.nodeId) {
                     const node = this.repo.getNodeById(payload.nodeId);
+                    const currentDay = parseInt(this.repo.statements.getSetting.get('day')?.value) || 1;
+
                     if (node) {
                         buyMod = node.buy_modifier || 1.0;
                         sellMod = node.sell_modifier || 0.5;
                         nodeType = node.type;
-                        specialization = node.specialization; // <-- GET IT
+                        specialization = node.specialization;
+
+                        let inventoryChanged = false;
+                        let shopInventory = [];
+                        try {
+                            shopInventory = node.shop_inventory ? JSON.parse(node.shop_inventory) : [];
+                        } catch (e) { shopInventory = []; }
+
+                        let lastRestockDay = node.last_restock_day || 0;
+                        let nextTradeRestockDay = node.next_trade_restock_day || 0;
+
+                        // 1. Standard Items Restock (Daily)
+                        if (currentDay > lastRestockDay) {
+                            // Filter OUT old standard items, keep Trade Goods
+                            shopInventory = shopInventory.filter(item => item.type === 'Trade Good');
+                            
+                            const newStandard = ItemFactory.getStandardInventory(nodeType, buyMod);
+                            shopInventory = shopInventory.concat(newStandard);
+                            
+                            lastRestockDay = currentDay;
+                            inventoryChanged = true;
+                        }
+
+                        // 2. Trade Goods Restock (Every 2-4 days)
+                        if (currentDay >= nextTradeRestockDay) {
+                            // Filter OUT old trade goods, keep Standard Items
+                            shopInventory = shopInventory.filter(item => item.type !== 'Trade Good');
+                            
+                            const newTrade = ItemFactory.getTradeInventory(buyMod, specialization);
+                            shopInventory = shopInventory.concat(newTrade);
+                            
+                            nextTradeRestockDay = currentDay + Math.floor(Math.random() * 3) + 2; // +2 to +4 days
+                            inventoryChanged = true;
+                        }
+
+                        if (inventoryChanged) {
+                            this.repo.updateNodeShopData(node.id, JSON.stringify(shopInventory), lastRestockDay, nextTradeRestockDay);
+                        }
+
+                        shopItems = shopInventory;
                     }
                 }
 
                 const resources = this.repo.getResources();
                 const enrichedInventory = this._getEnrichedInventory(sellMod);
-                // Pass specialization to the factory
-                const shopItems = ItemFactory.getShopInventory(nodeType, buyMod, specialization);
 
                 app.events.broadcast("receiveMarketData", { 
                     gold: resources.gold,
@@ -216,9 +255,28 @@ export class MercenaryController {
 
         app.events.on("buyItem", (payload) => {
             try {
+                // Remove item from persistent shop inventory
+                if (payload.nodeId) {
+                    const node = this.repo.getNodeById(payload.nodeId);
+                    if (node) {
+                        let shopInventory = [];
+                        try { shopInventory = node.shop_inventory ? JSON.parse(node.shop_inventory) : []; } 
+                        catch (e) { shopInventory = []; }
+
+                        // Find the exact item they clicked by matching its template ID
+                        const index = shopInventory.findIndex(i => i.id === payload.itemId);
+                        if (index !== -1) {
+                            shopInventory.splice(index, 1);
+                            this.repo.updateNodeShopData(node.id, JSON.stringify(shopInventory), node.last_restock_day, node.next_trade_restock_day);
+                        } else {
+                            throw new Error("Item is out of stock.");
+                        }
+                    }
+                }
+
                 this.repo.updateGold(-payload.cost);
                 
-                // Intercept 'Resource' items (like medicine, ammo) so they go to the top bar, not the stash
+                // Intercept 'Resource' items (like medicine, ammo)
                 const template = ItemFactory.createItem(payload.itemId);
                 if (template && template.type === 'Resource') {
                     const resources = this.repo.getResources();

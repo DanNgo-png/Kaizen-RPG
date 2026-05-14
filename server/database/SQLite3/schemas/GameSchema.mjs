@@ -49,7 +49,10 @@ export const GAME_SCHEMA_SQL = `
         buy_modifier REAL DEFAULT 1.0,
         sell_modifier REAL DEFAULT 0.5,
         is_pinned INTEGER DEFAULT 0,
-        specialization TEXT
+        specialization TEXT,
+        shop_inventory TEXT DEFAULT '[]',
+        last_restock_day INTEGER DEFAULT 0,
+        next_trade_restock_day INTEGER DEFAULT 0
     );
 
     -- Contracts Table
@@ -72,7 +75,7 @@ export const GAME_SCHEMA_SQL = `
         node_id INTEGER NOT NULL,
         day INTEGER NOT NULL,
         event_text TEXT NOT NULL,
-        event_type TEXT DEFAULT 'world', -- 'world', 'player', 'mechanic'
+        event_type TEXT DEFAULT 'world',
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY(node_id) REFERENCES world_nodes(id) ON DELETE CASCADE
     );
