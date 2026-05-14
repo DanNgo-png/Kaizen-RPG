@@ -17,5 +17,9 @@ export function initializeGameSchema(db) {
     try { db.exec("ALTER TABLE world_nodes ADD COLUMN buy_modifier REAL DEFAULT 1.0;"); } catch(e) {}
     try { db.exec("ALTER TABLE world_nodes ADD COLUMN sell_modifier REAL DEFAULT 0.5;"); } catch(e) {}
 
+    try { db.exec("ALTER TABLE world_nodes ADD COLUMN buy_modifier REAL DEFAULT 1.0;"); } catch(e) {}
+    try { db.exec("ALTER TABLE world_nodes ADD COLUMN sell_modifier REAL DEFAULT 0.5;"); } catch(e) {}
+    try { db.exec("ALTER TABLE world_nodes ADD COLUMN specialization TEXT;"); } catch(e) {} 
+    
     console.log("⚔️ Game Schema Initialized for Save Slot");
 }
