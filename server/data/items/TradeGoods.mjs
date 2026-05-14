@@ -11,4 +11,14 @@ export const TRADE_GOODS = [
     { id: 'dyes', name: 'Dyes', type: 'Trade Good', icon: 'fa-solid fa-palette', baseValue: 400, rarity: 'legendary' },
     { id: 'silk', name: 'Silk', type: 'Trade Good', icon: 'fa-brands fa-yarn', baseValue: 460, rarity: 'legendary' },
     { id: 'uncut_gems', name: 'Uncut Gems', type: 'Trade Good', icon: 'fa-solid fa-gem', baseValue: 520, rarity: 'legendary' },
+    { 
+        id: 'wine', 
+        name: 'Fine Wine', 
+        type: 'Trade Good', 
+        description: 'A cask of excellent vintage. Highly sought after by nobles for trade, but can also be consumed by the company to restore provisions.',
+        icon: 'fa-solid fa-wine-bottle', 
+        baseValue: 200, 
+        rarity: 'uncommon',
+        stats: { provisions: 15 } // Allows it to be consumed
+    },
 ];

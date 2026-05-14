@@ -79,6 +79,7 @@ export const SPECIALIZATIONS = {
     'Peat Pit': ['peat_bricks'],
     'Weavers': ['cloth_rolls'],
     'Lumber Camp': ['quality_wood'],
+    'Vineyard': ['wine'],
     'Copper Mine': ['copper_ingots'],
     'Amber Collector': ['amber_shards'],
     'Hunters': ['furs'],
