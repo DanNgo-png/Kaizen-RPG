@@ -136,4 +136,11 @@ export class MarketPanel {
             ${consumeHint}
         `;
     }
+
+    /**
+     * Translates a rarity string into the proper CSS class
+     */
+    _rarityClass(rarity) {
+        return `rarity-${(rarity || "common").toLowerCase()}`;
+    }
 }
