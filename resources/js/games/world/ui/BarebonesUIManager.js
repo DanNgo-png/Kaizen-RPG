@@ -1,6 +1,8 @@
 import { GameAPI } from "../../../api/GameAPI.js";
 import { CustomMenuManager } from "../../../components/CustomMenuManager.js";
 import { notifier } from "../../../_global-managers/NotificationManager.js"; 
+import { NAMES } from "../../party/Names.js";
+import { ROLES } from "../../party/Roles.js";
 
 export class BarebonesUIManager {
     constructor() {
@@ -41,8 +43,11 @@ export class BarebonesUIManager {
             marketContainer: document.getElementById('bb-marketplace-container'),
             marketStashList: document.getElementById('bb-market-stash-list'),
             marketShopList: document.getElementById('bb-market-shop-list'),
+            hireContainer: document.getElementById('bb-hire-container'),
+            hireList: document.getElementById('bb-hire-list'),
             tabJobs: document.getElementById('bb-tab-jobs'),
-            tabMarket: document.getElementById('bb-tab-market')
+            tabMarket: document.getElementById('bb-tab-market'),
+            tabHire: document.getElementById('bb-tab-hire')
         };
 
         this.nodes = [];
@@ -52,9 +57,91 @@ export class BarebonesUIManager {
         
         this.activeTab = 'jobs';
         this.marketData = { inventory: [], shopItems: [], gold: 0 };
+        this.partyData = { mercenaries: [], resources: { gold: 0 } };
+        this.hireCandidatesByNode = new Map();
+        this.pendingHire = null;
+        this.rosterLimit = 12;
         this.isDelving = false;
 
         this.menuManager = new CustomMenuManager();
+
+        this.hireBackgrounds = [
+            {
+                role: 'Squire',
+                icon: 'fa-user',
+                baseCost: 70,
+                level: 1,
+                statBase: { str: 8, int: 7, spd: 8 },
+                tags: ['Eager', 'Trainable', 'Cheap wage'],
+                rumor: 'Green, affordable, and looking for a first real company.'
+            },
+            {
+                role: 'Vanguard',
+                icon: 'fa-shield-halved',
+                baseCost: 120,
+                level: 1,
+                statBase: { str: 11, int: 7, spd: 8 },
+                tags: ['Stout', 'Front line', 'Reliable'],
+                rumor: 'Used to standing firm when the line gets ugly.'
+            },
+            {
+                role: 'Skirmisher',
+                icon: 'fa-person-running',
+                baseCost: 115,
+                level: 1,
+                statBase: { str: 8, int: 8, spd: 12 },
+                tags: ['Quick', 'Light footed', 'Scout'],
+                rumor: 'Fast enough to get into trouble and sometimes back out again.'
+            },
+            {
+                role: 'Quartermaster',
+                icon: 'fa-scroll',
+                baseCost: 135,
+                level: 1,
+                statBase: { str: 7, int: 13, spd: 7 },
+                tags: ['Logistics', 'Measured', 'Camp mind'],
+                rumor: 'Keeps ledgers, counts food, and notices bad deals.'
+            },
+            {
+                role: 'Raider',
+                icon: 'fa-gavel',
+                baseCost: 150,
+                level: 1,
+                statBase: { str: 12, int: 6, spd: 10 },
+                tags: ['Aggressive', 'Loot minded', 'Rough'],
+                rumor: 'The kind of blade that asks about loot before danger.'
+            },
+            {
+                role: 'Sellsword',
+                icon: 'fa-user-shield',
+                baseCost: 190,
+                level: 2,
+                statBase: { str: 12, int: 9, spd: 10 },
+                tags: ['Professional', 'Veteran', 'Costly'],
+                rumor: 'A practical fighter with a practical price.'
+            },
+            {
+                role: 'Swordmaster',
+                icon: 'fa-khanda',
+                baseCost: 320,
+                level: 2,
+                statBase: { str: 13, int: 10, spd: 13 },
+                tags: ['Duelist', 'Precise', 'Expensive'],
+                rumor: 'Carries themself like steel is a language.'
+            },
+            {
+                role: 'Hedge Knight',
+                icon: 'fa-chess-rook',
+                baseCost: 380,
+                level: 3,
+                statBase: { str: 16, int: 8, spd: 9 },
+                tags: ['Battle hardened', 'Heavy wage', 'Brave'],
+                rumor: 'Big armor, bigger appetite, and no fear of dark halls.'
+            }
+        ];
+
+        this._onMercenaryHiredBound = this._onMercenaryHired.bind(this);
+        this._onReceivePartyDataBound = this._onReceivePartyData.bind(this);
 
         this.tooltip = document.createElement('div');
         this.tooltip.className = 'bb-item-tooltip hidden';
@@ -239,6 +326,12 @@ export class BarebonesUIManager {
         Neutralino.events.off('receiveNodeHistory', this._onReceiveNodeHistory.bind(this));
         Neutralino.events.on('receiveNodeHistory', this._onReceiveNodeHistory.bind(this));
 
+        Neutralino.events.off('receivePartyData', this._onReceivePartyDataBound);
+        Neutralino.events.on('receivePartyData', this._onReceivePartyDataBound);
+
+        Neutralino.events.off('mercenaryHired', this._onMercenaryHiredBound);
+        Neutralino.events.on('mercenaryHired', this._onMercenaryHiredBound);
+
         Neutralino.events.off('nodePinToggled', () => GameAPI.getWorldData());
         Neutralino.events.on('nodePinToggled', () => GameAPI.getWorldData());
 
@@ -253,6 +346,7 @@ export class BarebonesUIManager {
 
         if(this.dom.tabJobs) this.dom.tabJobs.addEventListener('click', () => this.switchTab('jobs'));
         if(this.dom.tabMarket) this.dom.tabMarket.addEventListener('click', () => this.switchTab('market'));
+        if(this.dom.tabHire) this.dom.tabHire.addEventListener('click', () => this.switchTab('hire'));
 
         Object.entries(this.dom.resContainers).forEach(([type, el]) => {
             if (el) {
@@ -268,26 +362,72 @@ export class BarebonesUIManager {
         this.updateActiveBanner(this.activeContract);
     }
 
+    _onReceivePartyData(e) {
+        if (!e.detail) return;
+
+        this.partyData = e.detail;
+        if (e.detail.resources) this.updateStats(e.detail.resources);
+        if (this.activeTab === 'hire') this.renderHireList();
+    }
+
+    _onMercenaryHired(e) {
+        const result = e.detail || {};
+
+        if (!result.success) {
+            this.pendingHire = null;
+            notifier.show("Hiring Failed", result.error || "Unable to hire this recruit.", "fa-solid fa-handshake");
+            if (this.activeTab === 'hire') this.renderHireList();
+            return;
+        }
+
+        if (this.pendingHire) {
+            const nodeKey = String(this.pendingHire.nodeId);
+            const candidates = this.hireCandidatesByNode.get(nodeKey) || [];
+            this.hireCandidatesByNode.set(
+                nodeKey,
+                candidates.filter(candidate => candidate.id !== this.pendingHire.candidateId)
+            );
+            this.pendingHire = null;
+        }
+
+        const mercName = result.merc?.name || "A new recruit";
+        notifier.show("Recruited!", `${mercName} has joined the company.`, "fa-solid fa-handshake");
+
+        if (Number.isFinite(result.newGold)) {
+            this.updateStats({ ...this.currentResources, gold: result.newGold });
+        }
+
+        GameAPI.getPartyData();
+        GameAPI.getWorldData();
+        if (this.activeTab === 'hire') this.renderHireList();
+    }
+
     switchTab(tabName) {
         this.activeTab = tabName;
-        
+
+        if (this.dom.tabJobs) this.dom.tabJobs.classList.toggle('active', tabName === 'jobs');
+        if (this.dom.tabMarket) this.dom.tabMarket.classList.toggle('active', tabName === 'market');
+        if (this.dom.tabHire) this.dom.tabHire.classList.toggle('active', tabName === 'hire');
+
+        if (this.dom.contractList) this.dom.contractList.classList.toggle('hidden', tabName !== 'jobs');
+        if (this.dom.marketContainer) this.dom.marketContainer.classList.toggle('hidden', tabName !== 'market');
+        if (this.dom.hireContainer) this.dom.hireContainer.classList.toggle('hidden', tabName !== 'hire');
+
         if (tabName === 'jobs') {
-            this.dom.tabJobs.classList.add('active');
-            this.dom.tabMarket.classList.remove('active');
-            this.dom.contractList.classList.remove('hidden');
-            this.dom.marketContainer.classList.add('hidden');
-        } else {
-            this.dom.tabMarket.classList.add('active');
-            this.dom.tabJobs.classList.remove('active');
-            this.dom.marketContainer.classList.remove('hidden');
-            this.dom.contractList.classList.add('hidden');
-            
+            if (this.selectedNode) {
+                this.dom.contractList.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
+                GameAPI.getContractsForNode(this.selectedNode.id);
+            }
+        } else if (tabName === 'market') {
             if (this.selectedNode) {
                 const loader = '<div style="text-align:center; padding:20px; color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
                 this.dom.marketStashList.innerHTML = loader;
                 this.dom.marketShopList.innerHTML = loader;
                 GameAPI.getMarketData(this.selectedNode.id);
             }
+        } else if (tabName === 'hire') {
+            GameAPI.getPartyData();
+            this.renderHireList();
         }
     }
 
@@ -301,6 +441,7 @@ export class BarebonesUIManager {
             this.selectNode(this.nodes[0]);
         }
         
+        GameAPI.getPartyData();
         this.switchTab('jobs');
     }
 
@@ -408,6 +549,14 @@ export class BarebonesUIManager {
                         }
                     },
                     {
+                        label: "Visit Hiring Hall",
+                        icon: '<i class="fa-solid fa-handshake"></i>',
+                        action: () => {
+                            this.selectNode(node);
+                            this.switchTab('hire');
+                        }
+                    },
+                    {
                         label: "View Job Board",
                         icon: '<i class="fa-solid fa-clipboard-list"></i>',
                         action: () => {
@@ -430,11 +579,239 @@ export class BarebonesUIManager {
         if (this.activeTab === 'jobs') {
             this.dom.contractList.innerHTML = '<div style="text-align:center; padding: 20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
             GameAPI.getContractsForNode(node.id);
-        } else {
+        } else if (this.activeTab === 'market') {
             this.dom.marketStashList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
             this.dom.marketShopList.innerHTML = '<div style="text-align:center; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</div>';
             GameAPI.getMarketData(node.id);
+        } else if (this.activeTab === 'hire') {
+            this.renderHireList();
+            GameAPI.getPartyData();
         }
+    }
+
+    // --- Hire Logic ---
+    _hashString(value) {
+        let hash = 0;
+        const text = String(value);
+        for (let i = 0; i < text.length; i++) {
+            hash = ((hash << 5) - hash) + text.charCodeAt(i);
+            hash |= 0;
+        }
+        return Math.abs(hash) || 1;
+    }
+
+    _createSeededRandom(seed) {
+        let state = seed % 2147483647;
+        if (state <= 0) state += 2147483646;
+        return () => {
+            state = state * 16807 % 2147483647;
+            return (state - 1) / 2147483646;
+        };
+    }
+
+    _pick(list, rand) {
+        return list[Math.floor(rand() * list.length)];
+    }
+
+    _roll(rand, min, max) {
+        return min + Math.floor(rand() * (max - min + 1));
+    }
+
+    _clamp(value, min, max) {
+        return Math.max(min, Math.min(max, value));
+    }
+
+    _getHireCandidates(node) {
+        if (!node) return [];
+
+        const nodeKey = String(node.id);
+        if (!this.hireCandidatesByNode.has(nodeKey)) {
+            this.hireCandidatesByNode.set(nodeKey, this._generateHireCandidates(node));
+        }
+
+        return this.hireCandidatesByNode.get(nodeKey);
+    }
+
+    _generateHireCandidates(node) {
+        const seed = this._hashString(`${node.id}-${node.name}-${node.type}`);
+        const rand = this._createSeededRandom(seed);
+        const type = node.type || 'Town';
+        const baseCounts = {
+            Town: 4,
+            City: 6,
+            'City-State': 6,
+            Province: 5,
+            Kingdom: 6,
+            'High Kingdom': 7,
+            Empire: 7,
+            Stronghold: 5,
+            Ruins: 2
+        };
+        const count = (baseCounts[type] || 4) + this._roll(rand, 0, 1);
+        const buyModifier = Number(node.buy_modifier) || 1;
+        const candidates = [];
+
+        for (let i = 0; i < count; i++) {
+            const background = this._pick(this.hireBackgrounds, rand);
+            const name = this._pick(NAMES, rand);
+            const role = background.role || this._pick(ROLES, rand);
+            const level = background.level + (rand() > 0.82 ? 1 : 0);
+            const statBase = background.statBase;
+            const str = this._clamp(statBase.str + this._roll(rand, -2, 4), 4, 22);
+            const int = this._clamp(statBase.int + this._roll(rand, -2, 4), 4, 22);
+            const spd = this._clamp(statBase.spd + this._roll(rand, -2, 4), 4, 22);
+            const statSum = str + int + spd;
+            const wage = Math.max(5, Math.floor((statSum + (level * 4)) / 2));
+            const cost = Math.max(50, Math.round((background.baseCost + (statSum * 5) + (level * 35)) * buyModifier));
+            const traits = [...background.tags].sort(() => rand() - 0.5).slice(0, 2);
+
+            candidates.push({
+                id: `${node.id}-${i}-${name}-${role}`,
+                name,
+                role,
+                level,
+                str,
+                int,
+                spd,
+                wage,
+                cost,
+                icon: background.icon || 'fa-user-shield',
+                rumor: background.rumor,
+                traits,
+                current_hp: 100,
+                max_hp: 100,
+                fatigue: 0
+            });
+        }
+
+        return candidates.sort((a, b) => a.cost - b.cost);
+    }
+
+    renderHireList() {
+        if (!this.dom.hireList) return;
+
+        const rosterCount = this.partyData?.mercenaries?.length || 0;
+        const gold = this.currentResources?.gold ?? this.partyData?.resources?.gold ?? 0;
+
+        this.dom.hireList.innerHTML = '';
+
+        if (!this.selectedNode) {
+            this.dom.hireList.innerHTML = '<div class="bb-hire-empty">Select a settlement to view available recruits.</div>';
+            return;
+        }
+
+        const candidates = this._getHireCandidates(this.selectedNode);
+        const header = document.createElement('div');
+        header.className = 'bb-hire-summary';
+        header.innerHTML = `
+            <div>
+                <div class="bb-hire-summary-title">${this.selectedNode.name} Hiring Hall</div>
+                <div class="bb-hire-summary-meta">
+                    <span><i class="fa-solid fa-users"></i> ${rosterCount}/${this.rosterLimit}</span>
+                    <span><i class="fa-solid fa-coins"></i> ${gold}</span>
+                </div>
+            </div>
+            <div class="bb-hire-summary-meta">
+                <span><i class="fa-solid fa-handshake"></i> ${candidates.length} available</span>
+            </div>
+        `;
+        this.dom.hireList.appendChild(header);
+
+        if (candidates.length === 0) {
+            this.dom.hireList.insertAdjacentHTML('beforeend', '<div class="bb-hire-empty">No one else is looking for work here right now.</div>');
+            return;
+        }
+
+        candidates.forEach(candidate => {
+            this.dom.hireList.appendChild(this._createHireCard(candidate, gold, rosterCount));
+        });
+    }
+
+    _createHireCard(candidate, gold, rosterCount) {
+        const el = document.createElement('div');
+        const rosterFull = rosterCount >= this.rosterLimit;
+        const canAfford = gold >= candidate.cost;
+        const isPending = this.pendingHire?.candidateId === candidate.id;
+        const disabled = rosterFull || !canAfford || !!this.pendingHire;
+        const buttonText = isPending ? 'Hiring...' : rosterFull ? 'Roster Full' : canAfford ? 'Hire' : 'Need Gold';
+
+        el.className = `bb-hire-card ${disabled ? 'disabled' : ''}`;
+        el.innerHTML = `
+            <div class="bb-hire-main">
+                <div class="bb-hire-portrait"><i class="fa-solid ${candidate.icon}"></i></div>
+                <div>
+                    <div class="bb-hire-name-row">
+                        <span class="bb-hire-name">${candidate.name}</span>
+                        <span class="bb-hire-role">${candidate.role} - Lvl ${candidate.level}</span>
+                    </div>
+                    <p class="bb-hire-rumor">${candidate.rumor}</p>
+                    <div class="bb-hire-stats">
+                        <span class="bb-hire-stat" title="Strength"><i class="fa-solid fa-dumbbell"></i> ${candidate.str}</span>
+                        <span class="bb-hire-stat" title="Intellect"><i class="fa-solid fa-brain"></i> ${candidate.int}</span>
+                        <span class="bb-hire-stat" title="Speed"><i class="fa-solid fa-wind"></i> ${candidate.spd}</span>
+                    </div>
+                    <div class="bb-hire-traits" style="margin-top: 8px;">
+                        ${candidate.traits.map(trait => `<span class="bb-hire-trait">${trait}</span>`).join('')}
+                    </div>
+                </div>
+            </div>
+            <div class="bb-hire-economy">
+                <div class="bb-hire-price"><i class="fa-solid fa-coins"></i> ${candidate.cost}</div>
+                <div class="bb-hire-wage"><i class="fa-regular fa-clock"></i> ${candidate.wage}g / day</div>
+                <button class="bb-btn-accept" ${disabled ? 'disabled' : ''}>${buttonText}</button>
+            </div>
+        `;
+
+        const button = el.querySelector('.bb-btn-accept');
+        if (button && !disabled) {
+            button.addEventListener('click', () => this.hireCandidate(candidate));
+        }
+
+        return el;
+    }
+
+    hireCandidate(candidate) {
+        const rosterCount = this.partyData?.mercenaries?.length || 0;
+        const gold = this.currentResources?.gold ?? this.partyData?.resources?.gold ?? 0;
+
+        if (rosterCount >= this.rosterLimit) {
+            notifier.show("Roster Full", `Your company can only field ${this.rosterLimit} mercenaries.`, "fa-solid fa-users");
+            return;
+        }
+
+        if (gold < candidate.cost) {
+            notifier.show("Insufficient Funds", `${candidate.name} asks for ${candidate.cost} crowns.`, "fa-solid fa-coins");
+            return;
+        }
+
+        const confirmMsg = [
+            `Hire ${candidate.name}, ${candidate.role}?`,
+            '',
+            `Upfront Cost: ${candidate.cost}g`,
+            `Daily Wage: ${candidate.wage}g`,
+            `Stats: STR ${candidate.str} / INT ${candidate.int} / SPD ${candidate.spd}`
+        ].join('\n');
+
+        if (!confirm(confirmMsg)) return;
+
+        this.pendingHire = {
+            nodeId: this.selectedNode?.id,
+            candidateId: candidate.id
+        };
+
+        this.renderHireList();
+        GameAPI.hireMercenary({
+            name: candidate.name,
+            role: candidate.role,
+            level: candidate.level,
+            str: candidate.str,
+            int: candidate.int,
+            spd: candidate.spd,
+            wage: candidate.wage,
+            current_hp: candidate.current_hp,
+            max_hp: candidate.max_hp,
+            fatigue: candidate.fatigue
+        }, candidate.cost);
     }
 
     // --- Market Logic ---
