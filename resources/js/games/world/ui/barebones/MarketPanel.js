@@ -77,9 +77,15 @@ export class MarketPanel {
         const priceClass = isBuying ? "buy" : "sell";
         const quantity = item.amount || item.count;
 
+        // Visual Provision Amount Badge
+        const provisionStat = (item.stats && item.stats.provisions)
+            ? `<div style="position: absolute; top: 2px; right: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace; color: #d97706; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; pointer-events: none;"><i class="fa-solid fa-drumstick-bite"></i> ${item.stats.provisions}</div>`
+            : "";
+
         element.className = `bb-market-slot ${rarityClass} ${!canAfford ? "disabled" : ""}`;
         element.innerHTML = `
             ${quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? `<div class="bb-slot-qty">x${quantity}</div>` : ""}
+            ${provisionStat}
             <i class="${escapeHtml(item.icon || "fa-solid fa-cube")}"></i>
             <div class="bb-slot-price ${priceClass}">${price}</div>
         `;
@@ -110,10 +116,16 @@ export class MarketPanel {
         const actionText = isBuying ? "L-Click: Buy" : "L-Click: Sell";
         const quantityText = quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? ` (x${quantity})` : "";
         
-        // Show Spoil Days if applicable
-        const spoilHint = (!isBuying && item.stats && item.stats.spoil_days) 
-            ? `<div style="color:#ef4444; font-size:0.8rem; margin-top:4px;"><i class="fa-solid fa-clock"></i> Spoils in ${item.durability} days</div>` 
-            : '';
+        // Show Spoil Days based on Buying or Checking Stash
+        let spoilHint = '';
+        if (item.stats && item.stats.spoil_days) {
+            if (isBuying) {
+                spoilHint = `<div style="color:#fbbf24; font-size:0.8rem; margin-top:4px;"><i class="fa-solid fa-clock"></i> Lasts for ${item.stats.spoil_days} days</div>`;
+            } else {
+                const durColor = item.durability <= 3 ? '#ef4444' : '#fbbf24';
+                spoilHint = `<div style="color:${durColor}; font-size:0.8rem; margin-top:4px;"><i class="fa-solid fa-clock"></i> Spoils in ${item.durability} days</div>`;
+            }
+        }
 
         return `
             <div class="tt-name">${escapeHtml(item.name)}${quantityText}</div>

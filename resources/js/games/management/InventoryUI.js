@@ -41,8 +41,18 @@ export class InventoryUI {
                 if (item.count > 1) {
                     el.innerHTML += `<div class="item-qty">${item.count}</div>`;
                 }
+
+                // Add Provisions Visual Stat
+                if (item.stats && item.stats.provisions) {
+                    el.innerHTML += `<div style="position: absolute; top: 2px; right: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace; color: #d97706; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; pointer-events: none;"><i class="fa-solid fa-drumstick-bite"></i> ${item.stats.provisions}</div>`;
+                }
                 
-                el.title = item.name;
+                // Add Spoil text to native title Tooltip
+                let titleText = item.name;
+                if (item.stats && item.stats.spoil_days) {
+                    titleText += ` (Spoils in ${item.durability} days)`;
+                }
+                el.title = titleText;
                 el.draggable = true;
 
                 // --- Drag Start ---
