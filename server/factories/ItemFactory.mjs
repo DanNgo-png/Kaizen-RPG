@@ -7,7 +7,7 @@ import { SETTLEMENT_TIERS, SPECIALIZATIONS } from '../data/GameDataConstants.mjs
 class ItemFactoryClass {
     constructor() {
         this.templates = new Map();
-        this._registerTemplates([...WEAPONS, ...ARMOR, ...CONSUMABLES, ...TRADE_GOODS]);
+        this._registerTemplates([...WEAPONS, ...ARMOR, ...CONSUMABLES, ...TRADE_GOODS, ...PROVISIONS]);
     }
 
     _registerTemplates(items) {
