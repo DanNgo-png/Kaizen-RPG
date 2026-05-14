@@ -37,8 +37,8 @@ export class GameRepository {
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
 
             insertNode: this.db.prepare(`
-                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier) 
-                VALUES (@type, @name, @x, @y, @faction_id, 0, @buy_modifier, @sell_modifier)
+                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier, specialization) 
+                VALUES (@type, @name, @x, @y, @faction_id, 0, @buy_modifier, @sell_modifier, @specialization)
             `),
             getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
 
@@ -502,7 +502,8 @@ export class GameRepository {
             y: node.y,
             faction_id: node.faction_id || null,
             buy_modifier: node.buy_modifier || 1.0,
-            sell_modifier: node.sell_modifier || 0.5
+            sell_modifier: node.sell_modifier || 0.5,
+            specialization: node.specialization || null
         });
     }
 
