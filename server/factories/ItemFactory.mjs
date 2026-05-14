@@ -2,6 +2,7 @@ import { WEAPONS } from '../data/items/Weapons.mjs';
 import { ARMOR } from '../data/items/Armor.mjs';
 import { CONSUMABLES } from '../data/items/Consumables.mjs';
 import { TRADE_GOODS } from '../data/items/TradeGoods.mjs';
+import { PROVISIONS } from '../data/items/Provisions.mjs';
 import { SETTLEMENT_TIERS, SPECIALIZATIONS } from '../data/GameDataConstants.mjs';
 
 class ItemFactoryClass {
