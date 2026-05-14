@@ -48,7 +48,8 @@ export const GAME_SCHEMA_SQL = `
         is_visited INTEGER DEFAULT 0,
         buy_modifier REAL DEFAULT 1.0,
         sell_modifier REAL DEFAULT 0.5,
-        is_pinned INTEGER DEFAULT 0
+        is_pinned INTEGER DEFAULT 0,
+        specialization TEXT
     );
 
     -- Contracts Table
