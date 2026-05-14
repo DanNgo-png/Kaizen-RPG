@@ -138,6 +138,50 @@
     border-color: #3b82f6;
 }
 
+.bb-node-icon {
+    font-size: 1.5rem;
+    color: #94a3b8;
+    width: 30px;
+    text-align: center;
+}
+
+.bb-node-content {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-width: 0;
+}
+
+.bb-node-title {
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bb-node-type {
+    font-size: 0.8rem;
+    color: #64748b;
+}
+
+.bb-node-pin {
+    color: #60a5fa;
+    font-size: 0.8rem;
+    margin-left: auto;
+}
+
+.bb-selected-reputation {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    margin-left: 10px;
+}
+
+.bb-empty-state {
+    color: #64748b;
+    padding: 30px 20px;
+    text-align: center;
+}
+
 .bb-contract-card {
     padding: 20px;
     background: #0f172a;
@@ -172,6 +216,8 @@
     font-weight: 700;
 }
 .bb-c-rewards span { display: flex; align-items: center; gap: 5px; }
+.bb-reward-gold { color: #facc15; }
+.bb-reward-time { color: #60a5fa; }
 
 .bb-btn-accept {
     background: #059669;
@@ -405,6 +451,36 @@
 .bb-item-tooltip .tt-action.buy { color: #60a5fa; }
 .bb-item-tooltip .tt-action.sell { color: #fbbf24; }
 
+.bb-tooltip-title {
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 1.05rem;
+    text-align: left;
+}
+
+.bb-tooltip-title.gold { color: #facc15; }
+.bb-tooltip-title.provisions { color: #d97706; }
+.bb-tooltip-title.tools { color: #9ca3af; }
+.bb-tooltip-title.ammo { color: #d1d5db; }
+.bb-tooltip-title.meds { color: #f87171; }
+
+.bb-tooltip-body {
+    max-width: 320px;
+    margin-top: 8px;
+    line-height: 1.4;
+    text-align: left;
+    color: #9ca3af;
+    font-weight: normal;
+}
+
+.bb-tooltip-title + .bb-tooltip-body {
+    margin-top: 0;
+}
+
+.bb-tooltip-body b {
+    color: #fff;
+}
+
 /* --- Hide Market Scrollbars --- */
 .bb-market-panel .bb-scroll-list {
     overflow-y: auto;
@@ -543,6 +619,10 @@
     gap: 8px;
 }
 
+.bb-hire-traits {
+    margin-top: 8px;
+}
+
 .bb-hire-stat,
 .bb-hire-trait {
     display: inline-flex;
@@ -589,4 +669,97 @@
     color: #64748b;
     padding: 42px 20px;
     text-align: center;
+}
+
+/* --- Barebones Chronicles Modal --- */
+.bb-chronicles-overlay {
+    z-index: 60;
+}
+
+.bb-chronicles-modal {
+    width: 500px;
+    text-align: left;
+    align-items: flex-start;
+    max-height: 80vh;
+    overflow: hidden;
+}
+
+.bb-chronicles-header {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+.bb-chronicles-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.3rem;
+}
+
+.bb-chronicles-title i {
+    color: #a78bfa;
+}
+
+.bb-chronicles-close {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 1.2rem;
+}
+
+.bb-chronicles-close:hover {
+    color: #fff;
+}
+
+.bb-chronicles-economy {
+    width: 100%;
+    margin-bottom: 15px;
+}
+
+.bb-chronicles-list {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding-right: 5px;
+}
+
+.bb-chronicles-entry {
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid #374151;
+    padding: 12px;
+    border-radius: 8px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.bb-chronicles-icon {
+    font-size: 1.2rem;
+    margin-top: 2px;
+}
+
+.bb-chronicles-icon.world { color: #60a5fa; }
+.bb-chronicles-icon.player { color: #10b981; }
+.bb-chronicles-icon.mechanic { color: #f59e0b; }
+.bb-chronicles-icon.economy { color: #facc15; }
+
+.bb-chronicles-day {
+    font-size: 0.8rem;
+    color: #9ca3af;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.bb-chronicles-text {
+    color: #e5e7eb;
+    font-size: 0.95rem;
+    line-height: 1.4;
 }
