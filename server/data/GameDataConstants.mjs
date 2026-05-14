@@ -19,7 +19,7 @@ export const SETTLEMENT_NAMES = [
     'Oldham', 'Hewe', 'Eastbourne', 'Quan Ma', 'Travercraig', 'Bournemouth'
 ];
 
-// --- NEW: Settlement Tiers & Economy ---
+// --- Settlement Tiers & Economy ---
 // Order of Development with isolated economies to prevent infinite money glitches
 export const SETTLEMENT_TIERS = {
     'Hamlet':       { buyMult: 1.20, sellMult: 0.30, shopLevel: 1 },
@@ -73,4 +73,19 @@ export const ROLE_STATS = {
     'Skirmisher': { str: [8, 12], int: [10, 14], spd: [14, 18] },
     'Hedge Knight': { str: [18, 25], int: [10, 15], spd: [8, 12] },
     'default': { str: [8, 12], int: [8, 12], spd: [8, 12] }
+};
+
+export const SPECIALIZATIONS = {
+    'Peat Pit': ['peat_bricks'],
+    'Weavers': ['cloth_rolls'],
+    'Lumber Camp': ['quality_wood'],
+    'Copper Mine': ['copper_ingots'],
+    'Amber Collector': ['amber_shards'],
+    'Hunters': ['furs'],
+    'Spice Farm': ['spices'],
+    'Salt Mine': ['salt'],
+    'Incense Gatherer': ['incense'],
+    'Dye Maker': ['dyes'],
+    'Silk Weaver': ['silk'],
+    'Gem Mine': ['uncut_gems']
 };
