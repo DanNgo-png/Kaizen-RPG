@@ -31,6 +31,9 @@ export class GameRepository {
                 VALUES (@name, @role, @level, 0, @str, @int, @spd, @wage, 1, @max_hp, @current_hp)
             `),
             addXp: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE is_active = 1`),
+            
+            // NEW: Apply individual XP and Fatigue to account for gear penalties
+            updateMercXpFatigue: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE id = @id`),
 
             damageMercenary: this.db.prepare(`UPDATE mercenaries SET current_hp = MAX(0, current_hp - @damage) WHERE id = @id`),
             getWages: this.db.prepare(`SELECT SUM(daily_wage) as total FROM mercenaries`),
@@ -316,8 +319,7 @@ export class GameRepository {
         const origin = this.statements.getSetting.get('origin')?.value || 'sellswords';
         const gameVersion = this.statements.getSetting.get('game_version')?.value || 'standard';
 
-        const xpAmount = Math.floor(focusMinutes * 10 * ratio);
-        const fatigueCost = Math.floor(focusMinutes / 5);
+        const baseXpAmount = Math.floor(focusMinutes * 10 * ratio);
 
         const logs = [];
         const foundLoot = [];
@@ -331,9 +333,53 @@ export class GameRepository {
             }
         };
 
+        // --- FETCH MERCS AND EQUIPMENT ---
+        const activeMercs = this.statements.getAll.all();
+        const equippedRaw = this.db.prepare('SELECT * FROM inventory WHERE mercenary_id IS NOT NULL AND equip_slot IS NOT NULL').all();
+
+        let partyTotalAttack = 0;
+        let tankCount = 0;
+        let totalPartyPower = 0;
+
+        // Process Equipment Modifiers
+        activeMercs.forEach(merc => {
+            merc.totalAttack = 0;
+            merc.totalDefense = 0;
+            merc.fatiguePenalty = 0;
+            merc.xpBonus = 0;
+
+            const mercGear = equippedRaw.filter(i => i.mercenary_id === merc.id);
+            mercGear.forEach(gear => {
+                const template = ItemFactory.createItem(gear.item_id);
+                if (template && template.stats) {
+                    merc.totalAttack += (template.stats.attack || 0);
+                    merc.totalDefense += (template.stats.defense || 0);
+                    merc.fatiguePenalty += Math.abs(template.stats.fatigue_penalty || 0);
+                    
+                    if (template.stats.xp_multiplier) {
+                        merc.xpBonus += (template.stats.xp_multiplier - 1);
+                    }
+                }
+                
+                // Light gear degradation in dangerous areas
+                if (origin === 'dungeon' && gameVersion === 'barebones' && Math.random() < 0.25) {
+                    this.db.prepare('UPDATE inventory SET durability = MAX(0, durability - 1) WHERE id = ?').run(gear.id);
+                }
+            });
+
+            partyTotalAttack += merc.totalAttack;
+
+            let mercPower = (merc.str || 10) + (merc.spd || 10) + (merc.int || 10) + merc.totalAttack + merc.totalDefense;
+            if (['Vanguard', 'Hedge Knight'].includes(merc.role)) {
+                tankCount++;
+                mercPower *= 1.2;
+            }
+            totalPartyPower += mercPower;
+        });
+
         // --- IN-GAME TIME PROGRESSION ---
         let daysPassed = 0;
-        const MINUTES_PER_DAY = 30; // 1m 45s real-time = 1.75 minutes = 1 in-game day
+        const MINUTES_PER_DAY = 30; // 1m 45s real-time = 1 in-game day
 
         const currentAccumulated = parseFloat(this.statements.getSetting.get('accumulated_time')?.value || '0');
         let newAccumulated = currentAccumulated + focusMinutes;
@@ -357,117 +403,119 @@ export class GameRepository {
         if (origin === 'dungeon' && gameVersion === 'barebones') {
             const activeContract = this.getActiveContract();
             const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
-            const activeMercs = this.statements.getAll.all();
 
             if (activeContract) {
-                this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+                // Apply Contract XP & Fatigue Individually
+                activeMercs.forEach(merc => {
+                    const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
+                    const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
+                    this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
+
+                    if (Math.random() < 0.20) {
+                        const rawDamage = Math.floor(Math.random() * 8 * ratio) + 2;
+                        const defMitigation = Math.floor(merc.totalDefense / 4); // Low mitigation for minor events
+                        const finalDamage = Math.max(0, rawDamage - defMitigation);
+                        
+                        if (finalDamage > 0) {
+                            this.statements.damageMercenary.run({ damage: finalDamage, id: merc.id });
+                            logs.push(`⚔️ ${merc.name} took ${finalDamage} damage fending off a wandering beast.`);
+                        }
+                    }
+                });
 
                 if (Math.random() < 0.3) {
                     logs.push(`🏕️ The party encountered travelers on the road during the contract.`);
                 }
 
-                activeMercs.forEach(merc => {
-                    if (Math.random() < 0.20) {
-                        const dmg = Math.floor(Math.random() * 8 * ratio) + 2;
-                        this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
-                        logs.push(`⚔️ ${merc.name} took ${dmg} damage fending off a wandering beast.`);
-                    }
-                });
-
-                const lootChance = 0.15 * (focusMinutes / 25);
+                const attackLootBonus = (partyTotalAttack / 100) * 0.10; // Every 10 atk gives +1% loot chance
+                const lootChance = 0.15 * (focusMinutes / 25) + attackLootBonus;
                 rollForLoot(lootChance);
 
                 if (logs.length === 0 && daysPassed === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
-                const goldFound = Math.floor(focusMinutes * ratio * 2.0);
+                // Apply Delving Bonus Multipliers
+                const attackGoldMultiplier = 1 + (partyTotalAttack / 100); 
+                const goldFound = Math.floor(focusMinutes * ratio * 2.0 * attackGoldMultiplier);
+                
                 this.updateGold(goldFound);
-                this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
-
+                
                 if (focusMinutes >= 1) {
                     logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
                     logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 }
 
-                // --- NEW: SQUAD POWER & THREAT LOGIC ---
-                const partySize = activeMercs.length;
-
-                // 1. Calculate Total Party Power (Stats + Bonus for certain roles)
-                let totalPartyPower = 0;
-                let tankCount = 0;
-
-                activeMercs.forEach(merc => {
-                    let mercPower = (merc.str || 10) + (merc.spd || 10) + (merc.int || 10);
-                    // Tanks help mitigate overall party danger
-                    if (['Vanguard', 'Hedge Knight'].includes(merc.role)) {
-                        tankCount++;
-                        mercPower *= 1.2;
-                    }
-                    totalPartyPower += mercPower;
-                });
-
-                // 2. Calculate Dungeon Threat (Longer focus = Deeper dungeon = Higher threat)
+                // Calculate Danger based on Party Power
                 const baseThreatPerMinute = 5;
                 const dungeonThreat = focusMinutes * baseThreatPerMinute * ratio;
-
-                // 3. Compare Power to Threat to establish a Danger Multiplier (Lower is safer)
-                // A massive party will push this multiplier close to 0.1. A weak party will push it over 1.0.
                 const dangerMultiplier = Math.max(0.1, dungeonThreat / Math.max(1, totalPartyPower));
-
-                // 4. Calculate Event Chances based on Danger
+                
                 const BASE_DAMAGE_CHANCE = 0.40;
                 const adjustedDamageChance = Math.min(0.80, BASE_DAMAGE_CHANCE * dangerMultiplier);
-
-                // Tanks reduce the chance of non-tanks getting hit by 10% per tank
                 const tankProtectionBonus = tankCount * 0.10;
 
                 activeMercs.forEach(merc => {
-                    let personalHitChance = adjustedDamageChance;
+                    // Award Individual XP & Fatigue
+                    const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
+                    const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
+                    this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
 
-                    // Apply tank protection if this merc is NOT a tank
+                    let personalHitChance = adjustedDamageChance;
                     if (!['Vanguard', 'Hedge Knight'].includes(merc.role)) {
                         personalHitChance = Math.max(0.05, personalHitChance - tankProtectionBonus);
                     } else {
-                        // Tanks are slightly more likely to get hit (they are drawing aggro)
-                        personalHitChance = Math.min(0.90, personalHitChance + 0.15);
+                        personalHitChance = Math.min(0.90, personalHitChance + 0.15); // Tanks draw aggro
                     }
 
                     if (Math.random() < personalHitChance) {
-                        // Damage scales with difficulty (ratio) but is mitigated by the merc's own strength/level
                         const rawDamage = Math.floor(Math.random() * 15 * ratio) + 5;
-                        const defenseMitigation = Math.floor((merc.str + merc.level) / 4);
-                        const finalDamage = Math.max(1, rawDamage - defenseMitigation);
+                        const defenseMitigation = Math.floor((merc.str + merc.level) / 4) + Math.floor(merc.totalDefense / 2);
+                        const finalDamage = Math.max(0, rawDamage - defenseMitigation);
 
-                        this.statements.damageMercenary.run({ damage: finalDamage, id: merc.id });
-
-                        // Flavorful logs based on damage taken
-                        if (finalDamage > 10) {
-                            logs.push(`🩸 ${merc.name} took a vicious blow for ${finalDamage} damage!`);
+                        if (finalDamage > 0) {
+                            this.statements.damageMercenary.run({ damage: finalDamage, id: merc.id });
+                            if (finalDamage > 10) {
+                                logs.push(`🩸 ${merc.name} took a vicious blow for ${finalDamage} damage!`);
+                            } else {
+                                logs.push(`⚔️ ${merc.name} suffered ${finalDamage} damage in a skirmish.`);
+                            }
                         } else {
-                            logs.push(`⚔️ ${merc.name} suffered ${finalDamage} damage in a skirmish.`);
+                            logs.push(`🛡️ ${merc.name}'s armor completely deflected an attack!`);
                         }
                     }
                 });
 
-                // --- LOOT LOGIC (Deeper = Better Loot) ---
-                // Base chance is 15%, plus 1% for every 2 minutes focused
+                // --- LOOT LOGIC (Scales with attack power & depth) ---
                 const depthLootBonus = (focusMinutes / 2) * 0.01;
-                const lootChance = 0.15 + depthLootBonus;
+                const attackLootBonus = (partyTotalAttack / 100) * 0.05; // 5% flat per 100 atk
+                const lootChance = 0.15 + depthLootBonus + attackLootBonus;
 
                 rollForLoot(lootChance);
 
-                // Deep work milestone (e.g., fighting a mini-boss)
                 if (focusMinutes >= 45) {
                     logs.push(`👑 Survived a deep floor! Extra loot granted.`);
-                    rollForLoot(0.30 + depthLootBonus);
+                    rollForLoot(0.30 + depthLootBonus + attackLootBonus);
                 }
+            } else {
+                 activeMercs.forEach(merc => {
+                    const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
+                    const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
+                    this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
+                });
             }
 
         } else {
-            this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
+            // Standard Game Modes
+            activeMercs.forEach(merc => {
+                const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
+                const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
+                this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
+            });
         }
 
-        return { xp: xpAmount, fatigue: fatigueCost, logs: logs, loot: foundLoot };
+        const totalXpGranted = activeMercs.reduce((sum, m) => sum + Math.floor(baseXpAmount * (1 + m.xpBonus)), 0);
+
+        return { xp: Math.floor(totalXpGranted/Math.max(1, activeMercs.length)), logs: logs, loot: foundLoot };
     }
 
     processDayEnd() {
