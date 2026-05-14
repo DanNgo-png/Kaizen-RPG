@@ -708,7 +708,6 @@ export class BarebonesUIManager {
                 <div class="bb-hire-summary-title">${this.selectedNode.name} Hiring Hall</div>
                 <div class="bb-hire-summary-meta">
                     <span><i class="fa-solid fa-users"></i> ${rosterCount}/${this.rosterLimit}</span>
-                    <span><i class="fa-solid fa-coins"></i> ${gold}</span>
                 </div>
             </div>
             <div class="bb-hire-summary-meta">
