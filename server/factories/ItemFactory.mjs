@@ -63,11 +63,7 @@ class ItemFactoryClass {
                 for (let i = 0; i < qty; i++) {
                     const item = this.createItem(id);
                     
-                    // --- TRADE MARGIN MATH ---
-                    // Base Value * 0.25 (75% off) ensures it's dirt cheap at the source.
-                    // Even if you sell it at a poor village (0.35 sell modifier), you make a 10% profit.
-                    // If you sell it at an Empire (0.70 sell modifier), you make nearly 300% profit!
-                    item.cost = Math.max(1, Math.floor((item.cost * 0.25) * buyModifier)); 
+                    item.cost = Math.max(1, Math.floor(item.cost * buyModifier)); 
                     inventory.push(item);
                 }
             });
