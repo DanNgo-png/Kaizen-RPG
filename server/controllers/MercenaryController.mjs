@@ -1,6 +1,7 @@
 import { GameRepository } from "../database/SQLite3/repositories/GameRepository.mjs";
 import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 import { ItemFactory } from "../factories/ItemFactory.mjs";
+import { SETTLEMENT_EVENTS } from "../data/GameDataConstants.mjs";
 
 export class MercenaryController {
     constructor() {
@@ -38,13 +39,26 @@ export class MercenaryController {
                 const resources = this.repo.getResources();
                 const worldState = this.repo.getWorldState();
 
+                worldState.nodes.forEach(node => {
+                    node.effective_buy = node.buy_modifier || 1.0;
+                    node.effective_sell = node.sell_modifier || 0.5;
+                    node.event_name = null;
+
+                    if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
+                        const evt = SETTLEMENT_EVENTS[node.current_event];
+                        node.effective_buy *= evt.buyMult;
+                        node.effective_sell *= evt.sellMult;
+                        node.event_name = evt.name;
+                    }
+                });
+
                 app.events.broadcast("receiveWorldData", { 
                     resources: resources,
                     nodes: worldState.nodes,
                     player: worldState.player, 
                     origin: worldState.origin,
                     gameVersion: worldState.gameVersion,
-                    isDelving: worldState.isDelving // Broadcast back to UI
+                    isDelving: worldState.isDelving 
                 });
             } catch (error) {
                 app.events.broadcast("receiveWorldData", { nodes: [], player: {x: 400, y: 300}, origin: 'default', gameVersion: 'standard' });

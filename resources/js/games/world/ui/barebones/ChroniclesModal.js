@@ -73,17 +73,47 @@ export class ChroniclesModal {
     }
 
     _economyHtml(node) {
-        const prices = this._modifierPercent(node.buy_modifier);
-        const payouts = this._modifierPercent(node.sell_modifier);
+        // Use effective modifiers provided by backend, fallback to base if missing
+        const effectiveBuy = node.effective_buy !== undefined ? node.effective_buy : node.buy_modifier;
+        const effectiveSell = node.effective_sell !== undefined ? node.effective_sell : node.sell_modifier;
+
+        const prices = this._modifierPercent(effectiveBuy);
+        const payouts = this._modifierPercent(effectiveSell);
+
+        // Build Event Context UI
+        let eventContext = '';
+        if (node.current_event && node.event_name) {
+            let color = '#3b82f6'; // Default Blue
+            if (node.current_event.includes('ruined') || node.current_event.includes('ambushed')) {
+                color = '#ef4444'; // Red for negative events
+            } else if (node.current_event === 'well_supplied' || node.current_event === 'safe_roads') {
+                color = '#10b981'; // Green for positive events
+            }
+            
+            eventContext = `
+                <div style="margin-top: 6px; font-size: 0.85rem; color: ${color}; font-weight: 600;">
+                    <i class="fa-solid fa-bolt"></i> Altered by ${escapeHtml(node.event_name)}
+                </div>
+            `;
+        } else {
+            eventContext = `
+                <div style="margin-top: 6px; font-size: 0.85rem; color: #64748b; font-style: italic;">
+                    No active events altering the economy.
+                </div>
+            `;
+        }
 
         return `
             <div class="bb-chronicles-entry">
                 <div class="bb-chronicles-icon economy">
                     <i class="fa-solid fa-scale-balanced"></i>
                 </div>
-                <div>
+                <div style="flex: 1;">
                     <div class="bb-chronicles-day">Local Economy</div>
-                    <div class="bb-chronicles-text">Prices: ${prices}% | Payouts: ${payouts}%</div>
+                    <div class="bb-chronicles-text">
+                        Prices: <b style="color: #fff;">${prices}%</b> | Payouts: <b style="color: #fff;">${payouts}%</b>
+                    </div>
+                    ${eventContext}
                 </div>
             </div>
         `;
