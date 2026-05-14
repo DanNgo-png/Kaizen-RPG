@@ -31,7 +31,7 @@ export class GameRepository {
                 VALUES (@name, @role, @level, 0, @str, @int, @spd, @wage, 1, @max_hp, @current_hp)
             `),
             addXp: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE is_active = 1`),
-            
+
             damageMercenary: this.db.prepare(`UPDATE mercenaries SET current_hp = MAX(0, current_hp - @damage) WHERE id = @id`),
             getWages: this.db.prepare(`SELECT SUM(daily_wage) as total FROM mercenaries`),
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
@@ -41,9 +41,9 @@ export class GameRepository {
                 VALUES (@type, @name, @x, @y, @faction_id, 0, @buy_modifier, @sell_modifier)
             `),
             getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
-            
+
             getNodeById: this.db.prepare(`SELECT * FROM world_nodes WHERE id = ?`),
-            
+
             updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
 
             togglePin: this.db.prepare(`UPDATE world_nodes SET is_pinned = CASE WHEN is_pinned = 1 THEN 0 ELSE 1 END WHERE id = ?`),
@@ -103,7 +103,7 @@ export class GameRepository {
     getOrGenerateContracts(nodeId, minMins = 10, maxMins = 120) {
         this.ensureConnection();
         let contracts = this.statements.getNodeContracts.all(nodeId);
-        
+
         if (contracts.length === 0) {
             const titles = ["Clear the Rat Cellar", "Hunt the Goblin Raiders", "Escort the Merchant", "Explore the Ruined Tower", "Guard the Caravan"];
             const descs = [
@@ -113,17 +113,17 @@ export class GameRepository {
                 "Ancient secrets and hidden dangers await.",
                 "Protect the goods at all costs."
             ];
-            
+
             let possibleMins = [];
-            for(let m = minMins; m <= maxMins; m += 5) {
+            for (let m = minMins; m <= maxMins; m += 5) {
                 possibleMins.push(m);
             }
-            if (possibleMins.length === 0) possibleMins = [minMins]; 
-            
-            for(let i=0; i<3; i++) {
+            if (possibleMins.length === 0) possibleMins = [minMins];
+
+            for (let i = 0; i < 3; i++) {
                 const reqMins = possibleMins[Math.floor(Math.random() * possibleMins.length)];
                 const gold = Math.floor(reqMins * 2.5 * (0.8 + Math.random() * 0.4));
-                
+
                 this.statements.insertContract.run({
                     node_id: nodeId,
                     title: titles[Math.floor(Math.random() * titles.length)],
@@ -140,7 +140,7 @@ export class GameRepository {
     acceptContract(contractId) {
         this.ensureConnection();
         this.statements.setActiveContract.run(contractId);
-        
+
         // Force the party out of Delve Mode when accepting a strict contract
         this.setCampaignSetting('is_delving', 'false');
     }
@@ -163,7 +163,7 @@ export class GameRepository {
 
         this.statements.completeContract.run({ id: activeContract.id });
         this.updateGold(activeContract.gold_reward);
-        
+
         const contractRepReward = 15;
         this.updateNodeReputation(activeContract.node_id, contractRepReward);
 
@@ -179,15 +179,15 @@ export class GameRepository {
 
         // --- LOOT LOGIC ---
         const foundLoot = [];
-        let lootChance = 0.20; 
+        let lootChance = 0.20;
         const titleLower = activeContract.title.toLowerCase();
-        
+
         if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
-            lootChance = 0.65; 
+            lootChance = 0.65;
         }
 
-        const rolls = Math.max(1, Math.floor(activeContract.required_minutes / 25)); 
-        for(let i = 0; i < rolls; i++) {
+        const rolls = Math.max(1, Math.floor(activeContract.required_minutes / 25));
+        for (let i = 0; i < rolls; i++) {
             if (Math.random() < lootChance) {
                 const newItem = ItemFactory.getRandomItem();
                 this.addItemToInventory(newItem.id);
@@ -213,22 +213,22 @@ export class GameRepository {
     // --- REPUTATION ---
     updateNodeReputation(nodeId, amount) {
         this.ensureConnection();
-        if(nodeId) this.statements.updateReputation.run(amount, nodeId);
+        if (nodeId) this.statements.updateReputation.run(amount, nodeId);
     }
 
     // --- WORLD MAP & POSITION ---
     getNodeById(id) {
         this.ensureConnection();
-        return this.statements.getNodeById.get(id); 
+        return this.statements.getNodeById.get(id);
     }
-    
+
     getWorldState() {
         this.ensureConnection();
         const nodes = this.statements.getAllNodes.all();
-        
+
         const px = this.statements.getSetting.get('player_x')?.value || '400';
         const py = this.statements.getSetting.get('player_y')?.value || '300';
-        
+
         const origin = this.statements.getSetting.get('origin')?.value || 'sellswords';
         const gameVersion = this.statements.getSetting.get('game_version')?.value || 'standard';
         const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
@@ -246,7 +246,7 @@ export class GameRepository {
         this.ensureConnection();
         const db = this.db;
         const insert = this.statements.insertSetting;
-        
+
         const txn = db.transaction(() => {
             insert.run({ key: 'player_x', value: String(x) });
             insert.run({ key: 'player_y', value: String(y) });
@@ -257,21 +257,21 @@ export class GameRepository {
     // --- GAMEPLAY LOGIC ---
     distributeSessionXP(focusMinutes, ratio = 1.0) {
         this.ensureConnection();
-        
+
         const origin = this.statements.getSetting.get('origin')?.value || 'sellswords';
         const gameVersion = this.statements.getSetting.get('game_version')?.value || 'standard';
 
         const xpAmount = Math.floor(focusMinutes * 10 * ratio);
-        const fatigueCost = Math.floor(focusMinutes / 5); 
+        const fatigueCost = Math.floor(focusMinutes / 5);
 
         const logs = [];
-        const foundLoot = []; 
+        const foundLoot = [];
 
         const rollForLoot = (chancePercentage) => {
             if (Math.random() < chancePercentage) {
                 const newItem = ItemFactory.getRandomItem();
-                this.addItemToInventory(newItem.id); 
-                foundLoot.push(newItem); 
+                this.addItemToInventory(newItem.id);
+                foundLoot.push(newItem);
                 logs.push(`✨ Found loot: ${newItem.name}`);
             }
         };
@@ -280,7 +280,7 @@ export class GameRepository {
         let daysPassed = 0;
         const MINUTES_PER_DAY = 30; // 1m 45s real-time = 1.75 minutes = 1 in-game day
         // OPTIONAL: 1 hour of real focus = 1 in-game day
-        
+
         const currentAccumulated = parseFloat(this.statements.getSetting.get('accumulated_time')?.value || '0');
         let newAccumulated = currentAccumulated + focusMinutes;
 
@@ -288,7 +288,7 @@ export class GameRepository {
             newAccumulated -= MINUTES_PER_DAY;
             daysPassed++;
             const dayResult = this.processDayEnd();
-            
+
             logs.push(`🌙 A day passed. Paid ${dayResult.wagesPaid}g in wages.`);
             if (dayResult.medicineUsed > 0 || dayResult.totalHealed > 0) {
                 logs.push(`⚕️ Recovered ${dayResult.totalHealed} HP using ${dayResult.medicineUsed} meds.`);
@@ -304,13 +304,13 @@ export class GameRepository {
 
             if (activeContract) {
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
-                
+
                 if (Math.random() < 0.3) {
                     logs.push(`🏕️ The party encountered travelers on the road during the contract.`);
                 }
-                
+
                 activeMercs.forEach(merc => {
-                    if (Math.random() < 0.20) { 
+                    if (Math.random() < 0.20) {
                         const dmg = Math.floor(Math.random() * 8 * ratio) + 2;
                         this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
                         logs.push(`⚔️ ${merc.name} took ${dmg} damage fending off a wandering beast.`);
@@ -323,30 +323,87 @@ export class GameRepository {
                 if (logs.length === 0 && daysPassed === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
-                const goldFound = Math.floor(focusMinutes * ratio * 2.0); 
+                const goldFound = Math.floor(focusMinutes * ratio * 2.0);
                 this.updateGold(goldFound);
                 this.statements.addXp.run({ amount: xpAmount, fatigue: fatigueCost });
-                
-                if (focusMinutes >= 1) { 
+
+                if (focusMinutes >= 1) {
                     logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
                     logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 }
-                
+
+                // --- NEW: SQUAD POWER & THREAT LOGIC ---
+                const partySize = activeMercs.length;
+
+                // 1. Calculate Total Party Power (Stats + Bonus for certain roles)
+                let totalPartyPower = 0;
+                let tankCount = 0;
+
                 activeMercs.forEach(merc => {
-                    if (Math.random() < 0.40) { 
-                        const dmg = Math.floor(Math.random() * 12 * ratio) + 2;
-                        this.statements.damageMercenary.run({ damage: dmg, id: merc.id });
-                        logs.push(`🩸 ${merc.name} took ${dmg} damage from a trap/monster.`);
+                    let mercPower = (merc.str || 10) + (merc.spd || 10) + (merc.int || 10);
+                    // Tanks help mitigate overall party danger
+                    if (['Vanguard', 'Hedge Knight'].includes(merc.role)) {
+                        tankCount++;
+                        mercPower *= 1.2;
+                    }
+                    totalPartyPower += mercPower;
+                });
+
+                // 2. Calculate Dungeon Threat (Longer focus = Deeper dungeon = Higher threat)
+                const baseThreatPerMinute = 5;
+                const dungeonThreat = focusMinutes * baseThreatPerMinute * ratio;
+
+                // 3. Compare Power to Threat to establish a Danger Multiplier (Lower is safer)
+                // A massive party will push this multiplier close to 0.1. A weak party will push it over 1.0.
+                const dangerMultiplier = Math.max(0.1, dungeonThreat / Math.max(1, totalPartyPower));
+
+                // 4. Calculate Event Chances based on Danger
+                const BASE_DAMAGE_CHANCE = 0.40;
+                const adjustedDamageChance = Math.min(0.80, BASE_DAMAGE_CHANCE * dangerMultiplier);
+
+                // Tanks reduce the chance of non-tanks getting hit by 10% per tank
+                const tankProtectionBonus = tankCount * 0.10;
+
+                activeMercs.forEach(merc => {
+                    let personalHitChance = adjustedDamageChance;
+
+                    // Apply tank protection if this merc is NOT a tank
+                    if (!['Vanguard', 'Hedge Knight'].includes(merc.role)) {
+                        personalHitChance = Math.max(0.05, personalHitChance - tankProtectionBonus);
+                    } else {
+                        // Tanks are slightly more likely to get hit (they are drawing aggro)
+                        personalHitChance = Math.min(0.90, personalHitChance + 0.15);
+                    }
+
+                    if (Math.random() < personalHitChance) {
+                        // Damage scales with difficulty (ratio) but is mitigated by the merc's own strength/level
+                        const rawDamage = Math.floor(Math.random() * 15 * ratio) + 5;
+                        const defenseMitigation = Math.floor((merc.str + merc.level) / 4);
+                        const finalDamage = Math.max(1, rawDamage - defenseMitigation);
+
+                        this.statements.damageMercenary.run({ damage: finalDamage, id: merc.id });
+
+                        // Flavorful logs based on damage taken
+                        if (finalDamage > 10) {
+                            logs.push(`🩸 ${merc.name} took a vicious blow for ${finalDamage} damage!`);
+                        } else {
+                            logs.push(`⚔️ ${merc.name} suffered ${finalDamage} damage in a skirmish.`);
+                        }
                     }
                 });
 
-                const lootChance = 0.40 * (focusMinutes / 25);
-                rollForLoot(lootChance);
-                if (focusMinutes >= 45) rollForLoot(0.20);
+                // --- LOOT LOGIC (Deeper = Better Loot) ---
+                // Base chance is 15%, plus 1% for every 2 minutes focused
+                const depthLootBonus = (focusMinutes / 2) * 0.01;
+                const lootChance = 0.15 + depthLootBonus;
 
-            } else {
-                // If totally idle and 0 days passed, just return empty
-                return { xp: 0, fatigue: 0, logs: logs, loot: [] };
+                rollForLoot(lootChance);
+
+                // Deep work milestone (e.g., fighting a mini-boss)
+                if (focusMinutes >= 45) {
+                    logs.push(`👑 Survived a deep floor! Extra loot granted.`);
+                    rollForLoot(0.30 + depthLootBonus);
+                }
             }
 
         } else {
@@ -358,14 +415,14 @@ export class GameRepository {
 
     processDayEnd() {
         this.ensureConnection();
-        
+
         const db = this.db;
         const result = db.transaction(() => {
             const currentDay = parseInt(this.statements.getSetting.get('day').value);
             const currentGold = parseInt(this.statements.getSetting.get('gold').value);
             let currentMedicine = parseInt(this.statements.getSetting.get('medicine').value || '0');
             const totalWages = this.statements.getWages.get().total || 0;
-            
+
             const newGold = currentGold - totalWages;
             this.statements.updateSetting.run({ key: 'gold', value: newGold });
             this.statements.insertLedger.run({ day: currentDay, desc: 'Daily Wages', amount: -totalWages });
@@ -377,7 +434,7 @@ export class GameRepository {
 
             for (const merc of allMercs) {
                 let healAmount = 5; // Base natural healing without meds
-                
+
                 if (merc.current_hp < merc.max_hp) {
                     if (currentMedicine >= 1) { // 1 med per merc per day
                         currentMedicine -= 1;
@@ -388,7 +445,7 @@ export class GameRepository {
                     totalHealed += (newHp - merc.current_hp);
                     this.db.prepare('UPDATE mercenaries SET current_hp = ? WHERE id = ?').run(newHp, merc.id);
                 }
-                
+
                 // Fatigue heals normally without resources
                 this.db.prepare('UPDATE mercenaries SET fatigue = MAX(0, fatigue - 25) WHERE id = ?').run(merc.id);
             }
@@ -414,7 +471,7 @@ export class GameRepository {
             const currentItems = this.statements.getInventory.all().filter(i => i.mercenary_id === null && i.stash_slot !== null);
             const occupied = new Set(currentItems.map(i => i.stash_slot));
             stashSlot = 0;
-            while(occupied.has(stashSlot)) stashSlot++; 
+            while (occupied.has(stashSlot)) stashSlot++;
         }
         return this.statements.insertItem.run({ itemId, mercId, stashSlot });
     }
@@ -425,7 +482,7 @@ export class GameRepository {
         if (!draggedItem) return;
 
         const existingItem = this.db.prepare('SELECT id FROM inventory WHERE stash_slot = ? AND mercenary_id IS NULL').get(newSlot);
-        
+
         const db = this.db;
         const txn = db.transaction(() => {
             if (existingItem) {
@@ -467,7 +524,7 @@ export class GameRepository {
 
         const totalWages = this.statements.getWages.get().total || 0;
         const mercCount = this.statements.getAll.all().length;
-        const foodPerDay = mercCount * 2; 
+        const foodPerDay = mercCount * 2;
 
         return { gold, renown, provisions, tools, ammo, medicine, dailyWages: totalWages, foodPerDay };
     }
@@ -477,14 +534,14 @@ export class GameRepository {
         const current = this.getResources().gold;
         const newAmount = current + amount;
         if (newAmount < 0) throw new Error("Insufficient Gold");
-        
+
         this.statements.updateSetting.run({ key: 'gold', value: newAmount });
         return newAmount;
     }
 
-    getAllMercenaries() { 
-        this.ensureConnection(); 
-        return this.statements.getAll.all(); 
+    getAllMercenaries() {
+        this.ensureConnection();
+        return this.statements.getAll.all();
     }
 
     addMercenary(merc) {
