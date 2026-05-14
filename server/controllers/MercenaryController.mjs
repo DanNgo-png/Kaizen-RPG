@@ -183,6 +183,7 @@ export class MercenaryController {
                 let buyMod = 1.0;
                 let sellMod = 0.5;
                 let nodeType = 'Town';
+                let specialization = null;
 
                 // Look up specific economy via Database Node lookup
                 if (payload.nodeId) {
@@ -191,12 +192,14 @@ export class MercenaryController {
                         buyMod = node.buy_modifier || 1.0;
                         sellMod = node.sell_modifier || 0.5;
                         nodeType = node.type;
+                        specialization = node.specialization; // <-- GET IT
                     }
                 }
 
                 const resources = this.repo.getResources();
                 const enrichedInventory = this._getEnrichedInventory(sellMod);
-                const shopItems = ItemFactory.getShopInventory(nodeType, buyMod);
+                // Pass specialization to the factory
+                const shopItems = ItemFactory.getShopInventory(nodeType, buyMod, specialization);
 
                 app.events.broadcast("receiveMarketData", { 
                     gold: resources.gold,
