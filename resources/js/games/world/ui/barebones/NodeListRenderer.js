@@ -58,11 +58,15 @@ export class NodeListRenderer {
             ? `<i class="fa-solid fa-thumbtack bb-node-pin"></i>`
             : "";
 
+        const specHtml = node.specialization 
+            ? `<span style="color:#a78bfa; margin-left: 8px;" title="${node.specialization}"><i class="fa-solid fa-star"></i> ${escapeHtml(node.specialization)}</span>`
+            : `<span style="color:#6b7280; margin-left: 8px; font-style:italic;" title="No Specialization"><i class="fa-solid fa-ban"></i> Poor</span>`;
+
         return `
             <div class="bb-node-icon"><i class="fa-solid ${escapeHtml(icon)}"></i></div>
             <div class="bb-node-content">
                 <div class="bb-node-title">${escapeHtml(node.name)} ${pinHtml}</div>
-                <div class="bb-node-type">${escapeHtml(node.type)}</div>
+                <div class="bb-node-type">${escapeHtml(node.type)} ${specHtml}</div>
             </div>
         `;
     }
