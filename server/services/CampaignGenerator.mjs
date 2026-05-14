@@ -1,4 +1,4 @@
-import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES, SETTLEMENT_NAMES, SETTLEMENT_TIERS } from '../data/GameDataConstants.mjs';
+import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES, SETTLEMENT_NAMES, SETTLEMENT_TIERS, SPECIALIZATIONS } from '../data/GameDataConstants.mjs';
 
 export class CampaignGenerator {
     constructor(repository) {
@@ -115,6 +115,7 @@ export class CampaignGenerator {
         ];
         
         const availableNames = [...SETTLEMENT_NAMES];
+        const specKeys = Object.keys(SPECIALIZATIONS);
 
         for (let i = availableNames.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
@@ -128,6 +129,10 @@ export class CampaignGenerator {
             const type = weightedTypes[Math.floor(Math.random() * weightedTypes.length)];
             const settlementName = availableNames.pop() || `Unknown Lands ${i}`;
             const tierInfo = SETTLEMENT_TIERS[type] || { buyMult: 1.0, sellMult: 0.5 };
+
+            // 30% chance the settlement is too poor to have a specialization (null)
+            const isPoor = Math.random() < 0.30;
+            const specialization = isPoor ? null : specKeys[Math.floor(Math.random() * specKeys.length)];
             
             const nodeData = {
                 type: type,
@@ -136,7 +141,8 @@ export class CampaignGenerator {
                 y: y,
                 faction_id: null,
                 buy_modifier: tierInfo.buyMult,
-                sell_modifier: tierInfo.sellMult
+                sell_modifier: tierInfo.sellMult,
+                specialization: specialization
             };
 
             this.repo.createWorldNode(nodeData);
