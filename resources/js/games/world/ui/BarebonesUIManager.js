@@ -159,9 +159,10 @@ export class BarebonesUIManager {
         this.chroniclesModal.innerHTML = `
             <div class="exit-modal-content" style="width: 500px; text-align: left; align-items: flex-start; max-height: 80vh; overflow: hidden; display: flex; flex-direction: column;">
                 <div style="display:flex; justify-content:space-between; width:100%; border-bottom: 1px solid #374151; padding-bottom: 15px; margin-bottom: 15px;">
-                    <h2 style="margin: 0; color: #fff; font-size: 1.3rem;"><i class="fa-solid fa-book-open" style="color: #a78bfa;"></i> Local Chronicles</h2>
+                    <h2 id="chronicles-title" style="margin: 0; color: #fff; font-size: 1.3rem;"><i class="fa-solid fa-book-open" style="color: #a78bfa;"></i> Local Chronicles</h2>
                     <button id="btn-close-chronicles" style="background:transparent; border:none; color:#9ca3af; cursor:pointer; font-size:1.2rem;"><i class="fa-solid fa-xmark"></i></button>
                 </div>
+                <div id="inspect-economy-panel" style="width: 100%; margin-bottom: 15px;"></div>
                 <div id="chronicles-list" style="flex: 1; overflow-y: auto; width: 100%; display: flex; flex-direction: column; gap: 10px; padding-right: 5px;">
                     <!-- Logs injected here -->
                 </div>
@@ -171,6 +172,13 @@ export class BarebonesUIManager {
 
         this.chroniclesModal.querySelector('#btn-close-chronicles').addEventListener('click', () => {
             this.chroniclesModal.classList.add('hidden');
+        });
+
+        // Add external click to close
+        this.chroniclesModal.addEventListener('click', (e) => {
+            if (e.target === this.chroniclesModal) {
+                this.chroniclesModal.classList.add('hidden');
+            }
         });
     }
     
@@ -504,31 +512,32 @@ export class BarebonesUIManager {
             el.addEventListener('contextmenu', (e) => {
                 this.menuManager.show(e, [
                     {
-                        label: "Inspect Settlement",
-                        icon: '<i class="fa-solid fa-magnifying-glass"></i>',
+                        label: "Description",
+                        icon: '<i class="fa-solid fa-book-open"></i>',
                         action: () => {
-                            // Simple notifier for now, we can upgrade to a modal later
-                            notifier.show(
-                                `${node.name} Economy`, 
-                                `Prices: ${Math.round(node.buy_modifier * 100)}% | Payouts: ${Math.round(node.sell_modifier * 100)}%`,
-                                'fa-solid fa-scale-balanced'
-                            );
-                        }
-                    },
-                    {
-                        label: "View Local Chronicles",
-                        icon: '<i class="fa-solid fa-scroll"></i>',
-                        action: () => {
+                            // 1. Update Title
+                            const titleEl = this.chroniclesModal.querySelector('#chronicles-title');
+                            titleEl.innerHTML = `<i class="fa-solid fa-book-open" style="color: #a78bfa;"></i> ${node.name}`;
+                            
+                            // 2. Inject Economy Data
+                            const ecoPanel = this.chroniclesModal.querySelector('#inspect-economy-panel');
+                            const prices = Math.round(node.buy_modifier * 100);
+                            const payouts = Math.round(node.sell_modifier * 100);
+                            
+                            ecoPanel.innerHTML = `
+                                <div style="background: rgba(0,0,0,0.2); border: 1px solid #374151; padding: 12px; border-radius: 8px; display: flex; gap: 12px; align-items: flex-start;">
+                                    <div style="font-size: 1.2rem; margin-top: 2px;"><i class="fa-solid fa-scale-balanced" style="color:#facc15;"></i></div>
+                                    <div>
+                                        <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 4px; text-transform: uppercase; font-weight: 700;">Local Economy</div>
+                                        <div style="color: #e5e7eb; font-size: 0.95rem; line-height: 1.4;">Prices: ${prices}% | Payouts: ${payouts}%</div>
+                                    </div>
+                                </div>
+                            `;
+
+                            // 3. Load Archives
                             this.chroniclesModal.classList.remove('hidden');
                             this.chroniclesModal.querySelector('#chronicles-list').innerHTML = '<div style="text-align:center; color:#64748b; padding:20px;"><i class="fa-solid fa-circle-notch fa-spin"></i> Reading archives...</div>';
                             GameAPI.getNodeHistory(node.id);
-                        }
-                    },
-                    {
-                        label: "View Reputation",
-                        icon: '<i class="fa-solid fa-handshake"></i>',
-                        action: () => {
-                            notifier.show("Reputation", `Your standing with ${node.name} is ${node.reputation || 0}.`, 'fa-solid fa-handshake');
                         }
                     },
                     { separator: true },
