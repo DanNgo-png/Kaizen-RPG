@@ -84,12 +84,14 @@ export class MarketPanel {
             <div class="bb-slot-price ${priceClass}">${price}</div>
         `;
 
+        // Pass item's internal stats to the tooltip so we know if it's consumable
         element.addEventListener("mouseenter", (event) => {
             this.tooltipManager.show(this._tooltipHtml({ item, quantity, isBuying, price, priceClass }), event);
         });
         element.addEventListener("mousemove", (event) => this.tooltipManager.position(event));
         element.addEventListener("mouseleave", () => this.tooltipManager.hide());
 
+        // Left Click: Buy/Sell
         if (canTrade) {
             element.addEventListener("click", () => {
                 this.tooltipManager.hide();
@@ -97,30 +99,41 @@ export class MarketPanel {
                     this.onBuyItem?.(item.id, price, selectedNode.id);
                     return;
                 }
-
                 this.onSellItem?.(item.inventoryId, price, selectedNode.id);
             });
         }
+
+        // --- NEW: Right Click: Consume ---
+        // Only allow if it's in our Stash (!isBuying) and it has consumable stats
+        element.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            if (!isBuying && item.stats && item.stats.provisions) {
+                this.tooltipManager.hide();
+                // Dispatch directly to the backend listener we just made
+                Neutralino.extensions.dispatch("js.node-neutralino.projectRunner", "consumeItem", { 
+                    inventoryId: item.inventoryId 
+                });
+            }
+        });
 
         return element;
     }
 
     _tooltipHtml({ item, quantity, isBuying, price, priceClass }) {
-        const actionText = isBuying ? "Left Click to Buy" : "Left Click to Sell";
+        const actionText = isBuying ? "L-Click: Buy" : "L-Click: Sell";
         const quantityText = quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? ` (x${quantity})` : "";
+        
+        // Add hint if it's a consumable in our stash
+        const consumeHint = (!isBuying && item.stats && item.stats.provisions) 
+            ? `<div class="tt-action" style="color:#d97706; margin-top:4px;">R-Click: Consume (+${item.stats.provisions} Food)</div>` 
+            : '';
 
         return `
             <div class="tt-name">${escapeHtml(item.name)}${quantityText}</div>
             <div class="tt-type">[${escapeHtml(item.type || "Misc")}]</div>
+            <div style="font-style: italic; color: #9ca3af; font-size: 0.8rem; margin: 5px 0;">${escapeHtml(item.description || "")}</div>
             <div class="tt-action ${priceClass}">${actionText} <i class="fa-solid fa-coins"></i> ${price}</div>
+            ${consumeHint}
         `;
-    }
-
-    _rarityClass(rarity) {
-        const token = String(rarity || "common")
-            .toLowerCase()
-            .replace(/[^a-z0-9_-]/g, "");
-
-        return `rarity-${token || "common"}`;
     }
 }
