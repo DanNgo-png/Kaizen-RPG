@@ -416,3 +416,177 @@
 .bb-market-panel .bb-scroll-list::-webkit-scrollbar {
     display: none; /* Chrome, Safari and Opera */
 }
+
+/* --- Barebones Hiring Hall --- */
+.bb-hire-container {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+}
+
+.bb-hire-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+}
+
+.bb-hire-list::-webkit-scrollbar { width: 6px; }
+.bb-hire-list::-webkit-scrollbar-thumb { background: #475569; border-radius: 3px; }
+
+.bb-hire-summary {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: center;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin-bottom: 14px;
+}
+
+.bb-hire-summary-title {
+    color: #e2e8f0;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.bb-hire-summary-meta {
+    display: flex;
+    gap: 12px;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.bb-hire-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 18px;
+    align-items: center;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+}
+
+.bb-hire-card:hover {
+    border-color: #64748b;
+    background: #111c31;
+}
+
+.bb-hire-card.disabled {
+    opacity: 0.66;
+}
+
+.bb-hire-main {
+    min-width: 0;
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+}
+
+.bb-hire-portrait {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    border-radius: 8px;
+    background: rgba(59, 130, 246, 0.12);
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    color: #93c5fd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.bb-hire-name-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    margin-bottom: 4px;
+}
+
+.bb-hire-name {
+    color: #f8fafc;
+    font-size: 1.05rem;
+    font-weight: 800;
+}
+
+.bb-hire-role {
+    color: #94a3b8;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.bb-hire-rumor {
+    color: #94a3b8;
+    font-size: 0.88rem;
+    line-height: 1.4;
+    margin: 0 0 10px 0;
+}
+
+.bb-hire-stats,
+.bb-hire-traits {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.bb-hire-stat,
+.bb-hire-trait {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+.bb-hire-stat {
+    background: #111827;
+    border: 1px solid #374151;
+    color: #cbd5e1;
+    padding: 5px 8px;
+}
+
+.bb-hire-trait {
+    color: #a7f3d0;
+    background: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    padding: 4px 8px;
+}
+
+.bb-hire-economy {
+    display: grid;
+    gap: 8px;
+    justify-items: end;
+    min-width: 156px;
+}
+
+.bb-hire-price,
+.bb-hire-wage {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-weight: 800;
+}
+
+.bb-hire-price { color: #facc15; font-size: 1.05rem; }
+.bb-hire-wage { color: #cbd5e1; font-size: 0.85rem; }
+
+.bb-hire-empty {
+    color: #64748b;
+    padding: 42px 20px;
+    text-align: center;
+}
