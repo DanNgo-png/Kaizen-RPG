@@ -19,15 +19,27 @@ export class ManagementManager {
 
         // Initialize Sub-components
         this.rosterUI = new RosterUI((id) => this.selectMercenary(id));
-        this.charUI = new CharacterSheetUI();
+        
+        // Pass drag and drop equip callback
+        this.charUI = new CharacterSheetUI({
+            onEquip: (invId, mercId, slotName) => {
+                GameAPI.equipItem(invId, mercId, slotName);
+            }
+        });
         
         // Pass drag and drop callback to inventory
         this.inventoryUI = new InventoryUI({
-            onItemMoved: (invId, newSlot) => {
-                Neutralino.extensions.dispatch(EXTENSION_ID, "moveInventoryItem", {
-                    inventoryId: invId,
-                    newSlotIndex: newSlot
-                });
+            onItemMoved: (invId, newSlot, source) => {
+                if (source === 'equip') {
+                    // Item was dragged from the paper doll
+                    GameAPI.unequipItem(invId, newSlot);
+                } else {
+                    // Item was just moved around inside the stash
+                    Neutralino.extensions.dispatch(EXTENSION_ID, "moveInventoryItem", {
+                        inventoryId: invId,
+                        newSlotIndex: newSlot
+                    });
+                }
             }
         });
 

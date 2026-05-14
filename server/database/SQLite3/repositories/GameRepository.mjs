@@ -200,7 +200,7 @@ export class GameRepository {
         return { contract: activeContract, logs, loot: foundLoot };
     }
 
-    // --- INVENTORY ---
+    // --- INVENTORY & EQUIPPING ---
     getInventory() {
         this.ensureConnection();
         return this.statements.getInventory.all();
@@ -209,6 +209,49 @@ export class GameRepository {
     deleteItemFromInventory(inventoryId) {
         this.ensureConnection();
         return this.statements.deleteItem.run(inventoryId);
+    }
+
+    equipItem(inventoryId, mercenaryId, equipSlot) {
+        this.ensureConnection();
+        const db = this.db;
+        
+        return db.transaction(() => {
+            // 1. Check if the slot is currently occupied
+            const existing = db.prepare('SELECT id FROM inventory WHERE mercenary_id = ? AND equip_slot = ?').get(mercenaryId, equipSlot);
+            
+            // 2. Un-equip existing item back to stash
+            if (existing) {
+                const currentItems = db.prepare('SELECT stash_slot FROM inventory WHERE mercenary_id IS NULL AND stash_slot IS NOT NULL').all();
+                const occupied = new Set(currentItems.map(i => i.stash_slot));
+                let freeSlot = 0;
+                while (occupied.has(freeSlot)) freeSlot++;
+                db.prepare('UPDATE inventory SET mercenary_id = NULL, equip_slot = NULL, stash_slot = ? WHERE id = ?').run(freeSlot, existing.id);
+            }
+            
+            // 3. Equip the new item
+            db.prepare('UPDATE inventory SET mercenary_id = ?, equip_slot = ?, stash_slot = NULL WHERE id = ?').run(mercenaryId, equipSlot, inventoryId);
+        })();
+    }
+
+    unequipItem(inventoryId, targetStashSlot) {
+        this.ensureConnection();
+        const db = this.db;
+        
+        return db.transaction(() => {
+            // If dropping on a slot that's already occupied in stash
+            const existing = db.prepare('SELECT id FROM inventory WHERE mercenary_id IS NULL AND stash_slot = ?').get(targetStashSlot);
+            if (existing) {
+                // Find next free slot for the item that was already in stash
+                const currentItems = db.prepare('SELECT stash_slot FROM inventory WHERE mercenary_id IS NULL AND stash_slot IS NOT NULL').all();
+                const occupied = new Set(currentItems.map(i => i.stash_slot));
+                let freeSlot = 0;
+                while (occupied.has(freeSlot)) freeSlot++;
+                db.prepare('UPDATE inventory SET stash_slot = ? WHERE id = ?').run(freeSlot, existing.id);
+            }
+            
+            // Move item to stash
+            db.prepare('UPDATE inventory SET mercenary_id = NULL, equip_slot = NULL, stash_slot = ? WHERE id = ?').run(targetStashSlot, inventoryId);
+        })();
     }
 
     // --- REPUTATION ---

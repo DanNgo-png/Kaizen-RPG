@@ -25,7 +25,8 @@ export const GAME_SCHEMA_SQL = `
         item_id TEXT NOT NULL,
         mercenary_id INTEGER, 
         stash_slot INTEGER,
-        durability INTEGER DEFAULT 100
+        durability INTEGER DEFAULT 100,
+        equip_slot TEXT
     );
     
     CREATE TABLE IF NOT EXISTS company_ledger (

@@ -30,6 +30,14 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "hireMercenary", { mercData, cost });
     },
 
+    equipItem: async (inventoryId, mercenaryId, equipSlot) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "equipItem", { inventoryId, mercenaryId, equipSlot });
+    },
+
+    unequipItem: async (inventoryId, stashSlotIndex) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "unequipItem", { inventoryId, stashSlotIndex });
+    },
+
     getActiveContract: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getActiveContract", null);
     },

@@ -57,7 +57,9 @@ export class InventoryUI {
 
                 // --- Drag Start ---
                 el.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text/plain', item.inventoryId);
+                    // CHANGED: Package type and source inside a JSON payload so Character Sheet can validate it
+                    const payload = JSON.stringify({ invId: item.inventoryId, type: item.type, source: 'stash' });
+                    e.dataTransfer.setData('text/plain', payload);
                     e.dataTransfer.effectAllowed = 'move';
                     setTimeout(() => el.classList.add('is-dragging'), 0); // Visual indicator
                 });
@@ -84,9 +86,19 @@ export class InventoryUI {
             el.addEventListener('drop', (e) => {
                 e.preventDefault();
                 el.style.borderColor = '';
-                const invId = e.dataTransfer.getData('text/plain');
-                if (invId && this.onItemMoved) {
-                    this.onItemMoved(parseInt(invId), i); // i = Target Slot Index
+                
+                const rawData = e.dataTransfer.getData('text/plain');
+                if (rawData) {
+                    try {
+                        const data = JSON.parse(rawData);
+                        if (this.onItemMoved) {
+                            // If coming from equip slots, this acts as an Unequip
+                            this.onItemMoved(data.invId, i, data.source); 
+                        }
+                    } catch(err) {
+                        // Fallback in case old ID behavior triggers somehow
+                        if (this.onItemMoved) this.onItemMoved(parseInt(rawData), i, 'stash');
+                    }
                 }
             });
             

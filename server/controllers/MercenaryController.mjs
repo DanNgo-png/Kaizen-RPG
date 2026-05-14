@@ -19,6 +19,7 @@ export class MercenaryController {
                 itemId: inv.item_id,
                 mercenaryId: inv.mercenary_id,
                 stashSlot: inv.stash_slot, 
+                equipSlot: inv.equip_slot, // Included newly added column
                 name: itemInstance.name,
                 icon: itemInstance.icon,
                 type: itemInstance.type,
@@ -71,6 +72,17 @@ export class MercenaryController {
                 const mercs = this.repo.getAllMercenaries();
                 const resources = this.repo.getResources();
                 const inventory = this._getEnrichedInventory();
+                
+                // Attach Equipment to Mercenaries
+                mercs.forEach(m => {
+                    m.equipment = {};
+                    inventory.forEach(item => {
+                        if (item.mercenaryId === m.id && item.equipSlot) {
+                            m.equipment[item.equipSlot] = item;
+                        }
+                    });
+                });
+
                 app.events.broadcast("receivePartyData", { mercenaries: mercs, resources: resources, inventory: inventory });
             } catch (error) {
                 if (error.message.includes("No active save")) app.events.broadcast("receivePartyData", null);
@@ -126,6 +138,7 @@ export class MercenaryController {
             }
         });
 
+        // --- INVENTORY MANAGEMENT EVENTS ---
         app.events.on("moveInventoryItem", (payload) => {
             try {
                 this.repo.moveItemInStash(payload.inventoryId, payload.newSlotIndex);
@@ -134,7 +147,22 @@ export class MercenaryController {
                 console.error("Failed to move item:", e);
             }
         });
+        
+        app.events.on("equipItem", (payload) => {
+            try {
+                this.repo.equipItem(payload.inventoryId, payload.mercenaryId, payload.equipSlot);
+                this._refreshParty(app);
+            } catch(e) { console.error("Failed to equip item:", e); }
+        });
 
+        app.events.on("unequipItem", (payload) => {
+            try {
+                this.repo.unequipItem(payload.inventoryId, payload.stashSlotIndex);
+                this._refreshParty(app);
+            } catch(e) { console.error("Failed to unequip item:", e); }
+        });
+
+        // ... (Contracts and Market endpoints remain identical)
         app.events.on("getActiveContract", () => {
             try {
                 const contract = this.repo.getActiveContract();
@@ -207,27 +235,19 @@ export class MercenaryController {
                         let lastRestockDay = node.last_restock_day || 0;
                         let nextTradeRestockDay = node.next_trade_restock_day || 0;
 
-                        // 1. Standard Items Restock (Daily)
                         if (currentDay > lastRestockDay) {
-                            // Filter OUT old standard items, keep Trade Goods
                             shopInventory = shopInventory.filter(item => item.type === 'Trade Good');
-                            
                             const newStandard = ItemFactory.getStandardInventory(nodeType, buyMod);
                             shopInventory = shopInventory.concat(newStandard);
-                            
                             lastRestockDay = currentDay;
                             inventoryChanged = true;
                         }
 
-                        // 2. Trade Goods Restock (Every 2-4 days)
                         if (currentDay >= nextTradeRestockDay) {
-                            // Filter OUT old trade goods, keep Standard Items
                             shopInventory = shopInventory.filter(item => item.type !== 'Trade Good');
-                            
                             const newTrade = ItemFactory.getTradeInventory(buyMod, specialization);
                             shopInventory = shopInventory.concat(newTrade);
-                            
-                            nextTradeRestockDay = currentDay + Math.floor(Math.random() * 3) + 2; // +2 to +4 days
+                            nextTradeRestockDay = currentDay + Math.floor(Math.random() * 3) + 2;
                             inventoryChanged = true;
                         }
 
@@ -255,7 +275,6 @@ export class MercenaryController {
 
         app.events.on("buyItem", (payload) => {
             try {
-                // Remove item from persistent shop inventory
                 if (payload.nodeId) {
                     const node = this.repo.getNodeById(payload.nodeId);
                     if (node) {
@@ -263,7 +282,6 @@ export class MercenaryController {
                         try { shopInventory = node.shop_inventory ? JSON.parse(node.shop_inventory) : []; } 
                         catch (e) { shopInventory = []; }
 
-                        // Find the exact item they clicked by matching its template ID
                         const index = shopInventory.findIndex(i => i.id === payload.itemId);
                         if (index !== -1) {
                             shopInventory.splice(index, 1);
@@ -276,7 +294,6 @@ export class MercenaryController {
 
                 this.repo.updateGold(-payload.cost);
                 
-                // Intercept 'Resource' items (like medicine, ammo)
                 const template = ItemFactory.createItem(payload.itemId);
                 if (template && template.type === 'Resource') {
                     const resources = this.repo.getResources();
@@ -332,6 +349,16 @@ export class MercenaryController {
         const mercs = this.repo.getAllMercenaries();
         const resources = this.repo.getResources();
         const inventory = this._getEnrichedInventory();
+        
+        mercs.forEach(m => {
+            m.equipment = {};
+            inventory.forEach(item => {
+                if (item.mercenaryId === m.id && item.equipSlot) {
+                    m.equipment[item.equipSlot] = item;
+                }
+            });
+        });
+
         app.events.broadcast("receivePartyData", { mercenaries: mercs, resources, inventory });
     }
 }

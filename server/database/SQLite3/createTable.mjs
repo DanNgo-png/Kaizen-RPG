@@ -33,6 +33,14 @@ const migrations = [
         if (!nodeColumns.includes('shop_inventory')) db.exec("ALTER TABLE world_nodes ADD COLUMN shop_inventory TEXT DEFAULT '[]';");
         if (!nodeColumns.includes('last_restock_day')) db.exec("ALTER TABLE world_nodes ADD COLUMN last_restock_day INTEGER DEFAULT 0;");
         if (!nodeColumns.includes('next_trade_restock_day')) db.exec("ALTER TABLE world_nodes ADD COLUMN next_trade_restock_day INTEGER DEFAULT 0;");
+    },
+
+    // --- Version 4: Equip Slots for Inventory ---
+    (db) => {
+        const invColumns = db.pragma('table_info(inventory)').map(col => col.name);
+        if (!invColumns.includes('equip_slot')) {
+            db.exec("ALTER TABLE inventory ADD COLUMN equip_slot TEXT;");
+        }
     }
 ];
 
