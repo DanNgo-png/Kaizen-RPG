@@ -5,8 +5,8 @@ export const PREMADE_MAPS = [
         description: 'A balanced geography with a central capital, trade routes to the south, and dangerous mountains to the north.',
         difficulty: 'Normal',
         nodes: [
-            { type: 'Kingdom', name: 'Capital City', x: 400, y: 300, faction_id: 1 },
-            { type: 'Village', name: 'Northshire', x: 400, y: 150, faction_id: 1 },
+            { type: 'Kingdom', name: 'Capital City', x: 400, y: 300, faction_id: 1, specialization: 'Silk Weaver'},
+            { type: 'Village', name: 'Northshire', x: 400, y: 150, faction_id: 1, specialization: 'Lumber Camp' },
             { type: 'Town', name: 'Goldshire', x: 200, y: 400, faction_id: 1 },
             { type: 'Ruins', name: 'Dark Hollow', x: 600, y: 500, faction_id: null },
             { type: 'Hamlet', name: 'Riverwood', x: 550, y: 350, faction_id: 2 },
