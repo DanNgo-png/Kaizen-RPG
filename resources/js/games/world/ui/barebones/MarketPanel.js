@@ -84,7 +84,7 @@ export class MarketPanel {
             <div class="bb-slot-price ${priceClass}">${price}</div>
         `;
 
-        // Pass item's internal stats to the tooltip so we know if it's consumable
+        // Tooltips 
         element.addEventListener("mouseenter", (event) => {
             this.tooltipManager.show(this._tooltipHtml({ item, quantity, isBuying, price, priceClass }), event);
         });
@@ -103,19 +103,6 @@ export class MarketPanel {
             });
         }
 
-        // --- NEW: Right Click: Consume ---
-        // Only allow if it's in our Stash (!isBuying) and it has consumable stats
-        element.addEventListener("contextmenu", (event) => {
-            event.preventDefault();
-            if (!isBuying && item.stats && item.stats.provisions) {
-                this.tooltipManager.hide();
-                // Dispatch directly to the backend listener we just made
-                Neutralino.extensions.dispatch("js.node-neutralino.projectRunner", "consumeItem", { 
-                    inventoryId: item.inventoryId 
-                });
-            }
-        });
-
         return element;
     }
 
@@ -123,9 +110,9 @@ export class MarketPanel {
         const actionText = isBuying ? "L-Click: Buy" : "L-Click: Sell";
         const quantityText = quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? ` (x${quantity})` : "";
         
-        // Add hint if it's a consumable in our stash
-        const consumeHint = (!isBuying && item.stats && item.stats.provisions) 
-            ? `<div class="tt-action" style="color:#d97706; margin-top:4px;">R-Click: Consume (+${item.stats.provisions} Food)</div>` 
+        // Show Spoil Days if applicable
+        const spoilHint = (!isBuying && item.stats && item.stats.spoil_days) 
+            ? `<div style="color:#ef4444; font-size:0.8rem; margin-top:4px;"><i class="fa-solid fa-clock"></i> Spoils in ${item.durability} days</div>` 
             : '';
 
         return `
@@ -133,13 +120,10 @@ export class MarketPanel {
             <div class="tt-type">[${escapeHtml(item.type || "Misc")}]</div>
             <div style="font-style: italic; color: #9ca3af; font-size: 0.8rem; margin: 5px 0;">${escapeHtml(item.description || "")}</div>
             <div class="tt-action ${priceClass}">${actionText} <i class="fa-solid fa-coins"></i> ${price}</div>
-            ${consumeHint}
+            ${spoilHint}
         `;
     }
 
-    /**
-     * Translates a rarity string into the proper CSS class
-     */
     _rarityClass(rarity) {
         return `rarity-${(rarity || "common").toLowerCase()}`;
     }

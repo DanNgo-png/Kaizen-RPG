@@ -74,7 +74,7 @@ export class GameRepository {
 
         this.statements.insertItem = this.db.prepare(`
             INSERT INTO inventory (item_id, mercenary_id, durability, stash_slot) 
-            VALUES (@itemId, @mercId, 100, @stashSlot)
+            VALUES (@itemId, @mercId, @durability, @stashSlot)
         `);
 
         this.statements.updateItemSlot = this.db.prepare(`
@@ -279,7 +279,6 @@ export class GameRepository {
         // --- IN-GAME TIME PROGRESSION ---
         let daysPassed = 0;
         const MINUTES_PER_DAY = 30; // 1m 45s real-time = 1.75 minutes = 1 in-game day
-        // OPTIONAL: 1 hour of real focus = 1 in-game day
 
         const currentAccumulated = parseFloat(this.statements.getSetting.get('accumulated_time')?.value || '0');
         let newAccumulated = currentAccumulated + focusMinutes;
@@ -292,6 +291,9 @@ export class GameRepository {
             logs.push(`🌙 A day passed. Paid ${dayResult.wagesPaid}g in wages.`);
             if (dayResult.medicineUsed > 0 || dayResult.totalHealed > 0) {
                 logs.push(`⚕️ Recovered ${dayResult.totalHealed} HP using ${dayResult.medicineUsed} meds.`);
+            }
+            if (dayResult.spoiledCount > 0) {
+                logs.push(`🍞 ${dayResult.spoiledCount} food item(s) spoiled!`);
             }
         }
         this.setCampaignSetting('accumulated_time', newAccumulated);
@@ -450,10 +452,27 @@ export class GameRepository {
                 this.db.prepare('UPDATE mercenaries SET fatigue = MAX(0, fatigue - 25) WHERE id = ?').run(merc.id);
             }
 
+            // --- SPOILAGE LOGIC ---
+            const allInventory = this.db.prepare('SELECT * FROM inventory').all();
+            let spoiledCount = 0;
+            
+            for (const inv of allInventory) {
+                const template = ItemFactory.createItem(inv.item_id);
+                if (template.stats && template.stats.spoil_days) {
+                    const newDurability = inv.durability - 1;
+                    if (newDurability <= 0) {
+                        this.db.prepare('DELETE FROM inventory WHERE id = ?').run(inv.id);
+                        spoiledCount++;
+                    } else {
+                        this.db.prepare('UPDATE inventory SET durability = ? WHERE id = ?').run(newDurability, inv.id);
+                    }
+                }
+            }
+
             this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
             this.statements.updateSetting.run({ key: 'day', value: currentDay + 1 });
 
-            return { newGold, day: currentDay + 1, wagesPaid: totalWages, medicineUsed, totalHealed };
+            return { newGold, day: currentDay + 1, wagesPaid: totalWages, medicineUsed, totalHealed, spoiledCount };
         })();
 
         return result;
@@ -473,7 +492,14 @@ export class GameRepository {
             stashSlot = 0;
             while (occupied.has(stashSlot)) stashSlot++;
         }
-        return this.statements.insertItem.run({ itemId, mercId, stashSlot });
+
+        const template = ItemFactory.createItem(itemId);
+        let dur = 100;
+        if (template.stats && template.stats.spoil_days) {
+            dur = template.stats.spoil_days;
+        }
+
+        return this.statements.insertItem.run({ itemId, mercId, durability: dur, stashSlot });
     }
 
     moveItemInStash(inventoryId, newSlot) {
@@ -518,10 +544,19 @@ export class GameRepository {
 
         const gold = getSet('gold', 0);
         const renown = getSet('renown', 0);
-        const provisions = getSet('provisions', 50);
+        let provisions = getSet('provisions', 50);
         const tools = getSet('tools', 20);
         const ammo = getSet('ammo', 100);
         const medicine = getSet('medicine', 15);
+
+        // Add provisions from inventory items (e.g. Wine)
+        const inventoryItems = this.statements.getInventory.all();
+        inventoryItems.forEach(inv => {
+            const template = ItemFactory.createItem(inv.item_id);
+            if (template.stats && template.stats.provisions) {
+                provisions += template.stats.provisions;
+            }
+        });
 
         const totalWages = this.statements.getWages.get().total || 0;
         const mercCount = this.statements.getAll.all().length;

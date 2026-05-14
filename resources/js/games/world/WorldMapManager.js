@@ -9,6 +9,7 @@ import { BarebonesUIManager } from "./ui/BarebonesUIManager.js";
 import { loadPage } from "../../router.js";
 import { initMenuButtons } from "../playGameManager.js";
 import { GameAPI } from "../../api/GameAPI.js"; 
+import { notifier } from "../../_global-managers/NotificationManager.js";
 
 export class WorldMapManager {
     constructor() {
@@ -191,10 +192,12 @@ export class WorldMapManager {
         Neutralino.events.off('dayEnded', this._onDayEndedBound);
         this._onDayEndedBound = (e) => {
             if (e.detail.success) {
-                const { wagesPaid, medicineUsed, totalHealed } = e.detail;
+                const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
                 let msg = `Paid ${wagesPaid}g. `;
-                if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds.`;
-                else msg += "Party is fully rested.";
+                if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds. `;
+                else msg += "Party is fully rested. ";
+                
+                if (spoiledCount > 0) msg += `${spoiledCount} food item(s) spoiled!`;
                 
                 notifier.show("Rested at Camp", msg, "fa-solid fa-campground");
                 GameAPI.getWorldData(); // Refresh HUD

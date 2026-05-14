@@ -24,7 +24,9 @@ export class MercenaryController {
                 type: itemInstance.type,
                 rarity: itemInstance.rarity,
                 count: 1, 
-                sellPrice: Math.max(1, Math.floor(itemInstance.cost * sellModifier)) 
+                sellPrice: Math.max(1, Math.floor(itemInstance.cost * sellModifier)),
+                durability: inv.durability,
+                stats: itemInstance.stats 
             };
         });
     }
@@ -248,34 +250,6 @@ export class MercenaryController {
                 }
                 
                 app.events.broadcast("transactionComplete", { success: true });
-            } catch(e) {
-                app.events.broadcast("transactionComplete", { success: false, error: e.message });
-            }
-        });
-
-        app.events.on("consumeItem", (payload) => {
-            try {
-                this.repo.ensureConnection();
-                const invRow = this.repo.db.prepare('SELECT item_id FROM inventory WHERE id = ?').get(payload.inventoryId);
-                if (!invRow) throw new Error("Item not found in inventory.");
-
-                // Check template to see what it does
-                const itemData = ItemFactory.createItem(invRow.item_id);
-                
-                if (itemData.stats && itemData.stats.provisions) {
-                    const currentResources = this.repo.getResources();
-                    const newProvisions = currentResources.provisions + itemData.stats.provisions;
-                    
-                    // Update Database
-                    this.repo.setCampaignSetting('provisions', newProvisions);
-                    this.repo.deleteItemFromInventory(payload.inventoryId);
-                    
-                    // Notify and Refresh
-                    app.events.broadcast("transactionComplete", { success: true });
-                    this._refreshParty(app);
-                } else {
-                    throw new Error("This item cannot be consumed.");
-                }
             } catch(e) {
                 app.events.broadcast("transactionComplete", { success: false, error: e.message });
             }

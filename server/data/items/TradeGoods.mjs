@@ -15,10 +15,10 @@ export const TRADE_GOODS = [
         id: 'wine', 
         name: 'Fine Wine', 
         type: 'Trade Good', 
-        description: 'A cask of excellent vintage. Highly sought after by nobles for trade, but can also be consumed by the company to restore provisions.',
+        description: 'A cask of excellent vintage. Counts as 25 provisions, but will spoil in 14 days.',
         icon: 'fa-solid fa-wine-bottle', 
         baseValue: 200, 
         rarity: 'uncommon',
-        stats: { provisions: 15 } // Allows it to be consumed
+        stats: { provisions: 25, spoil_days: 14 } 
     },
 ];

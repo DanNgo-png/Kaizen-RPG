@@ -106,7 +106,7 @@ export class PartyManager {
 
     _onDayEnded(e) {
         if (e.detail.success) {
-            const { wagesPaid, medicineUsed, totalHealed } = e.detail;
+            const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
             let msg = `Paid ${wagesPaid}g wages.`;
             
             if (medicineUsed > 0) {
@@ -115,6 +115,10 @@ export class PartyManager {
                 msg += ` Slowly healed ${totalHealed} HP (No Meds).`;
             } else {
                 msg += ` Party is fully rested.`;
+            }
+            
+            if (spoiledCount > 0) {
+                msg += ` ${spoiledCount} food item(s) spoiled!`;
             }
 
             notifier.show("Day Ended", msg, "fa-solid fa-moon");
@@ -324,8 +328,6 @@ export class PartyManager {
 
         el.querySelector('.action-dismiss').addEventListener('click', () => {
             if (confirm(`Dismiss ${merc.name} permanently?`)) {
-                // Dispatch dismiss event (assuming backend support)
-                // Neutralino.extensions.dispatch(EXTENSION_ID, "dismissMercenary", { id: merc.id });
                 alert("Dismissal feature coming in next patch.");
             }
         });
