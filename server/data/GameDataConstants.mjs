@@ -90,3 +90,39 @@ export const SPECIALIZATIONS = {
     'Silk Weaver': ['silk'],
     'Gem Mine': ['uncut_gems']
 };
+
+// --- Settlement Events (Economy Modifiers) ---
+export const SETTLEMENT_EVENTS = {
+    'ruined_location': { 
+        name: 'Ruined Location', 
+        buyMult: 1.5, 
+        sellMult: 0.8, 
+        qtyMult: 0.0, 
+        specDisabled: true,
+        freqMod: 5 
+    },
+    'ambushed_trade_routes': { 
+        name: 'Ambushed Trade Routes', 
+        buyMult: 1.4, 
+        sellMult: 1.2, 
+        qtyMult: 0.4, 
+        specDisabled: false,
+        freqMod: 3 
+    },
+    'well_supplied': { 
+        name: 'Well Supplied', 
+        buyMult: 0.8, 
+        sellMult: 0.6, 
+        qtyMult: 1.8, 
+        specDisabled: false,
+        freqMod: 0 
+    },
+    'safe_roads': { 
+        name: 'Safe Roads', 
+        buyMult: 0.9, 
+        sellMult: 0.8, 
+        qtyMult: 1.3, 
+        specDisabled: false,
+        freqMod: 1 
+    }
+};

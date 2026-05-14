@@ -28,7 +28,7 @@ class ItemFactoryClass {
         };
     }
 
-    getStandardInventory(nodeType, buyModifier = 1.0) {
+    getStandardInventory(nodeType, buyModifier = 1.0, qtyMult = 1.0) {
         const inventory = [];
         if (nodeType === 'Ruins') return inventory;
 
@@ -48,23 +48,29 @@ class ItemFactoryClass {
             }
 
             if (available) {
-                const item = this.createItem(template.id);
-                item.cost = Math.max(1, Math.ceil(item.cost * buyModifier));
-                inventory.push(item);
+                // Apply quantity multiplier to standard stock (chance to spawn duplicates)
+                const spawnCount = Math.max(1, Math.floor(1 * qtyMult + (Math.random() * qtyMult)));
+                for (let i = 0; i < spawnCount; i++) {
+                    const item = this.createItem(template.id);
+                    item.cost = Math.max(1, Math.ceil(item.cost * buyModifier));
+                    inventory.push(item);
+                }
             }
         });
 
         return inventory;
     }
 
-    getTradeInventory(buyModifier = 1.0, specialization = null) {
+    getTradeInventory(buyModifier = 1.0, specialization = null, qtyMult = 1.0) {
         const inventory = [];
         
         if (specialization && SPECIALIZATIONS[specialization]) {
             const tradeGoodIds = SPECIALIZATIONS[specialization];
             tradeGoodIds.forEach(id => {
-                const qty = Math.floor(Math.random() * 5) + 2; 
-                for (let i = 0; i < qty; i++) {
+                const baseQty = Math.floor(Math.random() * 5) + 2; 
+                const finalQty = Math.floor(baseQty * qtyMult);
+
+                for (let i = 0; i < finalQty; i++) {
                     const item = this.createItem(id);
                     item.cost = Math.max(1, Math.floor(item.cost * buyModifier)); 
                     inventory.push(item);

@@ -53,7 +53,9 @@ export const GAME_SCHEMA_SQL = `
         specialization TEXT,
         shop_inventory TEXT DEFAULT '[]',
         last_restock_day INTEGER DEFAULT 0,
-        next_trade_restock_day INTEGER DEFAULT 0
+        next_trade_restock_day INTEGER DEFAULT 0,
+        current_event TEXT,
+        event_expiration INTEGER DEFAULT 0
     );
 
     -- Contracts Table

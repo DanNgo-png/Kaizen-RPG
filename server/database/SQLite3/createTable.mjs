@@ -41,6 +41,15 @@ const migrations = [
         if (!invColumns.includes('equip_slot')) {
             db.exec("ALTER TABLE inventory ADD COLUMN equip_slot TEXT;");
         }
+    },
+
+    // --- Version 5: Dynamic Settlement Events ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('current_event')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN current_event TEXT;");
+            db.exec("ALTER TABLE world_nodes ADD COLUMN event_expiration INTEGER DEFAULT 0;");
+        }
     }
 ];
 
