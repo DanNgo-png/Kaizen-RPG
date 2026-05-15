@@ -79,6 +79,22 @@ export class MercenaryController {
                         node.effective_sell *= evt.sellMult;
                         node.event_name = evt.name;
                     }
+
+                    // --- INJECT GROWTH UI DATA FOR FRONTEND ---
+                    const tierData = SETTLEMENT_TIERS[node.type];
+                    let reqs = {};
+                    try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+
+                    node.growth_data = {
+                        contractsDone: reqs.contracts || 0,
+                        contractsNeeded: tierData?.growthReqs?.contracts || 1,
+                        tradeDone: reqs.trade || 0,
+                        tradeNeeded: tierData?.growthReqs?.trade || 1,
+                        materialsDone: node.development_progress || 0,
+                        materialsNeeded: tierData?.growthReqs?.materials || 1,
+                        nextTier: SETTLEMENT_UPGRADE_PATH[node.type] || 'Colonial Outpost',
+                        canGrow: !!tierData?.growthReqs
+                    };
                 });
 
                 app.events.broadcast("receiveWorldData", { 
@@ -348,7 +364,7 @@ export class MercenaryController {
 
         app.events.on("buyItem", (payload) => {
             try {
-                if (payload.nodeId) {
+                if (payload.nodeId) {                    
                     const node = this.repo.getNodeById(payload.nodeId);
                     if (node) {
                         let shopInventory = [];
@@ -377,6 +393,9 @@ export class MercenaryController {
                 }
                 
                 if (payload.nodeId) {
+                    // Track trade volume for economy scaling
+                    this.repo.logTradeVolume(payload.nodeId, payload.cost);
+
                     // Nerfed: 1 rep per 300g traded, no guaranteed minimum
                     const repGain = Math.floor(payload.cost / 300);
                     if (repGain > 0) {
@@ -399,6 +418,9 @@ export class MercenaryController {
                 this.repo.deleteItemFromInventory(payload.inventoryId);
                 
                 if (payload.nodeId) {
+                    // Track trade volume for economy scaling
+                    this.repo.logTradeVolume(payload.nodeId, payload.price);
+
                     const repGain = Math.floor(payload.price / 300);
                     if (repGain > 0) {
                         this.repo.updateNodeReputation(payload.nodeId, repGain);
@@ -410,7 +432,7 @@ export class MercenaryController {
                         
                         if (isBuildingMat) {
                             // Get dynamic threshold based on the settlement's tier
-                            const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReq: 5 };
+                            const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: 10 } };
                             const maxProg = tierInfo.growthReq;
 
                             if (node.current_event === 'building_boom') {
