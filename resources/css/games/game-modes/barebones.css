@@ -164,6 +164,38 @@
     color: #64748b;
 }
 
+.bb-node-faction {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    width: fit-content;
+    max-width: 100%;
+    margin-top: 6px;
+    padding: 3px 7px;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-left-color: var(--faction-color);
+    border-left-width: 3px;
+    border-radius: 6px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.58);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bb-node-faction-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    flex: 0 0 7px;
+    background: var(--faction-color);
+    box-shadow: 0 0 8px var(--faction-color);
+}
+
 .bb-node-pin {
     color: #60a5fa;
     font-size: 0.8rem;
@@ -174,6 +206,31 @@
     color: #fbbf24;
     font-size: 0.8rem;
     margin-left: 10px;
+}
+
+.bb-selected-faction {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    padding: 3px 7px;
+    border: 1px solid rgba(148, 163, 184, 0.26);
+    border-left: 3px solid var(--faction-color);
+    border-radius: 6px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.64);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+}
+
+.bb-selected-faction-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--faction-color);
+    box-shadow: 0 0 8px var(--faction-color);
 }
 
 .bb-empty-state {
@@ -749,6 +806,27 @@
 .bb-chronicles-icon.player { color: #10b981; }
 .bb-chronicles-icon.mechanic { color: #f59e0b; }
 .bb-chronicles-icon.economy { color: #facc15; }
+.bb-chronicles-icon.faction { color: var(--faction-color); }
+
+.bb-chronicles-faction {
+    border-left: 4px solid var(--faction-color);
+    background: rgba(255, 255, 255, 0.04);
+}
+
+.bb-chronicles-faction-tag {
+    display: inline-flex;
+    align-items: center;
+    margin-top: 8px;
+    padding: 4px 7px;
+    border: 1px solid rgba(148, 163, 184, 0.28);
+    border-radius: 6px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.72);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.4px;
+    text-transform: uppercase;
+}
 
 .bb-chronicles-day {
     font-size: 0.8rem;
