@@ -43,6 +43,50 @@ export const WEAPONS = [
         availableIn: ['Town', 'Stronghold', 'Ruins'] 
     },
 
+    // --- RANGED WEAPONS ---
+    { 
+        id: 'hunting_bow', 
+        name: 'Hunting Bow', 
+        type: 'Ranged', 
+        description: "A simple wooden bow, typically used to hunt game but deadly enough against unarmored foes.",
+        icon: 'fa-solid fa-location-crosshairs', 
+        baseValue: 120, 
+        rarity: 'common',
+        stats: { attack: 15, ammo: 10, weight: 4 },
+        availableIn: ['Village', 'Town', 'Ruins'] 
+    },
+    { 
+        id: 'heavy_crossbow', 
+        name: 'Heavy Crossbow', 
+        type: 'Ranged', 
+        description: "Takes time to crank back, but launches bolts with enough force to punch clean through mail.",
+        icon: 'fa-solid fa-crosshairs', 
+        baseValue: 280, 
+        rarity: 'rare',
+        stats: { attack: 28, armor_penetration: 40, ammo: 15, weight: 8 },
+        availableIn: ['Town', 'Stronghold', 'Ruins'] 
+    },
+    { 
+        id: 'bundle_of_throwing_axes', 
+        name: 'Bundle of Throwing Axes', 
+        type: 'Ranged', 
+        icon: 'fa-solid fa-hammer', 
+        baseValue: 150, 
+        rarity: 'uncommon',
+        stats: { attack: 18, ammo: 5, weight: 6 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'bundle_of_javelins', 
+        name: 'Bundle of Javelins', 
+        type: 'Ranged', 
+        icon: 'fa-solid fa-arrows-up-down', 
+        baseValue: 140, 
+        rarity: 'uncommon',
+        stats: { attack: 16, ammo: 6, weight: 5 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+
     // --- BRIGAND LOOT WEAPONS ---
     { 
         id: 'woodcutters_axe', 
@@ -122,26 +166,6 @@ export const WEAPONS = [
         baseValue: 130, 
         rarity: 'common',
         stats: { attack: 12, defense: 2, weight: 4 },
-        availableIn: ['Town', 'Ruins'] 
-    },
-    { 
-        id: 'bundle_of_throwing_axes', 
-        name: 'Bundle of Throwing Axes', 
-        type: 'Ranged', 
-        icon: 'fa-solid fa-hammer', 
-        baseValue: 150, 
-        rarity: 'uncommon',
-        stats: { attack: 18, ammo: 5, weight: 6 },
-        availableIn: ['Town', 'Ruins'] 
-    },
-    { 
-        id: 'bundle_of_javelins', 
-        name: 'Bundle of Javelins', 
-        type: 'Ranged', 
-        icon: 'fa-solid fa-arrows-up-down', 
-        baseValue: 140, 
-        rarity: 'uncommon',
-        stats: { attack: 16, ammo: 6, weight: 5 },
         availableIn: ['Town', 'Ruins'] 
     },
 
