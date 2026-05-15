@@ -41,7 +41,8 @@ export const SETTLEMENT_TIERS = {
     'High Kingdom': { buyMult: 0.85, sellMult: 1.25, shopLevel: 4 },
     'Empire':       { buyMult: 0.80, sellMult: 1.30, shopLevel: 5 },
     'Stronghold':   { buyMult: 1.30, sellMult: 0.95, shopLevel: 3 },
-    'Ruins':        { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 }
+    'Ruins':        { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 },
+    'Bandit Camp':  { buyMult: 1.00, sellMult: 0.30, shopLevel: 0 }
 };
 
 export const ORIGIN_CONFIGS = {
