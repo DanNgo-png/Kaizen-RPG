@@ -29,7 +29,7 @@ class ItemFactoryClass {
         };
     }
 
-    getStandardInventory(nodeType, qtyMult = 1.0) {
+    getStandardInventory(nodeType, qtyMult = 1.0, rareChanceMult = 1.0) {
         const inventory = [];
         if (nodeType === 'Ruins') return inventory;
 
@@ -49,11 +49,25 @@ class ItemFactoryClass {
             }
 
             if (available) {
-                // Adjust quantity spawned based on event modifier
-                const spawnCount = Math.floor(1 * qtyMult + (Math.random() * qtyMult));
-                for (let i = 0; i < spawnCount; i++) {
-                    const item = this.createItem(template.id);
-                    inventory.push(item);
+                // Determine spawn probability based on rarity
+                let spawnProb = 1.0;
+                if (template.rarity === 'uncommon') spawnProb = 0.5 * rareChanceMult;
+                if (template.rarity === 'rare') spawnProb = 0.15 * rareChanceMult;
+                if (template.rarity === 'legendary') spawnProb = 0.05 * rareChanceMult;
+
+                if (Math.random() <= spawnProb) {
+                    // Boost base count specifically for provisions and consumables
+                    let consumableBoost = 0;
+                    if (template.type === 'Provision' || template.type === 'Consumable' || template.type === 'Resource') {
+                        consumableBoost = Math.floor(qtyMult); // Extra basics if well supplied
+                    }
+
+                    const spawnCount = Math.floor(1 * qtyMult + (Math.random() * qtyMult)) + consumableBoost;
+                    
+                    for (let i = 0; i < spawnCount; i++) {
+                        const item = this.createItem(template.id);
+                        inventory.push(item);
+                    }
                 }
             }
         });
