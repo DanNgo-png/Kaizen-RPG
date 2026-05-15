@@ -8,6 +8,9 @@ import {
     loadingStateHtml
 } from "./BarebonesTemplates.js";
 
+const DEFAULT_FACTION_COLOR = "#60a5fa";
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+
 export class ChroniclesModal {
     constructor({ documentRef = document, onRequestHistory } = {}) {
         this.documentRef = documentRef;
@@ -104,6 +107,7 @@ export class ChroniclesModal {
         }
 
         return `
+            ${this._factionHtml(node)}
             <div class="bb-chronicles-entry">
                 <div class="bb-chronicles-icon economy">
                     <i class="fa-solid fa-scale-balanced"></i>
@@ -114,6 +118,28 @@ export class ChroniclesModal {
                         Prices: <b style="color: #fff;">${prices}%</b> | Payouts: <b style="color: #fff;">${payouts}%</b>
                     </div>
                     ${eventContext}
+                </div>
+            </div>
+        `;
+    }
+
+    _factionHtml(node) {
+        if (!node.faction) return "";
+
+        const color = this._safeHexColor(node.faction.color);
+        const motto = node.faction.motto
+            ? `&ldquo;${escapeHtml(node.faction.motto)}&rdquo;`
+            : `${escapeHtml(node.name)} answers to ${escapeHtml(node.faction.name)}.`;
+
+        return `
+            <div class="bb-chronicles-entry bb-chronicles-faction" style="--faction-color:${color};">
+                <div class="bb-chronicles-icon faction">
+                    <i class="fa-solid fa-flag"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div class="bb-chronicles-day">${escapeHtml(node.faction.name)}</div>
+                    <div class="bb-chronicles-text">${motto}</div>
+                    <div class="bb-chronicles-faction-tag">${escapeHtml(node.faction.archetype)}</div>
                 </div>
             </div>
         `;
@@ -138,5 +164,9 @@ export class ChroniclesModal {
             </div>
         `;
         return entry;
+    }
+
+    _safeHexColor(color) {
+        return HEX_COLOR_PATTERN.test(String(color ?? "")) ? color : DEFAULT_FACTION_COLOR;
     }
 }
