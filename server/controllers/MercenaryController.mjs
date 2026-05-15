@@ -5,7 +5,6 @@ import {
     SETTLEMENT_EVENTS, 
     BUILDING_MATERIALS, 
     SETTLEMENT_UPGRADE_PATH, 
-    MAX_DEVELOPMENT_PROGRESS, 
     SETTLEMENT_TIERS,
     SPECIALIZATIONS
 } from "../data/GameDataConstants.mjs";
@@ -410,6 +409,10 @@ export class MercenaryController {
                         const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
                         
                         if (isBuildingMat) {
+                            // Get dynamic threshold based on the settlement's tier
+                            const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReq: 5 };
+                            const maxProg = tierInfo.growthReq;
+
                             if (node.current_event === 'building_boom') {
                                 let newProgress = (node.development_progress || 0) + 1;
                                 let newType = node.type;
@@ -420,16 +423,17 @@ export class MercenaryController {
                                 const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
                                 let upgraded = false;
                                 
-                                if (newProgress >= MAX_DEVELOPMENT_PROGRESS && nextTier) {
+                                // Compare against dynamic maxProg
+                                if (newProgress >= maxProg && nextTier) {
                                     newType = nextTier;
                                     newProgress = 0;
                                     newEvent = null;
                                     upgraded = true;
     
-                                    const tierInfo = SETTLEMENT_TIERS[nextTier];
-                                    if (tierInfo) {
-                                        buyMod = tierInfo.buyMult;
-                                        sellMod = tierInfo.sellMult;
+                                    const nextTierInfo = SETTLEMENT_TIERS[nextTier];
+                                    if (nextTierInfo) {
+                                        buyMod = nextTierInfo.buyMult;
+                                        sellMod = nextTierInfo.sellMult;
                                     }
                                 }
                                 
@@ -441,7 +445,8 @@ export class MercenaryController {
                             } else if (node.current_event === 'settlement_expansion') {
                                 let newProgress = (node.development_progress || 0) + 1;
                                 
-                                if (newProgress >= MAX_DEVELOPMENT_PROGRESS) {
+                                // Compare against dynamic maxProg
+                                if (newProgress >= maxProg) {
                                     let newSpec = null;
                                     if (itemId === 'quality_wood') newSpec = 'Lumber Camp';
                                     if (itemId === 'peat_bricks') newSpec = 'Peat Pit';
@@ -454,7 +459,7 @@ export class MercenaryController {
                                     
                                     if (spawnedNode) {
                                          this.repo.logNodeHistory(node.id, `Established the new settlement of ${spawnedNode.name} with a ${newSpec ? 'focus on ' + newSpec : 'focus on local resources'}.`, 'world');
-                                         this.repo.logNodeHistory(spawnedNode.id, `Founded as a colony by ${node.name}.`, 'world');
+                                         this.repo.logNodeHistory(spawnedNode.id, `Founded as an outpost by ${node.name}.`, 'world');
                                     }
                                 } else {
                                     this.repo.updateNodeDevelopment(node.id, newProgress, node.type, node.current_event, node.buy_modifier, node.sell_modifier);
