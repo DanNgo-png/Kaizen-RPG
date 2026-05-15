@@ -29,7 +29,7 @@ class ItemFactoryClass {
         };
     }
 
-    getStandardInventory(nodeType, buyModifier = 1.0, qtyMult = 1.0) {
+    getStandardInventory(nodeType, qtyMult = 1.0) {
         const inventory = [];
         if (nodeType === 'Ruins') return inventory;
 
@@ -49,10 +49,10 @@ class ItemFactoryClass {
             }
 
             if (available) {
-                const spawnCount = Math.max(1, Math.floor(1 * qtyMult + (Math.random() * qtyMult)));
+                // Adjust quantity spawned based on event modifier
+                const spawnCount = Math.floor(1 * qtyMult + (Math.random() * qtyMult));
                 for (let i = 0; i < spawnCount; i++) {
                     const item = this.createItem(template.id);
-                    item.cost = Math.max(1, Math.ceil(item.cost * buyModifier));
                     inventory.push(item);
                 }
             }
@@ -61,7 +61,7 @@ class ItemFactoryClass {
         return inventory;
     }
 
-    getTradeInventory(buyModifier = 1.0, specialization = null, qtyMult = 1.0) {
+    getTradeInventory(specialization = null, qtyMult = 1.0) {
         const inventory = [];
         
         if (specialization && SPECIALIZATIONS[specialization]) {
@@ -72,7 +72,6 @@ class ItemFactoryClass {
 
                 for (let i = 0; i < finalQty; i++) {
                     const item = this.createItem(id);
-                    item.cost = Math.max(1, Math.floor(item.cost * buyModifier)); 
                     inventory.push(item);
                 }
             });
