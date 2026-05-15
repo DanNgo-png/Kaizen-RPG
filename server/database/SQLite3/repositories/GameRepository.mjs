@@ -198,7 +198,10 @@ export class GameRepository {
         
         // --- EXPANSION PREREQUISITES TRACKING ---
         const node = this.getNodeById(activeContract.node_id);
-        if (node && node.type === 'Empire' && !node.current_event) {
+        const tierData = SETTLEMENT_TIERS[node?.type];
+        
+        // Expansion unlocks at Level 2 (Towns and above)
+        if (node && tierData && tierData.level >= 2 && !node.current_event && node.type !== 'Ruins') {
             let reqs = {};
             try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
             
