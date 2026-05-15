@@ -148,6 +148,8 @@ export class RenderSystem {
 
     _drawNodes(nodes, hoveredNode) {
         nodes.forEach(node => {
+            if (node.is_hidden) return;
+            
             const baseSize = this._nodeSize(node.type);
             const factionColor = this._normalizeHexColor(node.faction?.color);
 
