@@ -1,6 +1,7 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
 import { ItemFactory } from '../../../factories/ItemFactory.mjs';
 import { SETTLEMENT_EVENTS, SETTLEMENT_NAMES } from '../../../data/GameDataConstants.mjs';
+import { WorldSimulator } from '../../../services/simulation/WorldSimulator.mjs';
 
 const WORLD_NODE_SELECT = `
     SELECT 
@@ -84,8 +85,8 @@ export class GameRepository {
             deleteItem: this.db.prepare(`DELETE FROM inventory WHERE id = ?`),
 
             insertFaction: this.db.prepare(`
-                INSERT INTO factions (name, color, archetype, motto)
-                VALUES (@name, @color, @archetype, @motto)
+                INSERT INTO factions (name, color, archetype, motto, type)
+                VALUES (@name, @color, @archetype, @motto, @type)
             `),
             getAllFactions: this.db.prepare(`SELECT * FROM factions ORDER BY name`)
         };
@@ -617,30 +618,11 @@ export class GameRepository {
                 }
             });
 
-            const allNodes = this.db.prepare('SELECT id, current_event, event_expiration FROM world_nodes').all();
-            const eventKeys = Object.keys(SETTLEMENT_EVENTS);
-
-            for (const n of allNodes) {
-                if (n.current_event) {
-                    const newExp = n.event_expiration - 1;
-                    if (newExp <= 0) {
-                        this.db.prepare('UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?').run(n.id);
-                        this.logNodeHistory(n.id, `The local situation has stabilized. Things return to normal.`, 'world');
-                    } else {
-                        this.db.prepare('UPDATE world_nodes SET event_expiration = ? WHERE id = ?').run(newExp, n.id);
-                    }
-                } else {
-                    if (Math.random() < 0.05) {
-                        const validEvents = eventKeys.filter(k => SETTLEMENT_EVENTS[k].isRandom !== false);
-                        const randomEvent = validEvents[Math.floor(Math.random() * validEvents.length)];
-                        const duration = Math.floor(Math.random() * 5) + 3;
-                        this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?').run(randomEvent, duration, n.id);
-                        
-                        const eventName = SETTLEMENT_EVENTS[randomEvent].name;
-                        this.logNodeHistory(n.id, `Rumors spread of: ${eventName}.`, 'world');
-                    }
-                }
-            }
+            // ============================================
+            // FACTION TICK SYSTEM 
+            // ============================================
+            const simulator = new WorldSimulator(this);
+            simulator.processDayEnd(currentDay);
 
             this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
             this.statements.updateSetting.run({ key: 'day', value: currentDay + 1 });
@@ -654,6 +636,17 @@ export class GameRepository {
     setCampaignSetting(key, value) {
         this.ensureConnection();
         return this.statements.insertSetting.run({ key, value: String(value) });
+    }
+
+    createFaction(faction) {
+        this.ensureConnection();
+        return this.statements.insertFaction.run({
+            name: faction.name,
+            color: faction.color,
+            archetype: faction.archetype,
+            motto: faction.motto ?? null,
+            type: faction.type ?? 'noble' 
+        });
     }
 
     addItemToInventory(itemId, mercId = null) {
@@ -704,16 +697,6 @@ export class GameRepository {
             sell_modifier: node.sell_modifier ?? 0.5,
             specialization: node.specialization ?? null,
             attachments: node.attachments ?? 0
-        });
-    }
-
-    createFaction(faction) {
-        this.ensureConnection();
-        return this.statements.insertFaction.run({
-            name: faction.name,
-            color: faction.color,
-            archetype: faction.archetype,
-            motto: faction.motto ?? null
         });
     }
 
