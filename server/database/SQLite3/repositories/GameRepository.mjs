@@ -128,7 +128,7 @@ export class GameRepository {
         let contracts = this.statements.getNodeContracts.all(nodeId);
 
         if (contracts.length === 0) {
-            const titles = ["Clear the Rat Cellar", "Hunt the Goblin Raiders", "Escort the Merchant", "Explore the Ruined Tower", "Guard the Caravan"];
+            const titles = ["Clear the Rat Cellar", "Hunt the Goblin Raiders", "Escort Merchant Caravan", "Explore the Ruined Tower", "Delivery to the Capital"];
             const descs = [
                 "A simple task, but honest pay.",
                 "They have been harassing the local trade routes.",
@@ -195,7 +195,21 @@ export class GameRepository {
 
         const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
         this.logNodeHistory(activeContract.node_id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
+
+        // Declare titleLower ONCE for the entire function
+        const titleLower = activeContract.title.toLowerCase();
+
+        // --- CARAVAN / DELIVERY "WELL SUPPLIED" LOGIC ---
+        const isCaravan = titleLower.includes('caravan') || titleLower.includes('escort') || titleLower.includes('delivery');
         
+        if (isCaravan) {
+            // Apply the 'well_supplied' event to the settlement for 5 days
+            this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?')
+                .run('well_supplied', 5, activeContract.node_id);
+            
+            this.logNodeHistory(activeContract.node_id, `A merchant caravan safely arrived, guided by ${companyName}. The settlement is now well supplied!`, 'world');
+        }
+
         // --- EXPANSION PREREQUISITES TRACKING ---
         const node = this.getNodeById(activeContract.node_id);
         const tierData = SETTLEMENT_TIERS[node?.type];
@@ -227,8 +241,8 @@ export class GameRepository {
         // --- LOOT LOGIC ---
         const foundLoot = [];
         let lootChance = 0.20;
-        const titleLower = activeContract.title.toLowerCase();
 
+        // Use the already declared titleLower variable
         if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
             lootChance = 0.65;
         }
