@@ -1,6 +1,6 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
 import { ItemFactory } from '../../../factories/ItemFactory.mjs';
-import { SETTLEMENT_EVENTS, SETTLEMENT_NAMES } from '../../../data/GameDataConstants.mjs';
+import { SETTLEMENT_EVENTS, SETTLEMENT_NAMES, SETTLEMENT_TIERS, SETTLEMENT_UPGRADE_PATH } from '../../../data/GameDataConstants.mjs';
 import { WorldSimulator } from '../../../services/simulation/WorldSimulator.mjs';
 
 const WORLD_NODE_SELECT = `
@@ -199,22 +199,22 @@ export class GameRepository {
         // --- EXPANSION PREREQUISITES TRACKING ---
         const node = this.getNodeById(activeContract.node_id);
         const tierData = SETTLEMENT_TIERS[node?.type];
-        
-        // Expansion unlocks at Level 2 (Towns and above)
-        if (node && tierData && tierData.level >= 2 && !node.current_event && node.type !== 'Ruins') {
+
+        if (node && tierData && tierData.growthReqs && !node.current_event && node.type !== 'Ruins' && node.type !== 'Bandit Camp') {
             let reqs = {};
             try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
-            
-            const titleLower = activeContract.title.toLowerCase();
-            if (titleLower.includes('escort')) reqs.escorts = (reqs.escorts || 0) + 1;
-            if (titleLower.includes('guard')) reqs.guards = (reqs.guards || 0) + 1;
-            
+
+            reqs.contracts = (reqs.contracts || 0) + 1;
+
+            let readyForBoom = (reqs.contracts >= tierData.growthReqs.contracts) && ((reqs.trade || 0) >= tierData.growthReqs.trade);
+
             this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), node.id);
-            
-            if (reqs.escorts >= 2 && reqs.guards >= 2) {
-                this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, expansion_reqs = ? WHERE id = ?')
-                    .run('settlement_expansion', 999, '{}', node.id);
-                this.logNodeHistory(node.id, `After securing trade routes and protecting merchants, ${node.name} is ready for expansion!`, 'world');
+
+            if (readyForBoom) {
+                const eventType = SETTLEMENT_UPGRADE_PATH[node.type] ? 'building_boom' : 'settlement_expansion';
+                this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, development_progress = 0 WHERE id = ?')
+                    .run(eventType, 999, node.id);
+                this.logNodeHistory(node.id, `Thanks to safe roads and bustling trade, ${node.name} is preparing to expand! They are requesting building materials.`, 'world');
             }
         }
 
@@ -865,5 +865,29 @@ export class GameRepository {
         });
         
         return { id: info.lastInsertRowid, name: newName };
+    }
+
+    logTradeVolume(nodeId, amount) {
+        this.ensureConnection();
+        const node = this.getNodeById(nodeId);
+        const tierData = SETTLEMENT_TIERS[node?.type];
+
+        if (node && tierData && tierData.growthReqs && !node.current_event && node.type !== 'Ruins' && node.type !== 'Bandit Camp') {
+            let reqs = {};
+            try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+
+            reqs.trade = (reqs.trade || 0) + amount;
+
+            let readyForBoom = ((reqs.contracts || 0) >= tierData.growthReqs.contracts) && (reqs.trade >= tierData.growthReqs.trade);
+
+            this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), node.id);
+
+            if (readyForBoom) {
+                const eventType = SETTLEMENT_UPGRADE_PATH[node.type] ? 'building_boom' : 'settlement_expansion';
+                this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, development_progress = 0 WHERE id = ?')
+                    .run(eventType, 999, node.id);
+                this.logNodeHistory(node.id, `Driven by booming commerce and safe roads, ${node.name} is preparing to expand! They are requesting building materials.`, 'world');
+            }
+        }
     }
 }
