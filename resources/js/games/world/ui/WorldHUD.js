@@ -1,3 +1,6 @@
+const DEFAULT_FACTION_COLOR = '#60a5fa';
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+
 export class WorldHUD {
     constructor() {
         this.tooltip = document.getElementById('map-tooltip');
@@ -146,19 +149,46 @@ export class WorldHUD {
 
         const typeColor = node.type === 'Stronghold' ? '#f87171' : '#aaa';
         const specHtml = node.specialization 
-            ? `<div style="color:#a78bfa; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-star"></i> Specialization: ${node.specialization}</div>` 
+            ? `<div style="color:#a78bfa; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-star"></i> Specialization: ${this._escapeHtml(node.specialization)}</div>` 
             : `<div style="color:#6b7280; font-size:0.75rem; margin-top:4px; font-style:italic;"><i class="fa-solid fa-ban"></i> Too poor to specialize</div>`;
+        const factionHtml = node.faction
+            ? this._factionBannerHtml(node.faction)
+            : `<div class="map-tooltip-unclaimed"><i class="fa-solid fa-tree"></i> Unclaimed Wilderness</div>`;
 
         this.tooltip.innerHTML = `
-            <div style="font-weight:700; font-size:1rem; margin-bottom:2px;">${node.name}</div>
-            <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${node.type}</div>
+            ${factionHtml}
+            <div style="font-weight:700; font-size:1rem; margin-bottom:2px;">${this._escapeHtml(node.name)}</div>
+            <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${this._escapeHtml(node.type)}</div>
             <div style="color:#fbbf24; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${node.reputation || 0}</div>
             ${specHtml}
-            ${node.faction ? `<div style="color:#60a5fa; font-size:0.75rem; margin-top:4px;">${node.faction}</div>` : ''}
         `;
 
         this.tooltip.style.display = 'block';
         this._positionTooltip(screenX, screenY);
+    }
+
+    _factionBannerHtml(faction) {
+        const color = this._safeHexColor(faction.color);
+
+        return `
+            <div class="map-tooltip-faction" style="--faction-color:${color};">
+                <span class="map-tooltip-faction-dot"></span>
+                Bannermen of ${this._escapeHtml(faction.name)}
+            </div>
+        `;
+    }
+
+    _safeHexColor(color) {
+        return HEX_COLOR_PATTERN.test(String(color ?? '')) ? color : DEFAULT_FACTION_COLOR;
+    }
+
+    _escapeHtml(value) {
+        return String(value ?? "")
+            .replaceAll("&", "&amp;")
+            .replaceAll("<", "&lt;")
+            .replaceAll(">", "&gt;")
+            .replaceAll('"', "&quot;")
+            .replaceAll("'", "&#039;");
     }
 
     hideTooltip() {
