@@ -37,6 +37,15 @@ export const GAME_SCHEMA_SQL = `
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
+    -- Noble Houses and future faction systems
+    CREATE TABLE IF NOT EXISTS factions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL UNIQUE,
+        color TEXT NOT NULL,
+        archetype TEXT NOT NULL,
+        motto TEXT
+    );
+
     -- World Map Data
     CREATE TABLE IF NOT EXISTS world_nodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -55,7 +64,8 @@ export const GAME_SCHEMA_SQL = `
         last_restock_day INTEGER DEFAULT 0,
         next_trade_restock_day INTEGER DEFAULT 0,
         current_event TEXT,
-        event_expiration INTEGER DEFAULT 0
+        event_expiration INTEGER DEFAULT 0,
+        FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 
     -- Contracts Table
