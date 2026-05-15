@@ -21,8 +21,8 @@ export const CONSUMABLES = [
         availableIn: ['All']
     },
     {
-        id: 'tools_bundle',
-        name: 'Bundle of Tools',
+        id: 'tools_and_supplies',
+        name: 'Tools and Supplies',
         type: 'Resource',
         resourceType: 'tools',
         amount: 20,
@@ -32,8 +32,8 @@ export const CONSUMABLES = [
         availableIn: ['All']
     },
     {
-        id: 'ammo_bundle',
-        name: 'Ammunition Quiver',
+        id: 'ammunition',
+        name: 'Ammunition',
         type: 'Resource',
         resourceType: 'ammo',
         amount: 50,
