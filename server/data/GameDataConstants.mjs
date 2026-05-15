@@ -29,22 +29,21 @@ export const SETTLEMENT_NAMES = [
 ];
 
 // --- Settlement Tiers & Economy ---
-// Order of Development with isolated economies to prevent infinite money glitches
+// Sell multipliers now scale logically on top of base type reductions (15%, 95%, 101%)
 export const SETTLEMENT_TIERS = {
-    'Hamlet':       { buyMult: 1.20, sellMult: 0.30, shopLevel: 1 },
-    'Village':      { buyMult: 1.15, sellMult: 0.35, shopLevel: 1 },
-    'Town':         { buyMult: 1.10, sellMult: 0.40, shopLevel: 2 },
-    'City':         { buyMult: 1.05, sellMult: 0.45, shopLevel: 2 },
-    'City-State':   { buyMult: 1.00, sellMult: 0.50, shopLevel: 3 },
-    'Province':     { buyMult: 0.95, sellMult: 0.55, shopLevel: 3 },
-    'Kingdom':      { buyMult: 0.90, sellMult: 0.60, shopLevel: 4 },
-    'High Kingdom': { buyMult: 0.85, sellMult: 0.65, shopLevel: 4 },
-    'Empire':       { buyMult: 0.80, sellMult: 0.70, shopLevel: 5 },
-    'Stronghold':   { buyMult: 1.30, sellMult: 0.60, shopLevel: 3 }, // Military: charges premium, pays well for gear
+    'Hamlet':       { buyMult: 1.20, sellMult: 0.85, shopLevel: 1 },
+    'Village':      { buyMult: 1.15, sellMult: 0.90, shopLevel: 1 },
+    'Town':         { buyMult: 1.10, sellMult: 1.00, shopLevel: 2 },
+    'City':         { buyMult: 1.05, sellMult: 1.05, shopLevel: 2 },
+    'City-State':   { buyMult: 1.00, sellMult: 1.10, shopLevel: 3 },
+    'Province':     { buyMult: 0.95, sellMult: 1.15, shopLevel: 3 },
+    'Kingdom':      { buyMult: 0.90, sellMult: 1.20, shopLevel: 4 },
+    'High Kingdom': { buyMult: 0.85, sellMult: 1.25, shopLevel: 4 },
+    'Empire':       { buyMult: 0.80, sellMult: 1.30, shopLevel: 5 },
+    'Stronghold':   { buyMult: 1.30, sellMult: 0.95, shopLevel: 3 },
     'Ruins':        { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 }
 };
 
-// Definitions for "Origins" (Game Modes)
 export const ORIGIN_CONFIGS = {
     'sellswords': {
         gold: 2000,
@@ -67,7 +66,6 @@ export const ORIGIN_CONFIGS = {
             { role: 'Guard', level: 1, gear: ['sword', 'shield', 'mail_shirt'] }
         ]
     },
-    // Default fallback
     'default': {
         gold: 1000,
         roster: [
@@ -76,7 +74,6 @@ export const ORIGIN_CONFIGS = {
     }
 };
 
-// Simple stat ranges for generation
 export const ROLE_STATS = {
     'Vanguard': { str: [12, 18], int: [8, 12], spd: [8, 12] },
     'Skirmisher': { str: [8, 12], int: [10, 14], spd: [14, 18] },
@@ -100,7 +97,6 @@ export const SPECIALIZATIONS = {
     'Gem Mine': ['uncut_gems']
 };
 
-// --- Settlement Events (Economy Modifiers) ---
 export const SETTLEMENT_EVENTS = {
     'ruined_location': { 
         name: 'Ruined Location', 
@@ -146,11 +142,11 @@ export const SETTLEMENT_EVENTS = {
     'settlement_expansion': {
         name: 'Settlement Expansion',
         buyMult: 1.1,
-        sellMult: 1.5, // Pays 50% more to entice the player to sell goods here
+        sellMult: 1.5,
         qtyMult: 1.2,
         specDisabled: false,
         freqMod: 3,
-        isRandom: false // Not rolled randomly in day progression
+        isRandom: false
     }
 };
 
@@ -170,6 +166,6 @@ export const SETTLEMENT_UPGRADE_PATH = {
     'Province': 'Kingdom',
     'Kingdom': 'High Kingdom',
     'High Kingdom': 'Empire',
-    'Empire': null,     // Max level reached
-    'Stronghold': null  // Military outposts don't naturally expand into cities
+    'Empire': null,     
+    'Stronghold': null  
 };

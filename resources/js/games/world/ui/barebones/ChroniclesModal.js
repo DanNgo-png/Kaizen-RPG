@@ -115,6 +115,10 @@ export class ChroniclesModal {
             specHtml = `<div style="font-size: 0.8rem; color: #64748b; margin-top: 6px; font-style: italic;"><i class="fa-solid fa-ban"></i> No specializations.</div>`;
         }
 
+        const attachHtml = node.attachments > 0 
+            ? `<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px;"><i class="fa-solid fa-link"></i> ${node.attachments} Attached Locations</div>`
+            : '';
+
         return `
             <div class="bb-chronicles-entry" style="border-left: 4px solid #facc15; background: rgba(255, 255, 255, 0.04);">
                 <div class="bb-chronicles-icon" style="color: #facc15;">
@@ -126,27 +130,26 @@ export class ChroniclesModal {
                         <b style="color: #fff; font-size: 1.05rem;">${escapeHtml(node.type)}</b> ${tierBadge}
                     </div>
                     ${specHtml}
+                    ${attachHtml}
                 </div>
             </div>
         `;
     }
 
     _economyHtml(node) {
-        // Use effective modifiers provided by backend, fallback to base if missing
         const effectiveBuy = node.effective_buy !== undefined ? node.effective_buy : node.buy_modifier;
         const effectiveSell = node.effective_sell !== undefined ? node.effective_sell : node.sell_modifier;
 
         const prices = this._modifierPercent(effectiveBuy);
         const payouts = this._modifierPercent(effectiveSell);
 
-        // Build Event Context UI
         let eventContext = '';
         if (node.current_event && node.event_name) {
-            let color = '#3b82f6'; // Default Blue
+            let color = '#3b82f6'; 
             if (node.current_event.includes('ruined') || node.current_event.includes('ambushed')) {
-                color = '#ef4444'; // Red for negative events
+                color = '#ef4444'; 
             } else if (node.current_event === 'well_supplied' || node.current_event === 'safe_roads') {
-                color = '#10b981'; // Green for positive events
+                color = '#10b981'; 
             }
             
             eventContext = `
@@ -155,7 +158,6 @@ export class ChroniclesModal {
                 </div>
             `;
 
-            // --- Inject Expansion Progress UI ---
             if (node.current_event === 'settlement_expansion' || node.current_event === 'building_boom') {
                 const progress = node.development_progress || 0;
                 const maxProg = BAREBONES_UI.MAX_DEVELOPMENT_PROGRESS;

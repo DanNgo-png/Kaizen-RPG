@@ -2,13 +2,14 @@ import { WEAPONS } from '../data/items/Weapons.mjs';
 import { ARMOR } from '../data/items/Armor.mjs';
 import { CONSUMABLES } from '../data/items/Consumables.mjs';
 import { TRADE_GOODS } from '../data/items/TradeGoods.mjs';
+import { TREASURE } from '../data/items/Treasure.mjs';
 import { PROVISIONS } from '../data/items/Provisions.mjs';
 import { SETTLEMENT_TIERS, SPECIALIZATIONS } from '../data/GameDataConstants.mjs';
 
 class ItemFactoryClass {
     constructor() {
         this.templates = new Map();
-        this._registerTemplates([...WEAPONS, ...ARMOR, ...CONSUMABLES, ...TRADE_GOODS, ...PROVISIONS]);
+        this._registerTemplates([...WEAPONS, ...ARMOR, ...CONSUMABLES, ...TRADE_GOODS, ...TREASURE, ...PROVISIONS]);
     }
 
     _registerTemplates(items) {
@@ -36,7 +37,7 @@ class ItemFactoryClass {
         const shopLevel = tierConfig.shopLevel;
 
         this.templates.forEach(template => {
-            if (template.type === 'Trade Good') return;
+            if (template.type === 'Trade Good' || template.type === 'Treasure') return;
 
             let available = false;
             if (template.availableIn.includes('All') || template.availableIn.includes(nodeType)) {
@@ -48,7 +49,6 @@ class ItemFactoryClass {
             }
 
             if (available) {
-                // Apply quantity multiplier to standard stock (chance to spawn duplicates)
                 const spawnCount = Math.max(1, Math.floor(1 * qtyMult + (Math.random() * qtyMult)));
                 for (let i = 0; i < spawnCount; i++) {
                     const item = this.createItem(template.id);

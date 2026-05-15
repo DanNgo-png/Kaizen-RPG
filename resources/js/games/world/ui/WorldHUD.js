@@ -15,19 +15,14 @@ export class WorldHUD {
             roster: document.getElementById('hud-roster')
         };
 
-        this.currentData = null; // Store latest resource data for tooltips
+        this.currentData = null; 
 
         this._bindResourceTooltips();
     }
 
-    /**
-     * Updates the top bar statistics.
-     * @param {Object} data - Contains all resource keys
-     */
     updateStats(data) {
-        this.currentData = data; // Cache for hover logic
+        this.currentData = data; 
 
-        // Same Time Calculation for standard HUD
         if (data.day !== undefined && this.stats.day) {
             const accTime = data.accumulated_time || 0;
             const fraction = Math.min(accTime / 30, 1);
@@ -133,9 +128,6 @@ export class WorldHUD {
         this._positionTooltip(e.clientX, e.clientY);
     }
 
-    /**
-     * Shared logic to keep tooltips inside the viewport
-     */
     _positionTooltip(screenX, screenY) {
         if (!this.tooltip || this.tooltip.style.display === 'none') return;
 
@@ -149,12 +141,10 @@ export class WorldHUD {
         let left = screenX + OFFSET_X;
         let top = screenY + OFFSET_Y;
 
-        // Flip to left if too close to right edge
         if (left + tooltipRect.width > viewportWidth) {
             left = screenX - tooltipRect.width - OFFSET_X;
         }
 
-        // Flip up if too close to bottom edge
         if (top + tooltipRect.height > viewportHeight) {
             top = screenY - tooltipRect.height - OFFSET_Y;
         }
@@ -163,9 +153,6 @@ export class WorldHUD {
         this.tooltip.style.top = `${top}px`;
     }
 
-    /**
-     * Shows map node tooltip. Refactored to use shared positioning.
-     */
     showTooltip(node, screenX, screenY) {
         if (!this.tooltip) return;
 
@@ -176,6 +163,9 @@ export class WorldHUD {
         const factionHtml = node.faction
             ? this._factionBannerHtml(node.faction)
             : `<div class="map-tooltip-unclaimed"><i class="fa-solid fa-tree"></i> Unclaimed Wilderness</div>`;
+        const attachHtml = node.attachments > 0 
+            ? `<div style="color:#9ca3af; font-size:0.75rem; margin-top:2px;"><i class="fa-solid fa-link"></i> Attached Locations: ${node.attachments}</div>`
+            : '';
 
         this.tooltip.innerHTML = `
             ${factionHtml}
@@ -183,6 +173,7 @@ export class WorldHUD {
             <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${this._escapeHtml(node.type)}</div>
             <div style="color:#fbbf24; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${node.reputation || 0}</div>
             ${specHtml}
+            ${attachHtml}
         `;
 
         this.tooltip.style.display = 'block';

@@ -6,7 +6,8 @@ import {
     BUILDING_MATERIALS, 
     SETTLEMENT_UPGRADE_PATH, 
     MAX_DEVELOPMENT_PROGRESS, 
-    SETTLEMENT_TIERS 
+    SETTLEMENT_TIERS,
+    SPECIALIZATIONS
 } from "../data/GameDataConstants.mjs";
 
 export class MercenaryController {
@@ -15,10 +16,33 @@ export class MercenaryController {
         this.settingsRepo = new AppSettingsRepository();
     }
 
-    _getEnrichedInventory(sellModifier = 0.5) {
+    _getEnrichedInventory(node = null) {
         const rawInventory = this.repo.getInventory();
         return rawInventory.map(inv => {
             const itemInstance = ItemFactory.createItem(inv.item_id); 
+            
+            let baseTypeMult = 0.15; // Normal items
+
+            if (itemInstance.type === 'Treasure') {
+                baseTypeMult = 0.95;
+            } else if (itemInstance.type === 'Trade Good') {
+                let produces = false;
+                if (node && node.specialization) {
+                    const producedItems = SPECIALIZATIONS[node.specialization] || [];
+                    if (producedItems.includes(itemInstance.id)) produces = true;
+                }
+                baseTypeMult = produces ? 0.15 : 1.01;
+            }
+
+            let finalSellPrice = itemInstance.cost * baseTypeMult;
+
+            if (node) {
+                const repMod = 1.0 + ((node.reputation || 0) * 0.005);
+                const attachMod = 1.0 + ((node.attachments || 0) * 0.02);
+                const eventMod = node.effective_sell || node.sell_modifier || 1.0;
+
+                finalSellPrice = finalSellPrice * eventMod * repMod * attachMod;
+            }
             
             return {
                 id: inv.id,
@@ -26,13 +50,13 @@ export class MercenaryController {
                 itemId: inv.item_id,
                 mercenaryId: inv.mercenary_id,
                 stashSlot: inv.stash_slot, 
-                equipSlot: inv.equip_slot, // Included newly added column
+                equipSlot: inv.equip_slot, 
                 name: itemInstance.name,
                 icon: itemInstance.icon,
                 type: itemInstance.type,
                 rarity: itemInstance.rarity,
                 count: 1, 
-                sellPrice: Math.max(1, Math.floor(itemInstance.cost * sellModifier)),
+                sellPrice: Math.max(1, Math.floor(finalSellPrice)),
                 durability: inv.durability,
                 stats: itemInstance.stats 
             };
@@ -47,7 +71,7 @@ export class MercenaryController {
 
                 worldState.nodes.forEach(node => {
                     node.effective_buy = node.buy_modifier || 1.0;
-                    node.effective_sell = node.sell_modifier || 0.5;
+                    node.effective_sell = node.sell_modifier || 1.0;
                     node.event_name = null;
 
                     if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
@@ -71,7 +95,6 @@ export class MercenaryController {
             }
         });
 
-        // --- Toggle Delving State ---
         app.events.on("setDelvingStatus", (payload) => {
             try {
                 this.repo.setCampaignSetting('is_delving', payload.isDelving ? 'true' : 'false');
@@ -91,9 +114,8 @@ export class MercenaryController {
             try {
                 const mercs = this.repo.getAllMercenaries();
                 const resources = this.repo.getResources();
-                const inventory = this._getEnrichedInventory();
+                const inventory = this._getEnrichedInventory(null);
                 
-                // Attach Equipment to Mercenaries
                 mercs.forEach(m => {
                     m.equipment = {};
                     inventory.forEach(item => {
@@ -123,8 +145,6 @@ export class MercenaryController {
             try {
                 const { focusSeconds, ratio } = payload;
                 const minutes = focusSeconds / 60;
-                
-                // Allow XP to scale directly with whatever time was focused
                 const result = this.repo.distributeSessionXP(minutes, ratio);
                 app.events.broadcast("xpGained", result); 
             } catch (e) {
@@ -158,7 +178,6 @@ export class MercenaryController {
             }
         });
 
-        // --- INVENTORY MANAGEMENT EVENTS ---
         app.events.on("moveInventoryItem", (payload) => {
             try {
                 this.repo.moveItemInStash(payload.inventoryId, payload.newSlotIndex);
@@ -182,7 +201,6 @@ export class MercenaryController {
             } catch(e) { console.error("Failed to unequip item:", e); }
         });
 
-        // ... (Contracts and Market endpoints remain identical)
         app.events.on("getActiveContract", () => {
             try {
                 const contract = this.repo.getActiveContract();
@@ -231,20 +249,28 @@ export class MercenaryController {
         app.events.on("getMarketData", (payload) => {
             try {
                 let buyMod = 1.0;
-                let sellMod = 0.5;
                 let nodeType = 'Town';
                 let specialization = null;
                 let shopItems = [];
+                let nodeContext = null;
 
                 if (payload.nodeId) {
                     const node = this.repo.getNodeById(payload.nodeId);
                     const currentDay = parseInt(this.repo.statements.getSetting.get('day')?.value) || 1;
 
                     if (node) {
-                        buyMod = node.buy_modifier || 1.0;
-                        sellMod = node.sell_modifier || 0.5;
+                        node.effective_buy = node.buy_modifier || 1.0;
+                        node.effective_sell = node.sell_modifier || 1.0;
+                        if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
+                            const evt = SETTLEMENT_EVENTS[node.current_event];
+                            node.effective_buy *= evt.buyMult;
+                            node.effective_sell *= evt.sellMult;
+                        }
+
+                        buyMod = node.effective_buy;
                         nodeType = node.type;
                         specialization = node.specialization;
+                        nodeContext = node;
 
                         let inventoryChanged = false;
                         let shopInventory = [];
@@ -280,7 +306,7 @@ export class MercenaryController {
                 }
 
                 const resources = this.repo.getResources();
-                const enrichedInventory = this._getEnrichedInventory(sellMod);
+                const enrichedInventory = this._getEnrichedInventory(nodeContext);
 
                 app.events.broadcast("receiveMarketData", { 
                     gold: resources.gold,
@@ -336,7 +362,6 @@ export class MercenaryController {
 
         app.events.on("sellItem", (payload) => {
             try {
-                // Fetch the item info BEFORE deleting it to check if it's a building material
                 const itemDb = this.repo.db.prepare('SELECT item_id FROM inventory WHERE id = ?').get(payload.inventoryId);
                 const itemId = itemDb ? itemDb.item_id : null;
 
@@ -347,7 +372,6 @@ export class MercenaryController {
                     const repGain = Math.max(1, Math.floor(payload.price / 100));
                     this.repo.updateNodeReputation(payload.nodeId, repGain);
 
-                    // --- SETTLEMENT EXPANSION LOGIC ---
                     if (itemId) {
                         const node = this.repo.getNodeById(payload.nodeId);
                         const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
@@ -431,7 +455,7 @@ export class MercenaryController {
     _refreshParty(app) {
         const mercs = this.repo.getAllMercenaries();
         const resources = this.repo.getResources();
-        const inventory = this._getEnrichedInventory();
+        const inventory = this._getEnrichedInventory(null);
         
         mercs.forEach(m => {
             m.equipment = {};

@@ -37,7 +37,6 @@ export const GAME_SCHEMA_SQL = `
         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
-    -- Noble Houses and future faction systems
     CREATE TABLE IF NOT EXISTS factions (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         name TEXT NOT NULL UNIQUE,
@@ -46,10 +45,9 @@ export const GAME_SCHEMA_SQL = `
         motto TEXT
     );
 
-    -- World Map Data
     CREATE TABLE IF NOT EXISTS world_nodes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        type TEXT NOT NULL, -- 'Hamlet', 'Town', 'Empire', etc.
+        type TEXT NOT NULL,
         name TEXT,
         x INTEGER,
         y INTEGER,
@@ -67,10 +65,10 @@ export const GAME_SCHEMA_SQL = `
         event_expiration INTEGER DEFAULT 0,
         development_progress INTEGER DEFAULT 0, 
         expansion_reqs TEXT DEFAULT '{}',
+        attachments INTEGER DEFAULT 0,
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 
-    -- Contracts Table
     CREATE TABLE IF NOT EXISTS contracts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         node_id INTEGER NOT NULL,
@@ -84,7 +82,6 @@ export const GAME_SCHEMA_SQL = `
         FOREIGN KEY(node_id) REFERENCES world_nodes(id)
     );
 
-    -- Settlement History
     CREATE TABLE IF NOT EXISTS node_history (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         node_id INTEGER NOT NULL,
@@ -95,7 +92,6 @@ export const GAME_SCHEMA_SQL = `
         FOREIGN KEY(node_id) REFERENCES world_nodes(id) ON DELETE CASCADE
     );
 
-    -- Default Resource Tracking
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('gold', '500');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('provisions', '50');
     INSERT OR IGNORE INTO campaign_settings (key, value) VALUES ('tools', '20');

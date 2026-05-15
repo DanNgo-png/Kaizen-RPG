@@ -16,7 +16,7 @@ import {
 
 const DEFAULT_WORLD_MODIFIERS = Object.freeze({
     BUY: 1.0,
-    SELL: 0.5,
+    SELL: 1.0,
     LOW_FUNDS: 0.5,
     HIGH_FUNDS: 1.5,
     STARTING_DAY: 1,
@@ -40,13 +40,9 @@ export class CampaignGenerator {
     generate(config) {
         console.log(`Generating Campaign: Source: ${config.mapSource}`);
 
-        // 1. Setup Economy & Settings
         this._setupWorld(config);
-
-        // 2. Generate Mercenaries based on Origin
         this._generateRoster(config.modeId, config.seed);
 
-        // 3. Generate World Map
         if (config.mapSource === 'premade') {
             if (config.premadeNodes && Array.isArray(config.premadeNodes)) {
                 this._createPremadeNodes(config.premadeNodes, config.seed);
@@ -78,7 +74,8 @@ export class CampaignGenerator {
                 ...n,
                 faction_id: factionId,
                 buy_modifier: n.buy_modifier || tierInfo.buyMult,
-                sell_modifier: n.sell_modifier || tierInfo.sellMult
+                sell_modifier: n.sell_modifier || tierInfo.sellMult,
+                attachments: n.attachments || 0
             });
         });
     }
@@ -90,7 +87,6 @@ export class CampaignGenerator {
         if (config.funds === 'low') startingGold *= DEFAULT_WORLD_MODIFIERS.LOW_FUNDS;
         if (config.funds === 'high') startingGold *= DEFAULT_WORLD_MODIFIERS.HIGH_FUNDS;
 
-        // Save Global Settings
         this.repo.setCampaignSetting('company_name', config.name || "The Nameless");
         this.repo.setCampaignSetting('origin', config.modeId || 'sellswords');
         this.repo.setCampaignSetting('game_version', config.version || 'standard');
@@ -112,7 +108,7 @@ export class CampaignGenerator {
             const fullName = `${name}${title}`;
 
             const ranges = ROLE_STATS[template.role] || ROLE_STATS['default'];
-            const multiplier = template.statsMod || DEFAULT_WORLD_MODIFIERS.BUY;
+            const multiplier = template.statsMod || 1.0;
 
             const str = Math.floor(this._rand(ranges.str) * multiplier);
             const int = Math.floor(this._rand(ranges.int) * multiplier);
@@ -174,9 +170,9 @@ export class CampaignGenerator {
             };
             const closestCapital = this._findClosestCapital({ x, y }, capitals);
 
-            // Poor settlements can lack a signature trade or craft.
             const isPoor = rng() < WORLD_GENERATION_CONFIG.POOR_SPECIALIZATION_CHANCE;
             const specialization = isPoor ? null : this._pick(specKeys, rng);
+            const attachments = this._randomInt(rng, 0, 3); // 0 to 3 attached locations
 
             this.repo.createWorldNode({
                 type,
@@ -186,7 +182,8 @@ export class CampaignGenerator {
                 faction_id: type === 'Ruins' ? null : closestCapital?.factionId ?? null,
                 buy_modifier: tierInfo.buyMult,
                 sell_modifier: tierInfo.sellMult,
-                specialization
+                specialization,
+                attachments
             });
         }
 
@@ -238,6 +235,8 @@ export class CampaignGenerator {
                 sellMult: DEFAULT_WORLD_MODIFIERS.SELL
             };
 
+            const attachments = this._randomInt(rng, 1, 3);
+
             this.repo.createWorldNode({
                 type: house.capitalType,
                 name: house.seatName,
@@ -246,7 +245,8 @@ export class CampaignGenerator {
                 faction_id: house.id,
                 buy_modifier: tierInfo.buyMult,
                 sell_modifier: tierInfo.sellMult,
-                specialization: null
+                specialization: null,
+                attachments
             });
 
             capitals.push({
