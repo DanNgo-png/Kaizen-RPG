@@ -210,12 +210,3 @@ export function getReputationColor(repValue) {
     if (repValue <= 300) return "#10b981"; // Green
     return "#059669"; // Dark Green
 }
-
-export function getMaxDevelopmentProgress(nodeType) {
-    const reqs = {
-        'Hamlet': 5, 'Village': 10, 'Town': 15, 'City': 20,
-        'City-State': 25, 'Province': 30, 'Kingdom': 40,
-        'High Kingdom': 50, 'Empire': 60, 'Stronghold': 25
-    };
-    return reqs[nodeType] || 5; // Default fallback
-}
