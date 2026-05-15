@@ -151,7 +151,6 @@ export const SETTLEMENT_EVENTS = {
     }
 };
 
-export const MAX_DEVELOPMENT_PROGRESS = 5;
 export const BUILDING_MATERIALS = [
     'peat_bricks', 
     'quality_wood', 
