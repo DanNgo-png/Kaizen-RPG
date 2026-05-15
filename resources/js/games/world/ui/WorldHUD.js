@@ -169,6 +169,23 @@ export class WorldHUD {
             ? `<div style="color:#9ca3af; font-size:0.75rem; margin-top:2px;"><i class="fa-solid fa-link"></i> Attached Locations: ${node.attachments}</div>`
             : '';
 
+        // --- Check for active events ---
+        let eventHtml = '';
+        if (node.event_name) {
+            // Use different colors based on the event nature
+            let iconColor = '#3b82f6'; // Default Blue
+            if (node.current_event === 'building_boom' || node.current_event === 'settlement_expansion') {
+                iconColor = '#fbbf24'; // Gold/Yellow for construction
+            } else if (node.current_event.includes('ruined') || node.current_event.includes('ambushed')) {
+                iconColor = '#ef4444'; // Red for danger/ruin
+            } else if (node.current_event === 'well_supplied' || node.current_event === 'safe_roads') {
+                iconColor = '#10b981'; // Green for prosperous
+            }
+
+            eventHtml = `<div style="color:${iconColor}; font-size:0.75rem; margin-top:4px; font-weight:700;"><i class="fa-solid fa-bolt"></i> Active Event: ${this._escapeHtml(node.event_name)}</div>`;
+        }
+        // -------------------------------------
+
         const rep = node.reputation || 0;
         const repStr = getReputationString(rep);
         const repCol = getReputationColor(rep);
@@ -178,6 +195,7 @@ export class WorldHUD {
             <div style="font-weight:700; font-size:1rem; margin-bottom:2px;">${this._escapeHtml(node.name)}</div>
             <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${this._escapeHtml(node.type)}</div>
             <div style="color:${repCol}; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${repStr} (${rep})</div>
+            ${eventHtml} <!-- Injected Event HTML here -->
             ${specHtml}
             ${attachHtml}
         `;
