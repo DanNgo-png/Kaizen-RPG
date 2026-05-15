@@ -775,6 +775,9 @@
 .bb-chronicles-economy {
     width: 100%;
     margin-bottom: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
 }
 
 .bb-chronicles-list {

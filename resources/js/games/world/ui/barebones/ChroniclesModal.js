@@ -75,6 +75,45 @@ export class ChroniclesModal {
         return modal;
     }
 
+    _tierHtml(node) {
+        const typeIcons = {
+            'Hamlet': 'fa-house',
+            'Village': 'fa-tree-city',
+            'Town': 'fa-house-chimney',
+            'City': 'fa-city',
+            'City-State': 'fa-chess-rook',
+            'Province': 'fa-chess-rook',
+            'Kingdom': 'fa-crown',
+            'High Kingdom': 'fa-crown',
+            'Empire': 'fa-chess-king',
+            'Stronghold': 'fa-shield-halved',
+            'Ruins': 'fa-skull'
+        };
+        const icon = typeIcons[node.type] || 'fa-landmark';
+
+        let specHtml = '';
+        if (node.specialization) {
+            specHtml = `<div style="font-size: 0.8rem; color: #a78bfa; margin-top: 6px; font-weight: 600;"><i class="fa-solid fa-star"></i> Specialization: ${escapeHtml(node.specialization)}</div>`;
+        } else if (node.type !== 'Ruins') {
+            specHtml = `<div style="font-size: 0.8rem; color: #64748b; margin-top: 6px; font-style: italic;"><i class="fa-solid fa-ban"></i> No specializations.</div>`;
+        }
+
+        return `
+            <div class="bb-chronicles-entry" style="border-left: 4px solid #facc15; background: rgba(255, 255, 255, 0.04);">
+                <div class="bb-chronicles-icon" style="color: #facc15;">
+                    <i class="fa-solid ${icon}"></i>
+                </div>
+                <div style="flex: 1;">
+                    <div class="bb-chronicles-day">Settlement Tier</div>
+                    <div class="bb-chronicles-text">
+                        <b style="color: #fff; font-size: 1.05rem;">${escapeHtml(node.type)}</b>
+                    </div>
+                    ${specHtml}
+                </div>
+            </div>
+        `;
+    }
+
     _economyHtml(node) {
         // Use effective modifiers provided by backend, fallback to base if missing
         const effectiveBuy = node.effective_buy !== undefined ? node.effective_buy : node.buy_modifier;
@@ -131,6 +170,7 @@ export class ChroniclesModal {
         }
 
         return `
+            ${this._tierHtml(node)}
             ${this._factionHtml(node)}
             <div class="bb-chronicles-entry">
                 <div class="bb-chronicles-icon economy">
