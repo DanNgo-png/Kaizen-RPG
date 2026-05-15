@@ -16,7 +16,16 @@ export const SETTLEMENT_NAMES = [
     'Stonehaven', "Crow's Nest", 'Highmount', 'Deepwater', 'Mistveil',
     'Whitestone', 'Gallowsgate', 'Mournstead', 'Everlight', 'Glimmerbrook',
     'Briar-Bight', 'North-Cross', 'Skyshelf', 'Rust-Creek', 'Smokefall',
-    'Oldham', 'Hewe', 'Eastbourne', 'Quan Ma', 'Travercraig', 'Bournemouth'
+    'Oldham', 'Hewe', 'Eastbourne', 'Quan Ma', 'Travercraig', 'Bournemouth',
+    'Salt-Point', 'Singe', 'Copper-Mill', 'Marrow-Wall', 'Whalefall', 
+    'Onyx-Reach', 'Gristle-Creek', 'Sun-Spear', "Valkyrie's Landing", 'Broken-Oar',
+    'Shale-Town', 'Cinder-Hold', 'Verglas', 'Oakshade', 'Silt-Sump', 
+    'Bright-Moor', 'Wyrm-Tail', 'Fallowfield', 'Iron-Suture', 'Cold-Harbor',
+    'Brambleheart', 'Hollow-Gully', 'Cloudreach', 'Blood-Ridge', 'Wren-Hollow',
+    'Gold-Thirst', 'Nettle-Bed', 'Soot-Vail', 'Elder-Link', 'Rime-Crest',
+    'Silk-Garden', 'Mud-Spit', 'Twin-Spire', 'Goddlezipstle', 'Ferryzostle',
+    'Amber-Vault', 'Quick-Silver', 'Thistle-Down', 'Red-Reach', 'Crag-End',
+    'Kluarmont', 'Itreeta', 'Shuxmery', 'Wrifwell', 'Jufridge', 'Vragos', 'Strison'
 ];
 
 // --- Settlement Tiers & Economy ---

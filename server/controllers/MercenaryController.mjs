@@ -382,6 +382,19 @@ export class MercenaryController {
                             
                             if (upgraded) {
                                 this.repo.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
+                                
+                                // --- Colonization Logic ---
+                                const colonyTiers = ['Province', 'Kingdom', 'High Kingdom', 'Empire'];
+                                if (colonyTiers.includes(newType)) {
+                                    const spawnedNode = this.repo.spawnColony(node);
+                                    
+                                    if (spawnedNode) {
+                                         // Log it in the parent city's history
+                                         this.repo.logNodeHistory(node.id, `The ${newType} has expanded its borders, establishing the new settlement of ${spawnedNode.name}.`, 'world');
+                                         // Log it in the new colony's history
+                                         this.repo.logNodeHistory(spawnedNode.id, `Founded as a colony by ${node.name}.`, 'world');
+                                    }
+                                }
                             }
                         }
                     }

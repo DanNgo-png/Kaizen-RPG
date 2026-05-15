@@ -1,6 +1,6 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
 import { ItemFactory } from '../../../factories/ItemFactory.mjs';
-import { SETTLEMENT_EVENTS } from '../../../data/GameDataConstants.mjs';
+import { SETTLEMENT_EVENTS, SETTLEMENT_NAMES } from '../../../data/GameDataConstants.mjs';
 
 const WORLD_NODE_SELECT = `
     SELECT 
@@ -759,5 +759,70 @@ export class GameRepository {
             SET development_progress = ?, type = ?, current_event = ?, buy_modifier = ?, sell_modifier = ?
             WHERE id = ?
         `).run(progress, newType, newEvent, buyMod, sellMod, nodeId);
+    }
+
+    spawnColony(parentNode) {
+        this.ensureConnection();
+        const allNodes = this.statements.getAllNodes.all();
+        
+        // 1. Find a valid X/Y position near the parent settlement
+        const radius = 150;
+        let attempt = 0;
+        let newX, newY;
+        let valid = false;
+        
+        while(attempt < 50 && !valid) {
+            const angle = Math.random() * Math.PI * 2;
+            const dist = 80 + Math.random() * radius; // Between 80px and 230px away
+            newX = parentNode.x + Math.cos(angle) * dist;
+            newY = parentNode.y + Math.sin(angle) * dist;
+            
+            // Map bounds check (Keep it inside the playable area)
+            if (newX < 50 || newX > 1950 || newY < 50 || newY > 1450) {
+                attempt++;
+                continue;
+            }
+            
+            // Collision check (Don't spawn too close to existing settlements)
+            valid = true;
+            for (const n of allNodes) {
+                const d = Math.hypot(n.x - newX, n.y - newY);
+                if (d < 70) { 
+                    valid = false;
+                    break;
+                }
+            }
+            attempt++;
+        }
+        
+        if (!valid) return null; // No space to expand in this area
+        
+        // 2. Pick a name for the new colony
+        const usedNames = new Set(allNodes.map(n => n.name));
+        const availableNames = SETTLEMENT_NAMES.filter(n => !usedNames.has(n));
+        
+        let newName;
+        if (availableNames.length > 0) {
+            newName = availableNames[Math.floor(Math.random() * availableNames.length)];
+        } else {
+            // Fallback if we run out of unique names
+            const prefixes = ['New', 'North', 'South', 'East', 'West'];
+            const prefix = prefixes[Math.floor(Math.random() * prefixes.length)];
+            newName = `${prefix} ${parentNode.name}`;
+        }
+        
+        // 3. Insert the new Hamlet into the database
+        const info = this.statements.insertNode.run({
+            type: 'Hamlet',
+            name: newName,
+            x: Math.round(newX),
+            y: Math.round(newY),
+            faction_id: parentNode.faction_id,
+            buy_modifier: 1.2, // Default Hamlet economy
+            sell_modifier: 0.3,
+            specialization: null
+        });
+        
+        return { id: info.lastInsertRowid, name: newName };
     }
 }
