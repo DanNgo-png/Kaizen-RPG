@@ -210,6 +210,24 @@ export class GameRepository {
             this.logNodeHistory(activeContract.node_id, `A merchant caravan safely arrived, guided by ${companyName}. The settlement is now well supplied!`, 'world');
         }
 
+        const node = this.getNodeById(activeContract.node_id);
+        
+        if (node && (node.type === 'Bandit Camp' || node.type === 'Ruins')) {
+            // Check if it was a hunting/clearing contract
+            if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
+                // Delete the node from the map!
+                this.db.prepare('DELETE FROM world_nodes WHERE id = ?').run(node.id);
+                // Log it to the company ledger/history
+                this.logNodeHistory(activeContract.node_id, `${companyName} successfully cleared out ${node.name}, making the surrounding region much safer.`, 'player');
+                
+                // Add a guaranteed bonus loot drop for destroying a camp
+                const rareItem = ItemFactory.getRandomItem();
+                this.addItemToInventory(rareItem.id);
+                // We'll push this to the logs later down in the function
+                activeContract._campDestroyedLoot = rareItem; 
+            }
+        }
+
         // --- EXPANSION PREREQUISITES TRACKING ---
         const node = this.getNodeById(activeContract.node_id);
         const tierData = SETTLEMENT_TIERS[node?.type];
@@ -245,6 +263,12 @@ export class GameRepository {
         // Use the already declared titleLower variable
         if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
             lootChance = 0.65;
+        }
+
+        // Catch the guaranteed loot if we destroyed a camp
+        if (activeContract._campDestroyedLoot) {
+            foundLoot.push(activeContract._campDestroyedLoot);
+            logs.push(`🔥 Camp Destroyed! You found hidden stash: ${activeContract._campDestroyedLoot.name}`);
         }
 
         const rolls = Math.max(1, Math.floor(activeContract.required_minutes / 25));
