@@ -315,13 +315,20 @@
     background: transparent;
     border: none;
     color: #94a3b8;
-    padding: 15px 20px;
+    padding: 0 20px;
+    min-height: 56px; /* Ensures a good touch target if the right side is empty */
     font-size: 1rem;
     font-weight: 700;
     cursor: pointer;
     border-bottom: 2px solid transparent;
     transition: all 0.2s;
     font-family: var(--font-main);
+    
+    /* Center the icon and text perfectly when stretched */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .bb-tab-btn:hover:not(:disabled) {
