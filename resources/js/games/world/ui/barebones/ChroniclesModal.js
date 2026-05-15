@@ -75,6 +75,18 @@ export class ChroniclesModal {
         return modal;
     }
 
+    _getSettlementTier(type) {
+        const tiers = {
+            'Hamlet': 1, 'Village': 1,
+            'Town': 2, 'City': 2,
+            'City-State': 3, 'Province': 3, 'Stronghold': 3,
+            'Kingdom': 4, 'High Kingdom': 4,
+            'Empire': 5,
+            'Ruins': 0
+        };
+        return tiers[type] !== undefined ? tiers[type] : '?';
+    }
+
     _tierHtml(node) {
         const typeIcons = {
             'Hamlet': 'fa-house',
@@ -90,6 +102,11 @@ export class ChroniclesModal {
             'Ruins': 'fa-skull'
         };
         const icon = typeIcons[node.type] || 'fa-landmark';
+        const tier = this._getSettlementTier(node.type);
+        
+        const tierBadge = tier > 0 
+            ? `<span style="background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px; vertical-align: middle; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Tier ${tier}</span>` 
+            : '';
 
         let specHtml = '';
         if (node.specialization) {
@@ -104,9 +121,9 @@ export class ChroniclesModal {
                     <i class="fa-solid ${icon}"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div class="bb-chronicles-day">Settlement Tier</div>
-                    <div class="bb-chronicles-text">
-                        <b style="color: #fff; font-size: 1.05rem;">${escapeHtml(node.type)}</b>
+                    <div class="bb-chronicles-day">Settlement Type</div>
+                    <div class="bb-chronicles-text" style="display: flex; align-items: center;">
+                        <b style="color: #fff; font-size: 1.05rem;">${escapeHtml(node.type)}</b> ${tierBadge}
                     </div>
                     ${specHtml}
                 </div>
