@@ -36,9 +36,15 @@ export class MercenaryController {
             let finalSellPrice = itemInstance.cost * baseTypeMult;
 
             if (node) {
-                const repMod = 1.0 + ((node.reputation || 0) * 0.005);
+                // Selling to a node:
+                // Reputation bonus: +0.2% per reputation point (Max +60% payout at 300 Kindred)
+                const repMod = Math.max(0.1, 1.0 + ((node.reputation || 0) * 0.002));
                 const attachMod = 1.0 + ((node.attachments || 0) * 0.02);
-                const eventMod = node.effective_sell || node.sell_modifier || 1.0;
+                
+                let eventMod = node.sell_modifier || 1.0;
+                if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
+                    eventMod *= SETTLEMENT_EVENTS[node.current_event].sellMult;
+                }
 
                 finalSellPrice = finalSellPrice * eventMod * repMod * attachMod;
             }
@@ -302,10 +308,13 @@ export class MercenaryController {
                     if (node) {
                         node.effective_buy = node.buy_modifier || 1.0;
                         node.effective_sell = node.sell_modifier || 1.0;
+                        let qtyMod = 1.0;
+
                         if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
                             const evt = SETTLEMENT_EVENTS[node.current_event];
                             node.effective_buy *= evt.buyMult;
                             node.effective_sell *= evt.sellMult;
+                            qtyMod = evt.qtyMult !== undefined ? evt.qtyMult : 1.0;
                         }
 
                         buyMod = node.effective_buy;
@@ -322,17 +331,19 @@ export class MercenaryController {
                         let lastRestockDay = node.last_restock_day || 0;
                         let nextTradeRestockDay = node.next_trade_restock_day || 0;
 
+                        // Restock Standard Items (Affected by qtyMod)
                         if (currentDay > lastRestockDay) {
                             shopInventory = shopInventory.filter(item => item.type === 'Trade Good');
-                            const newStandard = ItemFactory.getStandardInventory(nodeType, buyMod);
+                            const newStandard = ItemFactory.getStandardInventory(nodeType, qtyMod);
                             shopInventory = shopInventory.concat(newStandard);
                             lastRestockDay = currentDay;
                             inventoryChanged = true;
                         }
 
+                        // Restock Trade Goods (Affected by qtyMod)
                         if (currentDay >= nextTradeRestockDay) {
                             shopInventory = shopInventory.filter(item => item.type !== 'Trade Good');
-                            const newTrade = ItemFactory.getTradeInventory(buyMod, specialization);
+                            const newTrade = ItemFactory.getTradeInventory(specialization, qtyMod);
                             shopInventory = shopInventory.concat(newTrade);
                             nextTradeRestockDay = currentDay + Math.floor(Math.random() * 3) + 2;
                             inventoryChanged = true;
@@ -342,7 +353,17 @@ export class MercenaryController {
                             this.repo.updateNodeShopData(node.id, JSON.stringify(shopInventory), lastRestockDay, nextTradeRestockDay);
                         }
 
-                        shopItems = shopInventory;
+                        // --- DYNAMIC BUY PRICING ---
+                        // Reputation Discount: -0.15% per point (Max -45% cost at 300 Kindred). Minimum price floored at 50%.
+                        const repBuyMod = Math.max(0.5, 1.0 - ((node.reputation || 0) * 0.0015));
+                        
+                        shopItems = shopInventory.map(item => {
+                            const baseCost = item.baseValue || ItemFactory.createItem(item.id).baseValue;
+                            return {
+                                ...item,
+                                cost: Math.max(1, Math.ceil(baseCost * buyMod * repBuyMod))
+                            };
+                        });
                     }
                 }
 
