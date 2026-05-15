@@ -81,10 +81,14 @@ export class NobleBehavior extends BaseFactionBehavior {
     }
 
     processDayEnd(currentDay) {
-        const allNodes = this.repo.db.prepare('SELECT id, current_event, event_expiration, name FROM world_nodes WHERE type != "Ruins" AND type != "Bandit Camp"').all();
+        // Fetch nodes including Bandit Camps to calculate safety distances
+        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name FROM world_nodes').all();
+        const settlements = allNodes.filter(n => n.type !== "Ruins" && n.type !== "Bandit Camp");
+        const enemies = allNodes.filter(n => n.type === "Bandit Camp" || n.type === "Ruins");
+
         const eventKeys = Object.keys(SETTLEMENT_EVENTS);
 
-        for (const n of allNodes) {
+        for (const n of settlements) {
             if (n.current_event) {
                 const newExp = n.event_expiration - 1;
                 if (newExp <= 0) {
@@ -94,10 +98,32 @@ export class NobleBehavior extends BaseFactionBehavior {
                     this.repo.db.prepare('UPDATE world_nodes SET event_expiration = ? WHERE id = ?').run(newExp, n.id);
                 }
             } else {
+                // Calculate distance to nearest enemy camp
+                let minEnemyDist = Infinity;
+                enemies.forEach(e => {
+                    const dist = Math.hypot(n.x - e.x, n.y - e.y);
+                    if (dist < minEnemyDist) minEnemyDist = dist;
+                });
+
                 if (Math.random() < 0.05) {
                     const validEvents = eventKeys.filter(k => SETTLEMENT_EVENTS[k].isRandom !== false);
-                    const randomEvent = validEvents[Math.floor(Math.random() * validEvents.length)];
+                    
+                    // Filter events based on safety
+                    let pool = validEvents;
+                    if (minEnemyDist < 150) {
+                        // Very close to enemies: high chance of negative events
+                        pool = validEvents.filter(k => ['raided', 'terrified_villagers', 'ambushed_trade_routes', 'sieged'].includes(k));
+                    } else if (minEnemyDist > 400) {
+                        // Very safe: high chance of positive events
+                        pool = validEvents.filter(k => ['well_supplied', 'safe_roads'].includes(k));
+                    }
+                    
+                    // Fallback to random if pool is empty
+                    if (pool.length === 0) pool = validEvents;
+
+                    const randomEvent = pool[Math.floor(Math.random() * pool.length)];
                     const duration = Math.floor(Math.random() * 5) + 3;
+                    
                     this.repo.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?').run(randomEvent, duration, n.id);
                     this.repo.logNodeHistory(n.id, `Rumors spread of: ${SETTLEMENT_EVENTS[randomEvent].name}.`, 'world');
                 }
