@@ -1,6 +1,40 @@
 import { GLOBAL_SCHEMAS } from "./schemas/GlobalSchema.mjs";
 import { GAME_SCHEMA_SQL } from "./schemas/GameSchema.mjs";
 
+const LEGACY_FACTION_PLACEHOLDERS = Object.freeze([
+    {
+        name: "House Blackwood",
+        color: "#22c55e",
+        archetype: "old_blood",
+        motto: "Roots deeper than steel."
+    },
+    {
+        name: "House Sterling",
+        color: "#fbbf24",
+        archetype: "merchant",
+        motto: "Prosperity binds the realm."
+    },
+    {
+        name: "House Thornwatch",
+        color: "#ef4444",
+        archetype: "militaristic",
+        motto: "The border does not break."
+    },
+    {
+        name: "House Silverpine",
+        color: "#a78bfa",
+        archetype: "old_blood",
+        motto: "Grace endures the winter."
+    }
+]);
+
+const LEGACY_FACTION_FALLBACK = Object.freeze({
+    namePrefix: "House Wayfarer",
+    color: "#60a5fa",
+    archetype: "frontier",
+    motto: "No road is foreign."
+});
+
 export function initializeSchema(db, dbName) {
     if (GLOBAL_SCHEMAS[dbName]) {
         db.exec(GLOBAL_SCHEMAS[dbName]);
@@ -50,6 +84,48 @@ const migrations = [
             db.exec("ALTER TABLE world_nodes ADD COLUMN current_event TEXT;");
             db.exec("ALTER TABLE world_nodes ADD COLUMN event_expiration INTEGER DEFAULT 0;");
         }
+    },
+
+    // --- Version 6: Noble Houses / Factions ---
+    (db) => {
+        db.exec(`
+            CREATE TABLE IF NOT EXISTS factions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                color TEXT NOT NULL,
+                archetype TEXT NOT NULL,
+                motto TEXT
+            );
+        `);
+
+        const factionColumns = db.pragma('table_info(factions)').map(col => col.name);
+        if (!factionColumns.includes('motto')) {
+            db.exec("ALTER TABLE factions ADD COLUMN motto TEXT;");
+        }
+
+        const missingFactionIds = db.prepare(`
+            SELECT DISTINCT faction_id AS id
+            FROM world_nodes
+            WHERE faction_id IS NOT NULL
+              AND faction_id NOT IN (SELECT id FROM factions)
+            ORDER BY faction_id
+        `).all();
+
+        const insertLegacyFaction = db.prepare(`
+            INSERT OR IGNORE INTO factions (id, name, color, archetype, motto)
+            VALUES (@id, @name, @color, @archetype, @motto)
+        `);
+
+        missingFactionIds.forEach((row, index) => {
+            const template = LEGACY_FACTION_PLACEHOLDERS[index] || {
+                name: `${LEGACY_FACTION_FALLBACK.namePrefix} ${row.id}`,
+                color: LEGACY_FACTION_FALLBACK.color,
+                archetype: LEGACY_FACTION_FALLBACK.archetype,
+                motto: LEGACY_FACTION_FALLBACK.motto
+            };
+
+            insertLegacyFaction.run({ id: row.id, ...template });
+        });
     }
 ];
 
