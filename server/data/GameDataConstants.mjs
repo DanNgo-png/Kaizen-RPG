@@ -108,9 +108,9 @@ export const SETTLEMENT_EVENTS = {
     },
     'ambushed_trade_routes': { 
         name: 'Ambushed Trade Routes', 
-        buyMult: 1.4, 
-        sellMult: 1.2, 
-        qtyMult: 0.4, 
+        buyMult: 2.5, 
+        sellMult: 2.0, 
+        qtyMult: 0.2, 
         specDisabled: false,
         freqMod: 3 
     },
@@ -147,6 +147,30 @@ export const SETTLEMENT_EVENTS = {
         specDisabled: false,
         freqMod: 3,
         isRandom: false
+    },
+    'raided': { 
+        name: 'Raided', 
+        buyMult: 1.8, 
+        sellMult: 0.7, 
+        qtyMult: 0.2, 
+        specDisabled: true, 
+        freqMod: 3 
+    },
+    'terrified_villagers': { 
+        name: 'Terrified Villagers', 
+        buyMult: 1.6, 
+        sellMult: 1.5, 
+        qtyMult: 0.8, 
+        specDisabled: false, 
+        freqMod: 2 
+    },
+    'sieged': { 
+        name: 'Sieged', 
+        buyMult: 2.5, 
+        sellMult: 0.5, 
+        qtyMult: 0.1, 
+        specDisabled: true, 
+        freqMod: 1 
     }
 };
 
