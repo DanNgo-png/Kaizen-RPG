@@ -29,18 +29,17 @@ export const SETTLEMENT_NAMES = [
 ];
 
 // --- Settlement Tiers & Economy ---
-// Sell multipliers now scale logically on top of base type reductions (15%, 95%, 101%)
 export const SETTLEMENT_TIERS = {
-    'Hamlet':       { buyMult: 1.20, sellMult: 0.85, shopLevel: 1 },
-    'Village':      { buyMult: 1.15, sellMult: 0.90, shopLevel: 1 },
-    'Town':         { buyMult: 1.10, sellMult: 1.00, shopLevel: 2 },
-    'City':         { buyMult: 1.05, sellMult: 1.05, shopLevel: 2 },
-    'City-State':   { buyMult: 1.00, sellMult: 1.10, shopLevel: 3 },
-    'Province':     { buyMult: 0.95, sellMult: 1.15, shopLevel: 3 },
-    'Kingdom':      { buyMult: 0.90, sellMult: 1.20, shopLevel: 4 },
-    'High Kingdom': { buyMult: 0.85, sellMult: 1.25, shopLevel: 4 },
-    'Empire':       { buyMult: 0.80, sellMult: 1.30, shopLevel: 5 },
-    'Stronghold':   { buyMult: 1.30, sellMult: 0.95, shopLevel: 3 },
+    'Hamlet':       { buyMult: 1.20, sellMult: 0.85, shopLevel: 1, growthReqs: { contracts: 3, trade: 1000, materials: 5 } },
+    'Village':      { buyMult: 1.15, sellMult: 0.90, shopLevel: 1, growthReqs: { contracts: 5, trade: 2500, materials: 10 } },
+    'Town':         { buyMult: 1.10, sellMult: 1.00, shopLevel: 2, growthReqs: { contracts: 8, trade: 5000, materials: 15 } },
+    'City':         { buyMult: 1.05, sellMult: 1.05, shopLevel: 2, growthReqs: { contracts: 12, trade: 8000, materials: 20 } },
+    'City-State':   { buyMult: 1.00, sellMult: 1.10, shopLevel: 3, growthReqs: { contracts: 15, trade: 12000, materials: 25 } },
+    'Province':     { buyMult: 0.95, sellMult: 1.15, shopLevel: 3, growthReqs: { contracts: 20, trade: 18000, materials: 30 } },
+    'Kingdom':      { buyMult: 0.90, sellMult: 1.20, shopLevel: 4, growthReqs: { contracts: 25, trade: 25000, materials: 40 } },
+    'High Kingdom': { buyMult: 0.85, sellMult: 1.25, shopLevel: 4, growthReqs: { contracts: 35, trade: 35000, materials: 50 } },
+    'Empire':       { buyMult: 0.80, sellMult: 1.30, shopLevel: 5, growthReqs: { contracts: 50, trade: 50000, materials: 60 } },
+    'Stronghold':   { buyMult: 1.30, sellMult: 0.95, shopLevel: 3, growthReqs: { contracts: 15, trade: 10000, materials: 25 } },
     'Ruins':        { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 },
     'Bandit Camp':  { buyMult: 1.00, sellMult: 0.30, shopLevel: 0 }
 };
@@ -138,7 +137,7 @@ export const SETTLEMENT_EVENTS = {
         qtyMult: 1.2,
         specDisabled: false,
         freqMod: 3,
-        isRandom: true
+        isRandom: false
     },
     'settlement_expansion': {
         name: 'Settlement Expansion',
