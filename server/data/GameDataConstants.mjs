@@ -116,9 +116,10 @@ export const SETTLEMENT_EVENTS = {
     },
     'well_supplied': { 
         name: 'Well Supplied', 
-        buyMult: 0.8, 
+        buyMult: 0.75, 
         sellMult: 0.6, 
-        qtyMult: 1.8, 
+        qtyMult: 2.5, 
+        rareChanceMult: 3.0,
         specDisabled: false,
         freqMod: 0 
     },
