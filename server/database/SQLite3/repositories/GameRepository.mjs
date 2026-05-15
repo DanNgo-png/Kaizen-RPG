@@ -1,6 +1,17 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
 import { ItemFactory } from '../../../factories/ItemFactory.mjs';
 
+const WORLD_NODE_SELECT = `
+    SELECT 
+        world_nodes.*,
+        factions.name AS faction_name,
+        factions.color AS faction_color,
+        factions.archetype AS faction_archetype,
+        factions.motto AS faction_motto
+    FROM world_nodes
+    LEFT JOIN factions ON factions.id = world_nodes.faction_id
+`;
+
 export class GameRepository {
     constructor() {
         this.db = null;
@@ -43,9 +54,9 @@ export class GameRepository {
                 INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier, specialization) 
                 VALUES (@type, @name, @x, @y, @faction_id, 0, @buy_modifier, @sell_modifier, @specialization)
             `),
-            getAllNodes: this.db.prepare(`SELECT * FROM world_nodes`),
+            getAllNodes: this.db.prepare(WORLD_NODE_SELECT),
 
-            getNodeById: this.db.prepare(`SELECT * FROM world_nodes WHERE id = ?`),
+            getNodeById: this.db.prepare(`${WORLD_NODE_SELECT} WHERE world_nodes.id = ?`),
             updateNodeShop: this.db.prepare(`UPDATE world_nodes SET shop_inventory = @inv, last_restock_day = @lastRestock, next_trade_restock_day = @nextTrade WHERE id = @id`),
 
             updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
@@ -69,7 +80,13 @@ export class GameRepository {
             abortContract: this.db.prepare(`DELETE FROM contracts WHERE id = ?`),
 
             getInventory: this.db.prepare(`SELECT * FROM inventory`),
-            deleteItem: this.db.prepare(`DELETE FROM inventory WHERE id = ?`)
+            deleteItem: this.db.prepare(`DELETE FROM inventory WHERE id = ?`),
+
+            insertFaction: this.db.prepare(`
+                INSERT INTO factions (name, color, archetype, motto)
+                VALUES (@name, @color, @archetype, @motto)
+            `),
+            getAllFactions: this.db.prepare(`SELECT * FROM factions ORDER BY name`)
         };
 
         this.statements.insertSetting = this.db.prepare(`
@@ -277,12 +294,12 @@ export class GameRepository {
     // --- WORLD MAP & POSITION ---
     getNodeById(id) {
         this.ensureConnection();
-        return this.statements.getNodeById.get(id);
+        return this._mapWorldNode(this.statements.getNodeById.get(id));
     }
 
     getWorldState() {
         this.ensureConnection();
-        const nodes = this.statements.getAllNodes.all();
+        const nodes = this.statements.getAllNodes.all().map((node) => this._mapWorldNode(node));
 
         const px = this.statements.getSetting.get('player_x')?.value || '400';
         const py = this.statements.getSetting.get('player_y')?.value || '300';
@@ -629,16 +646,31 @@ export class GameRepository {
             name: node.name,
             x: node.x,
             y: node.y,
-            faction_id: node.faction_id || null,
-            buy_modifier: node.buy_modifier || 1.0,
-            sell_modifier: node.sell_modifier || 0.5,
-            specialization: node.specialization || null
+            faction_id: node.faction_id ?? null,
+            buy_modifier: node.buy_modifier ?? 1.0,
+            sell_modifier: node.sell_modifier ?? 0.5,
+            specialization: node.specialization ?? null
         });
+    }
+
+    createFaction(faction) {
+        this.ensureConnection();
+        return this.statements.insertFaction.run({
+            name: faction.name,
+            color: faction.color,
+            archetype: faction.archetype,
+            motto: faction.motto ?? null
+        });
+    }
+
+    getFactions() {
+        this.ensureConnection();
+        return this.statements.getAllFactions.all();
     }
 
     getWorldNodes() {
         this.ensureConnection();
-        return this.statements.getAllNodes.all();
+        return this.statements.getAllNodes.all().map((node) => this._mapWorldNode(node));
     }
 
     getResources() {
@@ -696,5 +728,29 @@ export class GameRepository {
             current_hp: merc.current_hp || 100,
             wage: merc.wage || 10
         });
+    }
+
+    _mapWorldNode(row) {
+        if (!row) return row;
+
+        const {
+            faction_name,
+            faction_color,
+            faction_archetype,
+            faction_motto,
+            ...node
+        } = row;
+
+        node.faction = faction_name
+            ? {
+                id: node.faction_id,
+                name: faction_name,
+                color: faction_color,
+                archetype: faction_archetype,
+                motto: faction_motto
+            }
+            : null;
+
+        return node;
     }
 }
