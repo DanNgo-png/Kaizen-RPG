@@ -66,6 +66,8 @@ export const GAME_SCHEMA_SQL = `
         development_progress INTEGER DEFAULT 0, 
         expansion_reqs TEXT DEFAULT '{}',
         attachments INTEGER DEFAULT 0,
+        is_hidden INTEGER DEFAULT 0,
+        is_hostile INTEGER DEFAULT 0,
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 
