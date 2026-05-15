@@ -682,6 +682,10 @@ export class GameRepository {
         const ammo = getSet('ammo', 100);
         const medicine = getSet('medicine', 15);
 
+        // Fetch day and time progression
+        const day = getSet('day', 1);
+        const accumulated_time = parseFloat(this.statements.getSetting.get('accumulated_time')?.value || '0');
+
         // Add provisions from inventory items (e.g. Wine)
         const inventoryItems = this.statements.getInventory.all();
         inventoryItems.forEach(inv => {
@@ -695,7 +699,7 @@ export class GameRepository {
         const mercCount = this.statements.getAll.all().length;
         const foodPerDay = mercCount * 2;
 
-        return { gold, renown, provisions, tools, ammo, medicine, dailyWages: totalWages, foodPerDay };
+        return { gold, renown, provisions, tools, ammo, medicine, dailyWages: totalWages, foodPerDay, day, accumulated_time };
     }
 
     updateGold(amount) {

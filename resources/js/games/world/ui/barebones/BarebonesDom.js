@@ -14,6 +14,7 @@ export function createBarebonesDom(documentRef = document) {
         btnStartDelve: documentRef.getElementById("bb-btn-start-delve"),
         btnStopDelve: documentRef.getElementById("bb-btn-stop-delve"),
 
+        timeDisplay: documentRef.getElementById("bb-time-display"),
         goldDisplay: documentRef.getElementById("bb-gold-display"),
         provisionsDisplay: documentRef.getElementById("bb-provisions-display"),
         toolsDisplay: documentRef.getElementById("bb-tools-display"),
@@ -21,6 +22,7 @@ export function createBarebonesDom(documentRef = document) {
         medsDisplay: documentRef.getElementById("bb-meds-display"),
 
         resContainers: {
+            time: documentRef.getElementById("bb-res-time-container"),
             gold: documentRef.getElementById("bb-res-gold-container"),
             provisions: documentRef.getElementById("bb-res-provisions-container"),
             tools: documentRef.getElementById("bb-res-tools-container"),

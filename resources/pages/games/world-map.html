@@ -337,9 +337,9 @@
       </div>
 
       <div class="hud-stat-group">
-        <div class="hud-stat">
+        <div class="hud-stat" id="res-time-container" style="cursor:help;">
           <i class="fa-regular fa-clock"></i>
-          <span id="hud-day" class="text-day">Day 1</span>
+          <span id="hud-day" class="text-day">Day 1 - 00:00</span>
         </div>
         <div class="hud-stat">
           <i class="fa-solid fa-users"></i>
@@ -476,6 +476,10 @@
 
           <div style="display: flex; gap: 15px; align-items: center;">
             <div style="display: flex; gap: 15px; background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+              <!-- Time & Day -->
+              <div id="bb-res-time-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#e2e8f0; font-weight:bold; font-size:1.1rem; border-right: 1px solid #4b5563; padding-right: 15px; margin-right: 5px;">
+                <i class="fa-regular fa-clock"></i> <span id="bb-time-display">Day 1 - 00:00</span>
+              </div>
               <!-- Gold -->
               <div id="bb-res-gold-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#facc15; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-coins"></i> <span id="bb-gold-display">0</span>

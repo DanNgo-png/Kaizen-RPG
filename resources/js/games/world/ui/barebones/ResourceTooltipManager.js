@@ -72,6 +72,15 @@ export class ResourceTooltipManager {
         const value = (key) => Number(resources[key]) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
 
         switch (type) {
+            case "time": {
+                const day = resources.day || 1;
+                const year = Math.floor((day - 1) / 365) + 1;
+                const dayOfYear = ((day - 1) % 365) + 1;
+                return this._layout("Calendar", "time", [
+                    `Year <b>${year}</b>, Day <b>${dayOfYear}</b>.`,
+                    `Time advances as you complete Focus Sessions.`
+                ]);
+            }
             case "gold": {
                 const dailyWages = value("dailyWages");
                 const daysGold = this._daysRemaining(value("gold"), dailyWages);

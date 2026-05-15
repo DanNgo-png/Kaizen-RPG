@@ -27,6 +27,17 @@ export class WorldHUD {
     updateStats(data) {
         this.currentData = data; // Cache for hover logic
 
+        // Same Time Calculation for standard HUD
+        if (data.day !== undefined && this.stats.day) {
+            const accTime = data.accumulated_time || 0;
+            const fraction = Math.min(accTime / 30, 1);
+            const totalMinutes = fraction * 24 * 60;
+            const h = Math.floor(totalMinutes / 60);
+            const m = Math.floor(totalMinutes % 60);
+            const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+            this.stats.day.textContent = `Day ${data.day} - ${timeStr}`;
+        }
+
         if (data.gold !== undefined && this.stats.gold) this.stats.gold.textContent = data.gold;
         if (data.provisions !== undefined && this.stats.provisions) this.stats.provisions.textContent = data.provisions;
         if (data.tools !== undefined && this.stats.tools) this.stats.tools.textContent = data.tools;
@@ -40,6 +51,7 @@ export class WorldHUD {
 
     _bindResourceTooltips() {
         const resourceTriggers = [
+            { id: 'res-time-container', type: 'time' },
             { id: 'res-gold-container', type: 'gold' },
             { id: 'res-provisions-container', type: 'provisions' },
             { id: 'res-tools-container', type: 'tools' },
@@ -64,6 +76,16 @@ export class WorldHUD {
         const d = this.currentData;
 
         switch(type) {
+            case 'time':
+                const day = d.day || 1;
+                const year = Math.floor((day - 1) / 365) + 1;
+                const dayOfYear = ((day - 1) % 365) + 1;
+                html = `
+                    <div style="font-weight:700; color:#e2e8f0; margin-bottom:5px; font-size:1.05rem;">Calendar</div>
+                    <div style="max-width: 250px; line-height:1.4;">Year <b style="color:#fff;">${year}</b>, Day <b style="color:#fff;">${dayOfYear}</b>.</div>
+                    <div style="margin-top:8px; max-width: 250px; line-height:1.4; color:#9ca3af;">Time advances as you complete focus sessions. (30m focus = 1 in-game day).</div>
+                `;
+                break;
             case 'gold':
                 const daysGold = d.dailyWages > 0 ? Math.floor(d.gold / d.dailyWages) : '∞';
                 html = `

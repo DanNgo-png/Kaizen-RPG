@@ -106,6 +106,16 @@ export class BarebonesUIManager {
         this.currentResources = resources;
         if (!resources) return;
 
+        // Calculate 24H clock based on accumulated focus (0 to 30 mins = 1 day cycle)
+        const day = resources.day || 1;
+        const accTime = resources.accumulated_time || 0;
+        const fraction = Math.min(accTime / 30, 1);
+        const totalMinutes = fraction * 24 * 60;
+        const h = Math.floor(totalMinutes / 60);
+        const m = Math.floor(totalMinutes % 60);
+        const timeStr = `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        
+        this._setText(this.dom.timeDisplay, `Day ${day} - ${timeStr}`);
         this._setText(this.dom.goldDisplay, resources.gold);
         this._setText(this.dom.provisionsDisplay, resources.provisions);
         this._setText(this.dom.toolsDisplay, resources.tools);
