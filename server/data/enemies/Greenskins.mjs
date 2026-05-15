@@ -17,7 +17,8 @@ export const GREENSKINS = [
             'bundle_of_crude_javelins', 
             'metal_plated_hide_armor', 
             'metal_plated_helmet', 
-            'hide_armor'
+            'hide_armor',
+            'monster_teeth'
         ]
     },
     {
@@ -38,7 +39,9 @@ export const GREENSKINS = [
             'scale_armor', 
             'kettle_hat', 
             'nasal_helmet', 
-            'heavy_metal_shield'
+            'heavy_metal_shield',
+            'ancient_coin',
+            'monster_teeth'
         ]
     }
 ];

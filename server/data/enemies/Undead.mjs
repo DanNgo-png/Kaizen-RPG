@@ -7,7 +7,7 @@ export const UNDEAD = [
         baseAtk: 10,
         baseDef: 5,
         xpReward: 15,
-        lootTable: ['wooden_shield'] // Drops common, weak items
+        lootTable: ['wooden_shield', 'ancient_coin'] 
     },
     {
         id: 'zombie',
@@ -17,7 +17,7 @@ export const UNDEAD = [
         baseAtk: 20,
         baseDef: 0,
         xpReward: 35,
-        lootTable: ['healing_salve'] // Often carries intact salves on their rotting bodies
+        lootTable: ['healing_salve'] 
     },
     {
         id: 'skeleton_knight',
@@ -27,16 +27,16 @@ export const UNDEAD = [
         baseAtk: 35,
         baseDef: 25,
         xpReward: 100,
-        lootTable: ['iron_sword', 'chainmail'] // Good source of mid-tier gear
+        lootTable: ['iron_sword', 'chainmail', 'silver_bowl'] 
     },
     {
         id: 'necromancer',
         name: 'Necromancer',
         faction: 'undead',
         baseHp: 80,
-        baseAtk: 50, // High attack/magic damage
+        baseAtk: 50, 
         baseDef: 10,
         xpReward: 250,
-        lootTable: ['focus_elixir'] // Drops rare magical items
+        lootTable: ['focus_elixir', 'gemstone', 'golden_chalice'] 
     }
 ];
