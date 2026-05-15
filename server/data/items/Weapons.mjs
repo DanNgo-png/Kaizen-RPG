@@ -40,7 +40,109 @@ export const WEAPONS = [
         baseValue: 210, 
         rarity: 'uncommon',
         stats: { attack: 15, armor_penetration: 25, weight: 8 },
-        availableIn: ['Town', 'Stronghold'] 
+        availableIn: ['Town', 'Stronghold', 'Ruins'] 
+    },
+
+    // --- BRIGAND LOOT WEAPONS ---
+    { 
+        id: 'woodcutters_axe', 
+        name: "Woodcutter's Axe", 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-axe', 
+        baseValue: 120, 
+        rarity: 'common',
+        stats: { attack: 20, armor_penetration: 30, weight: 14 },
+        availableIn: ['Village', 'Ruins'] 
+    },
+    { 
+        id: 'two_handed_mallet', 
+        name: 'Two-Handed Mallet', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-gavel', 
+        baseValue: 140, 
+        rarity: 'common',
+        stats: { attack: 22, armor_penetration: 45, weight: 16 },
+        availableIn: ['Village', 'Ruins'] 
+    },
+    { 
+        id: 'hooked_blade', 
+        name: 'Hooked Blade', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-khanda', 
+        baseValue: 180, 
+        rarity: 'uncommon',
+        stats: { attack: 25, armor_penetration: 20, weight: 12 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'pike', 
+        name: 'Pike', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-text-height', 
+        baseValue: 200, 
+        rarity: 'uncommon',
+        stats: { attack: 24, armor_penetration: 25, weight: 10 },
+        availableIn: ['Town', 'Stronghold', 'Ruins'] 
+    },
+    { 
+        id: 'boar_spear', 
+        name: 'Boar Spear', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-arrow-up-long', 
+        baseValue: 160, 
+        rarity: 'uncommon',
+        stats: { attack: 18, defense: 5, weight: 8 },
+        availableIn: ['Town', 'Village', 'Ruins'] 
+    },
+    { 
+        id: 'flail', 
+        name: 'Flail', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-link', 
+        baseValue: 170, 
+        rarity: 'uncommon',
+        stats: { attack: 16, armor_penetration: 30, weight: 9 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'handaxe', 
+        name: 'Handaxe', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-hammer', 
+        baseValue: 110, 
+        rarity: 'common',
+        stats: { attack: 14, armor_penetration: 20, weight: 6 },
+        availableIn: ['Village', 'Town', 'Ruins'] 
+    },
+    { 
+        id: 'shortsword', 
+        name: 'Shortsword', 
+        type: 'Weapon', 
+        icon: 'fa-solid fa-khanda', 
+        baseValue: 130, 
+        rarity: 'common',
+        stats: { attack: 12, defense: 2, weight: 4 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'bundle_of_throwing_axes', 
+        name: 'Bundle of Throwing Axes', 
+        type: 'Ranged', 
+        icon: 'fa-solid fa-hammer', 
+        baseValue: 150, 
+        rarity: 'uncommon',
+        stats: { attack: 18, ammo: 5, weight: 6 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'bundle_of_javelins', 
+        name: 'Bundle of Javelins', 
+        type: 'Ranged', 
+        icon: 'fa-solid fa-arrows-up-down', 
+        baseValue: 140, 
+        rarity: 'uncommon',
+        stats: { attack: 16, ammo: 6, weight: 5 },
+        availableIn: ['Town', 'Ruins'] 
     },
 
     // --- GREENSKIN CRUDE WEAPONS ---

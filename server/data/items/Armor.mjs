@@ -51,6 +51,58 @@ export const ARMOR = [
         availableIn: ['Stronghold', 'High Kingdom'] 
     },
 
+    // --- BRIGAND LOOT ARMOR ---
+    { 
+        id: 'reinforced_mail_shirt', 
+        name: 'Reinforced Mail Shirt', 
+        type: 'Armor', 
+        icon: 'fa-solid fa-shirt', 
+        baseValue: 600, 
+        rarity: 'uncommon',
+        stats: { defense: 110, weight: 15, fatigue_penalty: -12 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'leather_lamellar_armor', 
+        name: 'Leather Lamellar Armor', 
+        type: 'Armor', 
+        icon: 'fa-solid fa-shirt', 
+        baseValue: 400, 
+        rarity: 'uncommon',
+        stats: { defense: 95, weight: 12, fatigue_penalty: -10 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'patched_mail_shirt', 
+        name: 'Patched Mail Shirt', 
+        type: 'Armor', 
+        icon: 'fa-solid fa-shirt', 
+        baseValue: 300, 
+        rarity: 'common',
+        stats: { defense: 90, weight: 14, fatigue_penalty: -11 },
+        availableIn: ['Village', 'Ruins'] 
+    },
+    { 
+        id: 'padded_leather', 
+        name: 'Padded Leather', 
+        type: 'Armor', 
+        icon: 'fa-solid fa-shirt', 
+        baseValue: 200, 
+        rarity: 'common',
+        stats: { defense: 80, weight: 8, fatigue_penalty: -6 },
+        availableIn: ['Village', 'Ruins'] 
+    },
+    { 
+        id: 'rugged_surcoat', 
+        name: 'Rugged Surcoat', 
+        type: 'Armor', 
+        icon: 'fa-solid fa-shirt', 
+        baseValue: 100, 
+        rarity: 'common',
+        stats: { defense: 55, weight: 4, fatigue_penalty: -3 },
+        availableIn: ['Village', 'Ruins'] 
+    },
+
     // --- HELMETS ---
     { 
         id: 'kettle_hat', 
@@ -72,6 +124,48 @@ export const ARMOR = [
         stats: { defense: 22, weight: 4, fatigue_penalty: -2 },
         availableIn: ['Town', 'Stronghold'] 
     },
+    
+    // --- BRIGAND LOOT HELMETS ---
+    { 
+        id: 'padded_dented_nasal_helmet', 
+        name: 'Padded Dented Nasal Helmet', 
+        type: 'Head', 
+        icon: 'fa-solid fa-helmet-safety', 
+        baseValue: 250, 
+        rarity: 'uncommon',
+        stats: { defense: 110, weight: 6, fatigue_penalty: -4 },
+        availableIn: ['Ruins'] 
+    },
+    { 
+        id: 'brigand_nasal_helmet', 
+        name: 'Nasal Helmet', 
+        type: 'Head', 
+        icon: 'fa-solid fa-helmet-safety', 
+        baseValue: 240, 
+        rarity: 'uncommon',
+        stats: { defense: 105, weight: 5, fatigue_penalty: -3 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'rusty_mail_coif', 
+        name: 'Rusty Mail Coif', 
+        type: 'Head', 
+        icon: 'fa-solid fa-helmet-safety', 
+        baseValue: 150, 
+        rarity: 'common',
+        stats: { defense: 70, weight: 4, fatigue_penalty: -2 },
+        availableIn: ['Village', 'Ruins'] 
+    },
+    { 
+        id: 'headscarf', 
+        name: 'Headscarf', 
+        type: 'Head', 
+        icon: 'fa-solid fa-mask', 
+        baseValue: 30, 
+        rarity: 'common',
+        stats: { defense: 20, weight: 0, fatigue_penalty: 0 },
+        availableIn: ['Village', 'Ruins'] 
+    },
 
     // --- SHIELDS ---
     { 
@@ -82,7 +176,17 @@ export const ARMOR = [
         baseValue: 80, 
         rarity: 'common',
         stats: { defense: 15, weight: 4, fatigue_penalty: -2 },
-        availableIn: ['Village', 'Town', 'Stronghold'] 
+        availableIn: ['Village', 'Town', 'Stronghold', 'Ruins'] 
+    },
+    { 
+        id: 'buckler', 
+        name: 'Buckler', 
+        type: 'Off-Hand', 
+        icon: 'fa-solid fa-shield', 
+        baseValue: 100, 
+        rarity: 'common',
+        stats: { defense: 10, weight: 2, fatigue_penalty: 0 },
+        availableIn: ['Village', 'Town', 'Ruins'] 
     },
     { 
         id: 'heavy_metal_shield', 
