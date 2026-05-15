@@ -18,7 +18,7 @@ function ensureDirectory(dir) {
     }
 }
 
-// 1. GLOBAL ACCESS (Unchanged behavior)
+// 1. GLOBAL ACCESS
 export function getDatabase(dbName) {
     if (globalConnections.has(dbName)) return globalConnections.get(dbName);
 
@@ -28,7 +28,7 @@ export function getDatabase(dbName) {
     try {
         const db = new Database(filePath);
         db.pragma('journal_mode = WAL');
-        initializeSchema(db, dbName); // Initialize Global Tables
+        initializeSchema(db, dbName);
         globalConnections.set(dbName, db);
         return db;
     } catch (error) {
@@ -49,7 +49,7 @@ export function loadGameDatabase(slotId) {
     }
 
     ensureDirectory(SAVE_DATA_DIR);
-    const filename = `slot_${slotId}.db`; // e.g., slot_1.db
+    const filename = `slot_${slotId}.db`;
     const filePath = path.join(SAVE_DATA_DIR, filename);
 
     try {
@@ -57,7 +57,7 @@ export function loadGameDatabase(slotId) {
         const db = new Database(filePath);
         db.pragma('journal_mode = WAL');
         
-        // Initialize Game-Specific Tables (Mercenaries, Inventory, etc.)
+        // Initialize Game-Specific Tables
         initializeGameSchema(db); 
         
         activeGameConnection = db;
@@ -69,43 +69,30 @@ export function loadGameDatabase(slotId) {
     }
 }
 
-// Helper to get the currently active connection
 export function getActiveGameDB() {
-    if (!activeGameConnection) {
-        throw new Error("No game save is currently loaded.");
-    }
-    if (!activeGameConnection.open) {
-        throw new Error("Active game connection is closed.");
-    }
+    if (!activeGameConnection) throw new Error("No game save is currently loaded.");
+    if (!activeGameConnection.open) throw new Error("Active game connection is closed.");
     return activeGameConnection;
 }
 
 export function closeActiveGameDatabase() {
     if (activeGameConnection) {
-        try {
-            activeGameConnection.close();
-        } catch(e) {}
+        try { activeGameConnection.close(); } catch(e) {}
         activeGameConnection = null;
         console.log("🎮 Game Save Connection Closed.");
     }
 }
 
-// Helper to delete a save
 export function deleteSaveFile(slotId) {
     const filePath = path.join(SAVE_DATA_DIR, `slot_${slotId}.db`);
     
-    // Close if it's the active one
-    // better-sqlite3 .name property contains the path passed to constructor
-    if (activeGameConnection && activeGameConnection.name === filePath) {
-        try {
-            activeGameConnection.close();
-        } catch(e) {}
+    if (activeGameConnection) {
+        try { activeGameConnection.close(); } catch(e) {}
         activeGameConnection = null;
     }
 
     try {
         if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        // Clean up WAL/SHM files to prevent corruption warnings
         if (fs.existsSync(filePath + '-wal')) fs.unlinkSync(filePath + '-wal');
         if (fs.existsSync(filePath + '-shm')) fs.unlinkSync(filePath + '-shm');
         return true;

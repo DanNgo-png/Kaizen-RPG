@@ -121,11 +121,26 @@ const migrations = [
             db.exec("ALTER TABLE world_nodes ADD COLUMN expansion_reqs TEXT DEFAULT '{}';");
         }
     },
-    // --- Version 9: Node Attachments ---
     (db) => {
         const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
         if (!nodeColumns.includes('attachments')) {
             db.exec("ALTER TABLE world_nodes ADD COLUMN attachments INTEGER DEFAULT 0;");
+        }
+    },
+    (db) => {
+        const factionColumns = db.pragma('table_info(factions)').map(col => col.name);
+        if (!factionColumns.includes('type')) {
+            db.exec("ALTER TABLE factions ADD COLUMN type TEXT DEFAULT 'noble';");
+        }
+    },
+    // --- Version 11: Hostile and Hidden node properties ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('is_hidden')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN is_hidden INTEGER DEFAULT 0;");
+        }
+        if (!nodeColumns.includes('is_hostile')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN is_hostile INTEGER DEFAULT 0;");
         }
     }
 ];
