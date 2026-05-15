@@ -491,6 +491,9 @@ export class GameRepository {
                 if (focusMinutes >= 1) {
                     logs.push(`🕳️ The party delved into the dungeon for ${Math.round(focusMinutes)} minutes.`);
                     logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
+                } else {
+                    logs.push(`🕳️ The party briefly scouted the dungeon entrance.`);
+                    if (goldFound > 0) logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 }
 
                 const baseThreatPerMinute = 5;
@@ -567,6 +570,10 @@ export class GameRepository {
                 const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
                 this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
             });
+        }
+
+        if (logs.length === 0 && daysPassed === 0) {
+            logs.push(`🛡️ The party trained and patrolled for ${Math.max(1, Math.round(focusMinutes))} minutes.`);
         }
 
         const totalXpGranted = activeMercs.reduce((sum, m) => sum + Math.floor(baseXpAmount * (1 + m.xpBonus)), 0);
