@@ -5,6 +5,7 @@ import { buildAftermathModal } from "../handlers/MercenaryHandler.js";
 class GlobalGameManager {
     constructor() {
         this.activeContract = null;
+        this.uncommittedSeconds = 0;
         this.init();
     }
 
@@ -47,6 +48,15 @@ class GlobalGameManager {
         setTimeout(() => {
             GameAPI.getActiveContract();
         }, 1000); 
+
+        // Bind global save hook for window close/refresh
+        window.kaizenSaveGameProgress = () => this.saveState();
+    }
+
+    saveState() {
+        if (this.activeContract) {
+            GameAPI.saveContractProgress(this.activeContract.id, this.activeContract.progress_minutes);
+        }
     }
 
     handleTick(e) {
@@ -54,6 +64,7 @@ class GlobalGameManager {
 
         const seconds = e.detail.seconds;
         this.activeContract.progress_minutes += (seconds / 60);
+        this.uncommittedSeconds += seconds;
 
         // Dispatch an event so the Game UI can animate the progress bar if it is open
         document.dispatchEvent(new CustomEvent('kaizen:contract-progress-updated', {
@@ -64,7 +75,12 @@ class GlobalGameManager {
         if (this.activeContract.progress_minutes >= this.activeContract.required_minutes) {
             const contractId = this.activeContract.id;
             this.activeContract = null; // Clear immediately to avoid duplicate triggers
+            this.uncommittedSeconds = 0;
             GameAPI.completeActiveContract(contractId);
+        } else if (this.uncommittedSeconds >= 10) {
+            // Save to DB every 10 seconds of focus to prevent data loss on crash/refresh
+            this.saveState();
+            this.uncommittedSeconds = 0;
         }
     }
 }

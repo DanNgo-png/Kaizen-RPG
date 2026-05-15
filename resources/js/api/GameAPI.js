@@ -38,6 +38,10 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "unequipItem", { inventoryId, stashSlotIndex });
     },
 
+    saveContractProgress: async (contractId, progressMinutes) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "saveContractProgress", { contractId, progressMinutes });
+    },
+
     getActiveContract: async () => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getActiveContract", null);
     },

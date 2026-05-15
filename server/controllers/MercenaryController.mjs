@@ -208,6 +208,12 @@ export class MercenaryController {
             } catch(e) { console.error(e); }
         });
 
+        app.events.on("saveContractProgress", (payload) => {
+            try {
+                this.repo.updateContractProgress(payload.contractId, payload.progressMinutes);
+            } catch(e) { console.error("Failed to save contract progress:", e); }
+        });
+
         app.events.on("completeActiveContract", (payload) => {
             try {
                 const result = this.repo.completeActiveContract();

@@ -76,6 +76,7 @@ export class GameRepository {
             `),
             setActiveContract: this.db.prepare(`UPDATE contracts SET is_active = CASE WHEN id = ? THEN 1 ELSE 0 END`),
             addContractProgress: this.db.prepare(`UPDATE contracts SET progress_minutes = progress_minutes + @progress WHERE id = @id`),
+            setContractProgress: this.db.prepare(`UPDATE contracts SET progress_minutes = @progress WHERE id = @id`),
             completeContract: this.db.prepare(`UPDATE contracts SET is_completed = 1, is_active = 0 WHERE id = @id`),
             abortContract: this.db.prepare(`DELETE FROM contracts WHERE id = ?`),
 
@@ -172,6 +173,11 @@ export class GameRepository {
     cancelContract(contractId) {
         this.ensureConnection();
         this.statements.abortContract.run(contractId);
+    }
+
+    updateContractProgress(contractId, progressMinutes) {
+        this.ensureConnection();
+        this.statements.setContractProgress.run({ id: contractId, progress: progressMinutes });
     }
 
     completeActiveContract() {

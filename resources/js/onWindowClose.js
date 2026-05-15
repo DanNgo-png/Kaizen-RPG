@@ -11,6 +11,12 @@ function saveAppState() {
         console.log("💾 Saving Active Game World...");
         window.kaizenSaveWorldState();
     }
+
+    // Check for active Game Progress save hook
+    if (typeof window.kaizenSaveGameProgress === 'function') {
+        console.log("💾 Saving Active Game Contract Progress...");
+        window.kaizenSaveGameProgress();
+    }
 }
 
 async function onWindowClose() {
