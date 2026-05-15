@@ -378,8 +378,11 @@ export class MercenaryController {
                 }
                 
                 if (payload.nodeId) {
-                    const repGain = Math.max(1, Math.floor(payload.cost / 100));
-                    this.repo.updateNodeReputation(payload.nodeId, repGain);
+                    // Nerfed: 1 rep per 300g traded, no guaranteed minimum
+                    const repGain = Math.floor(payload.cost / 300);
+                    if (repGain > 0) {
+                        this.repo.updateNodeReputation(payload.nodeId, repGain);
+                    }
                 }
                 
                 app.events.broadcast("transactionComplete", { success: true });
@@ -397,8 +400,10 @@ export class MercenaryController {
                 this.repo.deleteItemFromInventory(payload.inventoryId);
                 
                 if (payload.nodeId) {
-                    const repGain = Math.max(1, Math.floor(payload.price / 100));
-                    this.repo.updateNodeReputation(payload.nodeId, repGain);
+                    const repGain = Math.floor(payload.price / 300);
+                    if (repGain > 0) {
+                        this.repo.updateNodeReputation(payload.nodeId, repGain);
+                    }
 
                     if (itemId) {
                         const node = this.repo.getNodeById(payload.nodeId);

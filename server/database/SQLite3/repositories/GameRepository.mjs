@@ -189,12 +189,13 @@ export class GameRepository {
         this.statements.completeContract.run({ id: activeContract.id });
         this.updateGold(activeContract.gold_reward);
 
-        const contractRepReward = 15;
+        // Scale reputation: ~1 rep per 10 minutes of required focus (minimum 2)
+        const contractRepReward = Math.max(2, Math.floor(activeContract.required_minutes / 10));
         this.updateNodeReputation(activeContract.node_id, contractRepReward);
 
         const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
         this.logNodeHistory(activeContract.node_id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
-
+        
         // --- EXPANSION PREREQUISITES TRACKING ---
         const node = this.getNodeById(activeContract.node_id);
         if (node && node.type === 'Empire' && !node.current_event) {
