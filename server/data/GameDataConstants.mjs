@@ -134,13 +134,23 @@ export const SETTLEMENT_EVENTS = {
         specDisabled: false,
         freqMod: 1 
     },
+    'building_boom': {
+        name: 'Building Boom',
+        buyMult: 1.1,
+        sellMult: 1.5,
+        qtyMult: 1.2,
+        specDisabled: false,
+        freqMod: 3,
+        isRandom: true
+    },
     'settlement_expansion': {
         name: 'Settlement Expansion',
         buyMult: 1.1,
         sellMult: 1.5, // Pays 50% more to entice the player to sell goods here
         qtyMult: 1.2,
         specDisabled: false,
-        freqMod: 3
+        freqMod: 3,
+        isRandom: false // Not rolled randomly in day progression
     }
 };
 

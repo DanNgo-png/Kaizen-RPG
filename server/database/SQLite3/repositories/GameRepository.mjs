@@ -190,8 +190,27 @@ export class GameRepository {
         this.updateNodeReputation(activeContract.node_id, contractRepReward);
 
         const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
-
         this.logNodeHistory(activeContract.node_id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
+
+        // --- EXPANSION PREREQUISITES TRACKING ---
+        const node = this.getNodeById(activeContract.node_id);
+        if (node && node.type === 'Empire' && !node.current_event) {
+            let reqs = {};
+            try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+            
+            const titleLower = activeContract.title.toLowerCase();
+            if (titleLower.includes('escort')) reqs.escorts = (reqs.escorts || 0) + 1;
+            if (titleLower.includes('guard')) reqs.guards = (reqs.guards || 0) + 1;
+            
+            this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), node.id);
+            
+            // Check if prerequisites met
+            if (reqs.escorts >= 2 && reqs.guards >= 2) {
+                this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, expansion_reqs = ? WHERE id = ?')
+                    .run('settlement_expansion', 999, '{}', node.id);
+                this.logNodeHistory(node.id, `After securing trade routes and protecting merchants, ${node.name} is ready for expansion!`, 'world');
+            }
+        }
 
         const logs = [
             `📜 Contract Completed: ${activeContract.title}`,
@@ -555,12 +574,52 @@ export class GameRepository {
             let medicineUsed = 0;
             let totalHealed = 0;
 
-            // ... (keep existing healing logic) ...
-            
-            // --- SPOILAGE LOGIC ---
-            // ... (keep existing spoilage logic) ...
+            allMercs.forEach(m => {
+                let fatigueDecrease = m.is_active ? -10 : 30;
+                let newFatigue = Math.max(0, m.fatigue - fatigueDecrease);
 
-            // --- WORLD EVENTS SIMULATION (NEW LOGIC) ---
+                let hpToHeal = 0;
+                if (m.current_hp < m.max_hp) {
+                    if (currentMedicine > 0) {
+                        hpToHeal = Math.min(25, m.max_hp - m.current_hp);
+                        currentMedicine--;
+                        medicineUsed++;
+                    } else {
+                        hpToHeal = Math.min(5, m.max_hp - m.current_hp);
+                    }
+                }
+                
+                totalHealed += hpToHeal;
+                
+                this.db.prepare(`
+                    UPDATE mercenaries 
+                    SET current_hp = current_hp + ?, fatigue = ?
+                    WHERE id = ?
+                `).run(hpToHeal, newFatigue, m.id);
+            });
+
+            // --- SPOILAGE LOGIC ---
+            let spoiledCount = 0;
+            const perishableItems = this.db.prepare(`
+                SELECT i.id, i.item_id, i.durability 
+                FROM inventory i 
+                WHERE i.mercenary_id IS NULL AND i.stash_slot IS NOT NULL
+            `).all();
+
+            perishableItems.forEach(invItem => {
+                const template = ItemFactory.createItem(invItem.item_id);
+                if (template.stats && template.stats.spoil_days) {
+                    const newDurability = invItem.durability - 1;
+                    if (newDurability <= 0) {
+                        this.db.prepare('DELETE FROM inventory WHERE id = ?').run(invItem.id);
+                        spoiledCount++;
+                    } else {
+                        this.db.prepare('UPDATE inventory SET durability = ? WHERE id = ?').run(newDurability, invItem.id);
+                    }
+                }
+            });
+
+            // --- WORLD EVENTS SIMULATION ---
             const allNodes = this.db.prepare('SELECT id, current_event, event_expiration FROM world_nodes').all();
             const eventKeys = Object.keys(SETTLEMENT_EVENTS);
 
@@ -577,7 +636,8 @@ export class GameRepository {
                 } else {
                     // 5% chance per day for an idle settlement to get a new event
                     if (Math.random() < 0.05) {
-                        const randomEvent = eventKeys[Math.floor(Math.random() * eventKeys.length)];
+                        const validEvents = eventKeys.filter(k => SETTLEMENT_EVENTS[k].isRandom !== false);
+                        const randomEvent = validEvents[Math.floor(Math.random() * validEvents.length)];
                         const duration = Math.floor(Math.random() * 5) + 3; // Lasts 3 to 7 days
                         this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?').run(randomEvent, duration, n.id);
                         
@@ -765,7 +825,7 @@ export class GameRepository {
         `).run(progress, newType, newEvent, buyMod, sellMod, nodeId);
     }
 
-    spawnColony(parentNode) {
+    spawnColony(parentNode, specialization = null) {
         this.ensureConnection();
         const allNodes = this.statements.getAllNodes.all();
         
@@ -824,7 +884,7 @@ export class GameRepository {
             faction_id: parentNode.faction_id,
             buy_modifier: 1.2, // Default Hamlet economy
             sell_modifier: 0.3,
-            specialization: null
+            specialization: specialization
         });
         
         return { id: info.lastInsertRowid, name: newName };

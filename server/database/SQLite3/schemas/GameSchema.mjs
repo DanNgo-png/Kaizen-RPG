@@ -66,6 +66,7 @@ export const GAME_SCHEMA_SQL = `
         current_event TEXT,
         event_expiration INTEGER DEFAULT 0,
         development_progress INTEGER DEFAULT 0, 
+        expansion_reqs TEXT DEFAULT '{}',
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 

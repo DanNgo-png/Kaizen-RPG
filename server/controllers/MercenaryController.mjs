@@ -352,48 +352,55 @@ export class MercenaryController {
                         const node = this.repo.getNodeById(payload.nodeId);
                         const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
                         
-                        // If it's a building material AND the settlement is currently expanding
-                        if (isBuildingMat && node.current_event === 'settlement_expansion') {
-                            let newProgress = (node.development_progress || 0) + 1;
-                            let newType = node.type;
-                            let newEvent = node.current_event;
-                            let buyMod = node.buy_modifier;
-                            let sellMod = node.sell_modifier;
-                            
-                            const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
-                            let upgraded = false;
-                            
-                            // Check threshold
-                            if (newProgress >= MAX_DEVELOPMENT_PROGRESS && nextTier) {
-                                newType = nextTier;
-                                newProgress = 0;
-                                newEvent = null; // Clear the event, expansion is finished
-                                upgraded = true;
-
-                                // Update market modifiers for the new tier
-                                const tierInfo = SETTLEMENT_TIERS[nextTier];
-                                if (tierInfo) {
-                                    buyMod = tierInfo.buyMult;
-                                    sellMod = tierInfo.sellMult;
-                                }
-                            }
-                            
-                            this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod);
-                            
-                            if (upgraded) {
-                                this.repo.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
+                        if (isBuildingMat) {
+                            if (node.current_event === 'building_boom') {
+                                let newProgress = (node.development_progress || 0) + 1;
+                                let newType = node.type;
+                                let newEvent = node.current_event;
+                                let buyMod = node.buy_modifier;
+                                let sellMod = node.sell_modifier;
                                 
-                                // --- Colonization Logic ---
-                                const colonyTiers = ['Province', 'Kingdom', 'High Kingdom', 'Empire'];
-                                if (colonyTiers.includes(newType)) {
-                                    const spawnedNode = this.repo.spawnColony(node);
+                                const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
+                                let upgraded = false;
+                                
+                                if (newProgress >= MAX_DEVELOPMENT_PROGRESS && nextTier) {
+                                    newType = nextTier;
+                                    newProgress = 0;
+                                    newEvent = null;
+                                    upgraded = true;
+    
+                                    const tierInfo = SETTLEMENT_TIERS[nextTier];
+                                    if (tierInfo) {
+                                        buyMod = tierInfo.buyMult;
+                                        sellMod = tierInfo.sellMult;
+                                    }
+                                }
+                                
+                                this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod);
+                                
+                                if (upgraded) {
+                                    this.repo.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
+                                }
+                            } else if (node.current_event === 'settlement_expansion') {
+                                let newProgress = (node.development_progress || 0) + 1;
+                                
+                                if (newProgress >= MAX_DEVELOPMENT_PROGRESS) {
+                                    let newSpec = null;
+                                    if (itemId === 'quality_wood') newSpec = 'Lumber Camp';
+                                    if (itemId === 'peat_bricks') newSpec = 'Peat Pit';
+                                    if (itemId === 'copper_ingots') newSpec = 'Copper Mine';
+    
+                                    this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier);
+                                    this.repo.logNodeHistory(node.id, `The construction finished! ${node.name} has expanded its borders.`, 'world');
+                                    
+                                    const spawnedNode = this.repo.spawnColony(node, newSpec);
                                     
                                     if (spawnedNode) {
-                                         // Log it in the parent city's history
-                                         this.repo.logNodeHistory(node.id, `The ${newType} has expanded its borders, establishing the new settlement of ${spawnedNode.name}.`, 'world');
-                                         // Log it in the new colony's history
+                                         this.repo.logNodeHistory(node.id, `Established the new settlement of ${spawnedNode.name} with a ${newSpec ? 'focus on ' + newSpec : 'focus on local resources'}.`, 'world');
                                          this.repo.logNodeHistory(spawnedNode.id, `Founded as a colony by ${node.name}.`, 'world');
                                     }
+                                } else {
+                                    this.repo.updateNodeDevelopment(node.id, newProgress, node.type, node.current_event, node.buy_modifier, node.sell_modifier);
                                 }
                             }
                         }

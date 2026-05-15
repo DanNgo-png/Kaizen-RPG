@@ -156,15 +156,17 @@ export class ChroniclesModal {
             `;
 
             // --- Inject Expansion Progress UI ---
-            if (node.current_event === 'settlement_expansion') {
+            if (node.current_event === 'settlement_expansion' || node.current_event === 'building_boom') {
                 const progress = node.development_progress || 0;
                 const maxProg = BAREBONES_UI.MAX_DEVELOPMENT_PROGRESS;
                 const pct = (progress / maxProg) * 100;
                 
+                const titleStr = node.current_event === 'settlement_expansion' ? 'Colonial Expansion' : 'Settlement Upgrade';
+
                 eventContext += `
                     <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
                         <div style="font-size: 0.85rem; color: #fbbf24; font-weight: 700; margin-bottom: 4px;">
-                            <i class="fa-solid fa-hammer"></i> Settlement Expansion
+                            <i class="fa-solid fa-hammer"></i> ${titleStr}
                         </div>
                         <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px; line-height: 1.4;">
                             Selling Building Materials (Wood, Peat, Copper) accelerates growth.
@@ -184,6 +186,28 @@ export class ChroniclesModal {
                     No active events altering the economy.
                 </div>
             `;
+            
+            if (node.type === 'Empire') {
+                let reqs = {};
+                try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+                const escorts = reqs.escorts || 0;
+                const guards = reqs.guards || 0;
+                
+                eventContext += `
+                    <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
+                        <div style="font-size: 0.85rem; color: #a78bfa; font-weight: 700; margin-bottom: 4px;">
+                            <i class="fa-solid fa-map-location-dot"></i> Settlement Expansion Reqs
+                        </div>
+                        <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px; line-height: 1.4;">
+                            Complete contracts here to trigger an expansion.
+                        </div>
+                        <div style="font-size: 0.8rem; color: #cbd5e1;">
+                            Escort Merchants: ${escorts} / 2<br>
+                            Guard Caravans: ${guards} / 2
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         return `

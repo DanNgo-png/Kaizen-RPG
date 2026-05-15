@@ -134,6 +134,14 @@ const migrations = [
         if (!nodeColumns.includes('development_progress')) {
             db.exec("ALTER TABLE world_nodes ADD COLUMN development_progress INTEGER DEFAULT 0;");
         }
+    },
+    
+    // --- Version 8: Settlement Expansion Reqs ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('expansion_reqs')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN expansion_reqs TEXT DEFAULT '{}';");
+        }
     }
 ];
 
