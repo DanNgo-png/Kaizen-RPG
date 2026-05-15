@@ -1,36 +1,14 @@
-import {
-    ORIGIN_CONFIGS,
-    ROLE_STATS,
-    NAMES,
-    TITLES,
-    SETTLEMENT_NAMES,
-    SETTLEMENT_TIERS,
-    SPECIALIZATIONS
-} from '../data/GameDataConstants.mjs';
-import {
-    NOBLE_HOUSE_LORE_POOL,
-    WORLD_GENERATION_CONFIG,
-    WORLD_NODE_TYPE_WEIGHTS,
-    WORLD_RANDOM_CONFIG
-} from '../data/NobleHouses.mjs';
+import { ORIGIN_CONFIGS, ROLE_STATS, NAMES, TITLES } from '../data/GameDataConstants.mjs';
+import { WorldSimulator } from './simulation/WorldSimulator.mjs';
+import { RNG } from '../utils/RNG.mjs';
 
 const DEFAULT_WORLD_MODIFIERS = Object.freeze({
-    BUY: 1.0,
-    SELL: 1.0,
-    LOW_FUNDS: 0.5,
-    HIGH_FUNDS: 1.5,
-    STARTING_DAY: 1,
-    ACTIVE_MERCENARY: 1
+    BUY: 1.0, SELL: 1.0, LOW_FUNDS: 0.5, HIGH_FUNDS: 1.5, STARTING_DAY: 1, ACTIVE_MERCENARY: 1
 });
 
 const ROSTER_GENERATION = Object.freeze({
-    TITLE_CHANCE: 0.7,
-    BASE_HIT_POINTS: 50,
-    STRENGTH_HIT_POINT_MULTIPLIER: 2,
-    WAGE_STAT_DIVISOR: 2
+    TITLE_CHANCE: 0.7, BASE_HIT_POINTS: 50, STRENGTH_HIT_POINT_MULTIPLIER: 2, WAGE_STAT_DIVISOR: 2
 });
-
-const INCLUSIVE_RANGE_OFFSET = 1;
 
 export class CampaignGenerator {
     constructor(repository) {
@@ -43,46 +21,22 @@ export class CampaignGenerator {
         this._setupWorld(config);
         this._generateRoster(config.modeId, config.seed);
 
+        const simulator = new WorldSimulator(this.repo);
+        const rng = new RNG(config.seed);
+
         if (config.mapSource === 'premade') {
             if (config.premadeNodes && Array.isArray(config.premadeNodes)) {
-                this._createPremadeNodes(config.premadeNodes, config.seed);
+                simulator.setupPremadeWorld(rng, config.premadeNodes);
             } else {
                 console.error("Map Source is premade but no nodes provided in config.");
             }
         } else {
-            this._generateWorldMap(config.seed);
+            simulator.generateProceduralWorld(rng);
         }
-    }
-
-    _createPremadeNodes(nodes, seed) {
-        console.log(`Importing ${nodes.length} Premade Nodes...`);
-        const factionIdMap = this._createPremadeFactionMap(nodes, seed);
-
-        nodes.forEach(n => {
-            const tierInfo = SETTLEMENT_TIERS[n.type] || {
-                buyMult: DEFAULT_WORLD_MODIFIERS.BUY,
-                sellMult: DEFAULT_WORLD_MODIFIERS.SELL
-            };
-            const originalFactionId = n.faction_id === null || n.faction_id === undefined
-                ? null
-                : Number(n.faction_id);
-            const factionId = Number.isFinite(originalFactionId)
-                ? factionIdMap.get(originalFactionId) ?? null
-                : null;
-
-            this.repo.createWorldNode({
-                ...n,
-                faction_id: factionId,
-                buy_modifier: n.buy_modifier || tierInfo.buyMult,
-                sell_modifier: n.sell_modifier || tierInfo.sellMult,
-                attachments: n.attachments || 0
-            });
-        });
     }
 
     _setupWorld(config) {
         const originData = ORIGIN_CONFIGS[config.modeId] || ORIGIN_CONFIGS['default'];
-
         let startingGold = originData.gold;
         if (config.funds === 'low') startingGold *= DEFAULT_WORLD_MODIFIERS.LOW_FUNDS;
         if (config.funds === 'high') startingGold *= DEFAULT_WORLD_MODIFIERS.HIGH_FUNDS;
@@ -99,261 +53,30 @@ export class CampaignGenerator {
 
     _generateRoster(modeId, seed) {
         const originData = ORIGIN_CONFIGS[modeId] || ORIGIN_CONFIGS['default'];
+        const rng = new RNG(seed); // Seed the names too
 
         originData.roster.forEach((template) => {
-            const name = NAMES[Math.floor(Math.random() * NAMES.length)];
-            const title = Math.random() > ROSTER_GENERATION.TITLE_CHANCE
-                ? ` ${TITLES[Math.floor(Math.random() * TITLES.length)]}`
-                : '';
+            const name = rng.pick(NAMES);
+            const title = Math.random() > ROSTER_GENERATION.TITLE_CHANCE ? ` ${rng.pick(TITLES)}` : '';
             const fullName = `${name}${title}`;
-
             const ranges = ROLE_STATS[template.role] || ROLE_STATS['default'];
             const multiplier = template.statsMod || 1.0;
 
-            const str = Math.floor(this._rand(ranges.str) * multiplier);
-            const int = Math.floor(this._rand(ranges.int) * multiplier);
-            const spd = Math.floor(this._rand(ranges.spd) * multiplier);
-
+            const str = Math.floor(rng.randomInt(ranges.str[0], ranges.str[1]) * multiplier);
+            const int = Math.floor(rng.randomInt(ranges.int[0], ranges.int[1]) * multiplier);
+            const spd = Math.floor(rng.randomInt(ranges.spd[0], ranges.spd[1]) * multiplier);
             const maxHp = ROSTER_GENERATION.BASE_HIT_POINTS + (str * ROSTER_GENERATION.STRENGTH_HIT_POINT_MULTIPLIER);
             const wage = Math.floor((str + int + spd) / ROSTER_GENERATION.WAGE_STAT_DIVISOR);
 
-            const mercData = {
-                name: fullName,
-                role: template.role,
-                level: template.level,
-                str,
-                int,
-                spd,
-                max_hp: maxHp,
-                current_hp: maxHp,
-                wage: wage,
+            const result = this.repo.addMercenary({
+                name: fullName, role: template.role, level: template.level,
+                str, int, spd, max_hp: maxHp, current_hp: maxHp, wage: wage,
                 is_active: DEFAULT_WORLD_MODIFIERS.ACTIVE_MERCENARY
-            };
-
-            const result = this.repo.addMercenary(mercData);
-            const mercId = result.lastInsertRowid;
+            });
 
             if (template.gear) {
-                template.gear.forEach(itemId => {
-                    this.repo.addItemToInventory(itemId, mercId);
-                });
+                template.gear.forEach(itemId => this.repo.addItemToInventory(itemId, result.lastInsertRowid));
             }
         });
-    }
-
-    _generateWorldMap(seed) {
-        console.log("Generating Persistent World Map...");
-        const rng = this._createSeededRandom(seed);
-        const houseCount = this._randomInt(
-            rng,
-            WORLD_GENERATION_CONFIG.MIN_HOUSES,
-            WORLD_GENERATION_CONFIG.MAX_HOUSES
-        );
-        const houses = this._createFactions(houseCount, rng);
-        const capitals = this._createCapitalNodes(houses, rng);
-        const availableNames = this._shuffledSettlementNames(houses, rng);
-        const specKeys = Object.keys(SPECIALIZATIONS);
-        const remainingNodeCount = Math.max(
-            0,
-            WORLD_GENERATION_CONFIG.NODE_COUNT - capitals.length
-        );
-
-        for (let i = 0; i < remainingNodeCount; i++) {
-            const x = this._randomInt(rng, WORLD_GENERATION_CONFIG.MAP_MIN_X, WORLD_GENERATION_CONFIG.MAP_WIDTH);
-            const y = this._randomInt(rng, WORLD_GENERATION_CONFIG.MAP_MIN_Y, WORLD_GENERATION_CONFIG.MAP_HEIGHT);
-
-            const type = this._pick(WORLD_NODE_TYPE_WEIGHTS, rng);
-            const settlementName = availableNames.pop() || `Unknown Lands ${i}`;
-            const tierInfo = SETTLEMENT_TIERS[type] || {
-                buyMult: DEFAULT_WORLD_MODIFIERS.BUY,
-                sellMult: DEFAULT_WORLD_MODIFIERS.SELL
-            };
-            const closestCapital = this._findClosestCapital({ x, y }, capitals);
-
-            const isPoor = rng() < WORLD_GENERATION_CONFIG.POOR_SPECIALIZATION_CHANCE;
-            const specialization = isPoor ? null : this._pick(specKeys, rng);
-            const attachments = this._randomInt(rng, 0, 3); // 0 to 3 attached locations
-
-            this.repo.createWorldNode({
-                type,
-                name: settlementName,
-                x,
-                y,
-                faction_id: type === 'Ruins' ? null : closestCapital?.factionId ?? null,
-                buy_modifier: tierInfo.buyMult,
-                sell_modifier: tierInfo.sellMult,
-                specialization,
-                attachments
-            });
-        }
-
-        console.log(`Created ${WORLD_GENERATION_CONFIG.NODE_COUNT} permanent world nodes across ${houses.length} noble houses.`);
-    }
-
-    _createPremadeFactionMap(nodes, seed) {
-        const originalFactionIds = [
-            ...new Set(
-                nodes
-                    .map(node => (
-                        node.faction_id === null || node.faction_id === undefined
-                            ? null
-                            : Number(node.faction_id)
-                    ))
-                    .filter(Number.isFinite)
-            )
-        ].sort((a, b) => a - b);
-
-        if (!originalFactionIds.length) return new Map();
-
-        const rng = this._createSeededRandom(`${seed}:premade-factions`);
-        const factions = this._createFactions(originalFactionIds.length, rng);
-
-        return new Map(originalFactionIds.map((id, index) => [id, factions[index]?.id ?? null]));
-    }
-
-    _createFactions(count, rng) {
-        const selectedHouses = this
-            ._shuffle([...NOBLE_HOUSE_LORE_POOL], rng)
-            .slice(0, Math.min(count, NOBLE_HOUSE_LORE_POOL.length));
-
-        return selectedHouses.map(house => {
-            const result = this.repo.createFaction(house);
-            return {
-                ...house,
-                id: Number(result.lastInsertRowid)
-            };
-        });
-    }
-
-    _createCapitalNodes(houses, rng) {
-        const capitals = [];
-
-        houses.forEach(house => {
-            const position = this._findCapitalPosition(capitals, rng);
-            const tierInfo = SETTLEMENT_TIERS[house.capitalType] || {
-                buyMult: DEFAULT_WORLD_MODIFIERS.BUY,
-                sellMult: DEFAULT_WORLD_MODIFIERS.SELL
-            };
-
-            const attachments = this._randomInt(rng, 1, 3);
-
-            this.repo.createWorldNode({
-                type: house.capitalType,
-                name: house.seatName,
-                x: position.x,
-                y: position.y,
-                faction_id: house.id,
-                buy_modifier: tierInfo.buyMult,
-                sell_modifier: tierInfo.sellMult,
-                specialization: null,
-                attachments
-            });
-
-            capitals.push({
-                ...position,
-                factionId: house.id,
-                factionName: house.name,
-                name: house.seatName
-            });
-        });
-
-        return capitals;
-    }
-
-    _findCapitalPosition(existingCapitals, rng) {
-        for (let attempt = 0; attempt < WORLD_GENERATION_CONFIG.CAPITAL_PLACEMENT_ATTEMPTS; attempt++) {
-            const candidate = this._randomCapitalPosition(rng);
-            const hasEnoughDistance = existingCapitals.every(capital => {
-                return this._distance(candidate, capital) >= WORLD_GENERATION_CONFIG.CAPITAL_MIN_DISTANCE;
-            });
-
-            if (hasEnoughDistance) return candidate;
-        }
-
-        return this._randomCapitalPosition(rng);
-    }
-
-    _randomCapitalPosition(rng) {
-        return {
-            x: this._randomInt(
-                rng,
-                WORLD_GENERATION_CONFIG.CAPITAL_EDGE_PADDING,
-                WORLD_GENERATION_CONFIG.MAP_WIDTH - WORLD_GENERATION_CONFIG.CAPITAL_EDGE_PADDING
-            ),
-            y: this._randomInt(
-                rng,
-                WORLD_GENERATION_CONFIG.CAPITAL_EDGE_PADDING,
-                WORLD_GENERATION_CONFIG.MAP_HEIGHT - WORLD_GENERATION_CONFIG.CAPITAL_EDGE_PADDING
-            )
-        };
-    }
-
-    _findClosestCapital(position, capitals) {
-        return capitals.reduce((closest, capital) => {
-            const distance = this._distance(position, capital);
-            if (!closest || distance < closest.distance) {
-                return { capital, distance };
-            }
-            return closest;
-        }, null)?.capital ?? null;
-    }
-
-    _shuffledSettlementNames(houses, rng) {
-        const reservedCapitalNames = new Set(houses.map(house => house.seatName));
-        const names = SETTLEMENT_NAMES.filter(name => !reservedCapitalNames.has(name));
-        return this._shuffle(names, rng);
-    }
-
-    _shuffle(items, rng) {
-        const shuffled = [...items];
-        for (let i = shuffled.length - 1; i > 0; i--) {
-            const j = this._randomInt(rng, 0, i);
-            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-        }
-        return shuffled;
-    }
-
-    _pick(items, rng) {
-        if (!items.length) return null;
-        return items[this._randomInt(rng, 0, items.length - INCLUSIVE_RANGE_OFFSET)];
-    }
-
-    _distance(a, b) {
-        return Math.hypot(a.x - b.x, a.y - b.y);
-    }
-
-    _createSeededRandom(seed) {
-        let state = this._seedToNumber(seed);
-
-        return () => {
-            state = (
-                Math.imul(state, WORLD_RANDOM_CONFIG.LCG_MULTIPLIER) +
-                WORLD_RANDOM_CONFIG.LCG_INCREMENT
-            ) >>> 0;
-
-            return state / WORLD_RANDOM_CONFIG.LCG_MODULUS;
-        };
-    }
-
-    _seedToNumber(seed) {
-        const seedText = String(seed ?? WORLD_RANDOM_CONFIG.FALLBACK_SEED);
-        let hash = 0;
-
-        for (let i = 0; i < seedText.length; i++) {
-            hash = (
-                Math.imul(hash, WORLD_RANDOM_CONFIG.HASH_MULTIPLIER) +
-                seedText.charCodeAt(i)
-            ) >>> 0;
-        }
-
-        return hash || WORLD_RANDOM_CONFIG.FALLBACK_SEED;
-    }
-
-    _randomInt(rng, min, max) {
-        return Math.floor(rng() * (max - min + INCLUSIVE_RANGE_OFFSET)) + min;
-    }
-
-    _rand([min, max]) {
-        return Math.floor(Math.random() * (max - min + INCLUSIVE_RANGE_OFFSET)) + min;
     }
 }
