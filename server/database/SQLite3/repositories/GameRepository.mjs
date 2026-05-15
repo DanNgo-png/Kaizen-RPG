@@ -196,8 +196,9 @@ export class GameRepository {
         const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
         this.logNodeHistory(activeContract.node_id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
 
-        // Declare titleLower ONCE for the entire function
+        // --- DECLARE ONCE FOR THE ENTIRE FUNCTION ---
         const titleLower = activeContract.title.toLowerCase();
+        const node = this.getNodeById(activeContract.node_id);
 
         // --- CARAVAN / DELIVERY "WELL SUPPLIED" LOGIC ---
         const isCaravan = titleLower.includes('caravan') || titleLower.includes('escort') || titleLower.includes('delivery');
@@ -210,8 +211,7 @@ export class GameRepository {
             this.logNodeHistory(activeContract.node_id, `A merchant caravan safely arrived, guided by ${companyName}. The settlement is now well supplied!`, 'world');
         }
 
-        const node = this.getNodeById(activeContract.node_id);
-        
+        // --- DESTROYING ENEMY CAMPS ---
         if (node && (node.type === 'Bandit Camp' || node.type === 'Ruins')) {
             // Check if it was a hunting/clearing contract
             if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
@@ -229,7 +229,6 @@ export class GameRepository {
         }
 
         // --- EXPANSION PREREQUISITES TRACKING ---
-        const node = this.getNodeById(activeContract.node_id);
         const tierData = SETTLEMENT_TIERS[node?.type];
 
         if (node && tierData && tierData.growthReqs && !node.current_event && node.type !== 'Ruins' && node.type !== 'Bandit Camp') {
@@ -260,7 +259,6 @@ export class GameRepository {
         const foundLoot = [];
         let lootChance = 0.20;
 
-        // Use the already declared titleLower variable
         if (titleLower.includes('hunt') || titleLower.includes('clear') || titleLower.includes('explore')) {
             lootChance = 0.65;
         }
