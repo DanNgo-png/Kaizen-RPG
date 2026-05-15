@@ -144,7 +144,7 @@ class FocusTimerController {
                 else if (parts.length === 2) seconds = (parts[0] * 60) + parts[1];
                 return seconds;
             }
-            return parseInt(val) || 0;
+            return (parseFloat(val) || 0) * 60;
         };
 
         const fSec = parseToSeconds(focusVal);
