@@ -98,6 +98,30 @@ export class ChroniclesModal {
                     <i class="fa-solid fa-bolt"></i> Altered by ${escapeHtml(node.event_name)}
                 </div>
             `;
+
+            // --- Inject Expansion Progress UI ---
+            if (node.current_event === 'settlement_expansion') {
+                const progress = node.development_progress || 0;
+                const maxProg = BAREBONES_UI.MAX_DEVELOPMENT_PROGRESS;
+                const pct = (progress / maxProg) * 100;
+                
+                eventContext += `
+                    <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
+                        <div style="font-size: 0.85rem; color: #fbbf24; font-weight: 700; margin-bottom: 4px;">
+                            <i class="fa-solid fa-hammer"></i> Settlement Expansion
+                        </div>
+                        <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px; line-height: 1.4;">
+                            Selling Building Materials (Wood, Peat, Copper) accelerates growth.
+                        </div>
+                        <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
+                            <div class="bb-fill" style="width: ${pct}%; background: #fbbf24;"></div>
+                        </div>
+                        <div style="font-size: 0.75rem; color: #cbd5e1; text-align: right; margin-top: 6px;">
+                            ${progress} / ${maxProg} Deliveries
+                        </div>
+                    </div>
+                `;
+            }
         } else {
             eventContext = `
                 <div style="margin-top: 6px; font-size: 0.85rem; color: #64748b; font-style: italic;">

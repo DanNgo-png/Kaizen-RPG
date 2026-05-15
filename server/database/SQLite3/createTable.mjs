@@ -126,6 +126,14 @@ const migrations = [
 
             insertLegacyFaction.run({ id: row.id, ...template });
         });
+    },
+
+    // --- Version 7: Settlement Expansion ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('development_progress')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN development_progress INTEGER DEFAULT 0;");
+        }
     }
 ];
 

@@ -65,6 +65,7 @@ export const GAME_SCHEMA_SQL = `
         next_trade_restock_day INTEGER DEFAULT 0,
         current_event TEXT,
         event_expiration INTEGER DEFAULT 0,
+        development_progress INTEGER DEFAULT 0, 
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 

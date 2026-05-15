@@ -124,5 +124,33 @@ export const SETTLEMENT_EVENTS = {
         qtyMult: 1.3, 
         specDisabled: false,
         freqMod: 1 
+    },
+    'settlement_expansion': {
+        name: 'Settlement Expansion',
+        buyMult: 1.1,
+        sellMult: 1.5, // Pays 50% more to entice the player to sell goods here
+        qtyMult: 1.2,
+        specDisabled: false,
+        freqMod: 3
     }
+};
+
+export const MAX_DEVELOPMENT_PROGRESS = 5;
+export const BUILDING_MATERIALS = [
+    'peat_bricks', 
+    'quality_wood', 
+    'copper_ingots'
+];
+export const SETTLEMENT_UPGRADE_PATH = {
+    'Ruins': 'Hamlet',
+    'Hamlet': 'Village',
+    'Village': 'Town',
+    'Town': 'City',
+    'City': 'City-State',
+    'City-State': 'Province',
+    'Province': 'Kingdom',
+    'Kingdom': 'High Kingdom',
+    'High Kingdom': 'Empire',
+    'Empire': null,     // Max level reached
+    'Stronghold': null  // Military outposts don't naturally expand into cities
 };

@@ -1,7 +1,13 @@
 import { GameRepository } from "../database/SQLite3/repositories/GameRepository.mjs";
 import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 import { ItemFactory } from "../factories/ItemFactory.mjs";
-import { SETTLEMENT_EVENTS } from "../data/GameDataConstants.mjs";
+import { 
+    SETTLEMENT_EVENTS, 
+    BUILDING_MATERIALS, 
+    SETTLEMENT_UPGRADE_PATH, 
+    MAX_DEVELOPMENT_PROGRESS, 
+    SETTLEMENT_TIERS 
+} from "../data/GameDataConstants.mjs";
 
 export class MercenaryController {
     constructor() {
@@ -330,12 +336,55 @@ export class MercenaryController {
 
         app.events.on("sellItem", (payload) => {
             try {
+                // Fetch the item info BEFORE deleting it to check if it's a building material
+                const itemDb = this.repo.db.prepare('SELECT item_id FROM inventory WHERE id = ?').get(payload.inventoryId);
+                const itemId = itemDb ? itemDb.item_id : null;
+
                 this.repo.updateGold(payload.price);
                 this.repo.deleteItemFromInventory(payload.inventoryId);
                 
                 if (payload.nodeId) {
                     const repGain = Math.max(1, Math.floor(payload.price / 100));
                     this.repo.updateNodeReputation(payload.nodeId, repGain);
+
+                    // --- SETTLEMENT EXPANSION LOGIC ---
+                    if (itemId) {
+                        const node = this.repo.getNodeById(payload.nodeId);
+                        const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
+                        
+                        // If it's a building material AND the settlement is currently expanding
+                        if (isBuildingMat && node.current_event === 'settlement_expansion') {
+                            let newProgress = (node.development_progress || 0) + 1;
+                            let newType = node.type;
+                            let newEvent = node.current_event;
+                            let buyMod = node.buy_modifier;
+                            let sellMod = node.sell_modifier;
+                            
+                            const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
+                            let upgraded = false;
+                            
+                            // Check threshold
+                            if (newProgress >= MAX_DEVELOPMENT_PROGRESS && nextTier) {
+                                newType = nextTier;
+                                newProgress = 0;
+                                newEvent = null; // Clear the event, expansion is finished
+                                upgraded = true;
+
+                                // Update market modifiers for the new tier
+                                const tierInfo = SETTLEMENT_TIERS[nextTier];
+                                if (tierInfo) {
+                                    buyMod = tierInfo.buyMult;
+                                    sellMod = tierInfo.sellMult;
+                                }
+                            }
+                            
+                            this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod);
+                            
+                            if (upgraded) {
+                                this.repo.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
+                            }
+                        }
+                    }
                 }
                 
                 app.events.broadcast("transactionComplete", { success: true });
