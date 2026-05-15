@@ -92,7 +92,7 @@ export const WEAPONS = [
         id: 'woodcutters_axe', 
         name: "Woodcutter's Axe", 
         type: 'Weapon', 
-        icon: 'fa-solid fa-axe', 
+        icon: 'fa-solid fa-hammer', 
         baseValue: 120, 
         rarity: 'common',
         stats: { attack: 20, armor_penetration: 30, weight: 14 },
