@@ -1,0 +1,47 @@
+import { NobleBehavior } from './behaviors/NobleBehavior.mjs';
+import { BanditBehavior } from './behaviors/BanditBehavior.mjs';
+
+export class WorldSimulator {
+    constructor(repo) {
+        this.repo = repo;
+        // Add active factions in the world here
+        this.behaviors = [
+            new NobleBehavior(repo),
+            new BanditBehavior(repo)
+        ];
+    }
+
+    generateProceduralWorld(rng) {
+        const context = { nodes: [], factions: [], isPremade: false };
+
+        for (const behavior of this.behaviors) {
+            const factions = behavior.setupFactions(rng, context);
+            context.factions.push(...factions);
+        }
+
+        for (const behavior of this.behaviors) {
+            const nodes = behavior.generateNodes(rng, context);
+            context.nodes.push(...nodes);
+        }
+    }
+
+    setupPremadeWorld(rng, premadeNodes) {
+         const context = { nodes: premadeNodes, factions: [], isPremade: true };
+
+         for (const behavior of this.behaviors) {
+            const factions = behavior.setupFactions(rng, context);
+            context.factions.push(...factions);
+        }
+
+        for (const behavior of this.behaviors) {
+            const nodes = behavior.generateNodes(rng, context);
+            context.nodes.push(...nodes);
+        }
+    }
+
+    processDayEnd(currentDay) {
+        for (const behavior of this.behaviors) {
+            behavior.processDayEnd(currentDay);
+        }
+    }
+}
