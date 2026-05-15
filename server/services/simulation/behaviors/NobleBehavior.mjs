@@ -9,7 +9,7 @@ export class NobleBehavior extends BaseFactionBehavior {
 
         return selectedHouses.map(house => {
             const result = this.repo.createFaction({ ...house, type: 'noble' });
-            return { ...house, id: Number(result.lastInsertRowid) };
+            return { ...house, type: 'noble', id: Number(result.lastInsertRowid) }; 
         });
     }
 
