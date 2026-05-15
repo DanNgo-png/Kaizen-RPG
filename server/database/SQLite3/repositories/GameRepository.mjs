@@ -350,13 +350,15 @@ export class GameRepository {
         const logs = [];
         const foundLoot = [];
 
-        const rollForLoot = (chancePercentage) => {
+        const rollForLoot = (chancePercentage, isDeep = false) => {
             if (Math.random() < chancePercentage) {
                 const newItem = ItemFactory.getRandomItem();
                 this.addItemToInventory(newItem.id);
                 foundLoot.push(newItem);
-                logs.push(`✨ Found loot: ${newItem.name}`);
+                logs.push(`✨ ${isDeep ? 'Deep floor treasure' : 'Found loot'}: ${newItem.name}`);
+                return true;
             }
+            return false;
         };
 
         const activeMercs = this.statements.getAll.all();
@@ -448,14 +450,16 @@ export class GameRepository {
                 }
 
                 const attackLootBonus = (partyTotalAttack / 100) * 0.10; 
-                const lootChance = 0.15 * (focusMinutes / 25) + attackLootBonus;
-                rollForLoot(lootChance);
+                const lootChance = 0.30 + attackLootBonus;
+                const rolls = Math.max(1, Math.floor(focusMinutes / 15)); // Roll every 15 mins
+
+                for(let i=0; i<rolls; i++) rollForLoot(lootChance);
 
                 if (logs.length === 0 && daysPassed === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
                 const attackGoldMultiplier = 1 + (partyTotalAttack / 100); 
-                const goldFound = Math.floor(focusMinutes * ratio * 2.0 * attackGoldMultiplier);
+                const goldFound = Math.floor(focusMinutes * ratio * 2.5 * attackGoldMultiplier);
                 
                 this.updateGold(goldFound);
                 
@@ -502,15 +506,27 @@ export class GameRepository {
                     }
                 });
 
-                const depthLootBonus = (focusMinutes / 2) * 0.01;
-                const attackLootBonus = (partyTotalAttack / 100) * 0.05; 
-                const lootChance = 0.15 + depthLootBonus + attackLootBonus;
+                // Depth bonus scales better for longer sessions
+                const depthLootBonus = focusMinutes * 0.015;
+                const attackLootBonus = (partyTotalAttack / 100) * 0.1; 
+                const baseLootChance = 0.35 + depthLootBonus + attackLootBonus;
+                
+                // 1 roll per 5 minutes focused (minimum 1)
+                const lootRolls = Math.max(1, Math.floor(focusMinutes / 5));
+                let itemsLooted = 0;
 
-                rollForLoot(lootChance);
+                for (let i = 0; i < lootRolls; i++) {
+                    if (rollForLoot(baseLootChance)) itemsLooted++;
+                }
+
+                if (focusMinutes >= 20 && itemsLooted === 0) {
+                    rollForLoot(1.0);
+                }
 
                 if (focusMinutes >= 45) {
                     logs.push(`👑 Survived a deep floor! Extra loot granted.`);
                     rollForLoot(0.30 + depthLootBonus + attackLootBonus);
+                    rollForLoot(1.0, true);
                 }
             } else {
                  activeMercs.forEach(merc => {
