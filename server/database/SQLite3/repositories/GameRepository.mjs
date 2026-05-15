@@ -53,7 +53,7 @@ export class GameRepository {
 
             insertNode: this.db.prepare(`
                 INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier, specialization, attachments) 
-                VALUES (@type, @name, @x, @y, @faction_id, 0, @buy_modifier, @sell_modifier, @specialization, @attachments)
+                VALUES (@type, @name, @x, @y, @faction_id, @reputation, @buy_modifier, @sell_modifier, @specialization, @attachments)
             `),
             getAllNodes: this.db.prepare(WORLD_NODE_SELECT),
 
@@ -693,6 +693,7 @@ export class GameRepository {
             x: node.x,
             y: node.y,
             faction_id: node.faction_id ?? null,
+            reputation: node.reputation ?? 0,
             buy_modifier: node.buy_modifier ?? 1.0,
             sell_modifier: node.sell_modifier ?? 0.5,
             specialization: node.specialization ?? null,

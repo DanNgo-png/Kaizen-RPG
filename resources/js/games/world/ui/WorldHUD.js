@@ -1,3 +1,5 @@
+import { getReputationString, getReputationColor } from "./barebones/BarebonesConstants.js";
+
 const DEFAULT_FACTION_COLOR = '#60a5fa';
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
@@ -167,11 +169,15 @@ export class WorldHUD {
             ? `<div style="color:#9ca3af; font-size:0.75rem; margin-top:2px;"><i class="fa-solid fa-link"></i> Attached Locations: ${node.attachments}</div>`
             : '';
 
+        const rep = node.reputation || 0;
+        const repStr = getReputationString(rep);
+        const repCol = getReputationColor(rep);
+
         this.tooltip.innerHTML = `
             ${factionHtml}
             <div style="font-weight:700; font-size:1rem; margin-bottom:2px;">${this._escapeHtml(node.name)}</div>
             <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${this._escapeHtml(node.type)}</div>
-            <div style="color:#fbbf24; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${node.reputation || 0}</div>
+            <div style="color:${repCol}; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${repStr} (${rep})</div>
             ${specHtml}
             ${attachHtml}
         `;

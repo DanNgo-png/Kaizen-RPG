@@ -1,3 +1,5 @@
+import { getReputationString, getReputationColor } from "./BarebonesConstants.js";
+
 const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 
@@ -11,7 +13,7 @@ export function escapeHtml(value) {
 }
 
 export function emptyStateHtml(message, iconClass = "") {
-    const iconHtml = iconClass ? `<i class="${escapeHtml(iconClass)}"></i> ` : "";
+    const iconHtml = iconClass ? `<i class="${escapeHtml(iconClass)}"></i><br>` : "";
     return `<div class="bb-empty-state">${iconHtml}${escapeHtml(message)}</div>`;
 }
 
@@ -26,10 +28,14 @@ export function selectedNodeLabelHtml(node) {
         ? selectedFactionHtml(node.faction)
         : "";
 
+    const rep = Number(node.reputation) || 0;
+    const repStr = getReputationString(rep);
+    const repCol = getReputationColor(rep);
+
     return `
         &mdash; ${escapeHtml(node.name)}
-        <span class="bb-selected-reputation">
-            <i class="fa-solid fa-handshake"></i> Rep: ${Number(node.reputation) || 0}
+        <span class="bb-selected-reputation" style="color: ${repCol};">
+            <i class="fa-solid fa-handshake"></i> ${repStr} (${rep})
         </span>
         ${factionHtml}
     `;

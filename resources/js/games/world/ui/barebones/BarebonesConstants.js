@@ -190,3 +190,23 @@ export function createDefaultPartyData() {
         }
     };
 }
+
+export function getReputationString(repValue) {
+    if (repValue <= -50) return "Hostile";
+    if (repValue <= -10) return "Wary";
+    if (repValue <= 9) return "Stranger";
+    if (repValue <= 30) return "Neutral";
+    if (repValue <= 60) return "Friendly";
+    if (repValue <= 90) return "Ally";
+    return "Kindred";
+}
+
+export function getReputationColor(repValue) {
+    if (repValue <= -50) return "#ef4444"; // Red
+    if (repValue <= -10) return "#f97316"; // Orange
+    if (repValue <= 9) return "#9ca3af";  // Gray
+    if (repValue <= 30) return "#fbbf24"; // Yellow
+    if (repValue <= 60) return "#34d399"; // Light Green
+    if (repValue <= 90) return "#10b981"; // Green
+    return "#059669"; // Dark Green
+}

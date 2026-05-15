@@ -93,7 +93,8 @@ export class NodeListRenderer {
     }
 
     _showContextMenu(event, node) {
-        this.menuManager.show(event, [
+        const isHostile = node.is_hostile === 1 || node.reputation <= -50;
+        const menuItems = [
             {
                 label: "Description",
                 icon: '<i class="fa-solid fa-book-open"></i>',
@@ -104,32 +105,39 @@ export class NodeListRenderer {
                 label: node.is_pinned ? "Unpin Settlement" : "Pin to Top",
                 icon: '<i class="fa-solid fa-thumbtack"></i>',
                 action: () => this.onTogglePin(node.id)
-            },
-            { separator: true },
-            {
-                label: "Visit Marketplace",
-                icon: '<i class="fa-solid fa-coins"></i>',
-                action: () => {
-                    this.onSelectNode(node);
-                    this.onSwitchTab(BAREBONES_TABS.MARKET);
-                }
-            },
-            {
-                label: "Visit Hiring Hall",
-                icon: '<i class="fa-solid fa-handshake"></i>',
-                action: () => {
-                    this.onSelectNode(node);
-                    this.onSwitchTab(BAREBONES_TABS.HIRE);
-                }
-            },
-            {
-                label: "View Job Board",
-                icon: '<i class="fa-solid fa-clipboard-list"></i>',
-                action: () => {
-                    this.onSelectNode(node);
-                    this.onSwitchTab(BAREBONES_TABS.JOBS);
-                }
             }
-        ]);
+        ];
+
+        if (!isHostile) {
+            menuItems.push(
+                { separator: true },
+                {
+                    label: "Visit Marketplace",
+                    icon: '<i class="fa-solid fa-coins"></i>',
+                    action: () => {
+                        this.onSelectNode(node);
+                        this.onSwitchTab(BAREBONES_TABS.MARKET);
+                    }
+                },
+                {
+                    label: "Visit Hiring Hall",
+                    icon: '<i class="fa-solid fa-handshake"></i>',
+                    action: () => {
+                        this.onSelectNode(node);
+                        this.onSwitchTab(BAREBONES_TABS.HIRE);
+                    }
+                },
+                {
+                    label: "View Job Board",
+                    icon: '<i class="fa-solid fa-clipboard-list"></i>',
+                    action: () => {
+                        this.onSelectNode(node);
+                        this.onSwitchTab(BAREBONES_TABS.JOBS);
+                    }
+                }
+            );
+        }
+
+        this.menuManager.show(event, menuItems);
     }
 }

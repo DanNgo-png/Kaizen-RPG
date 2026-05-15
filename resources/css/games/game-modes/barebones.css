@@ -203,7 +203,6 @@
 }
 
 .bb-selected-reputation {
-    color: #fbbf24;
     font-size: 0.8rem;
     margin-left: 10px;
 }
@@ -325,15 +324,23 @@
     font-family: var(--font-main);
 }
 
-.bb-tab-btn:hover {
+.bb-tab-btn:hover:not(:disabled) {
     color: #fff;
     background: rgba(255,255,255,0.05);
 }
 
-.bb-tab-btn.active {
+.bb-tab-btn.active:not(:disabled) {
     color: #60a5fa;
     border-bottom-color: #3b82f6;
     background: rgba(59, 130, 246, 0.05);
+}
+
+.bb-tab-btn:disabled {
+    opacity: 0.3;
+    cursor: not-allowed;
+    background: transparent !important;
+    color: #64748b !important;
+    border-bottom-color: transparent !important;
 }
 
 .bb-subtab {

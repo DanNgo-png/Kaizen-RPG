@@ -34,6 +34,7 @@ export class BanditBehavior extends BaseFactionBehavior {
                 name: name,
                 x: pos.x, y: pos.y,
                 faction_id: banditFaction.id,
+                reputation: -100,
                 buy_modifier: 1.0,
                 sell_modifier: 0.3,
                 specialization: null,
@@ -43,7 +44,7 @@ export class BanditBehavior extends BaseFactionBehavior {
             // Update specific properties natively since createWorldNode lacks those arguments
             this.repo.db.prepare('UPDATE world_nodes SET is_hidden = 0, is_hostile = 1 WHERE id = ?').run(info.lastInsertRowid);
 
-            const node = { id: info.lastInsertRowid, type: 'Bandit Camp', ...pos, faction_id: banditFaction.id, is_hidden: 0, is_hostile: 1 };
+            const node = { id: info.lastInsertRowid, type: 'Bandit Camp', name, ...pos, faction_id: banditFaction.id, reputation: -100, is_hidden: 0, is_hostile: 1 };
             createdNodes.push(node);
             existingNodes.push(node); 
         }
@@ -67,6 +68,7 @@ export class BanditBehavior extends BaseFactionBehavior {
                     name: name,
                     x: pos.x, y: pos.y,
                     faction_id: banditFaction.id,
+                    reputation: -100,
                     buy_modifier: 1.0, sell_modifier: 0.3,
                     specialization: null, attachments: 0
                 });

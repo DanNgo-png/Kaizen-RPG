@@ -9,7 +9,7 @@ import {
     createDefaultPartyData
 } from "./barebones/BarebonesConstants.js";
 import { createBarebonesDom } from "./barebones/BarebonesDom.js";
-import { selectedNodeLabelHtml } from "./barebones/BarebonesTemplates.js";
+import { selectedNodeLabelHtml, emptyStateHtml } from "./barebones/BarebonesTemplates.js";
 import { ResourceTooltipManager } from "./barebones/ResourceTooltipManager.js";
 import { ChroniclesModal } from "./barebones/ChroniclesModal.js";
 import { NodeListRenderer } from "./barebones/NodeListRenderer.js";
@@ -131,6 +131,16 @@ export class BarebonesUIManager {
         this._renderTabState(tabName);
 
         if (!shouldLoad) return;
+
+        const isHostile = this.selectedNode && (this.selectedNode.is_hostile === 1 || this.selectedNode.reputation <= -50);
+        if (isHostile) {
+            if (this.dom.contractList) this.dom.contractList.innerHTML = emptyStateHtml("This settlement is hostile. No jobs available.", "fa-solid fa-skull");
+            if (this.dom.marketStashList) this.dom.marketStashList.innerHTML = "";
+            if (this.dom.marketShopList) this.dom.marketShopList.innerHTML = emptyStateHtml("Hostile factions do not trade with you.", "fa-solid fa-skull");
+            if (this.dom.hireList) this.dom.hireList.innerHTML = emptyStateHtml("No one here wants to join you.", "fa-solid fa-skull");
+            return;
+        }
+
         this._loadSelectedTab();
     }
 
@@ -138,7 +148,21 @@ export class BarebonesUIManager {
         this.selectedNode = node;
         this._renderSelectedNodeLabel();
         this.renderNodeList();
-        this._loadSelectedTab();
+
+        const isHostile = node.is_hostile === 1 || node.reputation <= -50;
+
+        if (this.dom.tabJobs) this.dom.tabJobs.disabled = isHostile;
+        if (this.dom.tabMarket) this.dom.tabMarket.disabled = isHostile;
+        if (this.dom.tabHire) this.dom.tabHire.disabled = isHostile;
+
+        if (isHostile) {
+            if (this.dom.contractList) this.dom.contractList.innerHTML = emptyStateHtml("This settlement is hostile. No jobs available.", "fa-solid fa-skull");
+            if (this.dom.marketStashList) this.dom.marketStashList.innerHTML = "";
+            if (this.dom.marketShopList) this.dom.marketShopList.innerHTML = emptyStateHtml("Hostile factions do not trade with you.", "fa-solid fa-skull");
+            if (this.dom.hireList) this.dom.hireList.innerHTML = emptyStateHtml("No one here wants to join you.", "fa-solid fa-skull");
+        } else {
+            this._loadSelectedTab();
+        }
     }
 
     renderNodeList() {
