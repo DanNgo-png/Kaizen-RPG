@@ -315,6 +315,7 @@ export class MercenaryController {
                             node.effective_buy *= evt.buyMult;
                             node.effective_sell *= evt.sellMult;
                             qtyMod = evt.qtyMult !== undefined ? evt.qtyMult : 1.0;
+                            rareMod = evt.rareChanceMult !== undefined ? evt.rareChanceMult : 1.0;
                         }
 
                         buyMod = node.effective_buy;
@@ -334,7 +335,7 @@ export class MercenaryController {
                         // Restock Standard Items (Affected by qtyMod)
                         if (currentDay > lastRestockDay) {
                             shopInventory = shopInventory.filter(item => item.type === 'Trade Good');
-                            const newStandard = ItemFactory.getStandardInventory(nodeType, qtyMod);
+                            const newStandard = ItemFactory.getStandardInventory(nodeType, qtyMod, rareMod);
                             shopInventory = shopInventory.concat(newStandard);
                             lastRestockDay = currentDay;
                             inventoryChanged = true;
