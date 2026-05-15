@@ -1,6 +1,7 @@
 import {
     BAREBONES_UI,
-    CHRONICLE_EVENT_META
+    CHRONICLE_EVENT_META,
+    getMaxDevelopmentProgress
 } from "./BarebonesConstants.js";
 import {
     emptyStateHtml,
@@ -160,7 +161,7 @@ export class ChroniclesModal {
 
             if (node.current_event === 'settlement_expansion' || node.current_event === 'building_boom') {
                 const progress = node.development_progress || 0;
-                const maxProg = BAREBONES_UI.MAX_DEVELOPMENT_PROGRESS;
+                const maxProg = getMaxDevelopmentProgress(node.type); 
                 const pct = (progress / maxProg) * 100;
                 
                 const titleStr = node.current_event === 'settlement_expansion' ? 'Colonial Expansion' : 'Settlement Upgrade';
