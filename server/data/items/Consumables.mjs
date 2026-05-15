@@ -20,6 +20,28 @@ export const CONSUMABLES = [
         rarity: 'common',
         availableIn: ['All']
     },
+    {
+        id: 'tools_bundle',
+        name: 'Bundle of Tools',
+        type: 'Resource',
+        resourceType: 'tools',
+        amount: 20,
+        icon: 'fa-solid fa-hammer',
+        baseValue: 200,
+        rarity: 'common',
+        availableIn: ['All']
+    },
+    {
+        id: 'ammo_bundle',
+        name: 'Ammunition Quiver',
+        type: 'Resource',
+        resourceType: 'ammo',
+        amount: 50,
+        icon: 'fa-solid fa-bullseye',
+        baseValue: 100,
+        rarity: 'common',
+        availableIn: ['All']
+    },
     { 
         id: 'stamina_potion', 
         name: 'Vigor Draught', 
