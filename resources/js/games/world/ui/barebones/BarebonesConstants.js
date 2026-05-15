@@ -33,7 +33,8 @@ export const NODE_TYPE_ICONS = Object.freeze({
     "High Kingdom": "fa-chess-rook",
     Empire: "fa-chess-rook",
     Stronghold: "fa-shield-halved",
-    Ruins: "fa-skull"
+    Ruins: "fa-skull",
+    "Bandit Camp": "fa-campground"
 });
 
 export const CHRONICLE_EVENT_META = Object.freeze({
