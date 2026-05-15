@@ -5,6 +5,9 @@ import {
 } from "./BarebonesConstants.js";
 import { escapeHtml } from "./BarebonesTemplates.js";
 
+const DEFAULT_FACTION_COLOR = "#60a5fa";
+const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+
 export class NodeListRenderer {
     constructor({
         dom,
@@ -59,16 +62,34 @@ export class NodeListRenderer {
             : "";
 
         const specHtml = node.specialization 
-            ? `<span style="color:#a78bfa; margin-left: 8px;" title="${node.specialization}"><i class="fa-solid fa-star"></i> ${escapeHtml(node.specialization)}</span>`
+            ? `<span style="color:#a78bfa; margin-left: 8px;" title="${escapeHtml(node.specialization)}"><i class="fa-solid fa-star"></i> ${escapeHtml(node.specialization)}</span>`
             : `<span style="color:#6b7280; margin-left: 8px; font-style:italic;" title="No Specialization"><i class="fa-solid fa-ban"></i> Poor</span>`;
+        const factionHtml = node.faction ? this._factionHtml(node.faction) : "";
 
         return `
             <div class="bb-node-icon"><i class="fa-solid ${escapeHtml(icon)}"></i></div>
             <div class="bb-node-content">
                 <div class="bb-node-title">${escapeHtml(node.name)} ${pinHtml}</div>
                 <div class="bb-node-type">${escapeHtml(node.type)} ${specHtml}</div>
+                ${factionHtml}
             </div>
         `;
+    }
+
+    _factionHtml(faction) {
+        const color = this._safeHexColor(faction.color);
+        const title = faction.motto || faction.name;
+
+        return `
+            <div class="bb-node-faction" title="${escapeHtml(title)}" style="--faction-color:${color};">
+                <span class="bb-node-faction-dot"></span>
+                ${escapeHtml(faction.name)}
+            </div>
+        `;
+    }
+
+    _safeHexColor(color) {
+        return HEX_COLOR_PATTERN.test(String(color ?? "")) ? color : DEFAULT_FACTION_COLOR;
     }
 
     _showContextMenu(event, node) {
