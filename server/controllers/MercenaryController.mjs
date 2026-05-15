@@ -91,6 +91,9 @@ export class MercenaryController {
                     isDelving: worldState.isDelving 
                 });
             } catch (error) {
+                if (!error.message.includes("No game save is currently loaded")) {
+                    console.error("❌ Error fetching world data:", error);
+                }
                 app.events.broadcast("receiveWorldData", { nodes: [], player: {x: 400, y: 300}, origin: 'default', gameVersion: 'standard' });
             }
         });
@@ -99,7 +102,9 @@ export class MercenaryController {
             try {
                 this.repo.setCampaignSetting('is_delving', payload.isDelving ? 'true' : 'false');
                 app.events.broadcast("delvingStatusUpdated", { isDelving: payload.isDelving });
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                if (!e.message.includes("No game save is currently loaded")) console.error(e); 
+            }
         });
 
         app.events.on("saveWorldData", (payload) => {
@@ -127,7 +132,11 @@ export class MercenaryController {
 
                 app.events.broadcast("receivePartyData", { mercenaries: mercs, resources: resources, inventory: inventory });
             } catch (error) {
-                if (error.message.includes("No active save")) app.events.broadcast("receivePartyData", null);
+                if (error.message.includes("No game save is currently loaded") || error.message.includes("No active save")) {
+                    app.events.broadcast("receivePartyData", null);
+                } else {
+                    console.error("❌ Error getting party data:", error);
+                }
             }
         });
 
@@ -183,7 +192,7 @@ export class MercenaryController {
                 this.repo.moveItemInStash(payload.inventoryId, payload.newSlotIndex);
                 this._refreshParty(app);
             } catch(e) {
-                console.error("Failed to move item:", e);
+                if (!e.message.includes("No game save is currently loaded")) console.error("Failed to move item:", e);
             }
         });
         
@@ -191,27 +200,38 @@ export class MercenaryController {
             try {
                 this.repo.equipItem(payload.inventoryId, payload.mercenaryId, payload.equipSlot);
                 this._refreshParty(app);
-            } catch(e) { console.error("Failed to equip item:", e); }
+            } catch(e) { 
+                if (!e.message.includes("No game save is currently loaded")) console.error("Failed to equip item:", e); 
+            }
         });
 
         app.events.on("unequipItem", (payload) => {
             try {
                 this.repo.unequipItem(payload.inventoryId, payload.stashSlotIndex);
                 this._refreshParty(app);
-            } catch(e) { console.error("Failed to unequip item:", e); }
+            } catch(e) { 
+                if (!e.message.includes("No game save is currently loaded")) console.error("Failed to unequip item:", e); 
+            }
         });
 
         app.events.on("getActiveContract", () => {
             try {
                 const contract = this.repo.getActiveContract();
                 app.events.broadcast("receiveActiveContract", contract);
-            } catch(e) { console.error(e); }
+            } catch(e) { 
+                if (!e.message.includes("No game save is currently loaded")) {
+                    console.error("❌ Failed to get active contract:", e); 
+                }
+                app.events.broadcast("receiveActiveContract", null);
+            }
         });
 
         app.events.on("saveContractProgress", (payload) => {
             try {
                 this.repo.updateContractProgress(payload.contractId, payload.progressMinutes);
-            } catch(e) { console.error("Failed to save contract progress:", e); }
+            } catch(e) { 
+                if (!e.message.includes("No game save is currently loaded")) console.error("Failed to save contract progress:", e); 
+            }
         });
 
         app.events.on("completeActiveContract", (payload) => {
@@ -320,7 +340,9 @@ export class MercenaryController {
                     shopItems: shopItems
                 });
             } catch(e) { 
-                console.error("❌ Error fetching market data:", e); 
+                if (!e.message.includes("No game save is currently loaded")) {
+                    console.error("❌ Error fetching market data:", e); 
+                }
                 app.events.broadcast("receiveMarketData", { gold: 0, inventory: [], shopItems: [] });
             }
         });
