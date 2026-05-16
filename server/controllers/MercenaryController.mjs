@@ -309,6 +309,7 @@ export class MercenaryController {
                         node.effective_buy = node.buy_modifier || 1.0;
                         node.effective_sell = node.sell_modifier || 1.0;
                         let qtyMod = 1.0;
+                        let rareMod = 1.0; 
 
                         if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
                             const evt = SETTLEMENT_EVENTS[node.current_event];
