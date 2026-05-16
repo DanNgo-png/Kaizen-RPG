@@ -21,10 +21,10 @@ export class TagColorPicker {
     _bindEvents() {
         // 1. Swatches
         this.dom.swatches.forEach(swatch => {
-            swatch.addEventListener('click', (e) => {
+            swatch.onclick = (e) => {
                 const color = e.target.dataset.color;
                 this._setInternalColor(color);
-            });
+            };
         });
 
         // 2. Hex Input (Manual Entry)
@@ -42,20 +42,20 @@ export class TagColorPicker {
 
         // 3. Confirm
         if (this.dom.btnConfirm) {
-            this.dom.btnConfirm.addEventListener('click', () => {
+            this.dom.btnConfirm.onclick = () => {
                 // Prefer input value if typed, else pending swatch click
                 const finalColor = this.dom.inputHex.value || this.pendingColor;
                 if (this.onSelect) this.onSelect(finalColor);
                 this.close();
-            });
+            };
         }
 
         // 4. Cancel
         if (this.dom.btnCancel) {
-            this.dom.btnCancel.addEventListener('click', () => {
+            this.dom.btnCancel.onclick = () => {
                 if (this.onCancel) this.onCancel();
                 this.close();
-            });
+            };
         }
     }
 

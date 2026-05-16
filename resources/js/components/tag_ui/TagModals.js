@@ -65,27 +65,27 @@ export class TagModals {
     _bindEvents() {
         if (!this.dom.manage) return;
 
-        this.dom.closeManage.addEventListener('click', () => this.closeManage());
-        this.dom.manage.addEventListener('click', (e) => {
+        this.dom.closeManage.onclick = () => this.closeManage();
+        this.dom.manage.onclick = (e) => {
             if (e.target === this.dom.manage) this.closeManage();
-        });
+        };
 
         // Submit Button Logic
-        this.dom.btnSubmit.addEventListener('click', () => this._handleSubmit());
+        this.dom.btnSubmit.onclick = () => this._handleSubmit();
         
         // Cancel Edit Logic
-        this.dom.btnCancelEdit.addEventListener('click', () => this._resetForm());
+        this.dom.btnCancelEdit.onclick = () => this._resetForm();
 
         // Open Color Picker
-        this.dom.btnColorTrigger.addEventListener('click', () => {
+        this.dom.btnColorTrigger.onclick = () => {
             if(this.colorPicker) {
                 // Pass current pending color so picker shows correct selection
                 this.colorPicker.open(this.pendingColor);
             }
-        });
+        };
 
         // Delete Modal Logic
-        this.dom.deleteCancel.addEventListener('click', () => this.dom.modalDelete.classList.add('hidden'));
+        this.dom.deleteCancel.onclick = () => this.dom.modalDelete.classList.add('hidden');
     }
 
     openManage() {
@@ -191,17 +191,14 @@ export class TagModals {
         this.dom.deleteName.textContent = tag.name;
         this.dom.modalDelete.classList.remove('hidden');
 
-        // Clean event listeners by cloning
-        const newBtn = this.dom.deleteConfirm.cloneNode(true);
-        this.dom.deleteConfirm.parentNode.replaceChild(newBtn, this.dom.deleteConfirm);
-        this.dom.deleteConfirm = newBtn;
-
-        newBtn.addEventListener('click', () => {
+        // Use onclick instead of cloning the node to strip listeners
+        this.dom.deleteConfirm.onclick = () => {
             if (this.onDelete) this.onDelete(tag.id);
             this.dom.modalDelete.classList.add('hidden');
+            
             // If we deleted the tag currently being edited, reset the form
             if (this.editingTagId === tag.id) this._resetForm();
-        });
+        };
     }
 
     destroy() {

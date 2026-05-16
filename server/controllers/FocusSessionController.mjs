@@ -150,21 +150,27 @@ export class FocusSessionController {
             try {
                 this.repo.addTag(payload.name, payload.color);
                 app.events.broadcast("receiveTags", this.repo.getAllTags());
-            } catch (error) {}
+            } catch (error) {
+                console.error("❌ Error saving tag:", error); // <-- Add
+            }
         });
 
         app.events.on("updateTag", (payload) => {
             try {
                 this.repo.updateTag(payload.id, payload.name, payload.color);
                 app.events.broadcast("receiveTags", this.repo.getAllTags());
-            } catch (error) {}
+            } catch (error) {
+                console.error("❌ Error updating tag:", error); // <-- Add
+            }
         });
 
         app.events.on("deleteTag", (payload) => {
             try {
                 this.repo.deleteTag(payload.id);
                 app.events.broadcast("receiveTags", this.repo.getAllTags());
-            } catch (error) {}
+            } catch (error) {
+                console.error("❌ Error deleting tag:", error); // <-- Add
+            }
         });
     }
 }

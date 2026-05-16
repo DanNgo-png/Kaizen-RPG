@@ -58,6 +58,7 @@ class FocusTimerController {
         const cleanupObserver = new MutationObserver((mutations) => {
             if (!document.body.contains(this.ui.dom.displays.focus)) {
                 document.removeEventListener('kaizen:flex-tick', this.boundTickHandler);
+                this.tagManager.destroy();
                 cleanupObserver.disconnect();
             }
         });
