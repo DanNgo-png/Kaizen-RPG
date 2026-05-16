@@ -10,6 +10,8 @@ import {
 
 const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const GROWTH_PROGRESS_MAX_PERCENT = 100;
+const DEFAULT_MATERIAL_DELIVERIES_NEEDED = 10;
 
 export class ChroniclesModal {
     constructor({ documentRef = document, onRequestHistory } = {}) {
@@ -162,8 +164,8 @@ export class ChroniclesModal {
             if (node.current_event === 'settlement_expansion' || node.current_event === 'building_boom') {
                 const growth = node.growth_data || {};
                 const progress = growth.materialsDone || 0;
-                const maxProg = growth.materialsNeeded || 10; 
-                const pct = Math.min(100, (progress / maxProg) * 100);
+                const maxProg = growth.materialsNeeded || DEFAULT_MATERIAL_DELIVERIES_NEEDED;
+                const pct = Math.min(GROWTH_PROGRESS_MAX_PERCENT, (progress / maxProg) * GROWTH_PROGRESS_MAX_PERCENT);
                 
                 const titleStr = node.current_event === 'settlement_expansion' ? 'Colonial Expansion' : 'Settlement Upgrade';
 
@@ -184,52 +186,18 @@ export class ChroniclesModal {
                     </div>
                 `;
             }
+
+            if (node.current_event === 'well_supplied') {
+                eventContext += this._growthProgressHtml(node);
+            }
         } else {
             eventContext = `
                 <div style="margin-top: 6px; font-size: 0.85rem; color: #64748b; font-style: italic;">
                     No active events altering the economy.
                 </div>
             `;
-            
-            // Render Prospective Prosperity/Growth Bars
-            const growth = node.growth_data;
-            if (growth && growth.canGrow) {
-                const contractsPct = Math.min(100, (growth.contractsDone / growth.contractsNeeded) * 100);
-                const tradePct = Math.min(100, (growth.tradeDone / growth.tradeNeeded) * 100);
-                
-                const targetTitle = growth.nextTier === 'Colonial Outpost' ? 'Fund Colonial Outpost' : `Upgrade to ${growth.nextTier}`;
 
-                eventContext += `
-                    <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
-                        <div style="font-size: 0.85rem; color: #a78bfa; font-weight: 700; margin-bottom: 4px;">
-                            <i class="fa-solid fa-arrow-trend-up"></i> Prosperity & Growth
-                        </div>
-                        <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 12px; line-height: 1.4;">
-                            Contribute to the local economy to trigger a <b>Building Boom</b> and ${targetTitle.toLowerCase()}.
-                        </div>
-
-                        <div style="margin-bottom: 8px;">
-                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#cbd5e1; margin-bottom:4px;">
-                                <span>Contracts Completed</span>
-                                <span>${growth.contractsDone} / ${growth.contractsNeeded}</span>
-                            </div>
-                            <div class="bb-progress-bar" style="height: 4px; margin: 0; background: #0f172a; width: 100%;">
-                                <div class="bb-fill" style="width: ${contractsPct}%; background: #60a5fa;"></div>
-                            </div>
-                        </div>
-
-                        <div>
-                            <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#cbd5e1; margin-bottom:4px;">
-                                <span>Trade Volume (Gold)</span>
-                                <span>${growth.tradeDone} / ${growth.tradeNeeded}g</span>
-                            </div>
-                            <div class="bb-progress-bar" style="height: 4px; margin: 0; background: #0f172a; width: 100%;">
-                                <div class="bb-fill" style="width: ${tradePct}%; background: #facc15;"></div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
+            eventContext += this._growthProgressHtml(node);
         }
 
         return `
@@ -245,6 +213,53 @@ export class ChroniclesModal {
                         Prices: <b style="color: #fff;">${prices}%</b> | Payouts: <b style="color: #fff;">${payouts}%</b>
                     </div>
                     ${eventContext}
+                </div>
+            </div>
+        `;
+    }
+
+    _growthProgressHtml(node) {
+        const growth = node.growth_data;
+        if (!growth?.canGrow) return "";
+
+        const contractsPct = Math.min(
+            GROWTH_PROGRESS_MAX_PERCENT,
+            (growth.contractsDone / growth.contractsNeeded) * GROWTH_PROGRESS_MAX_PERCENT
+        );
+        const tradePct = Math.min(
+            GROWTH_PROGRESS_MAX_PERCENT,
+            (growth.tradeDone / growth.tradeNeeded) * GROWTH_PROGRESS_MAX_PERCENT
+        );
+
+        const targetTitle = growth.nextTier === 'Colonial Outpost' ? 'Fund Colonial Outpost' : `Upgrade to ${growth.nextTier}`;
+
+        return `
+            <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
+                <div style="font-size: 0.85rem; color: #a78bfa; font-weight: 700; margin-bottom: 4px;">
+                    <i class="fa-solid fa-arrow-trend-up"></i> Prosperity & Growth
+                </div>
+                <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 12px; line-height: 1.4;">
+                    Contribute to the local economy to trigger a <b>Building Boom</b> and ${targetTitle.toLowerCase()}.
+                </div>
+
+                <div style="margin-bottom: 8px;">
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#cbd5e1; margin-bottom:4px;">
+                        <span>Contracts Completed</span>
+                        <span>${growth.contractsDone} / ${growth.contractsNeeded}</span>
+                    </div>
+                    <div class="bb-progress-bar" style="height: 4px; margin: 0; background: #0f172a; width: 100%;">
+                        <div class="bb-fill" style="width: ${contractsPct}%; background: #60a5fa;"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#cbd5e1; margin-bottom:4px;">
+                        <span>Trade Volume (Gold)</span>
+                        <span>${growth.tradeDone} / ${growth.tradeNeeded}g</span>
+                    </div>
+                    <div class="bb-progress-bar" style="height: 4px; margin: 0; background: #0f172a; width: 100%;">
+                        <div class="bb-fill" style="width: ${tradePct}%; background: #facc15;"></div>
+                    </div>
                 </div>
             </div>
         `;
