@@ -7,6 +7,8 @@ import { ROLES } from "./Roles.js";
 import { notifier } from "../../_global-managers/NotificationManager.js";
 import { initWorldMap } from "../world/WorldMapManager.js";
 
+let activePartyManager = null;
+
 export class PartyManager {
     constructor() {
         this.dom = {
@@ -21,6 +23,11 @@ export class PartyManager {
         };
 
         this.partyData = { mercenaries: [], resources: { gold: 0, renown: 0 } };
+        this._isDestroyed = false;
+        this._onDataReceivedBound = this._onDataReceived.bind(this);
+        this._onHiredBound = this._onHired.bind(this);
+        this._onDayEndedBound = this._onDayEnded.bind(this);
+
         this.init();
     }
 
@@ -28,15 +35,15 @@ export class PartyManager {
         if (!this.dom.grid) return;
 
         // 1. Listen for Data Updates
-        Neutralino.events.off('receivePartyData', this._onDataReceived);
-        Neutralino.events.on('receivePartyData', this._onDataReceived.bind(this));
+        Neutralino.events.off('receivePartyData', this._onDataReceivedBound);
+        Neutralino.events.on('receivePartyData', this._onDataReceivedBound);
 
         // 2. Listen for Action Results
-        Neutralino.events.off('mercenaryHired', this._onHired);
-        Neutralino.events.on('mercenaryHired', this._onHired.bind(this));
+        Neutralino.events.off('mercenaryHired', this._onHiredBound);
+        Neutralino.events.on('mercenaryHired', this._onHiredBound);
 
-        Neutralino.events.off('dayEnded', this._onDayEnded);
-        Neutralino.events.on('dayEnded', this._onDayEnded.bind(this));
+        Neutralino.events.off('dayEnded', this._onDayEndedBound);
+        Neutralino.events.on('dayEnded', this._onDayEndedBound);
 
         // 3. Bind Recruit Button
         if (this.dom.btnRecruit) {
@@ -50,6 +57,7 @@ export class PartyManager {
 
         if (document.getElementById('btn-back-to-map')) {
             document.getElementById('btn-back-to-map').addEventListener('click', async () => {
+                this.destroy();
                 await loadPage('./pages/games/world-map.html');
                 initWorldMap();
             });
@@ -60,6 +68,27 @@ export class PartyManager {
 
         // 5. Initial Fetch
         GameAPI.getPartyData();
+    }
+
+    destroy() {
+        if (this._isDestroyed) return;
+        this._isDestroyed = true;
+
+        Neutralino.events.off('receivePartyData', this._onDataReceivedBound);
+        Neutralino.events.off('mercenaryHired', this._onHiredBound);
+        Neutralino.events.off('dayEnded', this._onDayEndedBound);
+
+        if (activePartyManager === this) {
+            activePartyManager = null;
+        }
+    }
+
+    _shouldHandleEvent() {
+        if (this._isDestroyed) return false;
+        if (this.dom.grid && document.body.contains(this.dom.grid)) return true;
+
+        this.destroy();
+        return false;
     }
 
     _injectEndDayButton() {
@@ -85,6 +114,8 @@ export class PartyManager {
     }
 
     _onDataReceived(e) {
+        if (!this._shouldHandleEvent()) return;
+
         const data = e.detail;
         if (!data) {
             this.renderNoSaveState();
@@ -96,6 +127,8 @@ export class PartyManager {
     }
 
     _onHired(e) {
+        if (!this._shouldHandleEvent()) return;
+
         const res = e.detail;
         if (!res.success) {
             notifier.show("Hiring Failed", "Not enough gold or roster full.", "fa-solid fa-coins");
@@ -105,6 +138,8 @@ export class PartyManager {
     }
 
     _onDayEnded(e) {
+        if (!this._shouldHandleEvent()) return;
+
         if (e.detail.success) {
             const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
             let msg = `Paid ${wagesPaid}g wages.`;
@@ -376,6 +411,7 @@ export class PartyManager {
         `;
 
         el.querySelector('#btn-goto-load').addEventListener('click', async () => {
+            this.destroy();
             await loadPage('./pages/games/load-campaign.html');
             initLoadCampaign();
         });
@@ -385,5 +421,7 @@ export class PartyManager {
 }
 
 export function initParty() {
-    new PartyManager();
+    activePartyManager?.destroy();
+    activePartyManager = new PartyManager();
+    return activePartyManager;
 }
