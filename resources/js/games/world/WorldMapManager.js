@@ -11,6 +11,8 @@ import { initMenuButtons } from "../playGameManager.js";
 import { GameAPI } from "../../api/GameAPI.js"; 
 import { notifier } from "../../_global-managers/NotificationManager.js";
 
+let activeWorldMapManager = null;
+
 export class WorldMapManager {
     constructor() {
         this.canvas = document.getElementById('world-canvas');
@@ -32,6 +34,10 @@ export class WorldMapManager {
 
         // Bind for cleanup
         this._saveBinding = () => this.save();
+        this._resizeBinding = () => this.resize();
+        this._onWorldDataLoadedBound = this._onWorldDataLoaded.bind(this);
+        this._onDayEndedBound = this._onDayEnded.bind(this);
+        this._isDestroyed = false;
 
         this.init();
     }
@@ -46,8 +52,34 @@ export class WorldMapManager {
 
     stop() {
         this.gameLoop.stop();
+        this.isRunning = false;
         // Remove global save hook when stopping/destroying
         window.kaizenSaveWorldState = null;
+    }
+
+    destroy() {
+        if (this._isDestroyed) return;
+        this._isDestroyed = true;
+
+        this.stop();
+        window.removeEventListener('resize', this._resizeBinding);
+        Neutralino.events.off('receiveWorldData', this._onWorldDataLoadedBound);
+        Neutralino.events.off('dayEnded', this._onDayEndedBound);
+        this.input?.destroy();
+        this.barebonesUI?.destroy();
+        this.managementInstance?.destroy();
+
+        if (activeWorldMapManager === this) {
+            activeWorldMapManager = null;
+        }
+    }
+
+    _shouldHandleEvent() {
+        if (this._isDestroyed) return false;
+        if (this.canvas && document.body.contains(this.canvas)) return true;
+
+        this.destroy();
+        return false;
     }
 
     save() {
@@ -60,7 +92,8 @@ export class WorldMapManager {
 
     async init() {
         this.resize();
-        window.addEventListener('resize', () => this.resize());
+        window.removeEventListener('resize', this._resizeBinding);
+        window.addEventListener('resize', this._resizeBinding);
 
         // Register Global Save Hook for Window Close
         window.kaizenSaveWorldState = this._saveBinding;
@@ -87,8 +120,8 @@ export class WorldMapManager {
         };
 
         // Data Listener
-        Neutralino.events.off('receiveWorldData', this._onWorldDataLoaded);
-        Neutralino.events.on('receiveWorldData', this._onWorldDataLoaded.bind(this));
+        Neutralino.events.off('receiveWorldData', this._onWorldDataLoadedBound);
+        Neutralino.events.on('receiveWorldData', this._onWorldDataLoadedBound);
 
         this.bindUI();
         GameAPI.getWorldData();
@@ -96,6 +129,8 @@ export class WorldMapManager {
     }
 
     _onWorldDataLoaded(e) {
+        if (!this._shouldHandleEvent()) return;
+
         const data = e.detail;
         if(data) {
             console.log("🗺️ Loaded World Map Data");
@@ -190,19 +225,6 @@ export class WorldMapManager {
 
         // Listen for the Camp Day Ended event to refresh the UI and show a toast
         Neutralino.events.off('dayEnded', this._onDayEndedBound);
-        this._onDayEndedBound = (e) => {
-            if (e.detail.success) {
-                const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
-                let msg = `Paid ${wagesPaid}g. `;
-                if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds. `;
-                else msg += "Party is fully rested. ";
-                
-                if (spoiledCount > 0) msg += `${spoiledCount} food item(s) spoiled!`;
-                
-                notifier.show("Rested at Camp", msg, "fa-solid fa-campground");
-                GameAPI.getWorldData(); // Refresh HUD
-            }
-        };
         Neutralino.events.on('dayEnded', this._onDayEndedBound);
 
         const exitModal = document.getElementById('exit-game-modal');
@@ -232,13 +254,28 @@ export class WorldMapManager {
             btnConfirmExit.addEventListener('click', async () => {
                 exitModal.classList.add('hidden');
                 
-                this.stop(); // Stop loop and remove global hook
+                this.destroy(); // Stop loops and remove global hooks/listeners
                 GameAPI.closeGame(); 
                 
                 await loadPage('./pages/games/play-game.html');
                 initMenuButtons();
             });
         }
+    }
+
+    _onDayEnded(e) {
+        if (!this._shouldHandleEvent()) return;
+        if (!e.detail.success) return;
+
+        const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
+        let msg = `Paid ${wagesPaid}g. `;
+        if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds. `;
+        else msg += "Party is fully rested. ";
+
+        if (spoiledCount > 0) msg += `${spoiledCount} food item(s) spoiled!`;
+
+        notifier.show("Rested at Camp", msg, "fa-solid fa-campground");
+        GameAPI.getWorldData(); // Refresh HUD
     }
     
     resize() {
@@ -273,5 +310,7 @@ export class WorldMapManager {
 }
 
 export function initWorldMap() {
-    new WorldMapManager();
+    activeWorldMapManager?.destroy();
+    activeWorldMapManager = new WorldMapManager();
+    return activeWorldMapManager;
 }
