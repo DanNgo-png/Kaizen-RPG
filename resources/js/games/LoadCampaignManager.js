@@ -5,6 +5,9 @@ import { SaveSlotMenu } from "./load_campaign/CreateCustomMenu.js";
 import { initGameModes } from "./GameModesManager.js";
 import { initWorldMap } from "./world/WorldMapManager.js";
 import { LoadDragLogic } from "./load_campaign/logic/DragLogic.js";
+
+let activeLoadCampaignManager = null;
+
 export class LoadCampaignManager {
     constructor() {
         this.dom = {
@@ -30,6 +33,10 @@ export class LoadCampaignManager {
         this.slotsToCheck = [1, 2, 3]; 
         this.activeSlotId = null;
         this.dragLogic = null; 
+        this._isDestroyed = false;
+        this._onReceiveSlotsBound = this._onReceiveSlots.bind(this);
+        this._onGameLoadedBound = this._onGameLoaded.bind(this);
+        this._onReceiveMetadataBound = this._onReceiveMetadata.bind(this);
 
         this.menuManager = new SaveSlotMenu({
             onDelete: (slotId) => this.openDeleteModal(slotId),
@@ -53,6 +60,7 @@ export class LoadCampaignManager {
     bindGeneralEvents() {
         if (this.dom.btnBack) {
             this.dom.btnBack.addEventListener('click', () => {
+                this.destroy();
                 loadPage('./pages/games/play-game.html').then(initMenuButtons);
             });
         }
@@ -80,22 +88,47 @@ export class LoadCampaignManager {
     }
 
     bindServerEvents() {
-        Neutralino.events.off('receiveSaveSlots', this._onReceiveSlots);
-        Neutralino.events.on('receiveSaveSlots', this._onReceiveSlots.bind(this));
+        Neutralino.events.off('receiveSaveSlots', this._onReceiveSlotsBound);
+        Neutralino.events.on('receiveSaveSlots', this._onReceiveSlotsBound);
 
-        Neutralino.events.off('gameLoaded', this._onGameLoaded);
-        Neutralino.events.on('gameLoaded', this._onGameLoaded.bind(this));
+        Neutralino.events.off('gameLoaded', this._onGameLoadedBound);
+        Neutralino.events.on('gameLoaded', this._onGameLoadedBound);
 
-        Neutralino.events.off('receiveSaveMetadata', this._onReceiveMetadata);
-        Neutralino.events.on('receiveSaveMetadata', this._onReceiveMetadata.bind(this));
+        Neutralino.events.off('receiveSaveMetadata', this._onReceiveMetadataBound);
+        Neutralino.events.on('receiveSaveMetadata', this._onReceiveMetadataBound);
+    }
+
+    destroy() {
+        if (this._isDestroyed) return;
+        this._isDestroyed = true;
+
+        Neutralino.events.off('receiveSaveSlots', this._onReceiveSlotsBound);
+        Neutralino.events.off('gameLoaded', this._onGameLoadedBound);
+        Neutralino.events.off('receiveSaveMetadata', this._onReceiveMetadataBound);
+        this.dragLogic?.destroy();
+
+        if (activeLoadCampaignManager === this) {
+            activeLoadCampaignManager = null;
+        }
+    }
+
+    _shouldHandleEvent() {
+        if (this._isDestroyed) return false;
+        if (this.dom.container && document.body.contains(this.dom.container)) return true;
+
+        this.destroy();
+        return false;
     }
 
     fetchSaves() {
+        if (this._isDestroyed) return;
         this.dom.container.innerHTML = `<div class="loading-state"><i class="fa-solid fa-circle-notch fa-spin"></i> Reading disk...</div>`;
         Neutralino.extensions.dispatch(EXTENSION_ID, "listSaveSlots");
     }
 
     _onReceiveSlots(e) {
+        if (!this._shouldHandleEvent()) return;
+
         const files = e.detail || []; 
         this.renderSlots(files);
 
@@ -182,6 +215,7 @@ export class LoadCampaignManager {
                 </div>
             `;
             el.querySelector('.btn-create').addEventListener('click', async () => {
+                this.destroy();
                 localStorage.setItem('kaizen_target_slot', id);
                 await loadPage("./pages/games/game-modes.html");
                 initGameModes();
@@ -199,7 +233,10 @@ export class LoadCampaignManager {
     }
 
     _onGameLoaded(e) {
+        if (!this._shouldHandleEvent()) return;
+
         if (e.detail.success) {
+            this.destroy();
             loadPage('./pages/games/world-map.html').then(() => {
                 initWorldMap();
             });
@@ -252,6 +289,8 @@ export class LoadCampaignManager {
     }
 
     _onReceiveMetadata(e) {
+        if (!this._shouldHandleEvent()) return;
+
         const data = e.detail;
         if (data.slotId != this.activeSlotId) return;
 
@@ -293,5 +332,7 @@ export class LoadCampaignManager {
 }
 
 export function initLoadCampaign() {
-    new LoadCampaignManager();
+    activeLoadCampaignManager?.destroy();
+    activeLoadCampaignManager = new LoadCampaignManager();
+    return activeLoadCampaignManager;
 }
