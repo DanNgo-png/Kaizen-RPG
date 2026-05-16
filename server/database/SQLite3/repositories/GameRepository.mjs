@@ -224,27 +224,7 @@ export class GameRepository {
         const titleLower = activeContract.title.toLowerCase();
         const node = this.getNodeById(activeContract.node_id);
 
-        // --- CARAVAN / DELIVERY "WELL SUPPLIED" LOGIC ---
-        const isCaravan = contractTitleHasKeyword(activeContract.title, CARAVAN_CONTRACT_KEYWORDS);
-        let bonusRepReward = 0;
-        
-        if (isCaravan) {
-            if (node?.current_event === SETTLEMENT_EVENT_ID.AMBUSHED_TRADE_ROUTES) {
-                bonusRepReward = CONTRACT_REPUTATION.AMBUSHED_TRADE_ROUTE_CARAVAN_BONUS;
-                this.updateNodeReputation(activeContract.node_id, bonusRepReward);
-                this.logNodeHistory(
-                    activeContract.node_id,
-                    `${companyName} reopened the ambushed trade routes with a successful caravan escort, earning extra local trust.`,
-                    'player'
-                );
-            }
-
-            // Apply the 'well_supplied' event to the settlement for 5 days
-            this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?')
-                .run(SETTLEMENT_EVENT_ID.WELL_SUPPLIED, CONTRACT_EVENT_DURATION.WELL_SUPPLIED_DAYS, activeContract.node_id);
-            
-            this.logNodeHistory(activeContract.node_id, `A merchant caravan safely arrived, guided by ${companyName}. The settlement is now well supplied!`, 'world');
-        }
+        const bonusRepReward = this._applyCaravanContractOutcome(activeContract, node, companyName);
 
         // --- DESTROYING ENEMY CAMPS ---
         if (node && (node.type === 'Bandit Camp' || node.type === 'Ruins')) {
@@ -319,6 +299,43 @@ export class GameRepository {
         }
 
         return { contract: activeContract, logs, loot: foundLoot };
+    }
+
+    _applyCaravanContractOutcome(contract, node, companyName) {
+        if (!contractTitleHasKeyword(contract.title, CARAVAN_CONTRACT_KEYWORDS)) {
+            return 0;
+        }
+
+        let bonusRepReward = 0;
+
+        if (node?.current_event === SETTLEMENT_EVENT_ID.AMBUSHED_TRADE_ROUTES) {
+            bonusRepReward = CONTRACT_REPUTATION.AMBUSHED_TRADE_ROUTE_CARAVAN_BONUS;
+            this.updateNodeReputation(contract.node_id, bonusRepReward);
+            this.logNodeHistory(
+                contract.node_id,
+                `${companyName} reopened the ambushed trade routes with a successful caravan escort, earning extra local trust.`,
+                'player'
+            );
+        }
+
+        this._setNodeEvent(
+            contract.node_id,
+            SETTLEMENT_EVENT_ID.WELL_SUPPLIED,
+            CONTRACT_EVENT_DURATION.WELL_SUPPLIED_DAYS
+        );
+
+        this.logNodeHistory(
+            contract.node_id,
+            `A merchant caravan safely arrived, guided by ${companyName}. The settlement is now well supplied!`,
+            'world'
+        );
+
+        return bonusRepReward;
+    }
+
+    _setNodeEvent(nodeId, eventId, durationDays) {
+        this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?')
+            .run(eventId, durationDays, nodeId);
     }
 
     // --- INVENTORY & EQUIPPING ---
