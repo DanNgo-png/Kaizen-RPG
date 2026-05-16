@@ -85,22 +85,28 @@ export class HireHallPanel {
     }
 
     handleHireResult(result = {}) {
+        const pendingHire = this.pendingHire;
+
         if (!result.success) {
             this.pendingHire = null;
-            this._notify("Hiring Failed", result.error || "Unable to hire this recruit.", "fa-solid fa-handshake");
+            if (pendingHire) {
+                this._notify("Hiring Failed", result.error || "Unable to hire this recruit.", "fa-solid fa-handshake");
+            }
             return {
                 success: false,
                 shouldRender: true
             };
         }
 
-        if (this.pendingHire) {
-            this.candidateFactory.removeCandidate(this.pendingHire.nodeId, this.pendingHire.candidateId);
+        if (pendingHire) {
+            this.candidateFactory.removeCandidate(pendingHire.nodeId, pendingHire.candidateId);
             this.pendingHire = null;
         }
 
-        const mercName = result.merc?.name || "A new recruit";
-        this._notify("Recruited!", `${mercName} has joined the company.`, "fa-solid fa-handshake");
+        if (pendingHire) {
+            const mercName = result.merc?.name || "A new recruit";
+            this._notify("Recruited!", `${mercName} has joined the company.`, "fa-solid fa-handshake");
+        }
 
         return {
             success: true,
