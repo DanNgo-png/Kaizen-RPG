@@ -12,15 +12,29 @@ export class InputHandler {
         this.onRightClick = null;
         this.onHover = null;
 
+        this._onMouseDownBound = (event) => this._onMouseDown(event);
+        this._onMouseMoveBound = (event) => this._onMouseMove(event);
+        this._onMouseUpBound = () => this._onMouseUp();
+        this._onWheelBound = (event) => this._onWheel(event);
+        this._onContextMenuBound = (event) => event.preventDefault();
+
         this._bindEvents();
     }
 
     _bindEvents() {
-        this.canvas.addEventListener('mousedown', (e) => this._onMouseDown(e));
-        this.canvas.addEventListener('mousemove', (e) => this._onMouseMove(e));
-        this.canvas.addEventListener('mouseup', () => this._onMouseUp());
-        this.canvas.addEventListener('wheel', (e) => this._onWheel(e));
-        this.canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+        this.canvas.addEventListener('mousedown', this._onMouseDownBound);
+        this.canvas.addEventListener('mousemove', this._onMouseMoveBound);
+        this.canvas.addEventListener('mouseup', this._onMouseUpBound);
+        this.canvas.addEventListener('wheel', this._onWheelBound);
+        this.canvas.addEventListener('contextmenu', this._onContextMenuBound);
+    }
+
+    destroy() {
+        this.canvas.removeEventListener('mousedown', this._onMouseDownBound);
+        this.canvas.removeEventListener('mousemove', this._onMouseMoveBound);
+        this.canvas.removeEventListener('mouseup', this._onMouseUpBound);
+        this.canvas.removeEventListener('wheel', this._onWheelBound);
+        this.canvas.removeEventListener('contextmenu', this._onContextMenuBound);
     }
 
     _onMouseDown(e) {
