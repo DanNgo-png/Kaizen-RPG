@@ -14,6 +14,28 @@ const WORLD_NODE_SELECT = `
     LEFT JOIN factions ON factions.id = world_nodes.faction_id
 `;
 
+const CONTRACT_REPUTATION = Object.freeze({
+    MIN_REWARD: 2,
+    MINUTES_PER_POINT: 10,
+    AMBUSHED_TRADE_ROUTE_CARAVAN_BONUS: 5
+});
+
+const CONTRACT_EVENT_DURATION = Object.freeze({
+    WELL_SUPPLIED_DAYS: 5
+});
+
+const SETTLEMENT_EVENT_ID = Object.freeze({
+    AMBUSHED_TRADE_ROUTES: 'ambushed_trade_routes',
+    WELL_SUPPLIED: 'well_supplied'
+});
+
+const CARAVAN_CONTRACT_KEYWORDS = Object.freeze(['caravan', 'escort', 'delivery']);
+
+function contractTitleHasKeyword(title, keywords) {
+    const titleLower = String(title ?? '').toLowerCase();
+    return keywords.some((keyword) => titleLower.includes(keyword));
+}
+
 export class GameRepository {
     constructor() {
         this.db = null;
@@ -189,8 +211,10 @@ export class GameRepository {
         this.statements.completeContract.run({ id: activeContract.id });
         this.updateGold(activeContract.gold_reward);
 
-        // Scale reputation: ~1 rep per 10 minutes of required focus (minimum 2)
-        const contractRepReward = Math.max(2, Math.floor(activeContract.required_minutes / 10));
+        const contractRepReward = Math.max(
+            CONTRACT_REPUTATION.MIN_REWARD,
+            Math.floor(activeContract.required_minutes / CONTRACT_REPUTATION.MINUTES_PER_POINT)
+        );
         this.updateNodeReputation(activeContract.node_id, contractRepReward);
 
         const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
@@ -201,12 +225,23 @@ export class GameRepository {
         const node = this.getNodeById(activeContract.node_id);
 
         // --- CARAVAN / DELIVERY "WELL SUPPLIED" LOGIC ---
-        const isCaravan = titleLower.includes('caravan') || titleLower.includes('escort') || titleLower.includes('delivery');
+        const isCaravan = contractTitleHasKeyword(activeContract.title, CARAVAN_CONTRACT_KEYWORDS);
+        let bonusRepReward = 0;
         
         if (isCaravan) {
+            if (node?.current_event === SETTLEMENT_EVENT_ID.AMBUSHED_TRADE_ROUTES) {
+                bonusRepReward = CONTRACT_REPUTATION.AMBUSHED_TRADE_ROUTE_CARAVAN_BONUS;
+                this.updateNodeReputation(activeContract.node_id, bonusRepReward);
+                this.logNodeHistory(
+                    activeContract.node_id,
+                    `${companyName} reopened the ambushed trade routes with a successful caravan escort, earning extra local trust.`,
+                    'player'
+                );
+            }
+
             // Apply the 'well_supplied' event to the settlement for 5 days
             this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?')
-                .run('well_supplied', 5, activeContract.node_id);
+                .run(SETTLEMENT_EVENT_ID.WELL_SUPPLIED, CONTRACT_EVENT_DURATION.WELL_SUPPLIED_DAYS, activeContract.node_id);
             
             this.logNodeHistory(activeContract.node_id, `A merchant caravan safely arrived, guided by ${companyName}. The settlement is now well supplied!`, 'world');
         }
@@ -254,6 +289,10 @@ export class GameRepository {
             `💰 Earned ${activeContract.gold_reward} crowns!`,
             `🤝 Reputation with settlement increased by ${contractRepReward}.`
         ];
+
+        if (bonusRepReward > 0) {
+            logs.push(`Bonus reputation for restoring trade routes: +${bonusRepReward}.`);
+        }
 
         // --- LOOT LOGIC ---
         const foundLoot = [];
