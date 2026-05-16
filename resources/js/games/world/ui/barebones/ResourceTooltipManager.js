@@ -12,21 +12,43 @@ const RESOURCE_THEME_CLASS = Object.freeze({
 export class ResourceTooltipManager {
     constructor(documentRef = document) {
         this.documentRef = documentRef;
+        this.bindings = [];
         this.tooltip = documentRef.createElement("div");
         this.tooltip.className = "bb-item-tooltip hidden";
         documentRef.body.appendChild(this.tooltip);
     }
 
     bindResourceContainers(resourceContainers, getResources) {
+        this.unbindResourceContainers();
+
         Object.entries(resourceContainers).forEach(([type, element]) => {
             if (!element) return;
 
-            element.addEventListener("mouseenter", (event) => {
-                this.showResource(type, getResources(), event);
-            });
-            element.addEventListener("mousemove", (event) => this.position(event));
-            element.addEventListener("mouseleave", () => this.hide());
+            const handlers = {
+                mouseenter: (event) => this.showResource(type, getResources(), event),
+                mousemove: (event) => this.position(event),
+                mouseleave: () => this.hide()
+            };
+
+            element.addEventListener("mouseenter", handlers.mouseenter);
+            element.addEventListener("mousemove", handlers.mousemove);
+            element.addEventListener("mouseleave", handlers.mouseleave);
+            this.bindings.push({ element, handlers });
         });
+    }
+
+    unbindResourceContainers() {
+        this.bindings.forEach(({ element, handlers }) => {
+            element.removeEventListener("mouseenter", handlers.mouseenter);
+            element.removeEventListener("mousemove", handlers.mousemove);
+            element.removeEventListener("mouseleave", handlers.mouseleave);
+        });
+        this.bindings = [];
+    }
+
+    destroy() {
+        this.unbindResourceContainers();
+        this.tooltip.remove();
     }
 
     showResource(type, resources, event) {
