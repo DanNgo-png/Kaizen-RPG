@@ -18,8 +18,13 @@ import { HireHallPanel } from "./barebones/HireHallPanel.js";
 import { MarketPanel } from "./barebones/MarketPanel.js";
 import { ContractPanel } from "./barebones/ContractPanel.js";
 
+let activeBarebonesUIManager = null;
+
 export class BarebonesUIManager {
     constructor() {
+        activeBarebonesUIManager?.destroy();
+        activeBarebonesUIManager = this;
+
         this.dom = createBarebonesDom();
         this.nodes = [];
         this.selectedNode = null;
@@ -30,6 +35,8 @@ export class BarebonesUIManager {
         this.partyData = createDefaultPartyData();
         this.rosterLimit = HIRE_CONFIG.ROSTER_LIMIT;
         this.isDelving = false;
+        this.isDestroyed = false;
+        this._domEventBindings = [];
 
         this.menuManager = new CustomMenuManager();
         this.tooltipManager = new ResourceTooltipManager();
@@ -68,6 +75,7 @@ export class BarebonesUIManager {
     }
 
     show(nodes = []) {
+        if (this.isDestroyed) return;
         if (!this.dom.overlay) return;
 
         this.nodes = nodes;
@@ -83,11 +91,13 @@ export class BarebonesUIManager {
     }
 
     hide() {
+        if (this.isDestroyed) return;
         if (this.dom.overlay) this.dom.overlay.classList.add("hidden");
         this.tooltipManager.hide();
     }
 
     updateData(nodes = [], resources) {
+        if (this.isDestroyed) return;
         this.nodes = nodes;
         if (resources) this.updateStats(resources);
 
@@ -103,6 +113,7 @@ export class BarebonesUIManager {
     }
 
     updateStats(resources) {
+        if (this.isDestroyed) return;
         this.currentResources = resources;
         if (!resources) return;
 
@@ -125,6 +136,7 @@ export class BarebonesUIManager {
     }
 
     switchTab(tabName, { shouldLoad = true } = {}) {
+        if (this.isDestroyed) return;
         if (!Object.values(BAREBONES_TABS).includes(tabName)) return;
 
         this.activeTab = tabName;
@@ -145,6 +157,7 @@ export class BarebonesUIManager {
     }
 
     selectNode(node) {
+        if (this.isDestroyed) return;
         this.selectedNode = node;
         this._renderSelectedNodeLabel();
         this.renderNodeList();
@@ -210,7 +223,12 @@ export class BarebonesUIManager {
             receiveNodeHistory: (event) => this._onReceiveNodeHistory(event),
             receivePartyData: (event) => this._onReceivePartyData(event),
             mercenaryHired: (event) => this._onMercenaryHired(event),
-            nodePinToggled: () => GameAPI.getWorldData()
+            nodePinToggled: () => GameAPI.getWorldData(),
+            startDelve: () => GameAPI.setDelvingStatus(true),
+            stopDelve: () => GameAPI.setDelvingStatus(false),
+            showJobsTab: () => this.switchTab(BAREBONES_TABS.JOBS),
+            showMarketTab: () => this.switchTab(BAREBONES_TABS.MARKET),
+            showHireTab: () => this.switchTab(BAREBONES_TABS.HIRE)
         };
     }
 
@@ -223,13 +241,51 @@ export class BarebonesUIManager {
             Neutralino.events.on(eventName, handler);
         });
 
-        this.dom.btnStartDelve?.addEventListener("click", () => GameAPI.setDelvingStatus(true));
-        this.dom.btnStopDelve?.addEventListener("click", () => GameAPI.setDelvingStatus(false));
-        this.dom.tabJobs?.addEventListener("click", () => this.switchTab(BAREBONES_TABS.JOBS));
-        this.dom.tabMarket?.addEventListener("click", () => this.switchTab(BAREBONES_TABS.MARKET));
-        this.dom.tabHire?.addEventListener("click", () => this.switchTab(BAREBONES_TABS.HIRE));
+        this._domEventBindings = [
+            { element: this.dom.btnStartDelve, type: "click", handler: this._handlers.startDelve },
+            { element: this.dom.btnStopDelve, type: "click", handler: this._handlers.stopDelve },
+            { element: this.dom.tabJobs, type: "click", handler: this._handlers.showJobsTab },
+            { element: this.dom.tabMarket, type: "click", handler: this._handlers.showMarketTab },
+            { element: this.dom.tabHire, type: "click", handler: this._handlers.showHireTab }
+        ];
+
+        this._domEventBindings.forEach(({ element, type, handler }) => {
+            if (!element) return;
+            element.removeEventListener(type, handler);
+            element.addEventListener(type, handler);
+        });
 
         this.tooltipManager.bindResourceContainers(this.dom.resContainers, () => this.currentResources);
+    }
+
+    destroy() {
+        if (this.isDestroyed) return;
+        this.isDestroyed = true;
+
+        document.removeEventListener("kaizen:contract-progress-updated", this._handlers.contractProgressUpdated);
+
+        Object.entries(this._neutralinoEventMap()).forEach(([eventName, handler]) => {
+            Neutralino.events.off(eventName, handler);
+        });
+
+        this._domEventBindings.forEach(({ element, type, handler }) => {
+            element?.removeEventListener(type, handler);
+        });
+        this._domEventBindings = [];
+
+        this.tooltipManager.destroy();
+
+        if (activeBarebonesUIManager === this) {
+            activeBarebonesUIManager = null;
+        }
+    }
+
+    _shouldHandleEvent() {
+        if (this.isDestroyed) return false;
+        if (this.dom.overlay && document.body.contains(this.dom.overlay)) return true;
+
+        this.destroy();
+        return false;
     }
 
     _neutralinoEventMap() {
@@ -249,6 +305,8 @@ export class BarebonesUIManager {
     }
 
     _onContractProgressUpdated(event) {
+        if (!this._shouldHandleEvent()) return;
+
         const contract = event.detail;
         if (!this.activeContract || this.activeContract.id !== contract.id) return;
 
@@ -257,11 +315,14 @@ export class BarebonesUIManager {
     }
 
     _onDelvingStatusUpdated(event) {
+        if (!this._shouldHandleEvent()) return;
+
         this.isDelving = event.detail.isDelving;
         this.updateActiveBanner(this.activeContract);
     }
 
     _onReceivePartyData(event) {
+        if (!this._shouldHandleEvent()) return;
         if (!event.detail) return;
 
         this.partyData = event.detail;
@@ -270,6 +331,8 @@ export class BarebonesUIManager {
     }
 
     _onMercenaryHired(event) {
+        if (!this._shouldHandleEvent()) return;
+
         const outcome = this.hirePanel.handleHireResult(event.detail || {});
 
         if (outcome.newGold !== null && outcome.newGold !== undefined) {
@@ -282,10 +345,14 @@ export class BarebonesUIManager {
     }
 
     _onReceiveNodeHistory(event) {
+        if (!this._shouldHandleEvent()) return;
+
         this.chroniclesModal.renderHistory(event.detail?.history || []);
     }
 
     _onReceiveMarketData(event) {
+        if (!this._shouldHandleEvent()) return;
+
         this.marketData = {
             ...createDefaultMarketData(),
             ...(event.detail || {})
@@ -295,6 +362,8 @@ export class BarebonesUIManager {
     }
 
     _onTransactionComplete(event) {
+        if (!this._shouldHandleEvent()) return;
+
         if (event.detail.success) {
             if (this.selectedNode) GameAPI.getMarketData(this.selectedNode.id);
             GameAPI.getWorldData();
@@ -305,6 +374,8 @@ export class BarebonesUIManager {
     }
 
     _onContractCompletedRealtime() {
+        if (!this._shouldHandleEvent()) return;
+
         this.activeContract = null;
         this.updateActiveBanner(null);
 
@@ -316,6 +387,8 @@ export class BarebonesUIManager {
     }
 
     _onReceiveContracts(event) {
+        if (!this._shouldHandleEvent()) return;
+
         const { contracts, activeContract } = event.detail;
         this.activeContract = activeContract;
         this.updateActiveBanner(activeContract);
@@ -326,6 +399,8 @@ export class BarebonesUIManager {
     }
 
     _onContractAccepted(event) {
+        if (!this._shouldHandleEvent()) return;
+
         const { activeContract } = event.detail;
         this.activeContract = activeContract;
         this.updateActiveBanner(activeContract);
@@ -336,6 +411,8 @@ export class BarebonesUIManager {
     }
 
     _onContractAborted() {
+        if (!this._shouldHandleEvent()) return;
+
         this.activeContract = null;
         this.updateActiveBanner(null);
 
