@@ -4,6 +4,8 @@ import { RosterUI } from "./RosterUI.js";
 import { CharacterSheetUI } from "./CharacterSheetUI.js";
 import { InventoryUI } from "./InventoryUI.js";
 
+let activeManagementManager = null;
+
 export class ManagementManager {
     constructor() {
         this.data = {
@@ -16,6 +18,8 @@ export class ManagementManager {
             selectedMercId: null,
             filter: 'all'
         };
+        this._isDestroyed = false;
+        this._onDataReceivedBound = this._onDataReceived.bind(this);
 
         // Initialize Sub-components
         this.rosterUI = new RosterUI((id) => this.selectMercenary(id));
@@ -47,17 +51,41 @@ export class ManagementManager {
     }
 
     init() {
-        Neutralino.events.off('receivePartyData', this._onDataReceived);
-        Neutralino.events.on('receivePartyData', this._onDataReceived.bind(this));
+        Neutralino.events.off('receivePartyData', this._onDataReceivedBound);
+        Neutralino.events.on('receivePartyData', this._onDataReceivedBound);
 
         this.refresh();
     }
 
+    destroy() {
+        if (this._isDestroyed) return;
+        this._isDestroyed = true;
+
+        Neutralino.events.off('receivePartyData', this._onDataReceivedBound);
+
+        if (activeManagementManager === this) {
+            activeManagementManager = null;
+        }
+    }
+
+    _shouldHandleEvent() {
+        if (this._isDestroyed) return false;
+
+        const container = document.getElementById('management-overlay');
+        if (container) return true;
+
+        this.destroy();
+        return false;
+    }
+
     refresh() {
+        if (this._isDestroyed) return;
         GameAPI.getPartyData();
     }
 
     _onDataReceived(e) {
+        if (!this._shouldHandleEvent()) return;
+
         const payload = e.detail;
         if (!payload) return;
 
@@ -93,5 +121,7 @@ export class ManagementManager {
 }
 
 export function initManagement() {
-    return new ManagementManager();
+    activeManagementManager?.destroy();
+    activeManagementManager = new ManagementManager();
+    return activeManagementManager;
 }
