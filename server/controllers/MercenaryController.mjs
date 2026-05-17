@@ -17,8 +17,16 @@ export class MercenaryController {
 
     _getEnrichedInventory(node = null) {
         const rawInventory = this.repo.getInventory();
+        const mercenaryNamesById = new Map(
+            this.repo.db
+                .prepare('SELECT id, name FROM mercenaries')
+                .all()
+                .map((mercenary) => [mercenary.id, mercenary.name])
+        );
+
         return rawInventory.map(inv => {
             const itemInstance = ItemFactory.createItem(inv.item_id); 
+            const isEquipped = inv.mercenary_id !== null || Boolean(inv.equip_slot);
             
             let baseTypeMult = 0.15; // Normal items
 
@@ -56,6 +64,8 @@ export class MercenaryController {
                 mercenaryId: inv.mercenary_id,
                 stashSlot: inv.stash_slot, 
                 equipSlot: inv.equip_slot, 
+                isEquipped,
+                equippedByName: isEquipped ? (mercenaryNamesById.get(inv.mercenary_id) || "Unknown Mercenary") : null,
                 name: itemInstance.name,
                 icon: itemInstance.icon,
                 type: itemInstance.type,
@@ -434,8 +444,27 @@ export class MercenaryController {
 
         app.events.on("sellItem", (payload) => {
             try {
-                const itemDb = this.repo.db.prepare('SELECT item_id FROM inventory WHERE id = ?').get(payload.inventoryId);
-                const itemId = itemDb ? itemDb.item_id : null;
+                const itemDb = this.repo.db.prepare(`
+                    SELECT
+                        inventory.item_id,
+                        inventory.mercenary_id,
+                        inventory.equip_slot,
+                        mercenaries.name AS mercenary_name
+                    FROM inventory
+                    LEFT JOIN mercenaries ON mercenaries.id = inventory.mercenary_id
+                    WHERE inventory.id = ?
+                `).get(payload.inventoryId);
+
+                if (!itemDb) {
+                    throw new Error("Item is no longer in your company inventory.");
+                }
+
+                if (itemDb.mercenary_id !== null || itemDb.equip_slot) {
+                    const wearerName = itemDb.mercenary_name || "a mercenary";
+                    throw new Error(`Unequip this item from ${wearerName} before selling it.`);
+                }
+
+                const itemId = itemDb.item_id;
 
                 this.repo.updateGold(payload.price);
                 this.repo.deleteItemFromInventory(payload.inventoryId);

@@ -72,27 +72,37 @@ export class MarketPanel {
         const element = document.createElement("div");
         const price = isBuying ? item.cost : item.sellPrice;
         const canAfford = isBuying ? marketData.gold >= price : true;
-        const canTrade = canAfford && Boolean(selectedNode);
+        const isEquipped = !isBuying && Boolean(item.isEquipped);
+        const canTrade = canAfford && Boolean(selectedNode) && !isEquipped;
         const rarityClass = this._rarityClass(item.rarity);
-        const priceClass = isBuying ? "buy" : "sell";
+        const priceClass = isEquipped ? "locked" : (isBuying ? "buy" : "sell");
         const quantity = item.amount || item.count;
+        const equippedText = this._equippedText(item);
 
         // Visual Provision Amount Badge
         const provisionStat = (item.stats && item.stats.provisions)
             ? `<div style="position: absolute; top: 2px; right: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace; color: #d97706; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; pointer-events: none;"><i class="fa-solid fa-drumstick-bite"></i> ${item.stats.provisions}</div>`
             : "";
+        const equippedBadge = isEquipped
+            ? `<div class="bb-slot-equipped"><i class="fa-solid fa-lock"></i><span>Worn</span></div>`
+            : "";
+        const priceContent = isEquipped
+            ? `<i class="fa-solid fa-lock"></i>`
+            : price;
 
-        element.className = `bb-market-slot ${rarityClass} ${!canAfford ? "disabled" : ""}`;
+        element.className = `bb-market-slot ${rarityClass} ${!canTrade ? "disabled" : ""} ${isEquipped ? "equipped" : ""}`;
+        element.setAttribute("aria-label", isEquipped ? `${item.name}, ${equippedText}` : item.name);
         element.innerHTML = `
             ${quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? `<div class="bb-slot-qty">x${quantity}</div>` : ""}
             ${provisionStat}
+            ${equippedBadge}
             <i class="${escapeHtml(item.icon || "fa-solid fa-cube")}"></i>
-            <div class="bb-slot-price ${priceClass}">${price}</div>
+            <div class="bb-slot-price ${priceClass}">${priceContent}</div>
         `;
 
         // Tooltips 
         element.addEventListener("mouseenter", (event) => {
-            this.tooltipManager.show(this._tooltipHtml({ item, quantity, isBuying, price, priceClass }), event);
+            this.tooltipManager.show(this._tooltipHtml({ item, quantity, isBuying, price, priceClass, isEquipped, equippedText }), event);
         });
         element.addEventListener("mousemove", (event) => this.tooltipManager.position(event));
         element.addEventListener("mouseleave", () => this.tooltipManager.hide());
@@ -112,9 +122,13 @@ export class MarketPanel {
         return element;
     }
 
-    _tooltipHtml({ item, quantity, isBuying, price, priceClass }) {
-        const actionText = isBuying ? "L-Click: Buy" : "L-Click: Sell";
+    _tooltipHtml({ item, quantity, isBuying, price, priceClass, isEquipped, equippedText }) {
+        const actionText = isEquipped ? "Unequip before selling" : (isBuying ? "L-Click: Buy" : "L-Click: Sell");
         const quantityText = quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? ` (x${quantity})` : "";
+        const equippedHint = isEquipped
+            ? `<div class="tt-equipped"><i class="fa-solid fa-user-shield"></i> ${escapeHtml(equippedText)}</div>`
+            : "";
+        const priceHint = isEquipped ? `<div class="tt-muted">Sell value: ${price} <i class="fa-solid fa-coins"></i></div>` : "";
         
         // Show Spoil Days based on Buying or Checking Stash
         let spoilHint = '';
@@ -131,9 +145,17 @@ export class MarketPanel {
             <div class="tt-name">${escapeHtml(item.name)}${quantityText}</div>
             <div class="tt-type">[${escapeHtml(item.type || "Misc")}]</div>
             <div style="font-style: italic; color: #9ca3af; font-size: 0.8rem; margin: 5px 0;">${escapeHtml(item.description || "")}</div>
-            <div class="tt-action ${priceClass}">${actionText} <i class="fa-solid fa-coins"></i> ${price}</div>
+            ${equippedHint}
+            <div class="tt-action ${priceClass}">${actionText}${isEquipped ? "" : ` <i class="fa-solid fa-coins"></i> ${price}`}</div>
+            ${priceHint}
             ${spoilHint}
         `;
+    }
+
+    _equippedText(item) {
+        const wearer = item.equippedByName || "a mercenary";
+        const slot = item.equipSlot ? ` (${item.equipSlot.replaceAll("_", " ")})` : "";
+        return `Worn by ${wearer}${slot}`;
     }
 
     _rarityClass(rarity) {

@@ -450,6 +450,50 @@
     filter: grayscale(1);
 }
 
+.bb-market-slot.equipped {
+    opacity: 0.9;
+    border-color: #f59e0b;
+    color: #fbbf24;
+    filter: none;
+    background: linear-gradient(145deg, #111827, #1f2937);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.3), inset 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.bb-market-slot.equipped:hover {
+    transform: none;
+    border-color: #fbbf24;
+    background: #1f2937;
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.35), 0 4px 10px rgba(0,0,0,0.45);
+}
+
+.bb-slot-equipped {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    max-width: calc(100% - 10px);
+    padding: 2px 5px;
+    border-radius: 999px;
+    background: rgba(127, 29, 29, 0.9);
+    border: 1px solid rgba(248, 113, 113, 0.55);
+    color: #fecaca;
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.bb-slot-equipped span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 /* Rarity Colors */
 .bb-market-slot.rarity-uncommon { border-color: #059669; color: #34d399; }
 .bb-market-slot.rarity-rare { border-color: #2563eb; color: #60a5fa; }
@@ -468,6 +512,7 @@
 }
 .bb-slot-price.buy { color: #93c5fd; } /* Light Blue for Buying */
 .bb-slot-price.sell { color: #fcd34d; } /* Light Gold for Selling */
+.bb-slot-price.locked { color: #fecaca; }
 
 /* Tiny Quantity Tag inside the slot */
 .bb-slot-qty {
@@ -521,6 +566,20 @@
 
 .bb-item-tooltip .tt-action.buy { color: #60a5fa; }
 .bb-item-tooltip .tt-action.sell { color: #fbbf24; }
+.bb-item-tooltip .tt-action.locked { color: #fecaca; }
+
+.bb-item-tooltip .tt-equipped {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 6px 0;
+}
+
+.bb-item-tooltip .tt-muted {
+    color: #94a3b8;
+    font-size: 0.78rem;
+    margin-top: 4px;
+}
 
 .bb-tooltip-title {
     font-weight: 700;
