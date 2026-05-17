@@ -29,11 +29,23 @@ const SETTLEMENT_EVENT_ID = Object.freeze({
     WELL_SUPPLIED: 'well_supplied'
 });
 
+const NON_GROWING_SETTLEMENT_TYPES = Object.freeze(['Ruins', 'Bandit Camp']);
+const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([
+    SETTLEMENT_EVENT_ID.WELL_SUPPLIED
+]);
+
 const CARAVAN_CONTRACT_KEYWORDS = Object.freeze(['caravan', 'escort', 'delivery']);
 
 function contractTitleHasKeyword(title, keywords) {
     const titleLower = String(title ?? '').toLowerCase();
     return keywords.some((keyword) => titleLower.includes(keyword));
+}
+
+function canTrackSettlementGrowth(node, tierData) {
+    if (!node || !tierData?.growthReqs) return false;
+    if (NON_GROWING_SETTLEMENT_TYPES.includes(node.type)) return false;
+
+    return !node.current_event || GROWTH_PROGRESS_COMPATIBLE_EVENTS.includes(node.current_event);
 }
 
 export class GameRepository {
@@ -244,23 +256,24 @@ export class GameRepository {
         }
 
         // --- EXPANSION PREREQUISITES TRACKING ---
-        const tierData = SETTLEMENT_TIERS[node?.type];
+        const growthNode = this.getNodeById(activeContract.node_id) || node;
+        const tierData = SETTLEMENT_TIERS[growthNode?.type];
 
-        if (node && tierData && tierData.growthReqs && !node.current_event && node.type !== 'Ruins' && node.type !== 'Bandit Camp') {
+        if (canTrackSettlementGrowth(growthNode, tierData)) {
             let reqs = {};
-            try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+            try { reqs = JSON.parse(growthNode.expansion_reqs || '{}'); } catch(e){}
 
             reqs.contracts = (reqs.contracts || 0) + 1;
 
             let readyForBoom = (reqs.contracts >= tierData.growthReqs.contracts) && ((reqs.trade || 0) >= tierData.growthReqs.trade);
 
-            this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), node.id);
+            this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), growthNode.id);
 
             if (readyForBoom) {
-                const eventType = SETTLEMENT_UPGRADE_PATH[node.type] ? 'building_boom' : 'settlement_expansion';
+                const eventType = SETTLEMENT_UPGRADE_PATH[growthNode.type] ? 'building_boom' : 'settlement_expansion';
                 this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, development_progress = 0 WHERE id = ?')
-                    .run(eventType, 999, node.id);
-                this.logNodeHistory(node.id, `Thanks to safe roads and bustling trade, ${node.name} is preparing to expand! They are requesting building materials.`, 'world');
+                    .run(eventType, 999, growthNode.id);
+                this.logNodeHistory(growthNode.id, `Thanks to safe roads and bustling trade, ${growthNode.name} is preparing to expand! They are requesting building materials.`, 'world');
             }
         }
 
@@ -971,7 +984,7 @@ export class GameRepository {
         const node = this.getNodeById(nodeId);
         const tierData = SETTLEMENT_TIERS[node?.type];
 
-        if (node && tierData && tierData.growthReqs && !node.current_event && node.type !== 'Ruins' && node.type !== 'Bandit Camp') {
+        if (canTrackSettlementGrowth(node, tierData)) {
             let reqs = {};
             try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
 
