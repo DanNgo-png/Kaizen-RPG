@@ -485,7 +485,7 @@ export class MercenaryController {
                         if (isBuildingMat) {
                             // Get dynamic threshold based on the settlement's tier
                             const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: 10 } };
-                            const maxProg = tierInfo.growthReq;
+                            const maxProg = tierInfo.growthReqs ? tierInfo.growthReqs.materials : 10;
 
                             if (node.current_event === 'building_boom') {
                                 let newProgress = (node.development_progress || 0) + 1;
