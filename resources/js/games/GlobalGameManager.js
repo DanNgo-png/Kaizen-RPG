@@ -44,7 +44,16 @@ class GlobalGameManager {
             this.activeContract = e.detail || null;
         });
 
-        // Initial fetch (slight delay ensures Neutralino is fully up)
+        // 4. Ensure we fetch the contract immediately when a save is loaded or generated
+        Neutralino.events.on('gameLoaded', () => {
+            GameAPI.getActiveContract();
+        });
+
+        Neutralino.events.on('gameCreated', () => {
+            GameAPI.getActiveContract();
+        });
+
+        // Initial fetch (handles cases where they refresh the window while mid-game)
         setTimeout(() => {
             GameAPI.getActiveContract();
         }, 1000); 
