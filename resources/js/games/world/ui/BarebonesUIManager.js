@@ -88,6 +88,8 @@ export class BarebonesUIManager {
         }
 
         GameAPI.getPartyData();
+        // Request the active contract specifically every time we show the UI
+        GameAPI.getActiveContract();
     }
 
     hide() {
@@ -228,7 +230,9 @@ export class BarebonesUIManager {
             stopDelve: () => GameAPI.setDelvingStatus(false),
             showJobsTab: () => this.switchTab(BAREBONES_TABS.JOBS),
             showMarketTab: () => this.switchTab(BAREBONES_TABS.MARKET),
-            showHireTab: () => this.switchTab(BAREBONES_TABS.HIRE)
+            showHireTab: () => this.switchTab(BAREBONES_TABS.HIRE),
+            // Bind the active contract request
+            receiveActiveContract: (event) => this._onReceiveActiveContract(event)
         };
     }
 
@@ -300,8 +304,16 @@ export class BarebonesUIManager {
             receiveNodeHistory: this._handlers.receiveNodeHistory,
             receivePartyData: this._handlers.receivePartyData,
             mercenaryHired: this._handlers.mercenaryHired,
-            nodePinToggled: this._handlers.nodePinToggled
+            nodePinToggled: this._handlers.nodePinToggled,
+            receiveActiveContract: this._handlers.receiveActiveContract
         };
+    }
+
+    _onReceiveActiveContract(event) {
+        if (!this._shouldHandleEvent()) return;
+
+        this.activeContract = event.detail || null;
+        this.updateActiveBanner(this.activeContract);
     }
 
     _onContractProgressUpdated(event) {
