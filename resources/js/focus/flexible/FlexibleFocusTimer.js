@@ -2,6 +2,8 @@ import { flexManager } from "./FlexibleFocusManager.js";
 import { FlexibleTimerUI } from "./FlexibleTimerUI.js";
 import { TagUIManager } from "../../components/TagUIManager.js";
 
+const MIN_SESSION_SECONDS = 0;
+
 class FocusTimerController {
     constructor() {
         this.ui = new FlexibleTimerUI();
@@ -136,6 +138,11 @@ class FocusTimerController {
         const focusVal = document.getElementById('conclude-focus-input').value;
         const breakVal = document.getElementById('conclude-break-input').value;
 
+        const normalizeSeconds = (seconds) => {
+            if (!Number.isFinite(seconds)) return MIN_SESSION_SECONDS;
+            return Math.max(MIN_SESSION_SECONDS, Math.round(seconds));
+        };
+
         const parseToSeconds = (val) => {
             if (typeof val === 'number') return val;
             if (val.includes(':')) {
@@ -143,9 +150,9 @@ class FocusTimerController {
                 let seconds = 0;
                 if (parts.length === 3) seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
                 else if (parts.length === 2) seconds = (parts[0] * 60) + parts[1];
-                return seconds;
+                return normalizeSeconds(seconds);
             }
-            return (parseFloat(val) || 0) * 60;
+            return normalizeSeconds((parseFloat(val) || MIN_SESSION_SECONDS) * 60);
         };
 
         const fSec = parseToSeconds(focusVal);
