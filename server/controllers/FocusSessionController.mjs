@@ -14,6 +14,22 @@ const getLocalSQLDateTime = () => {
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 };
 
+const MIN_SESSION_SECONDS = 0;
+const DEFAULT_SESSION_RATIO = 1.0;
+const DEFAULT_TIMER_TYPE = 'standard';
+
+const normalizeSessionSeconds = (value) => {
+    const seconds = Number(value);
+    if (!Number.isFinite(seconds)) return MIN_SESSION_SECONDS;
+    return Math.max(MIN_SESSION_SECONDS, Math.round(seconds));
+};
+
+const normalizeSessionRatio = (value) => {
+    const ratio = Number(value);
+    if (!Number.isFinite(ratio) || ratio <= 0) return DEFAULT_SESSION_RATIO;
+    return ratio;
+};
+
 export class FocusSessionController {
     constructor() {
         this.repo = new FocusSessionRepository();
@@ -24,13 +40,17 @@ export class FocusSessionController {
         app.events.on("saveFocusSession", (payload) => {
             try {
                 const localCreatedAt = getLocalSQLDateTime();
+                const sessionPayload = payload || {};
+                const focusSeconds = normalizeSessionSeconds(sessionPayload.focusSeconds);
+                const breakSeconds = normalizeSessionSeconds(sessionPayload.breakSeconds);
+                const ratio = normalizeSessionRatio(sessionPayload.ratio);
 
                 const result = this.repo.addSession({
-                    tag: payload.tag || "No Tag",
-                    focus_seconds: payload.focusSeconds,
-                    break_seconds: payload.breakSeconds,
-                    ratio: payload.ratio,
-                    timer_type: payload.timer_type,
+                    tag: sessionPayload.tag || "No Tag",
+                    focus_seconds: focusSeconds,
+                    break_seconds: breakSeconds,
+                    ratio,
+                    timer_type: sessionPayload.timer_type || DEFAULT_TIMER_TYPE,
                     created_at: localCreatedAt
                 });
 
@@ -38,8 +58,8 @@ export class FocusSessionController {
 
                 // Include Ratio in dispatch for RPG logic
                 app.events.dispatch("internal:sessionCompleted", { 
-                    focusSeconds: payload.focusSeconds,
-                    ratio: payload.ratio || 1.0 
+                    focusSeconds,
+                    ratio
                 });
                 
                 app.events.broadcast("focusSessionSaved", {
