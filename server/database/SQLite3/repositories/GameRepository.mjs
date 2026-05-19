@@ -35,6 +35,8 @@ const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([
 ]);
 
 const CARAVAN_CONTRACT_KEYWORDS = Object.freeze(['caravan', 'escort', 'delivery']);
+const MIN_GOLD_BALANCE = 0;
+const NO_GOLD_DELTA = 0;
 
 function contractTitleHasKeyword(title, keywords) {
     const titleLower = String(title ?? '').toLowerCase();
@@ -858,9 +860,14 @@ export class GameRepository {
 
     updateGold(amount) {
         this.ensureConnection();
+        const delta = Number(amount);
+        if (!Number.isFinite(delta)) throw new Error("Invalid Gold Amount");
+
         const current = this.getResources().gold;
-        const newAmount = current + amount;
-        if (newAmount < 0) throw new Error("Insufficient Gold");
+        const newAmount = current + delta;
+        if (delta < NO_GOLD_DELTA && newAmount < MIN_GOLD_BALANCE) {
+            throw new Error("Insufficient Gold");
+        }
 
         this.statements.updateSetting.run({ key: 'gold', value: newAmount });
         return newAmount;
