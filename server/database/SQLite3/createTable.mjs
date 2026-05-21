@@ -142,6 +142,16 @@ const migrations = [
         if (!nodeColumns.includes('is_hostile')) {
             db.exec("ALTER TABLE world_nodes ADD COLUMN is_hostile INTEGER DEFAULT 0;");
         }
+    },
+    // --- Version 12: Structured contract destinations and types ---
+    (db) => {
+        const contractColumns = db.pragma('table_info(contracts)').map(col => col.name);
+        if (!contractColumns.includes('target_node_id')) {
+            db.exec("ALTER TABLE contracts ADD COLUMN target_node_id INTEGER;");
+        }
+        if (!contractColumns.includes('contract_type')) {
+            db.exec("ALTER TABLE contracts ADD COLUMN contract_type TEXT DEFAULT 'standard';");
+        }
     }
 ];
 
