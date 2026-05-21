@@ -59,6 +59,51 @@
       box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
     }
 
+    .hud-strength {
+      min-width: 150px;
+      align-items: stretch;
+    }
+
+    .hud-strength-body {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 3px 8px;
+      align-items: center;
+      width: 100%;
+      min-width: 0;
+    }
+
+    .hud-strength-score {
+      color: #e2e8f0;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .hud-strength-rating {
+      color: #34d399;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      line-height: 1;
+    }
+
+    .hud-strength-track {
+      grid-column: 1 / -1;
+      height: 5px;
+      background: #111827;
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .hud-strength-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #22c55e, #facc15);
+      transition: width 0.25s ease;
+    }
+
     .text-gold {
       color: #facc15;
       font-weight: 700;
@@ -341,6 +386,16 @@
           <i class="fa-regular fa-clock"></i>
           <span id="hud-day" class="text-day">Day 1 - 00:00</span>
         </div>
+        <div class="hud-stat hud-strength" id="res-strength-container" style="cursor:help;">
+          <i class="fa-solid fa-ranking-star" style="color: #34d399;"></i>
+          <div class="hud-strength-body">
+            <span id="hud-strength-score" class="hud-strength-score">0</span>
+            <span id="hud-strength-rating" class="hud-strength-rating">Unmanned</span>
+            <div class="hud-strength-track">
+              <div id="hud-strength-fill" class="hud-strength-fill"></div>
+            </div>
+          </div>
+        </div>
         <div class="hud-stat">
           <i class="fa-solid fa-users"></i>
           <span id="hud-roster">0 / 12</span>
@@ -375,6 +430,14 @@
             </div>
             <div class="stat-pill">
               <i class="fa-solid fa-users text-blue"></i> <span id="mgmt-roster-count">0/12</span>
+            </div>
+            <div class="stat-pill stat-pill-strength" title="Group Strength">
+              <i class="fa-solid fa-ranking-star"></i>
+              <span id="mgmt-strength-score">0</span>
+              <span id="mgmt-strength-rating">Unmanned</span>
+              <div class="mgmt-strength-track">
+                <div id="mgmt-strength-fill" class="mgmt-strength-fill"></div>
+              </div>
             </div>
           </div>
         </header>
@@ -499,6 +562,17 @@
               <!-- Meds -->
               <div id="bb-res-meds-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#f87171; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-band-aid"></i> <span id="bb-meds-display">0</span>
+              </div>
+              <!-- Strength -->
+              <div id="bb-res-strength-container" class="bb-strength-hud">
+                <i class="fa-solid fa-ranking-star"></i>
+                <div class="bb-strength-copy">
+                  <span id="bb-strength-display">0</span>
+                  <span id="bb-strength-rating">Unmanned</span>
+                </div>
+                <div class="bb-strength-track">
+                  <div id="bb-strength-fill" class="bb-strength-fill"></div>
+                </div>
               </div>
             </div>
 
