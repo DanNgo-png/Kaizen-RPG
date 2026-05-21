@@ -134,6 +134,7 @@ export class BarebonesUIManager {
         this._setText(this.dom.toolsDisplay, resources.tools);
         this._setText(this.dom.ammoDisplay, resources.ammo);
         this._setText(this.dom.medsDisplay, resources.medicine);
+        this._updateStrength(resources.partyStrength);
         this.marketData.gold = resources.gold || BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
     }
 
@@ -474,5 +475,18 @@ export class BarebonesUIManager {
     _setText(element, value) {
         if (!element) return;
         element.textContent = value ?? BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+    }
+
+    _updateStrength(strength) {
+        const score = strength?.score ?? BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+        const rating = strength?.rating ?? "Unmanned";
+        const progressPercent = strength?.progressPercent ?? BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+
+        this._setText(this.dom.strengthDisplay, score);
+        this._setText(this.dom.strengthRating, rating);
+
+        if (this.dom.strengthFill) {
+            this.dom.strengthFill.style.width = `${progressPercent}%`;
+        }
     }
 }
