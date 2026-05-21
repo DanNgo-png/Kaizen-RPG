@@ -6,6 +6,10 @@ import {
 } from "./BarebonesTemplates.js";
 
 const confirmAction = (message) => globalThis.confirm?.(message) ?? true;
+const CONTRACT_TYPE = Object.freeze({
+    CARAVAN: "caravan",
+    BRIGAND_CAMP: "brigand_camp"
+});
 
 export class ContractPanel {
     constructor({
@@ -67,14 +71,16 @@ export class ContractPanel {
 
     _createContractCard(contract, isBusy) {
         const element = document.createElement("div");
-        element.className = "bb-contract-card";
+        element.className = `bb-contract-card ${this._contractCardClass(contract)}`;
         element.innerHTML = `
             <div class="bb-c-left">
                 <h4>${escapeHtml(contract.title)}</h4>
                 <p>"${escapeHtml(contract.description)}"</p>
+                ${this._contractTargetHtml(contract)}
                 <div class="bb-c-rewards">
                     <span class="bb-reward-gold"><i class="fa-solid fa-coins"></i> ${contract.gold_reward}g</span>
                     <span class="bb-reward-time"><i class="fa-regular fa-clock"></i> ${contract.required_minutes}m Focus</span>
+                    ${this._contractLootHtml(contract)}
                 </div>
             </div>
             <div class="bb-c-right">
@@ -91,6 +97,33 @@ export class ContractPanel {
         }
 
         return element;
+    }
+
+    _contractCardClass(contract) {
+        if (contract.contract_type === CONTRACT_TYPE.BRIGAND_CAMP) return "danger";
+        if (contract.contract_type === CONTRACT_TYPE.CARAVAN) return "caravan";
+        return "";
+    }
+
+    _contractTargetHtml(contract) {
+        if (!contract.target_node_name) return "";
+
+        const isCaravan = contract.contract_type === CONTRACT_TYPE.CARAVAN;
+        const icon = isCaravan ? "fa-route" : "fa-campground";
+        const label = isCaravan ? "Destination" : "Target";
+
+        return `
+            <div class="bb-contract-target">
+                <i class="fa-solid ${icon}"></i>
+                <span>${label}: ${escapeHtml(contract.target_node_name)}</span>
+            </div>
+        `;
+    }
+
+    _contractLootHtml(contract) {
+        if (contract.contract_type !== CONTRACT_TYPE.BRIGAND_CAMP) return "";
+
+        return `<span class="bb-reward-loot"><i class="fa-solid fa-box-open"></i> Rich loot</span>`;
     }
 
     _renderContractBanner(activeContract) {
