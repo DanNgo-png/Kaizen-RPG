@@ -72,6 +72,55 @@
     color: #cbd5e1;
 }
 
+.bb-strength-hud {
+    cursor: help;
+    min-width: 126px;
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 3px 8px;
+    align-items: center;
+    color: #34d399;
+    font-weight: 800;
+    font-size: 1rem;
+    border-left: 1px solid #4b5563;
+    padding-left: 15px;
+    margin-left: 5px;
+}
+
+.bb-strength-copy {
+    display: flex;
+    align-items: baseline;
+    gap: 7px;
+    min-width: 0;
+}
+
+.bb-strength-copy span:first-child {
+    color: #e2e8f0;
+}
+
+.bb-strength-copy span:last-child {
+    color: #34d399;
+    font-size: 0.68rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.bb-strength-track {
+    grid-column: 1 / -1;
+    height: 5px;
+    background: #111827;
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.bb-strength-fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #22c55e, #facc15);
+    transition: width 0.25s ease;
+}
+
 .bb-split-layout {
     display: flex;
     gap: 25px;
@@ -253,6 +302,16 @@
     border-color: #64748b;
 }
 
+.bb-contract-card.danger {
+    border-color: rgba(248, 113, 113, 0.55);
+    background: linear-gradient(135deg, rgba(127, 29, 29, 0.28), #0f172a 42%);
+}
+
+.bb-contract-card.caravan {
+    border-color: rgba(52, 211, 153, 0.42);
+    background: linear-gradient(135deg, rgba(20, 83, 45, 0.2), #0f172a 42%);
+}
+
 .bb-c-left h4 {
     margin: 0 0 5px 0;
     font-size: 1.1rem;
@@ -265,8 +324,32 @@
     font-style: italic;
 }
 
+.bb-contract-target {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 0 10px 0;
+    padding: 5px 9px;
+    border-radius: 6px;
+    background: rgba(15, 23, 42, 0.8);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    color: #cbd5e1;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.bb-contract-target span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
 .bb-c-rewards {
     display: flex;
+    flex-wrap: wrap;
     gap: 15px;
     font-size: 0.85rem;
     font-weight: 700;
@@ -274,6 +357,7 @@
 .bb-c-rewards span { display: flex; align-items: center; gap: 5px; }
 .bb-reward-gold { color: #facc15; }
 .bb-reward-time { color: #60a5fa; }
+.bb-reward-loot { color: #34d399; }
 
 .bb-btn-accept {
     background: #059669;
@@ -593,6 +677,7 @@
 .bb-tooltip-title.tools { color: #9ca3af; }
 .bb-tooltip-title.ammo { color: #d1d5db; }
 .bb-tooltip-title.meds { color: #f87171; }
+.bb-tooltip-title.strength { color: #34d399; }
 
 .bb-tooltip-body {
     max-width: 320px;
