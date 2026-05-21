@@ -6,7 +6,8 @@ const RESOURCE_THEME_CLASS = Object.freeze({
     provisions: "provisions",
     tools: "tools",
     ammo: "ammo",
-    meds: "meds"
+    meds: "meds",
+    strength: "strength"
 });
 
 export class ResourceTooltipManager {
@@ -137,6 +138,13 @@ export class ResourceTooltipManager {
                     "Running out of medical supplies will leave your group unable to recover from severe injuries.",
                     `You can carry ${RESOURCE_TOOLTIP.MEDICINE_CAPACITY} units at most.`
                 ]);
+            case "strength": {
+                const strength = resources.partyStrength || {};
+                return this._layout("Group Strength", RESOURCE_THEME_CLASS.strength, [
+                    `Your active company is rated <b>${escapeHtml(strength.rating || "Unmanned")}</b> with <b>${Number(strength.score) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE}</b> strength.`,
+                    "Strength reflects level, core attributes, equipment, wounds, and fatigue."
+                ]);
+            }
             default:
                 return "";
         }
