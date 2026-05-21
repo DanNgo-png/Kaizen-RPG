@@ -93,9 +93,15 @@ export class ManagementManager {
         
         const elGold = document.getElementById('mgmt-gold');
         const elRoster = document.getElementById('mgmt-roster-count');
+        const elStrengthScore = document.getElementById('mgmt-strength-score');
+        const elStrengthRating = document.getElementById('mgmt-strength-rating');
+        const elStrengthFill = document.getElementById('mgmt-strength-fill');
         
         if (elGold) elGold.textContent = this.data.resources.gold || 0;
         if (elRoster) elRoster.textContent = `${this.data.mercenaries.length} / 12`;
+        if (elStrengthScore) elStrengthScore.textContent = this.data.resources.partyStrength?.score || 0;
+        if (elStrengthRating) elStrengthRating.textContent = this.data.resources.partyStrength?.rating || 'Unmanned';
+        if (elStrengthFill) elStrengthFill.style.width = `${this.data.resources.partyStrength?.progressPercent || 0}%`;
 
         this.rosterUI.render(this.data.mercenaries);
 
