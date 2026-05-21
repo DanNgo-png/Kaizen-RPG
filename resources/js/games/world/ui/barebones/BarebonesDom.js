@@ -20,6 +20,9 @@ export function createBarebonesDom(documentRef = document) {
         toolsDisplay: documentRef.getElementById("bb-tools-display"),
         ammoDisplay: documentRef.getElementById("bb-ammo-display"),
         medsDisplay: documentRef.getElementById("bb-meds-display"),
+        strengthDisplay: documentRef.getElementById("bb-strength-display"),
+        strengthRating: documentRef.getElementById("bb-strength-rating"),
+        strengthFill: documentRef.getElementById("bb-strength-fill"),
 
         resContainers: {
             time: documentRef.getElementById("bb-res-time-container"),
@@ -27,7 +30,8 @@ export function createBarebonesDom(documentRef = document) {
             provisions: documentRef.getElementById("bb-res-provisions-container"),
             tools: documentRef.getElementById("bb-res-tools-container"),
             ammo: documentRef.getElementById("bb-res-ammo-container"),
-            meds: documentRef.getElementById("bb-res-meds-container")
+            meds: documentRef.getElementById("bb-res-meds-container"),
+            strength: documentRef.getElementById("bb-res-strength-container")
         },
 
         marketContainer: documentRef.getElementById("bb-marketplace-container"),
