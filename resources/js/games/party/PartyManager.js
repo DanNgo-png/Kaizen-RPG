@@ -246,8 +246,8 @@ export class PartyManager {
     }
 
     updateHeaderStats(mercs, res) {
-        let totalPower = 0;
-        mercs.forEach(m => totalPower += (m.level * 10) + (m.str + m.int + m.spd));
+        const fallbackPower = mercs.reduce((sum, m) => sum + (m.level * 10) + (m.str + m.int + m.spd), 0);
+        const totalPower = res.partyStrength?.score ?? fallbackPower;
 
         if (this.dom.stats.power) this.dom.stats.power.innerHTML = `<i class="fa-solid fa-bolt"></i> ${totalPower}`;
 
