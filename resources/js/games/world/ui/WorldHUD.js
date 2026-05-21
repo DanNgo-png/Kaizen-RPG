@@ -14,7 +14,10 @@ export class WorldHUD {
             ammo: document.getElementById('hud-ammo'),
             meds: document.getElementById('hud-meds'),
             day: document.getElementById('hud-day'),
-            roster: document.getElementById('hud-roster')
+            roster: document.getElementById('hud-roster'),
+            strengthScore: document.getElementById('hud-strength-score'),
+            strengthRating: document.getElementById('hud-strength-rating'),
+            strengthFill: document.getElementById('hud-strength-fill')
         };
 
         this.currentData = null; 
@@ -40,10 +43,20 @@ export class WorldHUD {
         if (data.tools !== undefined && this.stats.tools) this.stats.tools.textContent = data.tools;
         if (data.ammo !== undefined && this.stats.ammo) this.stats.ammo.textContent = data.ammo;
         if (data.medicine !== undefined && this.stats.meds) this.stats.meds.textContent = data.medicine;
-        if (data.day !== undefined && this.stats.day) this.stats.day.textContent = `Day ${data.day}`;
+        if (data.partyStrength) this._updateStrength(data.partyStrength);
         if (data.currentRoster !== undefined && this.stats.roster) {
             this.stats.roster.textContent = `${data.currentRoster} / ${data.maxRoster || 12}`;
         }
+    }
+
+    _updateStrength(strength) {
+        const score = strength?.score ?? 0;
+        const rating = strength?.rating ?? "Unmanned";
+        const progressPercent = strength?.progressPercent ?? 0;
+
+        if (this.stats.strengthScore) this.stats.strengthScore.textContent = score;
+        if (this.stats.strengthRating) this.stats.strengthRating.textContent = rating;
+        if (this.stats.strengthFill) this.stats.strengthFill.style.width = `${progressPercent}%`;
     }
 
     _bindResourceTooltips() {
@@ -53,7 +66,8 @@ export class WorldHUD {
             { id: 'res-provisions-container', type: 'provisions' },
             { id: 'res-tools-container', type: 'tools' },
             { id: 'res-ammo-container', type: 'ammo' },
-            { id: 'res-meds-container', type: 'meds' }
+            { id: 'res-meds-container', type: 'meds' },
+            { id: 'res-strength-container', type: 'strength' }
         ];
 
         resourceTriggers.forEach(item => {
@@ -123,6 +137,15 @@ export class WorldHUD {
                     <div style="margin-top:8px; color:#9ca3af;">You can carry 150 units at most.</div>
                 `;
                 break;
+            case 'strength': {
+                const strength = d.partyStrength || {};
+                html = `
+                    <div style="font-weight:700; color:#34d399; margin-bottom:5px; font-size:1.05rem;">Group Strength</div>
+                    <div style="max-width: 280px; line-height:1.4;">Your active company is rated <b style="color:#fff;">${this._escapeHtml(strength.rating || 'Unmanned')}</b> with <b style="color:#fff;">${strength.score || 0}</b> strength.</div>
+                    <div style="margin-top:8px; max-width: 280px; line-height:1.4; color:#9ca3af;">Strength reflects level, core attributes, equipment, wounds, and fatigue.</div>
+                `;
+                break;
+            }
         }
 
         this.tooltip.innerHTML = html;
