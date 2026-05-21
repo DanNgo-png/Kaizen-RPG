@@ -74,6 +74,8 @@ export const GAME_SCHEMA_SQL = `
     CREATE TABLE IF NOT EXISTS contracts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         node_id INTEGER NOT NULL,
+        target_node_id INTEGER,
+        contract_type TEXT DEFAULT 'standard',
         title TEXT NOT NULL,
         description TEXT,
         required_minutes INTEGER DEFAULT 30,
@@ -81,7 +83,8 @@ export const GAME_SCHEMA_SQL = `
         gold_reward INTEGER DEFAULT 0,
         is_active INTEGER DEFAULT 0,
         is_completed INTEGER DEFAULT 0,
-        FOREIGN KEY(node_id) REFERENCES world_nodes(id)
+        FOREIGN KEY(node_id) REFERENCES world_nodes(id),
+        FOREIGN KEY(target_node_id) REFERENCES world_nodes(id) ON DELETE SET NULL
     );
 
     CREATE TABLE IF NOT EXISTS node_history (
