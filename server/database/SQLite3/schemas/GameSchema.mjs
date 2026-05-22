@@ -68,6 +68,7 @@ export const GAME_SCHEMA_SQL = `
         attachments INTEGER DEFAULT 0,
         is_hidden INTEGER DEFAULT 0,
         is_hostile INTEGER DEFAULT 0,
+        population_tier INTEGER DEFAULT 1,
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 
