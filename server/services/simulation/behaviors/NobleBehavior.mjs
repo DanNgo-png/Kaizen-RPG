@@ -83,8 +83,24 @@ export class NobleBehavior extends BaseFactionBehavior {
     processDayEnd(currentDay) {
         // Fetch nodes including Bandit Camps to calculate safety distances
         const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name FROM world_nodes').all();
-        const settlements = allNodes.filter(n => n.type !== "Ruins" && n.type !== "Bandit Camp");
-        const enemies = allNodes.filter(n => n.type === "Bandit Camp" || n.type === "Ruins");
+        
+        // Exclude all hostile / brigand-aligned settlements
+        const settlements = allNodes.filter(n => 
+            n.type !== "Ruins" && 
+            n.type !== "Bandit Camp" &&
+            n.type !== "Bandit Outpost" &&
+            n.type !== "Bandit Stronghold" &&
+            n.type !== "Stolen Stronghold"
+        );
+        
+        // Treat all hostile structures as local threats that can trigger sieges/attacks
+        const enemies = allNodes.filter(n => 
+            n.type === "Bandit Camp" || 
+            n.type === "Bandit Outpost" || 
+            n.type === "Bandit Stronghold" || 
+            n.type === "Stolen Stronghold" || 
+            n.type === "Ruins"
+        );
 
         const eventKeys = Object.keys(SETTLEMENT_EVENTS);
 
@@ -129,6 +145,7 @@ export class NobleBehavior extends BaseFactionBehavior {
                 }
             }
         }
+        return [];
     }
 
     _findCapitalPosition(capitals, rng) {
