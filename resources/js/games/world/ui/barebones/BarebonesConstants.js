@@ -31,8 +31,11 @@ export const NODE_TYPE_ICONS = Object.freeze({
     Province: "fa-city",
     Kingdom: "fa-chess-rook",
     "High Kingdom": "fa-chess-rook",
-    Empire: "fa-chess-rook",
+    Empire: "fa-chess-king",
     Stronghold: "fa-shield-halved",
+    "Stolen Stronghold": "fa-tower-observation",
+    "Bandit Stronghold": "fa-tower-observation",
+    "Bandit Outpost": "fa-tent",
     Ruins: "fa-skull",
     "Bandit Camp": "fa-campground"
 });
