@@ -162,6 +162,8 @@ export class GameRepository {
             
             updateMercXpFatigue: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE id = @id`),
 
+            reduceFatigue: this.db.prepare(`UPDATE mercenaries SET fatigue = MAX(0, fatigue - @amount) WHERE is_active = 1`),
+
             damageMercenary: this.db.prepare(`UPDATE mercenaries SET current_hp = MAX(0, current_hp - @damage) WHERE id = @id`),
             getWages: this.db.prepare(`SELECT SUM(daily_wage) as total FROM mercenaries`),
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
@@ -957,6 +959,25 @@ export class GameRepository {
         const totalXpGranted = activeMercs.reduce((sum, m) => sum + Math.floor(baseXpAmount * (1 + m.xpBonus)), 0);
 
         return { xp: Math.floor(totalXpGranted/Math.max(1, activeMercs.length)), logs: logs, loot: foundLoot };
+    }
+
+    /**
+     * Reduces active mercenaries' fatigue based on break time taken.
+     * Rate: 1 fatigue point per 5 minutes of break (mirrors the gain rate).
+     * Fatigue is clamped to a minimum of 0 (handled by SQL MAX(0, ...)).
+     * @param {number} breakMinutes - Total break minutes from the session.
+     * @returns {number} Amount of fatigue recovered per merc.
+     */
+    distributeBreakFatigueRecovery(breakMinutes) {
+        this.ensureConnection();
+        if (!breakMinutes || breakMinutes <= 0) return 0;
+
+        const fatigueRecovery = Math.floor(breakMinutes / 5);
+        if (fatigueRecovery <= 0) return 0;
+
+        this.statements.reduceFatigue.run({ amount: fatigueRecovery });
+        console.log(`😴 Break recovery: -${fatigueRecovery} fatigue to all active mercs (${Math.round(breakMinutes)}m break).`);
+        return fatigueRecovery;
     }
 
     processDayEnd() {

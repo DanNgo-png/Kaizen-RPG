@@ -31,13 +31,26 @@ export function buildAftermathModal(result) {
         lootHtml = `<div style="grid-column: 1/-1; text-align:center; color:#64748b; padding-top:20px;">No loot found.</div>`;
     }
 
-    // 3. Assemble Full Modal
+    // 3. Build Stats Summary HTML
+    let statsHtml = '';
+    const xp = result.xp || 0;
+    const fatigueRecovered = result.fatigueRecovered || 0;
+    if (xp > 0 || fatigueRecovered > 0) {
+        const xpPart = xp > 0 ? `<div class="aftermath-stat"><i class="fa-solid fa-star" style="color:#f59e0b;"></i> <span>+${xp} XP</span></div>` : '';
+        const fatiguePart = fatigueRecovered > 0
+            ? `<div class="aftermath-stat"><i class="fa-solid fa-bolt" style="color:#6ee7b7;"></i> <span>-${fatigueRecovered} Fatigue</span></div>`
+            : '';
+        statsHtml = `<div class="aftermath-stats-bar">${xpPart}${fatiguePart}</div>`;
+    }
+
+    // 4. Assemble Full Modal
     overlay.innerHTML = `
         <div class="aftermath-container">
             <div class="aftermath-header">
                 <h2>Session Aftermath</h2>
                 <div class="aftermath-subtitle">The dust settles. Here are the results of your time.</div>
             </div>
+            ${statsHtml}
             <div class="aftermath-body">
                 <div class="aftermath-logs-panel">
                     <h3 class="aftermath-section-title">Event Logs</h3>
@@ -73,6 +86,7 @@ export function buildAftermathModal(result) {
         GameAPI.getWorldData(); 
     });
 }
+
 
 export const MercenaryHandler = {
     onReceiveData: (event) => {

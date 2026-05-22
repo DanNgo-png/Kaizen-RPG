@@ -49,6 +49,30 @@
     margin-top: 5px;
 }
 
+/* Session Stats Bar (XP + Fatigue Recovery) */
+.aftermath-stats-bar {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    padding: 10px 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid #3d3024;
+}
+
+.aftermath-stat {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    letter-spacing: 0.5px;
+}
+
+.aftermath-stat i {
+    font-size: 0.95rem;
+}
+
 .aftermath-body {
     display: flex;
     flex: 1;

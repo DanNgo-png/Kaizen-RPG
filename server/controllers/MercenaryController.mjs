@@ -183,9 +183,15 @@ export class MercenaryController {
 
         app.events.on("internal:sessionCompleted", (payload) => {
             try {
-                const { focusSeconds, ratio } = payload;
-                const minutes = focusSeconds / 60;
-                const result = this.repo.distributeSessionXP(minutes, ratio);
+                const { focusSeconds, breakSeconds, ratio } = payload;
+                const focusMinutes = focusSeconds / 60;
+                const result = this.repo.distributeSessionXP(focusMinutes, ratio);
+
+                // Reduce fatigue for break time taken (1 fatigue per 5 min of break)
+                const breakMinutes = (breakSeconds || 0) / 60;
+                const fatigueRecovered = this.repo.distributeBreakFatigueRecovery(breakMinutes);
+                result.fatigueRecovered = fatigueRecovered;
+
                 app.events.broadcast("xpGained", result); 
             } catch (e) {
                 if (!e.message.includes("No game save is currently loaded")) {

@@ -56,9 +56,10 @@ export class FocusSessionController {
 
                 console.log(`✅ Focus Session Saved (ID: ${result.lastInsertRowid}) at ${localCreatedAt}`);
 
-                // Include Ratio in dispatch for RPG logic
+                // Include Ratio and breakSeconds in dispatch for RPG logic
                 app.events.dispatch("internal:sessionCompleted", { 
                     focusSeconds,
+                    breakSeconds,
                     ratio
                 });
                 
