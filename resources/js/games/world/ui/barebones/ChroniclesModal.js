@@ -89,6 +89,19 @@ export class ChroniclesModal {
         return tiers[type] !== undefined ? tiers[type] : '?';
     }
 
+    _getPopulationBadge(popTier) {
+        const tier = popTier || 1;
+        const labels = {
+            1: { name: "Low", bg: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" },
+            2: { name: "Medium", bg: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "rgba(16, 185, 129, 0.3)" },
+            3: { name: "High", bg: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "rgba(245, 158, 11, 0.3)" },
+            4: { name: "Very High", bg: "rgba(249, 115, 22, 0.15)", color: "#fb923c", border: "rgba(249, 115, 22, 0.3)" },
+            5: { name: "Overpopulated", bg: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "rgba(239, 68, 68, 0.3)" }
+        };
+        const config = labels[tier] || labels[1];
+        return `<span style="background: ${config.bg}; color: ${config.color}; border: 1px solid ${config.border}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-left: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.5px;">${config.name}</span>`;
+    }
+
     _tierHtml(node) {
         const typeIcons = {
             'Hamlet': 'fa-house',
@@ -108,6 +121,11 @@ export class ChroniclesModal {
         
         const tierBadge = tier > 0 
             ? `<span style="background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px; vertical-align: middle; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Tier ${tier}</span>` 
+            : '';
+
+        const popBadge = this._getPopulationBadge(node.population_tier);
+        const populationHtml = node.type !== 'Ruins'
+            ? `<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px; display: flex; align-items: center;"><i class="fa-solid fa-users" style="margin-right: 6px;"></i> Population: ${popBadge}</div>`
             : '';
 
         let specHtml = '';
@@ -131,6 +149,7 @@ export class ChroniclesModal {
                     <div class="bb-chronicles-text" style="display: flex; align-items: center;">
                         <b style="color: #fff; font-size: 1.05rem;">${escapeHtml(node.type)}</b> ${tierBadge}
                     </div>
+                    ${populationHtml}
                     ${specHtml}
                     ${attachHtml}
                 </div>
@@ -167,7 +186,20 @@ export class ChroniclesModal {
                 const maxProg = growth.materialsNeeded || DEFAULT_MATERIAL_DELIVERIES_NEEDED;
                 const pct = Math.min(GROWTH_PROGRESS_MAX_PERCENT, (progress / maxProg) * GROWTH_PROGRESS_MAX_PERCENT);
                 
-                const titleStr = node.current_event === 'settlement_expansion' ? 'Colonial Expansion' : 'Settlement Upgrade';
+                let titleStr = "Settlement Upgrade";
+                let descStr = "Sell <b>Building Materials</b> (Wood, Peat, Copper) here to construct the new infrastructure.";
+                
+                if (node.current_event === 'settlement_expansion') {
+                    titleStr = 'Colonial Expansion';
+                } else if (node.current_event === 'building_boom') {
+                    if ((node.population_tier || 1) < 5) {
+                        titleStr = 'Population Growth';
+                        descStr = "Sell <b>Building Materials</b> (Wood, Peat, Copper) here to increase the settlement's population.";
+                    } else {
+                        titleStr = 'Settlement Upgrade';
+                        descStr = "Sell <b>Building Materials</b> (Wood, Peat, Copper) here to construct the new infrastructure and upgrade the settlement type.";
+                    }
+                }
 
                 eventContext += `
                     <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
@@ -175,7 +207,7 @@ export class ChroniclesModal {
                             <i class="fa-solid fa-hammer"></i> ${titleStr} Active!
                         </div>
                         <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 8px; line-height: 1.4;">
-                            Sell <b>Building Materials</b> (Wood, Peat, Copper) here to construct the new infrastructure.
+                            ${descStr}
                         </div>
                         <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
                             <div class="bb-fill" style="width: ${pct}%; background: #fbbf24;"></div>
@@ -232,6 +264,11 @@ export class ChroniclesModal {
         );
 
         const targetTitle = growth.nextTier === 'Colonial Outpost' ? 'Fund Colonial Outpost' : `Upgrade to ${growth.nextTier}`;
+        
+        let growthDesc = `Contribute to the local economy to trigger a <b>Building Boom</b> and ${targetTitle.toLowerCase()}.`;
+        if ((node.population_tier || 1) < 5) {
+            growthDesc = "Contribute to the local economy to trigger a <b>Building Boom</b> and grow the population.";
+        }
 
         return `
             <div style="margin-top: 10px; background: rgba(0,0,0,0.3); padding: 10px; border-radius: 8px; border: 1px solid #374151;">
@@ -239,7 +276,7 @@ export class ChroniclesModal {
                     <i class="fa-solid fa-arrow-trend-up"></i> Prosperity & Growth
                 </div>
                 <div style="font-size: 0.8rem; color: #9ca3af; margin-bottom: 12px; line-height: 1.4;">
-                    Contribute to the local economy to trigger a <b>Building Boom</b> and ${targetTitle.toLowerCase()}.
+                    ${growthDesc}
                 </div>
 
                 <div style="margin-bottom: 8px;">
