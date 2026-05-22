@@ -58,6 +58,12 @@ const CONTRACT_EVENT_DURATION = Object.freeze({
     WELL_SUPPLIED_DAYS: 5
 });
 
+const IDLE_SESSION_CONFIG = Object.freeze({
+    XP_PER_MINUTE: 3,                 // Lower XP gain compared to active questing/delving
+    FATIGUE_RECOVERY_PER_MINUTE: 1.0, // Fatigue recovered per minute of rest
+    MIN_MINUTES_FOR_LOG: 5            // Minimum focus duration to trigger log entries
+});
+
 const SETTLEMENT_EVENT_ID = Object.freeze({
     AMBUSHED_TRADE_ROUTES: 'ambushed_trade_routes',
     WELL_SUPPLIED: 'well_supplied'
@@ -167,7 +173,7 @@ export class GameRepository {
             `),
             addXp: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE is_active = 1`),
             
-            updateMercXpFatigue: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = fatigue + @fatigue WHERE id = @id`),
+            updateMercXpFatigue: this.db.prepare(`UPDATE mercenaries SET xp = xp + @amount, fatigue = MAX(0, fatigue + @fatigue) WHERE id = @id`),
 
             reduceFatigue: this.db.prepare(`UPDATE mercenaries SET fatigue = MAX(0, fatigue - @amount) WHERE is_active = 1`),
 
@@ -867,7 +873,7 @@ export class GameRepository {
 
                 const attackLootBonus = (partyTotalAttack / 100) * 0.10; 
                 const lootChance = 0.30 + attackLootBonus;
-                const rolls = Math.max(1, Math.floor(focusMinutes / 15)); // Roll every 15 mins
+                const rolls = Math.max(1, Math.floor(focusMinutes / 15)); 
 
                 for(let i=0; i<rolls; i++) rollForLoot(lootChance);
 
@@ -925,12 +931,10 @@ export class GameRepository {
                     }
                 });
 
-                // Depth bonus scales better for longer sessions
                 const depthLootBonus = focusMinutes * 0.015;
                 const attackLootBonus = (partyTotalAttack / 100) * 0.1; 
                 const baseLootChance = 0.35 + depthLootBonus + attackLootBonus;
                 
-                // 1 roll per 5 minutes focused (minimum 1)
                 const lootRolls = Math.max(1, Math.floor(focusMinutes / 5));
                 let itemsLooted = 0;
 
@@ -948,23 +952,48 @@ export class GameRepository {
                     rollForLoot(1.0, true);
                 }
             } else {
-                 activeMercs.forEach(merc => {
+                // --- NEW IDLE / RESTING STATE (Dungeon Barebones) ---
+                const recoveryAmount = Math.floor(focusMinutes * IDLE_SESSION_CONFIG.FATIGUE_RECOVERY_PER_MINUTE);
+                const trainingXp = Math.floor(focusMinutes * IDLE_SESSION_CONFIG.XP_PER_MINUTE * ratio);
+
+                activeMercs.forEach(merc => {
+                    const mercXp = Math.floor(trainingXp * (1 + merc.xpBonus));
+                    // Passing negative value to decrease fatigue (Sql clamp MAX(0, fatigue + @fatigue) handles bounds)
+                    this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: -recoveryAmount, id: merc.id });
+                });
+
+                if (focusMinutes >= IDLE_SESSION_CONFIG.MIN_MINUTES_FOR_LOG) {
+                    logs.push(`💤 The company rested in camp, recovering up to ${recoveryAmount} fatigue.`);
+                    logs.push(`🛡️ The mercenaries spent the downtime training, earning light experience (+${trainingXp} XP).`);
+                }
+            }
+
+        } else {
+            // Standard map campaign mode checks
+            const activeContract = this.getActiveContract();
+
+            if (activeContract) {
+                // On duty
+                activeMercs.forEach(merc => {
                     const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
                     const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
                     this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
                 });
+            } else {
+                // --- NEW IDLE / RESTING STATE (Standard Campaign) ---
+                const recoveryAmount = Math.floor(focusMinutes * IDLE_SESSION_CONFIG.FATIGUE_RECOVERY_PER_MINUTE);
+                const trainingXp = Math.floor(focusMinutes * IDLE_SESSION_CONFIG.XP_PER_MINUTE * ratio);
+
+                activeMercs.forEach(merc => {
+                    const mercXp = Math.floor(trainingXp * (1 + merc.xpBonus));
+                    this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: -recoveryAmount, id: merc.id });
+                });
+
+                if (focusMinutes >= IDLE_SESSION_CONFIG.MIN_MINUTES_FOR_LOG) {
+                    logs.push(`💤 The company paused on the road to rest, recovering up to ${recoveryAmount} fatigue.`);
+                    logs.push(`🛡️ The mercenaries drilled during the halt, earning light experience (+${trainingXp} XP).`);
+                }
             }
-
-        } else {
-            activeMercs.forEach(merc => {
-                const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
-                const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
-                this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
-            });
-        }
-
-        if (logs.length === 0 && daysPassed === 0) {
-            logs.push(`🛡️ The party trained and patrolled for ${Math.max(1, Math.round(focusMinutes))} minutes.`);
         }
 
         const totalXpGranted = activeMercs.reduce((sum, m) => sum + Math.floor(baseXpAmount * (1 + m.xpBonus)), 0);
