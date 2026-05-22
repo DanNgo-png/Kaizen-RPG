@@ -141,7 +141,7 @@ export class PartyManager {
         if (!this._shouldHandleEvent()) return;
 
         if (e.detail.success) {
-            const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
+            const { wagesPaid, medicineUsed, totalHealed, spoiledCount, factionLogs } = e.detail;
             let msg = `Paid ${wagesPaid}g wages.`;
             
             if (medicineUsed > 0) {
@@ -154,6 +154,10 @@ export class PartyManager {
             
             if (spoiledCount > 0) {
                 msg += ` ${spoiledCount} food item(s) spoiled!`;
+            }
+
+            if (factionLogs && factionLogs.length > 0) {
+                msg += `\n\n📢 World Event: ${factionLogs.join(" ")}`;
             }
 
             notifier.show("Day Ended", msg, "fa-solid fa-moon");
