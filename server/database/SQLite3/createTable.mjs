@@ -152,6 +152,13 @@ const migrations = [
         if (!contractColumns.includes('contract_type')) {
             db.exec("ALTER TABLE contracts ADD COLUMN contract_type TEXT DEFAULT 'standard';");
         }
+    },
+    // --- Version 13: Add population_tier column to world_nodes ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('population_tier')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN population_tier INTEGER DEFAULT 1;");
+        }
     }
 ];
 
