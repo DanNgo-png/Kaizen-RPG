@@ -40,8 +40,13 @@ export class WorldSimulator {
     }
 
     processDayEnd(currentDay) {
+        const logs = [];
         for (const behavior of this.behaviors) {
-            behavior.processDayEnd(currentDay);
+            const behaviorLogs = behavior.processDayEnd(currentDay);
+            if (Array.isArray(behaviorLogs)) {
+                logs.push(...behaviorLogs);
+            }
         }
+        return logs;
     }
 }
