@@ -1263,13 +1263,21 @@ export class GameRepository {
         return node;
     }
 
-    updateNodeDevelopment(nodeId, progress, newType, newEvent, buyMod, sellMod) {
+    updateNodeDevelopment(nodeId, progress, newType, newEvent, buyMod, sellMod, populationTier = 1) {
         this.ensureConnection();
-        this.db.prepare(`
-            UPDATE world_nodes 
-            SET development_progress = ?, type = ?, current_event = ?, buy_modifier = ?, sell_modifier = ?
-            WHERE id = ?
-        `).run(progress, newType, newEvent, buyMod, sellMod, nodeId);
+        if (newEvent === null) {
+            this.db.prepare(`
+                UPDATE world_nodes 
+                SET development_progress = ?, type = ?, current_event = ?, buy_modifier = ?, sell_modifier = ?, population_tier = ?, expansion_reqs = '{}'
+                WHERE id = ?
+            `).run(progress, newType, newEvent, buyMod, sellMod, populationTier, nodeId);
+        } else {
+            this.db.prepare(`
+                UPDATE world_nodes 
+                SET development_progress = ?, type = ?, current_event = ?, buy_modifier = ?, sell_modifier = ?, population_tier = ?
+                WHERE id = ?
+            `).run(progress, newType, newEvent, buyMod, sellMod, populationTier, nodeId);
+        }
     }
 
     spawnColony(parentNode, specialization = null) {
