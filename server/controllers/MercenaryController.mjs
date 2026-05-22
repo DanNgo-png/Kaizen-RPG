@@ -493,28 +493,52 @@ export class MercenaryController {
                                 let newEvent = node.current_event;
                                 let buyMod = node.buy_modifier;
                                 let sellMod = node.sell_modifier;
+                                let newPopulationTier = node.population_tier || 1;
                                 
                                 const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
                                 let upgraded = false;
+                                let popGrown = false;
+                                let oldPopLabel = "";
+                                let newPopLabel = "";
                                 
                                 // Compare against dynamic maxProg
-                                if (newProgress >= maxProg && nextTier) {
-                                    newType = nextTier;
+                                if (newProgress >= maxProg) {
                                     newProgress = 0;
                                     newEvent = null;
-                                    upgraded = true;
-    
-                                    const nextTierInfo = SETTLEMENT_TIERS[nextTier];
-                                    if (nextTierInfo) {
-                                        buyMod = nextTierInfo.buyMult;
-                                        sellMod = nextTierInfo.sellMult;
+                                    
+                                    if (newPopulationTier < 5) {
+                                        const populationLabels = { 1: "Low", 2: "Medium", 3: "High", 4: "Very High", 5: "Overpopulated" };
+                                        oldPopLabel = populationLabels[newPopulationTier];
+                                        newPopulationTier += 1;
+                                        newPopLabel = populationLabels[newPopulationTier];
+                                        popGrown = true;
+                                    } else {
+                                        // Population is 5 (Overpopulated), do structural upgrade if nextTier exists
+                                        if (nextTier) {
+                                            newType = nextTier;
+                                            newPopulationTier = 1;
+                                            upgraded = true;
+                                            
+                                            const nextTierInfo = SETTLEMENT_TIERS[nextTier];
+                                            if (nextTierInfo) {
+                                                buyMod = nextTierInfo.buyMult;
+                                                sellMod = nextTierInfo.sellMult;
+                                            }
+                                        } else {
+                                            // Already at max tier, keep population at 5 and just reset event/progress
+                                            newPopulationTier = 5;
+                                        }
                                     }
                                 }
                                 
-                                this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod);
+                                this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod, newPopulationTier);
                                 
-                                if (upgraded) {
+                                if (popGrown) {
+                                    this.repo.logNodeHistory(node.id, `The construction finished! The settlement's population has grown from ${oldPopLabel} to ${newPopLabel}.`, 'world');
+                                } else if (upgraded) {
                                     this.repo.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
+                                } else if (newProgress === 0) {
+                                    this.repo.logNodeHistory(node.id, `The construction finished! The settlement continues to thrive at maximum capacity.`, 'world');
                                 }
                             } else if (node.current_event === 'settlement_expansion') {
                                 let newProgress = (node.development_progress || 0) + 1;
@@ -526,7 +550,7 @@ export class MercenaryController {
                                     if (itemId === 'peat_bricks') newSpec = 'Peat Pit';
                                     if (itemId === 'copper_ingots') newSpec = 'Copper Mine';
     
-                                    this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier);
+                                    this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier, node.population_tier || 1);
                                     this.repo.logNodeHistory(node.id, `The construction finished! ${node.name} has expanded its borders.`, 'world');
                                     
                                     const spawnedNode = this.repo.spawnColony(node, newSpec);
@@ -536,7 +560,7 @@ export class MercenaryController {
                                          this.repo.logNodeHistory(spawnedNode.id, `Founded as an outpost by ${node.name}.`, 'world');
                                     }
                                 } else {
-                                    this.repo.updateNodeDevelopment(node.id, newProgress, node.type, node.current_event, node.buy_modifier, node.sell_modifier);
+                                    this.repo.updateNodeDevelopment(node.id, newProgress, node.type, node.current_event, node.buy_modifier, node.sell_modifier, node.population_tier || 1);
                                 }
                             }
                         }
