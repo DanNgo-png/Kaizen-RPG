@@ -63,7 +63,14 @@ const SETTLEMENT_EVENT_ID = Object.freeze({
     WELL_SUPPLIED: 'well_supplied'
 });
 
-const NON_GROWING_SETTLEMENT_TYPES = Object.freeze(['Ruins', 'Bandit Camp']);
+const NON_GROWING_SETTLEMENT_TYPES = Object.freeze([
+    'Ruins', 
+    'Bandit Camp',
+    'Bandit Outpost',
+    'Bandit Stronghold',
+    'Stolen Stronghold'
+]);
+
 const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([
     SETTLEMENT_EVENT_ID.WELL_SUPPLIED
 ]);
@@ -357,8 +364,9 @@ export class GameRepository {
     _findNearestBrigandCamp(originNode) {
         if (!originNode) return null;
 
+        const targetTypes = ['Bandit Camp', 'Bandit Outpost', 'Bandit Stronghold', 'Stolen Stronghold'];
         return this.statements.getAllNodes.all()
-            .filter((node) => node.type === 'Bandit Camp')
+            .filter((node) => targetTypes.includes(node.type))
             .sort((a, b) => this._distanceSquared(originNode, a) - this._distanceSquared(originNode, b))[0] || null;
     }
 
@@ -825,6 +833,9 @@ export class GameRepository {
             if (dayResult.spoiledCount > 0) {
                 logs.push(`🍞 ${dayResult.spoiledCount} food item(s) spoiled!`);
             }
+            if (dayResult.factionLogs && dayResult.factionLogs.length > 0) {
+                dayResult.factionLogs.forEach(log => logs.push(`📢 ${log}`));
+            }
         }
         this.setCampaignSetting('accumulated_time', newAccumulated);
 
@@ -1046,12 +1057,12 @@ export class GameRepository {
             // FACTION TICK SYSTEM 
             // ============================================
             const simulator = new WorldSimulator(this);
-            simulator.processDayEnd(currentDay);
+            const factionLogs = simulator.processDayEnd(currentDay);
 
             this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
             this.statements.updateSetting.run({ key: 'day', value: currentDay + 1 });
 
-            return { newGold, day: currentDay + 1, wagesPaid: totalWages, medicineUsed, totalHealed, spoiledCount };
+            return { newGold, day: currentDay + 1, wagesPaid: totalWages, medicineUsed, totalHealed, spoiledCount, factionLogs };
         })();
 
         return result;
