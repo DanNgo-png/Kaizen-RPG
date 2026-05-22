@@ -267,12 +267,16 @@ export class WorldMapManager {
         if (!this._shouldHandleEvent()) return;
         if (!e.detail.success) return;
 
-        const { wagesPaid, medicineUsed, totalHealed, spoiledCount } = e.detail;
+        const { wagesPaid, medicineUsed, totalHealed, spoiledCount, factionLogs } = e.detail;
         let msg = `Paid ${wagesPaid}g. `;
         if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds. `;
         else msg += "Party is fully rested. ";
 
         if (spoiledCount > 0) msg += `${spoiledCount} food item(s) spoiled!`;
+
+        if (factionLogs && factionLogs.length > 0) {
+            msg += `\n\n📢 World Event: ${factionLogs.join(" ")}`;
+        }
 
         notifier.show("Rested at Camp", msg, "fa-solid fa-campground");
         GameAPI.getWorldData(); // Refresh HUD
