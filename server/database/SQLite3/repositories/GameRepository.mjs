@@ -1,6 +1,7 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
 import { ItemFactory } from '../../../factories/ItemFactory.mjs';
 import { SETTLEMENT_EVENTS, SETTLEMENT_NAMES, SETTLEMENT_TIERS, SETTLEMENT_UPGRADE_PATH } from '../../../data/GameDataConstants.mjs';
+import { BARBARIAN_NODE_TYPES } from '../../../data/factions/BarbarianFactions.mjs';
 import { WorldSimulator } from '../../../services/simulation/WorldSimulator.mjs';
 
 const WORLD_NODE_SELECT = `
@@ -26,7 +27,8 @@ const CONTRACT_SELECT = `
 const CONTRACT_TYPE = Object.freeze({
     STANDARD: 'standard',
     CARAVAN: 'caravan',
-    BRIGAND_CAMP: 'brigand_camp'
+    BRIGAND_CAMP: 'brigand_camp',
+    HOSTILE_CAMP: 'hostile_camp'
 });
 
 const CONTRACT_REPUTATION = Object.freeze({
@@ -38,20 +40,20 @@ const CONTRACT_REPUTATION = Object.freeze({
 const CONTRACT_GENERATION = Object.freeze({
     BOARD_SIZE: 3,
     MINUTE_STEP: 5,
-    BRIGAND_CAMP_MIN_MINUTES: 45,
+    HOSTILE_CAMP_MIN_MINUTES: 45,
     GOLD_PER_MINUTE: 2.5,
     GOLD_VARIANCE_MIN: 0.8,
     GOLD_VARIANCE_RANGE: 0.4,
-    BRIGAND_CAMP_GOLD_MULTIPLIER: 1.85
+    HOSTILE_CAMP_GOLD_MULTIPLIER: 1.85
 });
 
 const CONTRACT_LOOT = Object.freeze({
     DEFAULT_CHANCE: 0.20,
     COMBAT_CHANCE: 0.65,
-    BRIGAND_CAMP_CHANCE: 0.85,
+    HOSTILE_CAMP_CHANCE: 0.85,
     MIN_ROLLS: 1,
     MINUTES_PER_ROLL: 25,
-    BRIGAND_CAMP_EXTRA_ROLLS: 2
+    HOSTILE_CAMP_EXTRA_ROLLS: 2
 });
 
 const CONTRACT_EVENT_DURATION = Object.freeze({
@@ -74,7 +76,16 @@ const NON_GROWING_SETTLEMENT_TYPES = Object.freeze([
     'Bandit Camp',
     'Bandit Outpost',
     'Bandit Stronghold',
-    'Stolen Stronghold'
+    'Stolen Stronghold',
+    ...Object.values(BARBARIAN_NODE_TYPES)
+]);
+
+const HOSTILE_CONTRACT_TARGET_TYPES = Object.freeze([
+    'Bandit Camp',
+    'Bandit Outpost',
+    'Bandit Stronghold',
+    'Stolen Stronghold',
+    ...Object.values(BARBARIAN_NODE_TYPES)
 ]);
 
 const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([
@@ -82,8 +93,9 @@ const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([
 ]);
 
 const CARAVAN_CONTRACT_KEYWORDS = Object.freeze(['caravan', 'escort', 'delivery']);
-const BRIGAND_CAMP_CONTRACT_KEYWORDS = Object.freeze(['brigand camp', 'bandit camp', 'destroy']);
+const HOSTILE_CAMP_CONTRACT_KEYWORDS = Object.freeze(['brigand camp', 'bandit camp', 'barbarian camp', 'barbarian outpost', 'barbarian warcamp', 'destroy']);
 const COMBAT_CONTRACT_KEYWORDS = Object.freeze(['hunt', 'clear', 'explore']);
+const HOSTILE_REPUTATION_THRESHOLD = -50;
 const MIN_GOLD_BALANCE = 0;
 const NO_GOLD_DELTA = 0;
 
@@ -286,9 +298,9 @@ export class GameRepository {
         if (!this._canOfferSettlementContracts(originNode)) return [];
 
         const contracts = [];
-        const campTarget = this._findNearestBrigandCamp(originNode);
-        if (campTarget) {
-            contracts.push(this._createBrigandCampContract(originNode, campTarget, possibleMins));
+        const hostileTarget = this._findNearestHostileCamp(originNode);
+        if (hostileTarget) {
+            contracts.push(this._createHostileCampContract(originNode, hostileTarget, possibleMins));
         }
 
         const destination = this._pickSettlementDestination(originNode.id);
@@ -333,17 +345,17 @@ export class GameRepository {
         };
     }
 
-    _createBrigandCampContract(originNode, campNode, possibleMins) {
-        const reqMins = this._pickContractMinutes(possibleMins, CONTRACT_GENERATION.BRIGAND_CAMP_MIN_MINUTES);
+    _createHostileCampContract(originNode, campNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, CONTRACT_GENERATION.HOSTILE_CAMP_MIN_MINUTES);
 
         return {
             node_id: originNode.id,
             target_node_id: campNode.id,
-            contract_type: CONTRACT_TYPE.BRIGAND_CAMP,
-            title: `Destroy Brigand Camp: ${campNode.name}`,
-            desc: `${originNode.name} wants ${campNode.name} cleared from the roads. The pay is rich, and the camp's stores should be worth plundering.`,
+            contract_type: CONTRACT_TYPE.HOSTILE_CAMP,
+            title: `Destroy ${campNode.type}: ${campNode.name}`,
+            desc: `${originNode.name} wants ${campNode.name} cleared from the roads. The pay is rich, and the stores should be worth plundering.`,
             req_mins: reqMins,
-            gold: this._calculateContractGold(reqMins, CONTRACT_GENERATION.BRIGAND_CAMP_GOLD_MULTIPLIER)
+            gold: this._calculateContractGold(reqMins, CONTRACT_GENERATION.HOSTILE_CAMP_GOLD_MULTIPLIER)
         };
     }
 
@@ -367,12 +379,11 @@ export class GameRepository {
         return destinations.length > 0 ? this._pickRandom(destinations) : null;
     }
 
-    _findNearestBrigandCamp(originNode) {
+    _findNearestHostileCamp(originNode) {
         if (!originNode) return null;
 
-        const targetTypes = ['Bandit Camp', 'Bandit Outpost', 'Bandit Stronghold', 'Stolen Stronghold'];
         return this.statements.getAllNodes.all()
-            .filter((node) => targetTypes.includes(node.type))
+            .filter((node) => HOSTILE_CONTRACT_TARGET_TYPES.includes(node.type))
             .sort((a, b) => this._distanceSquared(originNode, a) - this._distanceSquared(originNode, b))[0] || null;
     }
 
@@ -386,7 +397,7 @@ export class GameRepository {
         if (!node) return false;
         if (NON_GROWING_SETTLEMENT_TYPES.includes(node.type)) return false;
         if (node.is_hostile === 1) return false;
-        return (node.reputation || 0) > -50;
+        return (node.reputation || 0) > HOSTILE_REPUTATION_THRESHOLD;
     }
 
     _distanceSquared(a, b) {
@@ -482,15 +493,15 @@ export class GameRepository {
             lootChance = CONTRACT_LOOT.COMBAT_CHANCE;
         }
 
-        if (contractType === CONTRACT_TYPE.BRIGAND_CAMP) {
-            lootChance = CONTRACT_LOOT.BRIGAND_CAMP_CHANCE;
+        if (this._isHostileCampContractType(contractType)) {
+            lootChance = CONTRACT_LOOT.HOSTILE_CAMP_CHANCE;
         }
 
         // Catch the guaranteed loot if we destroyed a camp
         if (campDestroyedLoot) {
             foundLoot.push(campDestroyedLoot);
             activeContract._campDestroyedLoot = campDestroyedLoot;
-            logs.push(`🔥 Camp Destroyed! You found hidden stash: ${activeContract._campDestroyedLoot.name}`);
+            logs.push(`🔥 Hostile location destroyed! You found hidden stash: ${activeContract._campDestroyedLoot.name}`);
         }
 
         const rolls = this._countLootRolls(activeContract, contractType);
@@ -507,7 +518,7 @@ export class GameRepository {
     }
 
     _resolveContractType(contract) {
-        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP].includes(contract.contract_type)) {
+        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP].includes(contract.contract_type)) {
             return contract.contract_type;
         }
 
@@ -515,8 +526,8 @@ export class GameRepository {
             return CONTRACT_TYPE.CARAVAN;
         }
 
-        if (contractTitleHasKeyword(contract.title, BRIGAND_CAMP_CONTRACT_KEYWORDS)) {
-            return CONTRACT_TYPE.BRIGAND_CAMP;
+        if (contractTitleHasKeyword(contract.title, HOSTILE_CAMP_CONTRACT_KEYWORDS)) {
+            return CONTRACT_TYPE.HOSTILE_CAMP;
         }
 
         return CONTRACT_TYPE.STANDARD;
@@ -553,7 +564,7 @@ export class GameRepository {
             && NON_GROWING_SETTLEMENT_TYPES.includes(campNode.type)
             && this._isCombatLootContract(contract, contractType);
 
-        if (contractType !== CONTRACT_TYPE.BRIGAND_CAMP && !isLegacyCampContract) {
+        if (!this._isHostileCampContractType(contractType) && !isLegacyCampContract) {
             return null;
         }
 
@@ -600,7 +611,7 @@ export class GameRepository {
     }
 
     _isCombatLootContract(contract, contractType = this._resolveContractType(contract)) {
-        return contractType === CONTRACT_TYPE.BRIGAND_CAMP
+        return this._isHostileCampContractType(contractType)
             || contractTitleHasKeyword(contract.title, COMBAT_CONTRACT_KEYWORDS);
     }
 
@@ -610,11 +621,15 @@ export class GameRepository {
             Math.floor(contract.required_minutes / CONTRACT_LOOT.MINUTES_PER_ROLL)
         );
 
-        if (contractType === CONTRACT_TYPE.BRIGAND_CAMP) {
-            return baseRolls + CONTRACT_LOOT.BRIGAND_CAMP_EXTRA_ROLLS;
+        if (this._isHostileCampContractType(contractType)) {
+            return baseRolls + CONTRACT_LOOT.HOSTILE_CAMP_EXTRA_ROLLS;
         }
 
         return baseRolls;
+    }
+
+    _isHostileCampContractType(contractType) {
+        return contractType === CONTRACT_TYPE.HOSTILE_CAMP || contractType === CONTRACT_TYPE.BRIGAND_CAMP;
     }
 
     _applyCaravanContractOutcome(contract, node, companyName) {
