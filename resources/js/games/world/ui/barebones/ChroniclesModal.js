@@ -12,6 +12,15 @@ const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const GROWTH_PROGRESS_MAX_PERCENT = 100;
 const DEFAULT_MATERIAL_DELIVERIES_NEEDED = 10;
+const HOSTILE_NODE_TYPES = Object.freeze([
+    'Bandit Camp',
+    'Bandit Outpost',
+    'Bandit Stronghold',
+    'Stolen Stronghold',
+    'Barbarian Camp',
+    'Barbarian Outpost',
+    'Barbarian Warcamp'
+]);
 
 export class ChroniclesModal {
     constructor({ documentRef = document, onRequestHistory } = {}) {
@@ -84,6 +93,13 @@ export class ChroniclesModal {
             'City-State': 3, 'Province': 3, 'Stronghold': 3,
             'Kingdom': 4, 'High Kingdom': 4,
             'Empire': 5,
+            'Bandit Camp': 0,
+            'Bandit Outpost': 0,
+            'Bandit Stronghold': 0,
+            'Stolen Stronghold': 0,
+            'Barbarian Camp': 0,
+            'Barbarian Outpost': 0,
+            'Barbarian Warcamp': 0,
             'Ruins': 0
         };
         return tiers[type] !== undefined ? tiers[type] : '?';
@@ -114,22 +130,32 @@ export class ChroniclesModal {
             'High Kingdom': 'fa-crown',
             'Empire': 'fa-chess-king',
             'Stronghold': 'fa-shield-halved',
+            'Bandit Camp': 'fa-campground',
+            'Bandit Outpost': 'fa-tent',
+            'Bandit Stronghold': 'fa-tower-observation',
+            'Stolen Stronghold': 'fa-tower-observation',
+            'Barbarian Camp': 'fa-campground',
+            'Barbarian Outpost': 'fa-tent',
+            'Barbarian Warcamp': 'fa-tower-observation',
             'Ruins': 'fa-skull'
         };
         const icon = typeIcons[node.type] || 'fa-landmark';
         const tier = this._getSettlementTier(node.type);
+        const isHostileLocation = HOSTILE_NODE_TYPES.includes(node.type);
         
         const tierBadge = tier > 0 
             ? `<span style="background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px; vertical-align: middle; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Tier ${tier}</span>` 
             : '';
 
         const popBadge = this._getPopulationBadge(node.population_tier);
-        const populationHtml = node.type !== 'Ruins'
+        const populationHtml = node.type !== 'Ruins' && !isHostileLocation
             ? `<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px; display: flex; align-items: center;"><i class="fa-solid fa-users" style="margin-right: 6px;"></i> Population: ${popBadge}</div>`
             : '';
 
         let specHtml = '';
-        if (node.specialization) {
+        if (isHostileLocation) {
+            specHtml = `<div style="font-size: 0.8rem; color: #ef4444; margin-top: 6px; font-weight: 700;"><i class="fa-solid fa-skull"></i> Hostile location.</div>`;
+        } else if (node.specialization) {
             specHtml = `<div style="font-size: 0.8rem; color: #a78bfa; margin-top: 6px; font-weight: 600;"><i class="fa-solid fa-star"></i> Specialization: ${escapeHtml(node.specialization)}</div>`;
         } else if (node.type !== 'Ruins') {
             specHtml = `<div style="font-size: 0.8rem; color: #64748b; margin-top: 6px; font-style: italic;"><i class="fa-solid fa-ban"></i> No specializations.</div>`;
