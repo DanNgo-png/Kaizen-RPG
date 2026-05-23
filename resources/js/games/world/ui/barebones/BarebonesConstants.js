@@ -36,6 +36,9 @@ export const NODE_TYPE_ICONS = Object.freeze({
     "Stolen Stronghold": "fa-tower-observation",
     "Bandit Stronghold": "fa-tower-observation",
     "Bandit Outpost": "fa-tent",
+    "Barbarian Camp": "fa-campground",
+    "Barbarian Outpost": "fa-tent",
+    "Barbarian Warcamp": "fa-tower-observation",
     Ruins: "fa-skull",
     "Bandit Camp": "fa-campground"
 });
