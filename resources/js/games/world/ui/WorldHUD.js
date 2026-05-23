@@ -2,6 +2,7 @@ import { getReputationString, getReputationColor } from "./barebones/BarebonesCo
 
 const DEFAULT_FACTION_COLOR = '#60a5fa';
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const HOSTILE_REPUTATION_THRESHOLD = -50;
 
 export class WorldHUD {
     constructor() {
@@ -181,10 +182,9 @@ export class WorldHUD {
     showTooltip(node, screenX, screenY) {
         if (!this.tooltip) return;
 
-        const typeColor = node.type === 'Stronghold' ? '#f87171' : '#aaa';
-        const specHtml = node.specialization 
-            ? `<div style="color:#a78bfa; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-star"></i> Specialization: ${this._escapeHtml(node.specialization)}</div>` 
-            : `<div style="color:#6b7280; font-size:0.75rem; margin-top:4px; font-style:italic;"><i class="fa-solid fa-ban"></i> Too poor to specialize</div>`;
+        const isHostile = node.is_hostile === 1 || node.reputation <= HOSTILE_REPUTATION_THRESHOLD;
+        const typeColor = isHostile || node.type === 'Stronghold' ? '#f87171' : '#aaa';
+        const specHtml = this._nodeMetaHtml(node, isHostile);
         const factionHtml = node.faction
             ? this._factionBannerHtml(node.faction)
             : `<div class="map-tooltip-unclaimed"><i class="fa-solid fa-tree"></i> Unclaimed Wilderness</div>`;
@@ -240,6 +240,18 @@ export class WorldHUD {
 
     _safeHexColor(color) {
         return HEX_COLOR_PATTERN.test(String(color ?? '')) ? color : DEFAULT_FACTION_COLOR;
+    }
+
+    _nodeMetaHtml(node, isHostile) {
+        if (isHostile) {
+            return `<div style="color:#ef4444; font-size:0.75rem; margin-top:4px; font-weight:700;"><i class="fa-solid fa-skull"></i> Hostile location</div>`;
+        }
+
+        if (node.specialization) {
+            return `<div style="color:#a78bfa; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-star"></i> Specialization: ${this._escapeHtml(node.specialization)}</div>`;
+        }
+
+        return `<div style="color:#6b7280; font-size:0.75rem; margin-top:4px; font-style:italic;"><i class="fa-solid fa-ban"></i> Too poor to specialize</div>`;
     }
 
     _escapeHtml(value) {
