@@ -1,6 +1,32 @@
 import { BaseFactionBehavior } from "./BaseFactionBehavior.mjs";
 import { NOBLE_HOUSE_LORE_POOL, WORLD_GENERATION_CONFIG, WORLD_NODE_TYPE_WEIGHTS } from "../../../data/factions/NobleFactions.mjs";
+import { BARBARIAN_NODE_TYPES } from "../../../data/factions/BarbarianFactions.mjs";
 import { SETTLEMENT_NAMES, SETTLEMENT_TIERS, SPECIALIZATIONS, SETTLEMENT_EVENTS } from "../../../data/GameDataConstants.mjs";
+
+const HOSTILE_SETTLEMENT_TYPES = Object.freeze([
+    "Ruins",
+    "Bandit Camp",
+    "Bandit Outpost",
+    "Bandit Stronghold",
+    "Stolen Stronghold",
+    ...Object.values(BARBARIAN_NODE_TYPES)
+]);
+
+const SETTLEMENT_EVENT_CHANCE = 0.05;
+const DANGEROUS_DISTANCE_PX = 150;
+const SAFE_DISTANCE_PX = 400;
+const EVENT_DURATION_MIN_DAYS = 3;
+const EVENT_DURATION_VARIANCE_DAYS = 5;
+const DANGEROUS_EVENT_KEYS = Object.freeze([
+    'raided',
+    'terrified_villagers',
+    'ambushed_trade_routes',
+    'sieged'
+]);
+const SAFE_EVENT_KEYS = Object.freeze([
+    'well_supplied',
+    'safe_roads'
+]);
 
 export class NobleBehavior extends BaseFactionBehavior {
     setupFactions(rng, context) {
@@ -81,26 +107,12 @@ export class NobleBehavior extends BaseFactionBehavior {
     }
 
     processDayEnd(currentDay) {
-        // Fetch nodes including Bandit Camps to calculate safety distances
+        // Fetch nodes including hostile camps to calculate safety distances
         const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name FROM world_nodes').all();
         
-        // Exclude all hostile / brigand-aligned settlements
-        const settlements = allNodes.filter(n => 
-            n.type !== "Ruins" && 
-            n.type !== "Bandit Camp" &&
-            n.type !== "Bandit Outpost" &&
-            n.type !== "Bandit Stronghold" &&
-            n.type !== "Stolen Stronghold"
-        );
+        const settlements = allNodes.filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
         
-        // Treat all hostile structures as local threats that can trigger sieges/attacks
-        const enemies = allNodes.filter(n => 
-            n.type === "Bandit Camp" || 
-            n.type === "Bandit Outpost" || 
-            n.type === "Bandit Stronghold" || 
-            n.type === "Stolen Stronghold" || 
-            n.type === "Ruins"
-        );
+        const enemies = allNodes.filter(n => HOSTILE_SETTLEMENT_TYPES.includes(n.type));
 
         const eventKeys = Object.keys(SETTLEMENT_EVENTS);
 
@@ -121,24 +133,24 @@ export class NobleBehavior extends BaseFactionBehavior {
                     if (dist < minEnemyDist) minEnemyDist = dist;
                 });
 
-                if (Math.random() < 0.05) {
+                if (Math.random() < SETTLEMENT_EVENT_CHANCE) {
                     const validEvents = eventKeys.filter(k => SETTLEMENT_EVENTS[k].isRandom !== false);
                     
                     // Filter events based on safety
                     let pool = validEvents;
-                    if (minEnemyDist < 150) {
+                    if (minEnemyDist < DANGEROUS_DISTANCE_PX) {
                         // Very close to enemies: high chance of negative events
-                        pool = validEvents.filter(k => ['raided', 'terrified_villagers', 'ambushed_trade_routes', 'sieged'].includes(k));
-                    } else if (minEnemyDist > 400) {
+                        pool = validEvents.filter(k => DANGEROUS_EVENT_KEYS.includes(k));
+                    } else if (minEnemyDist > SAFE_DISTANCE_PX) {
                         // Very safe: high chance of positive events
-                        pool = validEvents.filter(k => ['well_supplied', 'safe_roads'].includes(k));
+                        pool = validEvents.filter(k => SAFE_EVENT_KEYS.includes(k));
                     }
                     
                     // Fallback to random if pool is empty
                     if (pool.length === 0) pool = validEvents;
 
                     const randomEvent = pool[Math.floor(Math.random() * pool.length)];
-                    const duration = Math.floor(Math.random() * 5) + 3;
+                    const duration = Math.floor(Math.random() * EVENT_DURATION_VARIANCE_DAYS) + EVENT_DURATION_MIN_DAYS;
                     
                     this.repo.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?').run(randomEvent, duration, n.id);
                     this.repo.logNodeHistory(n.id, `Rumors spread of: ${SETTLEMENT_EVENTS[randomEvent].name}.`, 'world');
