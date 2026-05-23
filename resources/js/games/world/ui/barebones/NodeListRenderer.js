@@ -7,6 +7,7 @@ import { escapeHtml } from "./BarebonesTemplates.js";
 
 const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
+const HOSTILE_REPUTATION_THRESHOLD = -50;
 
 export class NodeListRenderer {
     constructor({
@@ -61,9 +62,7 @@ export class NodeListRenderer {
             ? `<i class="fa-solid fa-thumbtack bb-node-pin"></i>`
             : "";
 
-        const specHtml = node.specialization 
-            ? `<span style="color:#a78bfa; margin-left: 8px;" title="${escapeHtml(node.specialization)}"><i class="fa-solid fa-star"></i> ${escapeHtml(node.specialization)}</span>`
-            : `<span style="color:#6b7280; margin-left: 8px; font-style:italic;" title="No Specialization"><i class="fa-solid fa-ban"></i> Poor</span>`;
+        const specHtml = this._nodeMetaHtml(node);
         const factionHtml = node.faction ? this._factionHtml(node.faction) : "";
 
         return `
@@ -92,8 +91,24 @@ export class NodeListRenderer {
         return HEX_COLOR_PATTERN.test(String(color ?? "")) ? color : DEFAULT_FACTION_COLOR;
     }
 
+    _nodeMetaHtml(node) {
+        if (this._isHostileNode(node)) {
+            return `<span style="color:#ef4444; margin-left: 8px; font-weight:700;" title="Hostile"><i class="fa-solid fa-skull"></i> Hostile</span>`;
+        }
+
+        if (node.specialization) {
+            return `<span style="color:#a78bfa; margin-left: 8px;" title="${escapeHtml(node.specialization)}"><i class="fa-solid fa-star"></i> ${escapeHtml(node.specialization)}</span>`;
+        }
+
+        return `<span style="color:#6b7280; margin-left: 8px; font-style:italic;" title="No Specialization"><i class="fa-solid fa-ban"></i> Poor</span>`;
+    }
+
+    _isHostileNode(node) {
+        return node.is_hostile === 1 || node.reputation <= HOSTILE_REPUTATION_THRESHOLD;
+    }
+
     _showContextMenu(event, node) {
-        const isHostile = node.is_hostile === 1 || node.reputation <= -50;
+        const isHostile = this._isHostileNode(node);
         const menuItems = [
             {
                 label: "Description",
