@@ -40,8 +40,14 @@ export const SETTLEMENT_TIERS = {
     'High Kingdom': { buyMult: 0.85, sellMult: 1.25, shopLevel: 4, growthReqs: { contracts: 35, trade: 35000, materials: 50 } },
     'Empire':       { buyMult: 0.80, sellMult: 1.30, shopLevel: 5, growthReqs: { contracts: 50, trade: 50000, materials: 60 } },
     'Stronghold':   { buyMult: 1.30, sellMult: 0.95, shopLevel: 3, growthReqs: { contracts: 15, trade: 10000, materials: 25 } },
-    'Ruins':        { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 },
-    'Bandit Camp':  { buyMult: 1.00, sellMult: 0.30, shopLevel: 0 }
+    'Ruins':              { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 },
+    'Bandit Camp':        { buyMult: 1.00, sellMult: 0.30, shopLevel: 0 },
+    'Bandit Outpost':     { buyMult: 1.10, sellMult: 0.25, shopLevel: 0 },
+    'Bandit Stronghold':  { buyMult: 1.25, sellMult: 0.20, shopLevel: 0 },
+    'Stolen Stronghold':  { buyMult: 1.25, sellMult: 0.20, shopLevel: 0 },
+    'Barbarian Camp':     { buyMult: 1.05, sellMult: 0.25, shopLevel: 0 },
+    'Barbarian Outpost':  { buyMult: 1.15, sellMult: 0.20, shopLevel: 0 },
+    'Barbarian Warcamp':  { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 }
 };
 
 export const ORIGIN_CONFIGS = {
