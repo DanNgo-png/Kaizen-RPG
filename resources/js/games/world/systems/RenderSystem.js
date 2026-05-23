@@ -44,7 +44,9 @@ const DUNGEON_VISUALS = Object.freeze({
     HINT_Y_OFFSET: 45
 });
 
-const HEX_COLOR_PATTERN = Object.freeze({
+const HEX_COLOR_REGEX = /^#[0-9a-f]{6}$/i;
+
+const HEX_COLOR_COMPONENTS = Object.freeze({
     RADIX: 16,
     RED_START: 0,
     RED_END: 2,
@@ -210,7 +212,7 @@ export class RenderSystem {
     _nodeSize(type) {
         if (['City', 'City-State'].includes(type)) return NODE_VISUALS.CITY_SIZE;
         if (['Province', 'Kingdom'].includes(type)) return NODE_VISUALS.REGION_SIZE;
-        if (['High Kingdom', 'Empire', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold'].includes(type)) return NODE_VISUALS.CAPITAL_SIZE;
+        if (['High Kingdom', 'Empire', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'Barbarian Warcamp'].includes(type)) return NODE_VISUALS.CAPITAL_SIZE;
         return NODE_VISUALS.DEFAULT_SIZE;
     }
 
@@ -221,18 +223,18 @@ export class RenderSystem {
     }
 
     _isCapitalType(type) {
-        return ['City', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'City-State', 'Province', 'Kingdom', 'High Kingdom', 'Empire'].includes(type);
+        return ['City', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'Barbarian Warcamp', 'City-State', 'Province', 'Kingdom', 'High Kingdom', 'Empire'].includes(type);
     }
 
     _normalizeHexColor(color) {
-        return HEX_COLOR_PATTERN.test(String(color ?? '')) ? color : null;
+        return HEX_COLOR_REGEX.test(String(color ?? '')) ? color : null;
     }
 
     _hexToRgba(hex, alpha) {
         const value = hex.replace('#', '');
-        const red = parseInt(value.slice(HEX_COLOR_PATTERN.RED_START, HEX_COLOR_PATTERN.RED_END), HEX_COLOR_PATTERN.RADIX);
-        const green = parseInt(value.slice(HEX_COLOR_PATTERN.GREEN_START, HEX_COLOR_PATTERN.GREEN_END), HEX_COLOR_PATTERN.RADIX);
-        const blue = parseInt(value.slice(HEX_COLOR_PATTERN.BLUE_START, HEX_COLOR_PATTERN.BLUE_END), HEX_COLOR_PATTERN.RADIX);
+        const red = parseInt(value.slice(HEX_COLOR_COMPONENTS.RED_START, HEX_COLOR_COMPONENTS.RED_END), HEX_COLOR_COMPONENTS.RADIX);
+        const green = parseInt(value.slice(HEX_COLOR_COMPONENTS.GREEN_START, HEX_COLOR_COMPONENTS.GREEN_END), HEX_COLOR_COMPONENTS.RADIX);
+        const blue = parseInt(value.slice(HEX_COLOR_COMPONENTS.BLUE_START, HEX_COLOR_COMPONENTS.BLUE_END), HEX_COLOR_COMPONENTS.RADIX);
 
         return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
     }
