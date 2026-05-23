@@ -1,5 +1,6 @@
 import { NobleBehavior } from './behaviors/NobleBehavior.mjs';
 import { BanditBehavior } from './behaviors/BanditBehavior.mjs';
+import { BarbarianBehavior } from './behaviors/BarbarianBehavior.mjs';
 
 export class WorldSimulator {
     constructor(repo) {
@@ -7,7 +8,8 @@ export class WorldSimulator {
         // Add active factions in the world here
         this.behaviors = [
             new NobleBehavior(repo),
-            new BanditBehavior(repo)
+            new BanditBehavior(repo),
+            new BarbarianBehavior(repo)
         ];
     }
 
