@@ -1,11 +1,12 @@
 import { GREENSKINS } from '../data/enemies/Greenskins.mjs';
 import { UNDEAD } from '../data/enemies/Undead.mjs';
 import { BRIGANDS } from '../data/enemies/Brigands.mjs';
+import { BARBARIANS } from '../data/enemies/Barbarians.mjs';
 
 class EnemyFactoryClass {
     constructor() {
         this.templates = new Map();
-        this._registerTemplates([...GREENSKINS, ...UNDEAD, ...BRIGANDS]);
+        this._registerTemplates([...GREENSKINS, ...UNDEAD, ...BRIGANDS, ...BARBARIANS]);
     }
 
     _registerTemplates(enemies) {
