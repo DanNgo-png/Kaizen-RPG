@@ -42,6 +42,11 @@ export declare enum Architecture {
 	ia32 = "ia32",
 	unknown = "unknown"
 }
+export declare enum SendKeyState {
+	press = "press",
+	down = "down",
+	up = "up"
+}
 export interface DirectoryEntry {
 	entry: string;
 	path: string;
@@ -170,6 +175,7 @@ export interface Filter {
 export interface TrayOptions {
 	icon: string;
 	menuItems: TrayMenuItem[];
+	useTemplateIcon?: boolean;
 }
 export interface TrayMenuItem {
 	id?: string;
@@ -242,6 +248,9 @@ declare function getOSInfo(): Promise<OSInfo>;
 declare function getCPUInfo(): Promise<CPUInfo>;
 declare function getDisplays(): Promise<Display[]>;
 declare function getMousePosition(): Promise<MousePosition>;
+declare function setMousePosition(x: number, y: number): Promise<void>;
+declare function setMouseGrabbing(grabbing: boolean): Promise<void>;
+declare function sendKey(key: number, state: SendKeyState): Promise<void>;
 declare function setData(key: string, data: string | null): Promise<void>;
 declare function getData(key: string): Promise<string>;
 declare function removeData(key: string): Promise<void>;
@@ -290,8 +299,9 @@ export interface WindowSizeOptions {
 	resizable?: boolean;
 }
 export interface WindowPosOptions {
-	x: number;
-	y: number;
+	x?: number;
+	y?: number;
+	center?: boolean;
 }
 export interface WindowMenu extends Array<WindowMenuItem> {
 }
@@ -342,6 +352,7 @@ declare function setSize(options: WindowSizeOptions): Promise<void>;
 declare function getSize(): Promise<WindowSizeOptions>;
 declare function getPosition(): Promise<WindowPosOptions>;
 declare function setAlwaysOnTop(onTop: boolean): Promise<void>;
+declare function setBorderless(borderless: boolean): Promise<void>;
 declare function create(url: string, options?: WindowOptions): Promise<void>;
 declare function snapshot(path: string): Promise<void>;
 declare function setMainMenu(options: WindowMenu): Promise<void>;
@@ -403,7 +414,7 @@ declare function readFile$1(path: string): Promise<string>;
 declare function readBinaryFile$1(path: string): Promise<ArrayBuffer>;
 declare function mount(path: string, target: string): Promise<void>;
 declare function unmount(path: string): Promise<void>;
-declare function getMounts(): Promise<void>;
+declare function getMounts(): Promise<Record<string, string>>;
 declare function getMethods(): Promise<string[]>;
 export interface InitOptions {
 	exportCustomMethods?: boolean;
@@ -471,7 +482,7 @@ declare namespace os {
 	export { execCommand, getEnv, getEnvs, getPath, getSpawnedProcesses, open$1 as open, setTray, showFolderDialog, showMessageBox, showNotification, showOpenDialog, showSaveDialog, spawnProcess, updateSpawnedProcess };
 }
 declare namespace computer {
-	export { getArch, getCPUInfo, getDisplays, getKernelInfo, getMemoryInfo, getMousePosition, getOSInfo };
+	export { getArch, getCPUInfo, getDisplays, getKernelInfo, getMemoryInfo, getMousePosition, getOSInfo, sendKey, setMouseGrabbing, setMousePosition };
 }
 declare namespace storage {
 	export { clear, getData, getKeys, removeData, setData };
@@ -483,7 +494,7 @@ declare namespace app {
 	export { broadcast, exit, getConfig, killProcess, readProcessInput, restartProcess, writeProcessError, writeProcessOutput };
 }
 declare namespace window$1 {
-	export { beginDrag, center, create, exitFullScreen, focus$1 as focus, getPosition, getSize, getTitle, hide, isFullScreen, isMaximized, isMinimized, isVisible, maximize, minimize, move$1 as move, print$1 as print, setAlwaysOnTop, setDraggableRegion, setFullScreen, setIcon, setMainMenu, setSize, setTitle, show, snapshot, unmaximize, unminimize, unsetDraggableRegion };
+	export { beginDrag, center, create, exitFullScreen, focus$1 as focus, getPosition, getSize, getTitle, hide, isFullScreen, isMaximized, isMinimized, isVisible, maximize, minimize, move$1 as move, print$1 as print, setAlwaysOnTop, setBorderless, setDraggableRegion, setFullScreen, setIcon, setMainMenu, setSize, setTitle, show, snapshot, unmaximize, unminimize, unsetDraggableRegion };
 }
 declare namespace events {
 	export { broadcast$1 as broadcast, dispatch, off, on };
