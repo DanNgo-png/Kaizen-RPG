@@ -901,6 +901,13 @@ export class GameRepository {
                 if (logs.length === 0 && daysPassed === 0) logs.push(`🛡️ The party made safe progress on: ${activeContract.title}`);
 
             } else if (isDelving) {
+                // Threat & Balancing Constants 
+                const BASE_THREAT_PER_MINUTE = 5;
+                const MIN_DANGER_MULTIPLIER = 0.1;
+                const BASE_DAMAGE_CHANCE = 0.40;
+                const MAX_DAMAGE_CHANCE = 0.80;
+                const TANK_PROTECTION_RATE = 0.10;
+
                 const attackGoldMultiplier = 1 + (partyTotalAttack / 100); 
                 const goldFound = Math.floor(focusMinutes * ratio * 2.5 * attackGoldMultiplier);
                 
@@ -914,19 +921,18 @@ export class GameRepository {
                     if (goldFound > 0) logs.push(`💰 Scavenged ${goldFound} gold crowns.`);
                 }
 
-                const baseThreatPerMinute = 5;
-                const dungeonThreat = focusMinutes * baseThreatPerMinute * ratio;
-                const dangerMultiplier = Math.max(0.1, dungeonThreat / Math.max(1, totalPartyPower));
-                
-                const BASE_DAMAGE_CHANCE = 0.40;
-                const adjustedDamageChance = Math.min(0.80, BASE_DAMAGE_CHANCE * dangerMultiplier);
-                const tankProtectionBonus = tankCount * 0.10;
+                // Calculate threat and damage chances dynamically based on session time & party power
+                const dungeonThreat = focusMinutes * BASE_THREAT_PER_MINUTE * ratio;
+                const dangerMultiplier = Math.max(MIN_DANGER_MULTIPLIER, dungeonThreat / Math.max(1, totalPartyPower));
+                const adjustedDamageChance = Math.min(MAX_DAMAGE_CHANCE, BASE_DAMAGE_CHANCE * dangerMultiplier);
+                const tankProtectionBonus = tankCount * TANK_PROTECTION_RATE;
 
                 activeMercs.forEach(merc => {
                     const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
                     const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
                     this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
 
+                    // Tanks (Vanguards/Hedge Knights) absorb blows, lowering the hit chance for squishier roles
                     let personalHitChance = adjustedDamageChance;
                     if (!['Vanguard', 'Hedge Knight'].includes(merc.role)) {
                         personalHitChance = Math.max(0.05, personalHitChance - tankProtectionBonus);
@@ -960,17 +966,17 @@ export class GameRepository {
                 let itemsLooted = 0;
 
                 for (let i = 0; i < lootRolls; i++) {
-                    if (rollForLoot(baseLootChance)) itemsLooted++;
+                    if (this.rollForLoot(baseLootChance)) itemsLooted++; // Ensure internal call references this
                 }
 
                 if (focusMinutes >= 20 && itemsLooted === 0) {
-                    rollForLoot(1.0);
+                    this.rollForLoot(1.0);
                 }
 
                 if (focusMinutes >= 45) {
                     logs.push(`👑 Survived a deep floor! Extra loot granted.`);
-                    rollForLoot(0.30 + depthLootBonus + attackLootBonus);
-                    rollForLoot(1.0, true);
+                    this.rollForLoot(0.30 + depthLootBonus + attackLootBonus);
+                    this.rollForLoot(1.0, true);
                 }
             } else {
                 // --- NEW IDLE / RESTING STATE (Dungeon Barebones) ---
