@@ -40,7 +40,10 @@ export const NODE_TYPE_ICONS = Object.freeze({
     "Barbarian Outpost": "fa-tent",
     "Barbarian Warcamp": "fa-tower-observation",
     Ruins: "fa-skull",
-    "Bandit Camp": "fa-campground"
+    "Bandit Camp": "fa-campground",
+    "Goblin Camp": "fa-campground",
+    "Goblin Outpost": "fa-tent",
+    "Greenskin Stronghold": "fa-tower-observation"
 });
 
 export const CHRONICLE_EVENT_META = Object.freeze({

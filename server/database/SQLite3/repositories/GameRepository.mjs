@@ -77,7 +77,10 @@ const NON_GROWING_SETTLEMENT_TYPES = Object.freeze([
     'Bandit Outpost',
     'Bandit Stronghold',
     'Stolen Stronghold',
-    ...Object.values(BARBARIAN_NODE_TYPES)
+    ...Object.values(BARBARIAN_NODE_TYPES),
+    'Goblin Camp',
+    'Goblin Outpost',
+    'Greenskin Stronghold' 
 ]);
 
 const HOSTILE_CONTRACT_TARGET_TYPES = Object.freeze([
@@ -85,7 +88,10 @@ const HOSTILE_CONTRACT_TARGET_TYPES = Object.freeze([
     'Bandit Outpost',
     'Bandit Stronghold',
     'Stolen Stronghold',
-    ...Object.values(BARBARIAN_NODE_TYPES)
+    ...Object.values(BARBARIAN_NODE_TYPES),
+    'Goblin Camp',
+    'Goblin Outpost',
+    'Greenskin Stronghold'
 ]);
 
 const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([

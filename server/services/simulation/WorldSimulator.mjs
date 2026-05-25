@@ -1,6 +1,7 @@
 import { NobleBehavior } from './behaviors/NobleBehavior.mjs';
 import { BanditBehavior } from './behaviors/BanditBehavior.mjs';
 import { BarbarianBehavior } from './behaviors/BarbarianBehavior.mjs';
+import { GreenskinBehavior } from './behaviors/GreenskinBehavior.mjs'; 
 
 export class WorldSimulator {
     constructor(repo) {
@@ -9,7 +10,8 @@ export class WorldSimulator {
         this.behaviors = [
             new NobleBehavior(repo),
             new BanditBehavior(repo),
-            new BarbarianBehavior(repo)
+            new BarbarianBehavior(repo),
+            new GreenskinBehavior(repo)
         ];
     }
 

@@ -237,5 +237,40 @@ export const WEAPONS = [
         rarity: 'rare',
         stats: { attack: 30, defense_penalty: -5, weight: 16, fatigue_penalty: -8 },
         availableIn: ['Ruins'] 
+    },
+
+    // --- Goblins ---
+    { 
+        id: 'goblin_notched_blade', 
+        name: 'Goblin Notched Blade', 
+        type: 'Weapon', 
+        description: "A cruel, jagged dagger designed to cause severe bleeding and pain.",
+        icon: 'fa-solid fa-screwdriver',
+        baseValue: 90, 
+        rarity: 'uncommon',
+        stats: { attack: 11, defense: 1, weight: 3 },
+        availableIn: ['Ruins'] 
+    },
+    { 
+        id: 'goblin_reinforced_bow', 
+        name: 'Goblin Reinforced Bow', 
+        type: 'Ranged', 
+        description: "A compact bow made of composite wood and sinew, optimized for quick, poisonous harassment.",
+        icon: 'fa-solid fa-location-crosshairs', 
+        baseValue: 180, 
+        rarity: 'uncommon',
+        stats: { attack: 16, ammo: 15, weight: 3 },
+        availableIn: ['Ruins'] 
+    },
+    { 
+        id: 'goblin_jagged_pike', 
+        name: 'Goblin Jagged Pike', 
+        type: 'Weapon', 
+        description: "A long, cruel polearm crafted from light wood and topped with a serrated iron blade.",
+        icon: 'fa-solid fa-arrow-up-long', 
+        baseValue: 210, 
+        rarity: 'uncommon',
+        stats: { attack: 18, armor_penetration: 15, weight: 7 },
+        availableIn: ['Ruins'] 
     }
 ];

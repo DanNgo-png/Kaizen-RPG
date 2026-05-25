@@ -47,7 +47,10 @@ export const SETTLEMENT_TIERS = {
     'Stolen Stronghold':  { buyMult: 1.25, sellMult: 0.20, shopLevel: 0 },
     'Barbarian Camp':     { buyMult: 1.05, sellMult: 0.25, shopLevel: 0 },
     'Barbarian Outpost':  { buyMult: 1.15, sellMult: 0.20, shopLevel: 0 },
-    'Barbarian Warcamp':  { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 }
+    'Barbarian Warcamp':  { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 },
+    'Goblin Camp':          { buyMult: 1.05, sellMult: 0.25, shopLevel: 0 },
+    'Goblin Outpost':       { buyMult: 1.15, sellMult: 0.20, shopLevel: 0 },
+    'Greenskin Stronghold': { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 }
 };
 
 export const ORIGIN_CONFIGS = {
@@ -197,5 +200,8 @@ export const SETTLEMENT_UPGRADE_PATH = {
     'Kingdom': 'High Kingdom',
     'High Kingdom': 'Empire',
     'Empire': null,     
-    'Stronghold': null  
+    'Stronghold': null,
+    'Goblin Camp': null,
+    'Goblin Outpost': null,
+    'Greenskin Stronghold': null  
 };
