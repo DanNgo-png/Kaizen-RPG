@@ -3,6 +3,8 @@ import { FocusAPI } from "../../api/FocusAPI.js";
 import { SettingsAPI } from "../../api/SettingsAPI.js";
 import { notifier } from "../../_global-managers/NotificationManager.js";
 
+const MILLISECONDS_PER_SECOND = 1000;
+
 class FlexibleFocusManager {
     constructor() {
         if (FlexibleFocusManager.instance) {
@@ -173,7 +175,7 @@ class FlexibleFocusManager {
         this.tick(); // Update any listeners (UI)
     }
 
-    commitSession(focusSeconds, breakSeconds) {
+    async commitSession(focusSeconds, breakSeconds) {
         const payload = {
             tag: this.state.currentTag,
             focusSeconds: focusSeconds,
@@ -182,11 +184,22 @@ class FlexibleFocusManager {
             timer_type: 'flexible'
         };
 
-        FocusAPI.saveFocusSession(payload);
+        try {
+            await FocusAPI.saveFocusSession(payload);
+        } catch (error) {
+            console.error("Failed to save flexible focus session", error);
+            notifier.show(
+                "Session Save Failed",
+                "Your focus session was not saved. Please try again.",
+                "fa-solid fa-triangle-exclamation"
+            );
+            throw error;
+        }
+
         this.stopTicker();
 
-        const committedFocusMs = focusSeconds * 1000;
-        const committedBreakMs = breakSeconds * 1000;
+        const committedFocusMs = focusSeconds * MILLISECONDS_PER_SECOND;
+        const committedBreakMs = breakSeconds * MILLISECONDS_PER_SECOND;
         
         const sessionEarnedBreak = committedFocusMs / this.state.ratio;
         const sessionNetBalance = sessionEarnedBreak - committedBreakMs;

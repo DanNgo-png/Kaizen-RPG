@@ -3,6 +3,10 @@ import { FlexibleTimerUI } from "./FlexibleTimerUI.js";
 import { TagUIManager } from "../../components/TagUIManager.js";
 
 const MIN_SESSION_SECONDS = 0;
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_PER_HOUR = 3600;
+const TIME_PARTS_WITH_HOURS = 3;
+const TIME_PARTS_WITH_MINUTES = 2;
 
 class FocusTimerController {
     constructor() {
@@ -134,9 +138,11 @@ class FocusTimerController {
         });
     }
 
-    handleCommitSession() {
+    async handleCommitSession() {
         const focusVal = document.getElementById('conclude-focus-input').value;
         const breakVal = document.getElementById('conclude-break-input').value;
+        const saveButton = document.getElementById('btn-conclude-save');
+        const saveButtonLabel = saveButton?.innerHTML;
 
         const normalizeSeconds = (seconds) => {
             if (!Number.isFinite(seconds)) return MIN_SESSION_SECONDS;
@@ -148,24 +154,41 @@ class FocusTimerController {
             if (val.includes(':')) {
                 const parts = val.split(':').map(Number);
                 let seconds = 0;
-                if (parts.length === 3) seconds = (parts[0] * 3600) + (parts[1] * 60) + parts[2];
-                else if (parts.length === 2) seconds = (parts[0] * 60) + parts[1];
+                if (parts.length === TIME_PARTS_WITH_HOURS) {
+                    seconds = (parts[0] * SECONDS_PER_HOUR) + (parts[1] * SECONDS_PER_MINUTE) + parts[2];
+                } else if (parts.length === TIME_PARTS_WITH_MINUTES) {
+                    seconds = (parts[0] * SECONDS_PER_MINUTE) + parts[1];
+                }
                 return normalizeSeconds(seconds);
             }
-            return normalizeSeconds((parseFloat(val) || MIN_SESSION_SECONDS) * 60);
+            return normalizeSeconds((parseFloat(val) || MIN_SESSION_SECONDS) * SECONDS_PER_MINUTE);
         };
 
         const fSec = parseToSeconds(focusVal);
         const bSec = parseToSeconds(breakVal);
 
-        // Commit (This might trigger persist balance which updates the stats immediately)
-        flexManager.commitSession(fSec, bSec);
+        if (saveButton) {
+            saveButton.disabled = true;
+            saveButton.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin"></i> Saving`;
+        }
 
-        // Instead of hard resetting UI to 0, sync with the actual manager state
-        // This allows carried over balance to show up immediately
-        this.syncWithGlobalState(); 
-        
-        this.ui.toggleModal('conclusion', false);
+        try {
+            // Commit (This might trigger persist balance which updates the stats immediately)
+            await flexManager.commitSession(fSec, bSec);
+
+            // Instead of hard resetting UI to 0, sync with the actual manager state
+            // This allows carried over balance to show up immediately
+            this.syncWithGlobalState(); 
+            
+            this.ui.toggleModal('conclusion', false);
+        } catch (error) {
+            console.error("Flexible session commit failed", error);
+        } finally {
+            if (saveButton) {
+                saveButton.disabled = false;
+                saveButton.innerHTML = saveButtonLabel;
+            }
+        }
     }
 }
 
