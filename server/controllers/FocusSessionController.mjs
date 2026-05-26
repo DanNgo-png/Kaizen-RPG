@@ -1,5 +1,6 @@
 import { FocusSessionRepository } from "../database/SQLite3/repositories/FocusSessionRepository.mjs";
 import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
+import { internalEventBus } from "../utils/InternalEventBus.mjs";
 
 const getLocalSQLDateTime = () => {
     const now = new Date();
@@ -56,11 +57,11 @@ export class FocusSessionController {
 
                 console.log(`✅ Focus Session Saved (ID: ${result.lastInsertRowid}) at ${localCreatedAt}`);
 
-                // Include Ratio and breakSeconds in dispatch for RPG logic
-                app.events.dispatch("internal:sessionCompleted", { 
-                    focusSeconds,
-                    breakSeconds,
-                    ratio
+                // Publish internal event via server-side event bus
+                internalEventBus.emit("sessionCompleted", { 
+                    focusSeconds, 
+                    breakSeconds, 
+                    ratio 
                 });
                 
                 app.events.broadcast("focusSessionSaved", {
@@ -172,7 +173,7 @@ export class FocusSessionController {
                 this.repo.addTag(payload.name, payload.color);
                 app.events.broadcast("receiveTags", this.repo.getAllTags());
             } catch (error) {
-                console.error("❌ Error saving tag:", error); // <-- Add
+                console.error("❌ Error saving tag:", error);
             }
         });
 
@@ -181,7 +182,7 @@ export class FocusSessionController {
                 this.repo.updateTag(payload.id, payload.name, payload.color);
                 app.events.broadcast("receiveTags", this.repo.getAllTags());
             } catch (error) {
-                console.error("❌ Error updating tag:", error); // <-- Add
+                console.error("❌ Error updating tag:", error);
             }
         });
 
@@ -190,7 +191,7 @@ export class FocusSessionController {
                 this.repo.deleteTag(payload.id);
                 app.events.broadcast("receiveTags", this.repo.getAllTags());
             } catch (error) {
-                console.error("❌ Error deleting tag:", error); // <-- Add
+                console.error("❌ Error deleting tag:", error);
             }
         });
     }

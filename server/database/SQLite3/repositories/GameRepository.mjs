@@ -966,17 +966,17 @@ export class GameRepository {
                 let itemsLooted = 0;
 
                 for (let i = 0; i < lootRolls; i++) {
-                    if (this.rollForLoot(baseLootChance)) itemsLooted++; // Ensure internal call references this
+                    if (rollForLoot(baseLootChance)) itemsLooted++; // Ensure internal call references this
                 }
 
                 if (focusMinutes >= 20 && itemsLooted === 0) {
-                    this.rollForLoot(1.0);
+                    rollForLoot(1.0);
                 }
 
                 if (focusMinutes >= 45) {
                     logs.push(`👑 Survived a deep floor! Extra loot granted.`);
-                    this.rollForLoot(0.30 + depthLootBonus + attackLootBonus);
-                    this.rollForLoot(1.0, true);
+                    rollForLoot(0.30 + depthLootBonus + attackLootBonus);
+                    rollForLoot(1.0, true);
                 }
             } else {
                 // --- NEW IDLE / RESTING STATE (Dungeon Barebones) ---

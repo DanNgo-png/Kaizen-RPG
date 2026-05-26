@@ -1,6 +1,7 @@
 import { GameRepository } from "../database/SQLite3/repositories/GameRepository.mjs";
 import { AppSettingsRepository } from "../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 import { ItemFactory } from "../factories/ItemFactory.mjs";
+import { internalEventBus } from "../utils/InternalEventBus.mjs";
 import { 
     SETTLEMENT_EVENTS, 
     BUILDING_MATERIALS, 
@@ -8,6 +9,8 @@ import {
     SETTLEMENT_TIERS,
     SPECIALIZATIONS
 } from "../data/GameDataConstants.mjs";
+
+const SECONDS_PER_MINUTE = 60;
 
 export class MercenaryController {
     constructor() {
@@ -181,14 +184,15 @@ export class MercenaryController {
             }
         });
 
-        app.events.on("internal:sessionCompleted", (payload) => {
+        // Listen for internal completed session events via the local server event bus
+        internalEventBus.on("sessionCompleted", (payload) => {
             try {
                 const { focusSeconds, breakSeconds, ratio } = payload;
-                const focusMinutes = focusSeconds / 60;
+                const focusMinutes = focusSeconds / SECONDS_PER_MINUTE;
                 const result = this.repo.distributeSessionXP(focusMinutes, ratio);
 
                 // Reduce fatigue for break time taken (1 fatigue per 5 min of break)
-                const breakMinutes = (breakSeconds || 0) / 60;
+                const breakMinutes = (breakSeconds || 0) / SECONDS_PER_MINUTE;
                 const fatigueRecovered = this.repo.distributeBreakFatigueRecovery(breakMinutes);
                 result.fatigueRecovered = fatigueRecovered;
 
