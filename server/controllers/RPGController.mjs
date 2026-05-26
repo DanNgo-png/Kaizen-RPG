@@ -11,9 +11,8 @@ import {
 } from "../data/GameDataConstants.mjs";
 
 const SECONDS_PER_MINUTE = 60;
-// backup
 
-export class MercenaryController {
+export class RPGController {
     constructor() {
         this.repo = new GameRepository();
         this.settingsRepo = new AppSettingsRepository();

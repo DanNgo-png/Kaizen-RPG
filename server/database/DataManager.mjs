@@ -1,6 +1,6 @@
 import { TaskController } from "../controllers/TaskController.mjs";
 import { HabitController } from "../controllers/HabitController.mjs";
-import { MercenaryController } from "../controllers/MercenaryController.mjs";
+import { RPGController } from "../controllers/RPGController.mjs";
 import { AppSettingsController } from "../controllers/AppSettingsController.mjs";
 import { FocusSessionController } from "../controllers/FocusSessionController.mjs";
 import { TimeframeController } from "../controllers/TimeframeController.mjs";
@@ -18,7 +18,7 @@ export class DataManager {
 
         this.registerController(new TaskController());
         this.registerController(new HabitController());
-        this.registerController(new MercenaryController());
+        this.registerController(new RPGController());
         this.registerController(new AppSettingsController());
         this.registerController(new FocusSessionController());
         this.registerController(new TimeframeController());
