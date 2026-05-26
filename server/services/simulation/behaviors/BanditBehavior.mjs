@@ -64,7 +64,8 @@ export class BanditBehavior extends BaseFactionBehavior {
     processDayEnd(currentDay) {
         const logs = [];
 
-        const banditFaction = this.repo.db.prepare('SELECT id FROM factions WHERE type = "bandit" LIMIT 1').get();
+        // FIXED: Replaced "bandit" with 'bandit' string literal
+        const banditFaction = this.repo.db.prepare("SELECT id FROM factions WHERE type = 'bandit' LIMIT 1").get();
         if (!banditFaction) return logs;
 
         // --- 1. SIEGE CONQUEST MECHANIC (Stolen Strongholds) ---
@@ -171,7 +172,8 @@ export class BanditBehavior extends BaseFactionBehavior {
 
         // --- 3. ORIGINAL BANDIT CAMP SPAWNING ---
         if (currentDay % BANDIT_FACTION_CONFIG.SPAWN_INTERVAL_DAYS === 0) {
-            const camps = this.repo.db.prepare('SELECT id FROM world_nodes WHERE type = "Bandit Camp"').all();
+            // FIXED: Replaced "Bandit Camp" with 'Bandit Camp' string literal
+            const camps = this.repo.db.prepare("SELECT id FROM world_nodes WHERE type = 'Bandit Camp'").all();
             if (camps.length < BANDIT_FACTION_CONFIG.MAX_CAMPS) {
                 const physicalNodes = this.repo.db.prepare('SELECT x, y FROM world_nodes').all();
                 const pos = this._findIsolatedPositionRandom(physicalNodes);
