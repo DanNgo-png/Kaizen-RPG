@@ -56,24 +56,37 @@
 
                 <!-- 2. Paper Doll (Equipment Slots) -->
                 <div class="paper-doll-grid">
-                    <div class="doll-slot slot-helm" data-slot="head"><i class="fa-solid fa-helmet-safety"></i></div>
-                    <div class="doll-slot slot-armor" data-slot="body"><i class="fa-solid fa-shirt"></i></div>
-                    <div class="doll-slot slot-main" data-slot="main_hand"><i class="fa-solid fa-gavel"></i></div>
-                    <div class="doll-slot slot-off" data-slot="off_hand"><i class="fa-solid fa-shield-halved"></i></div>
                     <div class="doll-slot slot-acc" data-slot="accessory"><i class="fa-solid fa-ring"></i></div>
-                    <div class="doll-slot slot-ammo" data-slot="ammo"><i class="fa-solid fa-arrows-up-down"></i></div>
+                    <div class="doll-slot slot-helm" data-slot="head"><i class="fa-solid fa-helmet-safety"></i></div>
+                    <div class="doll-slot slot-ammo" data-slot="ammo"><i class="fa-solid fa-crosshairs"></i></div>
+                    <div class="doll-slot slot-main" data-slot="main_hand"><i class="fa-solid fa-khanda"></i></div>
+                    <div class="doll-slot slot-armor" data-slot="body"><i class="fa-solid fa-shirt"></i></div>
+                    <div class="doll-slot slot-off" data-slot="off_hand"><i class="fa-solid fa-shield-halved"></i></div>
                 </div>
 
-                <!-- 3. Stats Block -->
+                <!-- 3. Stats Block (14 Balanced Attributes Alternated Left/Right) -->
                 <div class="char-stats-grid">
-                    <div class="stat-row" title="Hit Points"><i class="fa-solid fa-heart text-red"></i> <span id="stat-hp">0</span></div>
-                    <div class="stat-row" title="Fatigue"><i class="fa-solid fa-bolt text-yellow"></i> <span id="stat-fat">0</span></div>
-                    <div class="stat-row" title="Resolve"><i class="fa-solid fa-flag text-blue"></i> <span id="stat-res">0</span></div>
-                    <div class="stat-row" title="Initiative"><i class="fa-solid fa-person-running text-green"></i> <span id="stat-ini">0</span></div>
-                    <div class="stat-row" title="Melee Skill"><i class="fa-solid fa-khanda"></i> <span id="stat-matk">0</span></div>
-                    <div class="stat-row" title="Ranged Skill"><i class="fa-solid fa-bullseye"></i> <span id="stat-ratk">0</span></div>
-                    <div class="stat-row" title="Melee Defense"><i class="fa-solid fa-shield"></i> <span id="stat-mdef">0</span></div>
-                    <div class="stat-row" title="Ranged Defense"><i class="fa-solid fa-shield-cat"></i> <span id="stat-rdef">0</span></div>
+                    <!-- Row 1 -->
+                    <div class="stat-row" title="Head Armor"><i class="fa-solid fa-helmet-safety" style="color: #3b82f6;"></i> <span id="stat-head-armor">0</span></div>
+                    <div class="stat-row" title="Melee Skill"><i class="fa-solid fa-khanda" style="color: #e2e8f0;"></i> <span id="stat-melee-skill">0</span></div>
+                    <!-- Row 2 -->
+                    <div class="stat-row" title="Body Armor"><i class="fa-solid fa-shirt" style="color: #60a5fa;"></i> <span id="stat-body-armor">0</span></div>
+                    <div class="stat-row" title="Range Skill"><i class="fa-solid fa-crosshairs" style="color: #94a3b8;"></i> <span id="stat-range-skill">0</span></div>
+                    <!-- Row 3 -->
+                    <div class="stat-row" title="Health"><i class="fa-solid fa-heart" style="color: #ef4444;"></i> <span id="stat-health">0</span></div>
+                    <div class="stat-row" title="Melee Defense"><i class="fa-solid fa-shield" style="color: #3b82f6;"></i> <span id="stat-melee-defense">0</span></div>
+                    <!-- Row 4 -->
+                    <div class="stat-row" title="Action Points"><i class="fa-solid fa-bolt" style="color: #fbbf24;"></i> <span id="stat-ap">0</span></div>
+                    <div class="stat-row" title="Range Defense"><i class="fa-solid fa-shield-halved" style="color: #60a5fa;"></i> <span id="stat-range-defense">0</span></div>
+                    <!-- Row 5 -->
+                    <div class="stat-row" title="Fatigue"><i class="fa-solid fa-weight-hanging" style="color: #f59e0b;"></i> <span id="stat-fatigue">0</span></div>
+                    <div class="stat-row" title="Damage"><i class="fa-solid fa-burst" style="color: #ef4444;"></i> <span id="stat-damage">0</span></div>
+                    <!-- Row 6 -->
+                    <div class="stat-row" title="Morale"><i class="fa-solid fa-face-smile" style="color: #ec4899;"></i> <span id="stat-morale">Steady (50)</span></div>
+                    <div class="stat-row" title="Effectiveness Against Armor"><i class="fa-solid fa-gavel" style="color: #fbbf24;"></i> <span id="stat-armor-effectiveness">100%</span></div>
+                    <!-- Row 7 -->
+                    <div class="stat-row" title="Resolve"><i class="fa-solid fa-flag" style="color: #a78bfa;"></i> <span id="stat-resolve">0</span></div>
+                    <div class="stat-row" title="Chance to Hit Head"><i class="fa-solid fa-bullseye" style="color: #f59e0b;"></i> <span id="stat-head-hit-chance">25%</span></div>
                 </div>
 
                 <!-- 4. Perks / Traits -->
@@ -92,7 +105,7 @@
                 </div>
 
                 <div class="stash-grid-container" id="stash-grid">
-                    <!-- 8x5 Grid of Items generated by JS -->
+                    <!-- Grid of Items generated by JS -->
                 </div>
 
                 <div class="stash-footer">
@@ -101,7 +114,7 @@
                         <div class="cap-track"><div class="cap-fill" style="width: 30%"></div></div>
                         <span>30 / 100</span>
                     </div>
-                    <button class="btn-sm"><i class="fa-solid fa-filter"></i> Sort</button>
+                    <button class="management-sort-btn"><i class="fa-solid fa-filter"></i> Sort</button>
                 </div>
             </section>
 

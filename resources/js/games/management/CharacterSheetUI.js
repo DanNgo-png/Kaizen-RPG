@@ -10,14 +10,20 @@ export class CharacterSheetUI {
             role: document.getElementById('char-role'),
             level: document.getElementById('char-level'),
             // Stats
-            hp: document.getElementById('stat-hp'),
-            fat: document.getElementById('stat-fat'),
-            res: document.getElementById('stat-res'),
-            ini: document.getElementById('stat-ini'),
-            matk: document.getElementById('stat-matk'),
-            ratk: document.getElementById('stat-ratk'),
-            mdef: document.getElementById('stat-mdef'),
-            rdef: document.getElementById('stat-rdef'),
+            headArmor: document.getElementById('stat-head-armor'),
+            bodyArmor: document.getElementById('stat-body-armor'),
+            health: document.getElementById('stat-health'),
+            ap: document.getElementById('stat-ap'),
+            fatigue: document.getElementById('stat-fatigue'),
+            morale: document.getElementById('stat-morale'),
+            resolve: document.getElementById('stat-resolve'),
+            meleeSkill: document.getElementById('stat-melee-skill'),
+            rangeSkill: document.getElementById('stat-range-skill'),
+            meleeDefense: document.getElementById('stat-melee-defense'),
+            rangeDefense: document.getElementById('stat-range-defense'),
+            damage: document.getElementById('stat-damage'),
+            armorEffectiveness: document.getElementById('stat-armor-effectiveness'),
+            headHitChance: document.getElementById('stat-head-hit-chance'),
             // Slots
             slots: document.querySelectorAll('.doll-slot')
         };
@@ -80,19 +86,110 @@ export class CharacterSheetUI {
         if (!merc) return;
         this.currentMercId = merc.id;
 
-        this.dom.name.textContent = merc.name;
-        this.dom.role.textContent = merc.role;
-        this.dom.level.textContent = merc.level;
+        if (this.dom.name) this.dom.name.textContent = merc.name;
+        if (this.dom.role) this.dom.role.textContent = merc.role;
+        if (this.dom.level) this.dom.level.textContent = merc.level;
 
-        // Basic Stats
-        this.dom.hp.textContent = `${merc.current_hp}/${merc.max_hp}`;
-        this.dom.fat.textContent = merc.fatigue || 0;
-        this.dom.res.textContent = 50; 
-        this.dom.ini.textContent = merc.spd; 
-        this.dom.matk.textContent = merc.str; 
-        this.dom.ratk.textContent = merc.int; 
-        this.dom.mdef.textContent = 10;
-        this.dom.rdef.textContent = 5;
+        // Initialize base stats
+        let headArmorVal = 0;
+        let bodyArmorVal = 0;
+        let totalFatiguePenalty = 0;
+        
+        let weaponAttack = 0;
+        let weaponDefense = 0;
+        let weaponArmorPen = 0;
+
+        let shieldDefense = 0;
+
+        const getStat = (item, key, defaultValue = 0) => {
+            return (item && item.stats && item.stats[key] !== undefined) ? item.stats[key] : defaultValue;
+        };
+
+        // Calculate equipment stats
+        if (merc.equipment) {
+            // Head
+            if (merc.equipment.head) {
+                headArmorVal = getStat(merc.equipment.head, 'defense');
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.head, 'fatigue_penalty'));
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.head, 'weight'));
+            }
+            // Body
+            if (merc.equipment.body) {
+                bodyArmorVal = getStat(merc.equipment.body, 'defense');
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.body, 'fatigue_penalty'));
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.body, 'weight'));
+            }
+            // Main hand weapon
+            if (merc.equipment.main_hand) {
+                weaponAttack = getStat(merc.equipment.main_hand, 'attack');
+                weaponDefense = getStat(merc.equipment.main_hand, 'defense');
+                weaponArmorPen = getStat(merc.equipment.main_hand, 'armor_penetration');
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.main_hand, 'weight'));
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.main_hand, 'fatigue_penalty'));
+            }
+            // Off hand shield
+            if (merc.equipment.off_hand) {
+                shieldDefense = getStat(merc.equipment.off_hand, 'defense');
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.off_hand, 'fatigue_penalty'));
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.off_hand, 'weight'));
+            }
+            // Accessory
+            if (merc.equipment.accessory) {
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.accessory, 'weight'));
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.accessory, 'fatigue_penalty'));
+            }
+            // Ammo
+            if (merc.equipment.ammo) {
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.ammo, 'weight'));
+                totalFatiguePenalty += Math.abs(getStat(merc.equipment.ammo, 'fatigue_penalty'));
+            }
+        }
+
+        // Calculate final stats
+        const baseMaxFatigue = 100;
+        const maxFatigue = Math.max(50, baseMaxFatigue - totalFatiguePenalty);
+
+        // Morale based on Health %
+        const hpPercent = merc.current_hp / merc.max_hp;
+        let moraleText = "Steady (50)";
+        if (hpPercent >= 1.0) moraleText = "Confident (60)";
+        else if (hpPercent >= 0.75) moraleText = "Steady (50)";
+        else if (hpPercent >= 0.50) moraleText = "Wavering (40)";
+        else moraleText = "Breaking (30)";
+
+        // Attributes calculations
+        const baseResolve = 50 + (merc.level * 2);
+        const baseMeleeSkill = 50 + Math.floor(merc.str * 1.5) + weaponAttack;
+        const baseRangeSkill = 40 + Math.floor(merc.int * 1.5) + (merc.equipment?.main_hand?.type === 'Ranged' ? weaponAttack : 0);
+        
+        const baseMeleeDefense = 5 + Math.floor(merc.spd * 0.5) + shieldDefense + weaponDefense;
+        const baseRangeDefense = 5 + Math.floor(merc.spd * 0.4) + shieldDefense;
+
+        // Damage calculation (base + weapon)
+        const baseMinDmg = 15 + Math.floor(merc.str * 0.5);
+        const baseMaxDmg = 25 + Math.floor(merc.str * 0.8);
+        const finalMinDmg = baseMinDmg + weaponAttack;
+        const finalMaxDmg = baseMaxDmg + weaponAttack;
+
+        const armorPenPercent = 100 + weaponArmorPen;
+        const headHitChanceVal = 25; // standard base 25%
+
+        // Populate UI elements securely
+        if (this.dom.headArmor) this.dom.headArmor.textContent = headArmorVal;
+        if (this.dom.bodyArmor) this.dom.bodyArmor.textContent = bodyArmorVal;
+        if (this.dom.health) this.dom.health.textContent = `${merc.current_hp}/${merc.max_hp}`;
+        if (this.dom.ap) this.dom.ap.textContent = `9`;
+        if (this.dom.fatigue) this.dom.fatigue.textContent = `${merc.fatigue || 0}/${maxFatigue}`;
+        if (this.dom.morale) this.dom.morale.textContent = moraleText;
+        if (this.dom.resolve) this.dom.resolve.textContent = baseResolve;
+        
+        if (this.dom.meleeSkill) this.dom.meleeSkill.textContent = baseMeleeSkill;
+        if (this.dom.rangeSkill) this.dom.rangeSkill.textContent = baseRangeSkill;
+        if (this.dom.meleeDefense) this.dom.meleeDefense.textContent = baseMeleeDefense;
+        if (this.dom.rangeDefense) this.dom.rangeDefense.textContent = baseRangeDefense;
+        if (this.dom.damage) this.dom.damage.textContent = `${finalMinDmg} - ${finalMaxDmg}`;
+        if (this.dom.armorEffectiveness) this.dom.armorEffectiveness.textContent = `${armorPenPercent}%`;
+        if (this.dom.headHitChance) this.dom.headHitChance.textContent = `${headHitChanceVal}%`;
 
         // Clear Slots
         this.dom.slots.forEach(slot => {
