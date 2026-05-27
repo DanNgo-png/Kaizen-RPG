@@ -16,6 +16,51 @@ export class MarketPanel {
         this.tooltipManager = tooltipManager;
         this.onBuyItem = onBuyItem;
         this.onSellItem = onSellItem;
+        this.marketFilter = 'all'; 
+        this.lastMarketData = null;
+        this.lastSelectedNode = null;
+        this._initFilterListeners();
+    }
+
+    _initFilterListeners() {
+        const marketChips = document.querySelectorAll('.bb-market-filters[data-target="market"] .bb-filter-chip');
+
+        if (marketChips.length > 0) {
+            marketChips.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    marketChips.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    
+                    this.marketFilter = btn.dataset.filter;
+                    if (this.lastMarketData && this.lastSelectedNode) {
+                        this.render(this.lastMarketData, this.lastSelectedNode);
+                    }
+                });
+            });
+        }
+    }
+
+    _filterItems(items, filter) {
+        if (!items) return [];
+        if (filter === 'all') return items;
+
+        return items.filter(item => {
+            const type = (item.type || '').toLowerCase();
+            if (filter === 'weapons') {
+                return type === 'weapon' || type === 'ranged';
+            }
+            if (filter === 'armor') {
+                return type === 'armor' || type === 'head' || type === 'off-hand';
+            }
+            if (filter === 'supplies') {
+                return type === 'consumable' || type === 'provision' || type === 'resource';
+            }
+            if (filter === 'trade') {
+                return type === 'trade good';
+            }
+            return false;
+        });
     }
 
     renderLoading() {
@@ -25,10 +70,18 @@ export class MarketPanel {
     }
 
     render(marketData, selectedNode) {
+        this.lastMarketData = marketData;
+        this.lastSelectedNode = selectedNode;
+
+        const currentFilter = this.marketFilter || 'all';
+
+        const filteredInventory = this._filterItems(marketData.inventory, currentFilter);
+        const filteredShopItems = this._filterItems(marketData.shopItems, currentFilter);
+
         this._renderCollection({
             listElement: this.dom.marketStashList,
-            items: marketData.inventory,
-            emptyMessage: "Your company stash is empty.",
+            items: filteredInventory,
+            emptyMessage: currentFilter === 'all' ? "Your company stash is empty." : "No matching items in your stash.",
             isBuying: false,
             marketData,
             selectedNode
@@ -36,8 +89,8 @@ export class MarketPanel {
 
         this._renderCollection({
             listElement: this.dom.marketShopList,
-            items: marketData.shopItems,
-            emptyMessage: "The merchant has nothing to sell today.",
+            items: filteredShopItems,
+            emptyMessage: currentFilter === 'all' ? "The merchant has nothing to sell today." : "No matching items in the shop.",
             isBuying: true,
             marketData,
             selectedNode
@@ -79,7 +132,6 @@ export class MarketPanel {
         const quantity = item.amount || item.count;
         const equippedText = this._equippedText(item);
 
-        // Visual Provision Amount Badge
         const provisionStat = (item.stats && item.stats.provisions)
             ? `<div style="position: absolute; top: 2px; right: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace; color: #d97706; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; pointer-events: none;"><i class="fa-solid fa-drumstick-bite"></i> ${item.stats.provisions}</div>`
             : "";
@@ -93,21 +145,19 @@ export class MarketPanel {
         element.className = `bb-market-slot ${rarityClass} ${!canTrade ? "disabled" : ""} ${isEquipped ? "equipped" : ""}`;
         element.setAttribute("aria-label", isEquipped ? `${item.name}, ${equippedText}` : item.name);
         element.innerHTML = `
-            ${quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? `<div class="bb-slot-qty">x${quantity}</div>` : ""}
+            ${quantity > 1 ? `<div class="bb-slot-qty">x${quantity}</div>` : ""}
             ${provisionStat}
             ${equippedBadge}
-            <i class="${escapeHtml(item.icon || "fa-solid fa-cube")}"></i>
+            <i class="${item.icon || "fa-solid fa-cube"}"></i>
             <div class="bb-slot-price ${priceClass}">${priceContent}</div>
         `;
 
-        // Tooltips 
         element.addEventListener("mouseenter", (event) => {
             this.tooltipManager.show(this._tooltipHtml({ item, quantity, isBuying, price, priceClass, isEquipped, equippedText }), event);
         });
         element.addEventListener("mousemove", (event) => this.tooltipManager.position(event));
         element.addEventListener("mouseleave", () => this.tooltipManager.hide());
 
-        // Left Click: Buy/Sell
         if (canTrade) {
             element.addEventListener("click", () => {
                 this.tooltipManager.hide();
@@ -124,13 +174,12 @@ export class MarketPanel {
 
     _tooltipHtml({ item, quantity, isBuying, price, priceClass, isEquipped, equippedText }) {
         const actionText = isEquipped ? "Unequip before selling" : (isBuying ? "L-Click: Buy" : "L-Click: Sell");
-        const quantityText = quantity > BAREBONES_UI.MARKET_QUANTITY_THRESHOLD ? ` (x${quantity})` : "";
+        const quantityText = quantity > 1 ? ` (x${quantity})` : "";
         const equippedHint = isEquipped
-            ? `<div class="tt-equipped"><i class="fa-solid fa-user-shield"></i> ${escapeHtml(equippedText)}</div>`
+            ? `<div class="tt-equipped"><i class="fa-solid fa-user-shield"></i> ${equippedText}</div>`
             : "";
         const priceHint = isEquipped ? `<div class="tt-muted">Sell value: ${price} <i class="fa-solid fa-coins"></i></div>` : "";
         
-        // Show Spoil Days based on Buying or Checking Stash
         let spoilHint = '';
         if (item.stats && item.stats.spoil_days) {
             if (isBuying) {
@@ -142,9 +191,9 @@ export class MarketPanel {
         }
 
         return `
-            <div class="tt-name">${escapeHtml(item.name)}${quantityText}</div>
-            <div class="tt-type">[${escapeHtml(item.type || "Misc")}]</div>
-            <div style="font-style: italic; color: #9ca3af; font-size: 0.8rem; margin: 5px 0;">${escapeHtml(item.description || "")}</div>
+            <div class="tt-name">${item.name}${quantityText}</div>
+            <div class="tt-type">[${item.type || "Misc"}]</div>
+            <div style="font-style: italic; color: #9ca3af; font-size: 0.8rem; margin: 5px 0;">${item.description || ""}</div>
             ${equippedHint}
             <div class="tt-action ${priceClass}">${actionText}${isEquipped ? "" : ` <i class="fa-solid fa-coins"></i> ${price}`}</div>
             ${priceHint}

@@ -37,6 +37,7 @@ export class BarebonesUIManager {
         this.rosterLimit = HIRE_CONFIG.ROSTER_LIMIT;
         this.isDelving = false;
         this.isDestroyed = false;
+        this.settlementSearchQuery = ""; 
         this._domEventBindings = [];
 
         this.menuManager = new CustomMenuManager();
@@ -186,7 +187,17 @@ export class BarebonesUIManager {
     }
 
     renderNodeList() {
-        this.nodeListRenderer.render(this.nodes, this.selectedNode);
+        let filteredNodes = this.nodes;
+        
+        if (this.settlementSearchQuery) {
+            filteredNodes = this.nodes.filter(node => 
+                (node.name || "").toLowerCase().includes(this.settlementSearchQuery) ||
+                (node.type || "").toLowerCase().includes(this.settlementSearchQuery) ||
+                (node.specialization && node.specialization.toLowerCase().includes(this.settlementSearchQuery))
+            );
+        }
+        
+        this.nodeListRenderer.render(filteredNodes, this.selectedNode);
     }
 
     renderHireList() {
@@ -258,7 +269,15 @@ export class BarebonesUIManager {
             { element: this.dom.tabJobs, type: "click", handler: this._handlers.showJobsTab },
             { element: this.dom.tabMarket, type: "click", handler: this._handlers.showMarketTab },
             { element: this.dom.tabHire, type: "click", handler: this._handlers.showHireTab },
-            { element: this.dom.resContainers.time, type: "click", handler: this._handlers.showWorldLog }
+            { element: this.dom.resContainers.time, type: "click", handler: this._handlers.showWorldLog },
+            { 
+                element: this.dom.settlementSearch, 
+                type: "input", 
+                handler: (e) => {
+                    this.settlementSearchQuery = e.target.value.trim().toLowerCase();
+                    this.renderNodeList();
+                } 
+            }
         ];
 
         this._domEventBindings.forEach(({ element, type, handler }) => {

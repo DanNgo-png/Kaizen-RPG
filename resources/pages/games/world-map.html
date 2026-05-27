@@ -447,58 +447,76 @@
 
           <!-- LEFT: Character Sheet -->
           <section class="char-panel">
-              <div class="char-header-info">
-                <div class="char-portrait">
-                  <i class="fa-solid fa-user-knight"></i>
+            <div class="char-header-info">
+              <div class="char-portrait">
+                <i class="fa-solid fa-user-knight"></i>
+              </div>
+              <div class="char-details">
+                <h3 id="char-name">Select a Mercenary</h3>
+                <div class="char-sub">
+                  <span id="char-role">Role</span> • Lvl <span id="char-level">1</span>
                 </div>
-                <div class="char-details">
-                  <h3 id="char-name">Select a Mercenary</h3>
-                  <div class="char-sub">
-                    <span id="char-role">Role</span> • Lvl <span id="char-level">1</span>
-                  </div>
-                  <div class="xp-bar-container">
-                    <div class="xp-bar-fill" style="width: 45%"></div>
-                    <span class="xp-text">450 / 1000 XP</span>
-                  </div>
+                <div class="xp-bar-container">
+                  <div class="xp-bar-fill" style="width: 45%"></div>
+                  <span class="xp-text">450 / 1000 XP</span>
                 </div>
               </div>
+            </div>
 
-              <div class="paper-doll-grid">
-                <div class="doll-slot slot-acc" data-slot="accessory"><i class="fa-solid fa-ring"></i></div>
-                <div class="doll-slot slot-helm" data-slot="head"><i class="fa-solid fa-helmet-safety"></i></div>
-                <div class="doll-slot slot-ammo" data-slot="ammo"><i class="fa-solid fa-crosshairs"></i></div>
-                <div class="doll-slot slot-main" data-slot="main_hand"><i class="fa-solid fa-khanda"></i></div>
-                <div class="doll-slot slot-armor" data-slot="body"><i class="fa-solid fa-shirt"></i></div>
-                <div class="doll-slot slot-off" data-slot="off_hand"><i class="fa-solid fa-shield-halved"></i></div>
+            <div class="paper-doll-grid">
+              <div class="doll-slot slot-acc" data-slot="accessory"><i class="fa-solid fa-ring"></i></div>
+              <div class="doll-slot slot-helm" data-slot="head"><i class="fa-solid fa-helmet-safety"></i></div>
+              <div class="doll-slot slot-ammo" data-slot="ammo"><i class="fa-solid fa-crosshairs"></i></div>
+              <div class="doll-slot slot-main" data-slot="main_hand"><i class="fa-solid fa-khanda"></i></div>
+              <div class="doll-slot slot-armor" data-slot="body"><i class="fa-solid fa-shirt"></i></div>
+              <div class="doll-slot slot-off" data-slot="off_hand"><i class="fa-solid fa-shield-halved"></i></div>
+            </div>
+
+            <!-- 14 Balanced Attributes Alternated Left/Right -->
+            <div class="char-stats-grid">
+              <!-- Row 1 -->
+              <div class="stat-row" title="Head Armor"><i class="fa-solid fa-helmet-safety" style="color: #3b82f6;"></i>
+                <span id="stat-head-armor">0</span>
               </div>
-
-              <!-- 14 Balanced Attributes Alternated Left/Right -->
-              <div class="char-stats-grid">
-                <!-- Row 1 -->
-                <div class="stat-row" title="Head Armor"><i class="fa-solid fa-helmet-safety" style="color: #3b82f6;"></i> <span id="stat-head-armor">0</span></div>
-                <div class="stat-row" title="Melee Skill"><i class="fa-solid fa-khanda" style="color: #e2e8f0;"></i> <span id="stat-melee-skill">0</span></div>
-                <!-- Row 2 -->
-                <div class="stat-row" title="Body Armor"><i class="fa-solid fa-shirt" style="color: #60a5fa;"></i> <span id="stat-body-armor">0</span></div>
-                <div class="stat-row" title="Range Skill"><i class="fa-solid fa-crosshairs" style="color: #94a3b8;"></i> <span id="stat-range-skill">0</span></div>
-                <!-- Row 3 -->
-                <div class="stat-row" title="Health"><i class="fa-solid fa-heart" style="color: #ef4444;"></i> <span id="stat-health">0</span></div>
-                <div class="stat-row" title="Melee Defense"><i class="fa-solid fa-shield" style="color: #3b82f6;"></i> <span id="stat-melee-defense">0</span></div>
-                <!-- Row 4 -->
-                <div class="stat-row" title="Action Points"><i class="fa-solid fa-bolt" style="color: #fbbf24;"></i> <span id="stat-ap">0</span></div>
-                <div class="stat-row" title="Range Defense"><i class="fa-solid fa-shield-halved" style="color: #60a5fa;"></i> <span id="stat-range-defense">0</span></div>
-                <!-- Row 5 -->
-                <div class="stat-row" title="Fatigue"><i class="fa-solid fa-weight-hanging" style="color: #f59e0b;"></i> <span id="stat-fatigue">0</span></div>
-                <div class="stat-row" title="Damage"><i class="fa-solid fa-burst" style="color: #ef4444;"></i> <span id="stat-damage">0</span></div>
-                <!-- Row 6 -->
-                <div class="stat-row" title="Morale"><i class="fa-solid fa-face-smile" style="color: #ec4899;"></i> <span id="stat-morale">Steady (50)</span></div>
-                <div class="stat-row" title="Effectiveness Against Armor"><i class="fa-solid fa-gavel" style="color: #fbbf24;"></i> <span id="stat-armor-effectiveness">100%</span></div>
-                <!-- Row 7 -->
-                <div class="stat-row" title="Resolve"><i class="fa-solid fa-flag" style="color: #a78bfa;"></i> <span id="stat-resolve">0</span></div>
-                <div class="stat-row" title="Chance to Hit Head"><i class="fa-solid fa-bullseye" style="color: #f59e0b;"></i> <span id="stat-head-hit-chance">25%</span></div>
+              <div class="stat-row" title="Melee Skill"><i class="fa-solid fa-khanda" style="color: #e2e8f0;"></i> <span
+                  id="stat-melee-skill">0</span></div>
+              <!-- Row 2 -->
+              <div class="stat-row" title="Body Armor"><i class="fa-solid fa-shirt" style="color: #60a5fa;"></i> <span
+                  id="stat-body-armor">0</span></div>
+              <div class="stat-row" title="Range Skill"><i class="fa-solid fa-crosshairs" style="color: #94a3b8;"></i>
+                <span id="stat-range-skill">0</span>
               </div>
+              <!-- Row 3 -->
+              <div class="stat-row" title="Health"><i class="fa-solid fa-heart" style="color: #ef4444;"></i> <span
+                  id="stat-health">0</span></div>
+              <div class="stat-row" title="Melee Defense"><i class="fa-solid fa-shield" style="color: #3b82f6;"></i>
+                <span id="stat-melee-defense">0</span>
+              </div>
+              <!-- Row 4 -->
+              <div class="stat-row" title="Action Points"><i class="fa-solid fa-bolt" style="color: #fbbf24;"></i> <span
+                  id="stat-ap">0</span></div>
+              <div class="stat-row" title="Range Defense"><i class="fa-solid fa-shield-halved"
+                  style="color: #60a5fa;"></i> <span id="stat-range-defense">0</span></div>
+              <!-- Row 5 -->
+              <div class="stat-row" title="Fatigue"><i class="fa-solid fa-weight-hanging" style="color: #f59e0b;"></i>
+                <span id="stat-fatigue">0</span>
+              </div>
+              <div class="stat-row" title="Damage"><i class="fa-solid fa-burst" style="color: #ef4444;"></i> <span
+                  id="stat-damage">0</span></div>
+              <!-- Row 6 -->
+              <div class="stat-row" title="Morale"><i class="fa-solid fa-face-smile" style="color: #ec4899;"></i> <span
+                  id="stat-morale">Steady (50)</span></div>
+              <div class="stat-row" title="Effectiveness Against Armor"><i class="fa-solid fa-gavel"
+                  style="color: #fbbf24;"></i> <span id="stat-armor-effectiveness">100%</span></div>
+              <!-- Row 7 -->
+              <div class="stat-row" title="Resolve"><i class="fa-solid fa-flag" style="color: #a78bfa;"></i> <span
+                  id="stat-resolve">0</span></div>
+              <div class="stat-row" title="Chance to Hit Head"><i class="fa-solid fa-bullseye"
+                  style="color: #f59e0b;"></i> <span id="stat-head-hit-chance">25%</span></div>
+            </div>
 
-              <div class="char-traits-area" id="char-traits-list"></div>
-            </section>
+            <div class="char-traits-area" id="char-traits-list"></div>
+          </section>
 
           <!-- RIGHT: Inventory Stash -->
           <section class="stash-panel">
@@ -544,29 +562,36 @@
             Crawler</h2>
 
           <div style="display: flex; gap: 15px; align-items: center;">
-            <div style="display: flex; gap: 15px; background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
+            <div
+              style="display: flex; gap: 15px; background: rgba(31, 41, 55, 0.9); border: 1px solid #374151; padding: 10px 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
               <!-- Time & Day -->
-              <div id="bb-res-time-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#e2e8f0; font-weight:bold; font-size:1.1rem; border-right: 1px solid #4b5563; padding-right: 15px; margin-right: 5px;">
+              <div id="bb-res-time-container"
+                style="cursor:help; display:flex; align-items:center; gap:6px; color:#e2e8f0; font-weight:bold; font-size:1.1rem; border-right: 1px solid #4b5563; padding-right: 15px; margin-right: 5px;">
                 <i class="fa-regular fa-clock"></i> <span id="bb-time-display">Day 1 - 00:00</span>
               </div>
               <!-- Gold -->
-              <div id="bb-res-gold-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#facc15; font-weight:bold; font-size:1.1rem;">
+              <div id="bb-res-gold-container"
+                style="cursor:help; display:flex; align-items:center; gap:6px; color:#facc15; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-coins"></i> <span id="bb-gold-display">0</span>
               </div>
               <!-- Provisions -->
-              <div id="bb-res-provisions-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#d97706; font-weight:bold; font-size:1.1rem;">
+              <div id="bb-res-provisions-container"
+                style="cursor:help; display:flex; align-items:center; gap:6px; color:#d97706; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-drumstick-bite"></i> <span id="bb-provisions-display">0</span>
               </div>
               <!-- Tools -->
-              <div id="bb-res-tools-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#9ca3af; font-weight:bold; font-size:1.1rem;">
+              <div id="bb-res-tools-container"
+                style="cursor:help; display:flex; align-items:center; gap:6px; color:#9ca3af; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-hammer"></i> <span id="bb-tools-display">0</span>
               </div>
               <!-- Ammo -->
-              <div id="bb-res-ammo-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#d1d5db; font-weight:bold; font-size:1.1rem;">
+              <div id="bb-res-ammo-container"
+                style="cursor:help; display:flex; align-items:center; gap:6px; color:#d1d5db; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-bullseye"></i> <span id="bb-ammo-display">0</span>
               </div>
               <!-- Meds -->
-              <div id="bb-res-meds-container" style="cursor:help; display:flex; align-items:center; gap:6px; color:#f87171; font-weight:bold; font-size:1.1rem;">
+              <div id="bb-res-meds-container"
+                style="cursor:help; display:flex; align-items:center; gap:6px; color:#f87171; font-weight:bold; font-size:1.1rem;">
                 <i class="fa-solid fa-band-aid"></i> <span id="bb-meds-display">0</span>
               </div>
               <!-- Strength -->
@@ -609,10 +634,12 @@
                 <h3 id="bb-active-title" style="margin: 4px 0 10px 0;">Idle</h3>
               </div>
               <div style="display: flex; gap: 10px;">
-                  <button id="bb-btn-abort" class="bb-btn-abort hidden"><i class="fa-solid fa-xmark"></i> Abort</button>
-                  <!-- Purple button for delving -->
-                  <button id="bb-btn-start-delve" class="bb-btn-accept hidden" style="background:#8b5cf6;"><i class="fa-solid fa-dungeon"></i> Delve Dungeon</button>
-                  <button id="bb-btn-stop-delve" class="bb-btn-abort hidden"><i class="fa-solid fa-hand-paper"></i> Stop Delving</button>
+                <button id="bb-btn-abort" class="bb-btn-abort hidden"><i class="fa-solid fa-xmark"></i> Abort</button>
+                <!-- Purple button for delving -->
+                <button id="bb-btn-start-delve" class="bb-btn-accept hidden" style="background:#8b5cf6;"><i
+                    class="fa-solid fa-dungeon"></i> Delve Dungeon</button>
+                <button id="bb-btn-stop-delve" class="bb-btn-abort hidden"><i class="fa-solid fa-hand-paper"></i> Stop
+                  Delving</button>
               </div>
             </div>
             <div class="bb-progress-bar hidden" id="bb-progress-container" style="margin-top: 5px;">
@@ -626,6 +653,13 @@
           <!-- Left: Settlements List -->
           <div class="bb-list-panel">
             <div class="bb-panel-header"><i class="fa-solid fa-map-location-dot"></i> Known Settlements</div>
+
+            <!-- Inline Settlement Search Bar -->
+            <div class="bb-search-wrapper">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input type="text" id="bb-settlement-search" placeholder="Filter settlements..." autocomplete="off" />
+            </div>
+
             <div id="bb-nodes-list" class="bb-scroll-list">
               <!-- Nodes injected here -->
             </div>
@@ -653,57 +687,90 @@
 
             <!-- Tab 2: Marketplace (Hidden by default) -->
             <div id="bb-marketplace-container" class="hidden"
-              style="display: flex; flex-direction: column; flex: 1; overflow: hidden; padding: 15px;">
+              style="display: flex; flex-direction: row; gap: 15px; flex: 1; height: 100%; min-height: 0; overflow: hidden; padding: 15px; box-sizing: border-box;">
 
-              <div class="bb-market-split">
-                <!-- Left: Company Stash (Sell) -->
-                <div class="bb-market-panel">
-                  <div class="bb-market-header">Company Stash</div>
-                  <div id="bb-market-stash-list" class="bb-scroll-list" style="padding: 0;">
-                    <!-- Stash items injected here -->
+              <!-- Left Column: Company Stash (Sell) -->
+              <div class="bb-market-panel"
+                style="flex: 1; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.2); border: 1px solid #334155; border-radius: 8px; overflow: hidden; min-height: 0; height: 100%;">
+                <div class="bb-market-header"
+                  style="padding: 10px 15px; background: #1e293b; border-bottom: 1px solid #334155; font-weight: 700; text-align: center; color: #cbd5e1; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; display: block;">
+                  <span>Company Stash</span>
+                </div>
+                <div id="bb-market-stash-list" class="bb-scroll-list"
+                  style="padding: 10px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0;">
+                  <!-- Stash items injected here -->
+                </div>
+              </div>
+
+              <!-- Middle Column: Unified Vertical Filter -->
+              <div class="bb-market-middle-filters"
+                style="display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(15, 23, 42, 0.4); border: 1px solid #334155; border-radius: 8px; padding: 20px 12px; gap: 20px; min-width: 60px; height: 100%; min-height: 0; box-sizing: border-box;">
+                <div class="bb-market-filter-group"
+                  style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+                  <span class="bb-market-filter-label"
+                    style="font-size: 0.7rem; text-transform: uppercase; color: #64748b; font-weight: 800; letter-spacing: 0.5px; user-select: none; margin-bottom: 4px;">Filter</span>
+                  <div class="bb-market-filters vertical" data-target="market"
+                    style="display: flex; flex-direction: column; gap: 8px; align-items: center;">
+                    <button class="bb-filter-chip active" data-filter="all" title="All Items"><i
+                        class="fa-solid fa-border-all"></i></button>
+                    <button class="bb-filter-chip" data-filter="weapons" title="Weapons"><i
+                        class="fa-solid fa-shield-halved" style="transform: rotate(45deg);"></i></button>
+                    <button class="bb-filter-chip" data-filter="armor" title="Armor"><i
+                        class="fa-solid fa-vest"></i></button>
+                    <button class="bb-filter-chip" data-filter="supplies" title="Supplies"><i
+                        class="fa-solid fa-kit-medical"></i></button>
+                    <button class="bb-filter-chip" data-filter="trade" title="Trade Goods"><i
+                        class="fa-solid fa-cubes"></i></button>
                   </div>
                 </div>
+              </div>
 
-                <!-- Right: Merchant Shop (Buy) -->
-                <div class="bb-market-panel">
-                  <div class="bb-market-header">Merchant Shop</div>
-                  <div id="bb-market-shop-list" class="bb-scroll-list" style="padding: 0;">
-                    <!-- Shop items injected here -->
-                  </div>
+              <!-- Right Column: Merchant Shop (Buy) -->
+              <div class="bb-market-panel"
+                style="flex: 1; display: flex; flex-direction: column; background: rgba(0, 0, 0, 0.2); border: 1px solid #334155; border-radius: 8px; overflow: hidden; min-height: 0; height: 100%;">
+                <div class="bb-market-header"
+                  style="padding: 10px 15px; background: #1e293b; border-bottom: 1px solid #334155; font-weight: 700; text-align: center; color: #cbd5e1; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; flex-shrink: 0; display: block;">
+                  <span>Merchant Shop</span>
+                </div>
+                <div id="bb-market-shop-list" class="bb-scroll-list"
+                  style="padding: 10px; flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; min-height: 0;">
+                  <!-- Shop items injected here -->
                 </div>
               </div>
 
             </div>
 
-            <!-- Tab 3: Hire (Hidden by default) -->
-            <div id="bb-hire-container" class="bb-hire-container hidden">
-              <div id="bb-hire-list" class="bb-hire-list">
-                <div style="text-align: center; color: #64748b; margin-top: 50px;">Select a settlement to view available
-                  recruits.</div>
-              </div>
+          </div>
+
+          <!-- Tab 3: Hire (Hidden by default) -->
+          <div id="bb-hire-container" class="bb-hire-container hidden">
+            <div id="bb-hire-list" class="bb-hire-list">
+              <div style="text-align: center; color: #64748b; margin-top: 50px;">Select a settlement to view available
+                recruits.</div>
             </div>
           </div>
         </div>
+      </div>
 
+    </div>
+  </div>
+
+  <!-- EXIT CONFIRMATION MODAL -->
+  <div id="exit-game-modal" class="mgmt-overlay hidden" style="z-index: 9999;">
+    <div class="exit-modal-content">
+      <div class="exit-modal-icon">
+        <i class="fa-solid fa-person-running"></i>
+      </div>
+      <h2 style="margin: 0 0 10px 0; color: #fff; font-size: 1.5rem;">Retreat to Menu?</h2>
+      <p style="color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
+        Your progress is automatically saved. Are you sure you want to exit to the main menu?
+      </p>
+      <div style="display: flex; gap: 15px; width: 100%; justify-content: center;">
+        <button id="btn-cancel-exit" class="exit-btn-cancel">Cancel</button>
+        <button id="btn-confirm-exit" class="exit-btn-confirm">Yes, Exit</button>
       </div>
     </div>
-
-    <!-- EXIT CONFIRMATION MODAL -->
-    <div id="exit-game-modal" class="mgmt-overlay hidden" style="z-index: 9999;">
-      <div class="exit-modal-content">
-        <div class="exit-modal-icon">
-          <i class="fa-solid fa-person-running"></i>
-        </div>
-        <h2 style="margin: 0 0 10px 0; color: #fff; font-size: 1.5rem;">Retreat to Menu?</h2>
-        <p style="color: #9ca3af; font-size: 0.95rem; line-height: 1.5; margin-bottom: 25px;">
-          Your progress is automatically saved. Are you sure you want to exit to the main menu?
-        </p>
-        <div style="display: flex; gap: 15px; width: 100%; justify-content: center;">
-          <button id="btn-cancel-exit" class="exit-btn-cancel">Cancel</button>
-          <button id="btn-confirm-exit" class="exit-btn-confirm">Yes, Exit</button>
-        </div>
-      </div>
-    </div>
+  </div>
 
   </div>
 </body>
