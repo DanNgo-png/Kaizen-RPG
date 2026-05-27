@@ -173,9 +173,9 @@ export class WorldLogOverlay {
                 
                 <div class="bb-world-log-filters">
                     <div class="bb-world-log-tabs">
-                        <button class="bb-log-filter-btn active" data-filter="all">All Days</button>
-                        <button class="bb-log-filter-btn" data-filter="world">World Events</button>
-                        <button class="bb-log-filter-btn" data-filter="player">Company Deeds</button>
+                        <button class="bb-log-filter-btn active" data-filter="all" style="font-family: var(--font-main)">All Days</button>
+                        <button class="bb-log-filter-btn" data-filter="world" style="font-family: var(--font-main)">World Events</button>
+                        <button class="bb-log-filter-btn" data-filter="player" style="font-family: var(--font-main)">Company Deeds</button>
                     </div>
                     <div class="bb-world-log-search-container">
                         <i class="fa-solid fa-magnifying-glass search-icon"></i>
