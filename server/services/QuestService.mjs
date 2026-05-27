@@ -1,0 +1,161 @@
+import { 
+    SETTLEMENT_EVENTS, 
+    SETTLEMENT_TIERS, 
+    SETTLEMENT_UPGRADE_PATH 
+} from "../data/GameDataConstants.mjs";
+
+const DEFAULT_MAP_CENTER_X = 400;
+const DEFAULT_MAP_CENTER_Y = 300;
+const DEFAULT_MIN_CONTRACT_DURATION = 10;
+const DEFAULT_MAX_CONTRACT_DURATION = 120;
+const CONTRACT_ABORT_REPUTATION_PENALTY = -10;
+
+export class QuestService {
+    constructor(repo, settingsRepo) {
+        this.repo = repo;
+        this.settingsRepo = settingsRepo;
+    }
+
+    getWorldData(app) {
+        try {
+            const resources = this.repo.getResources();
+            const worldState = this.repo.getWorldState();
+
+            worldState.nodes.forEach(node => {
+                node.effective_buy = node.buy_modifier || 1.0;
+                node.effective_sell = node.sell_modifier || 1.0;
+                node.event_name = null;
+
+                if (node.current_event && SETTLEMENT_EVENTS[node.current_event]) {
+                    const evt = SETTLEMENT_EVENTS[node.current_event];
+                    node.effective_buy *= evt.buyMult;
+                    node.effective_sell *= evt.sellMult;
+                    node.event_name = evt.name;
+                }
+
+                const tierData = SETTLEMENT_TIERS[node.type];
+                let reqs = {};
+                try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+
+                node.growth_data = {
+                    contractsDone: reqs.contracts || 0,
+                    contractsNeeded: tierData?.growthReqs?.contracts || 1,
+                    tradeDone: reqs.trade || 0,
+                    tradeNeeded: tierData?.growthReqs?.trade || 1,
+                    materialsDone: node.development_progress || 0,
+                    materialsNeeded: tierData?.growthReqs?.materials || 1,
+                    nextTier: SETTLEMENT_UPGRADE_PATH[node.type] || 'Colonial Outpost',
+                    canGrow: !!tierData?.growthReqs
+                };
+            });
+
+            app.events.broadcast("receiveWorldData", { 
+                resources: resources,
+                nodes: worldState.nodes,
+                player: worldState.player, 
+                origin: worldState.origin,
+                gameVersion: worldState.gameVersion,
+                isDelving: worldState.isDelving 
+            });
+        } catch (error) {
+            if (!error.message.includes("No game save is currently loaded")) {
+                console.error("❌ Error fetching world data:", error);
+            }
+            app.events.broadcast("receiveWorldData", { 
+                nodes: [], 
+                player: { x: DEFAULT_MAP_CENTER_X, y: DEFAULT_MAP_CENTER_Y }, 
+                origin: 'default', 
+                gameVersion: 'standard' 
+            });
+        }
+    }
+
+    saveWorldData(payload) {
+        try {
+            if (payload && payload.x !== undefined && payload.y !== undefined) {
+                this.repo.savePlayerPosition(payload.x, payload.y);
+            }
+        } catch (error) {}
+    }
+
+    setDelvingStatus(payload, app) {
+        try {
+            this.repo.setCampaignSetting('is_delving', payload.isDelving ? 'true' : 'false');
+            app.events.broadcast("delvingStatusUpdated", { isDelving: payload.isDelving });
+        } catch(e) { 
+            if (!e.message.includes("No game save is currently loaded")) console.error(e); 
+        }
+    }
+
+    getActiveContract(app) {
+        try {
+            const contract = this.repo.getActiveContract();
+            app.events.broadcast("receiveActiveContract", contract);
+        } catch(e) { 
+            if (!e.message.includes("No game save is currently loaded")) {
+                console.error("❌ Failed to get active contract:", e); 
+            }
+            app.events.broadcast("receiveActiveContract", null);
+        }
+    }
+
+    saveContractProgress(payload) {
+        try {
+            this.repo.updateContractProgress(payload.contractId, payload.progressMinutes);
+        } catch(e) { 
+            if (!e.message.includes("No game save is currently loaded")) console.error("Failed to save contract progress:", e); 
+        }
+    }
+
+    completeActiveContract(partyService, marketService, app) {
+        try {
+            const result = this.repo.completeActiveContract();
+            if (result) {
+                app.events.broadcast("contractCompletedRealtime", result);
+                partyService._refreshParty(marketService, app);
+            }
+        } catch(e) { console.error(e); }
+    }
+
+    getContractsForNode(payload, app) {
+        try {
+            const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || DEFAULT_MIN_CONTRACT_DURATION;
+            const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || DEFAULT_MAX_CONTRACT_DURATION;
+
+            const contracts = this.repo.getOrGenerateContracts(payload.nodeId, minMins, maxMins);
+            const activeContract = this.repo.getActiveContract();
+            
+            app.events.broadcast("receiveContracts", { contracts, activeContract });
+        } catch(e) { console.error(e); }
+    }
+
+    acceptContract(payload, app) {
+        try {
+            this.repo.acceptContract(payload.contractId);
+            const activeContract = this.repo.getActiveContract();
+            app.events.broadcast("contractAccepted", { activeContract });
+        } catch(e) { console.error(e); }
+    }
+
+    abortContract(payload, app) {
+        try {
+            this.repo.cancelContract(payload.contractId);
+            this.repo.updateNodeReputation(payload.nodeId, CONTRACT_ABORT_REPUTATION_PENALTY);
+            app.events.broadcast("contractAborted", { success: true });
+        } catch(e) { console.error(e); }
+    }
+
+    toggleNodePin(payload, app) {
+        try {
+            this.repo.toggleNodePin(payload.nodeId);
+            app.events.broadcast("nodePinToggled", { success: true });
+        } catch(e) { console.error(e); }
+    }
+
+    getNodeHistory(payload, app) {
+        try {
+            const history = this.repo.getNodeHistory(payload.nodeId);
+            app.events.broadcast("receiveNodeHistory", { nodeId: payload.nodeId, history });
+        } catch(e) { console.error(e); }
+    }
+}
