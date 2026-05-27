@@ -80,5 +80,9 @@ export const GameAPI = {
 
     getNodeHistory: async (nodeId) => {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "getNodeHistory", { nodeId });
+    },
+
+    getWorldHistory: async () => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "getWorldHistory", null);
     }
 };

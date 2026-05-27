@@ -12,6 +12,7 @@ import { createBarebonesDom } from "./barebones/BarebonesDom.js";
 import { selectedNodeLabelHtml, emptyStateHtml } from "./barebones/BarebonesTemplates.js";
 import { ResourceTooltipManager } from "./barebones/ResourceTooltipManager.js";
 import { ChroniclesModal } from "./barebones/ChroniclesModal.js";
+import { WorldLogOverlay } from "./barebones/WorldLogOverlay.js";
 import { NodeListRenderer } from "./barebones/NodeListRenderer.js";
 import { HireCandidateFactory } from "./barebones/HireCandidateFactory.js";
 import { HireHallPanel } from "./barebones/HireHallPanel.js";
@@ -42,6 +43,9 @@ export class BarebonesUIManager {
         this.tooltipManager = new ResourceTooltipManager();
         this.chroniclesModal = new ChroniclesModal({
             onRequestHistory: (nodeId) => GameAPI.getNodeHistory(nodeId)
+        });
+        this.worldLogOverlay = new WorldLogOverlay({
+            onRequestHistory: () => GameAPI.getWorldHistory()
         });
         this.nodeListRenderer = new NodeListRenderer({
             dom: this.dom,
@@ -233,7 +237,9 @@ export class BarebonesUIManager {
             showMarketTab: () => this.switchTab(BAREBONES_TABS.MARKET),
             showHireTab: () => this.switchTab(BAREBONES_TABS.HIRE),
             // Bind the active contract request
-            receiveActiveContract: (event) => this._onReceiveActiveContract(event)
+            receiveActiveContract: (event) => this._onReceiveActiveContract(event),
+            showWorldLog: () => this.worldLogOverlay.show(),
+            receiveWorldHistory: (event) => this._onReceiveWorldHistory(event)
         };
     }
 
@@ -251,7 +257,8 @@ export class BarebonesUIManager {
             { element: this.dom.btnStopDelve, type: "click", handler: this._handlers.stopDelve },
             { element: this.dom.tabJobs, type: "click", handler: this._handlers.showJobsTab },
             { element: this.dom.tabMarket, type: "click", handler: this._handlers.showMarketTab },
-            { element: this.dom.tabHire, type: "click", handler: this._handlers.showHireTab }
+            { element: this.dom.tabHire, type: "click", handler: this._handlers.showHireTab },
+            { element: this.dom.resContainers.time, type: "click", handler: this._handlers.showWorldLog }
         ];
 
         this._domEventBindings.forEach(({ element, type, handler }) => {
@@ -279,6 +286,7 @@ export class BarebonesUIManager {
         this._domEventBindings = [];
 
         this.tooltipManager.destroy();
+        this.worldLogOverlay?.root?.remove();
 
         if (activeBarebonesUIManager === this) {
             activeBarebonesUIManager = null;
@@ -306,7 +314,8 @@ export class BarebonesUIManager {
             receivePartyData: this._handlers.receivePartyData,
             mercenaryHired: this._handlers.mercenaryHired,
             nodePinToggled: this._handlers.nodePinToggled,
-            receiveActiveContract: this._handlers.receiveActiveContract
+            receiveActiveContract: this._handlers.receiveActiveContract,
+            receiveWorldHistory: this._handlers.receiveWorldHistory
         };
     }
 
@@ -361,6 +370,12 @@ export class BarebonesUIManager {
         if (!this._shouldHandleEvent()) return;
 
         this.chroniclesModal.renderHistory(event.detail?.history || []);
+    }
+
+    _onReceiveWorldHistory(event) {
+        if (!this._shouldHandleEvent()) return;
+
+        this.worldLogOverlay.renderHistory(event.detail?.history || []);
     }
 
     _onReceiveMarketData(event) {

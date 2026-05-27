@@ -213,6 +213,15 @@ export class GameRepository {
             togglePin: this.db.prepare(`UPDATE world_nodes SET is_pinned = CASE WHEN is_pinned = 1 THEN 0 ELSE 1 END WHERE id = ?`),
             getNodeHistory: this.db.prepare(`SELECT * FROM node_history WHERE node_id = ? ORDER BY day DESC, id DESC`),
             insertNodeHistory: this.db.prepare(`INSERT INTO node_history (node_id, day, event_text, event_type) VALUES (@node_id, @day, @text, @type)`),
+            getAllHistory: this.db.prepare(`
+                SELECT 
+                    node_history.*, 
+                    world_nodes.name AS node_name,
+                    world_nodes.type AS node_type
+                FROM node_history 
+                LEFT JOIN world_nodes ON node_history.node_id = world_nodes.id 
+                ORDER BY node_history.day DESC, node_history.id DESC
+            `),
 
             getSetting: this.db.prepare(`SELECT value FROM campaign_settings WHERE key = ?`),
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`),
@@ -262,6 +271,11 @@ export class GameRepository {
     getNodeHistory(nodeId) {
         this.ensureConnection();
         return this.statements.getNodeHistory.all(nodeId);
+    }
+
+    getAllHistory() {
+        this.ensureConnection();
+        return this.statements.getAllHistory.all();
     }
 
     logNodeHistory(nodeId, text, type = 'world') {

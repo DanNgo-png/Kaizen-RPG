@@ -158,4 +158,14 @@ export class QuestService {
             app.events.broadcast("receiveNodeHistory", { nodeId: payload.nodeId, history });
         } catch(e) { console.error(e); }
     }
+
+    getWorldHistory(app) {
+        try {
+            const history = this.repo.getAllHistory();
+            app.events.broadcast("receiveWorldHistory", { history });
+        } catch(e) {
+            console.error("Failed to fetch world history:", e);
+            app.events.broadcast("receiveWorldHistory", { history: [] });
+        }
+    }
 }

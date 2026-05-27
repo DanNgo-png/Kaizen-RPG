@@ -1004,3 +1004,272 @@
 }
 
 .bb-tooltip-title.time { color: #e2e8f0; }
+
+/* --- World Chronicles & Daily Log Overlay --- */
+.bb-world-log-overlay {
+    z-index: 70;
+}
+
+.bb-world-log-modal {
+    width: 600px !important;
+    text-align: left !important;
+    align-items: flex-start !important;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.bb-world-log-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.bb-world-log-title {
+    margin: 0;
+    color: #fff;
+    font-size: 1.35rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+}
+
+.bb-world-log-title i {
+    color: #3b82f6;
+    margin-right: 6px;
+}
+
+.bb-world-log-close {
+    background: transparent;
+    border: none;
+    color: #9ca3af;
+    cursor: pointer;
+    font-size: 1.25rem;
+    transition: color 0.2s, transform 0.2s;
+}
+
+.bb-world-log-close:hover {
+    color: #fff;
+    transform: rotate(90deg);
+}
+
+.bb-world-log-filters {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 15px;
+    flex-shrink: 0;
+}
+
+.bb-world-log-tabs {
+    display: flex;
+    gap: 8px;
+    background: rgba(15, 23, 42, 0.4);
+    padding: 4px;
+    border-radius: 8px;
+    border: 1px solid #334155;
+    width: fit-content;
+}
+
+.bb-log-filter-btn {
+    background: transparent;
+    border: none;
+    color: #94a3b8;
+    padding: 6px 14px;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.bb-log-filter-btn:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.bb-log-filter-btn.active {
+    background: #3b82f6;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
+.bb-world-log-search-container {
+    position: relative;
+    width: 100%;
+}
+
+.bb-world-log-search-container .search-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #64748b;
+    font-size: 0.9rem;
+    pointer-events: none;
+}
+
+.bb-world-log-search {
+    width: 100%;
+    background: #0f172a;
+    border: 1px solid #334155;
+    color: #f1f5f9;
+    padding: 10px 12px 10px 38px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-family: var(--font-main);
+    box-sizing: border-box;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.bb-world-log-search:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.bb-world-log-list {
+    flex: 1;
+    overflow-y: auto;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding-right: 5px;
+}
+
+/* Custom Scrollbar for daily log list */
+.bb-world-log-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.bb-world-log-list::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.bb-world-log-list::-webkit-scrollbar-thumb {
+    background: #334155;
+    border-radius: 3px;
+}
+
+.bb-world-log-list::-webkit-scrollbar-thumb:hover {
+    background: #475569;
+}
+
+/* Grouping & Accordion Styles */
+.bb-log-day-group {
+    background: rgba(0, 0, 0, 0.15);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.bb-log-day-header {
+    background: rgba(30, 41, 59, 0.5);
+    padding: 12px 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.2s;
+    border-bottom: 1px solid transparent;
+}
+
+.bb-log-day-header:hover {
+    background: rgba(30, 41, 59, 0.85);
+}
+
+.bb-log-day-header:not(.collapsed) {
+    border-bottom-color: #334155;
+}
+
+.bb-log-day-title {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.bb-log-day-title i {
+    color: #60a5fa;
+}
+
+.bb-log-day-count {
+    color: #64748b;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.bb-log-collapse-arrow {
+    color: #64748b;
+    font-size: 0.85rem;
+    transition: transform 0.2s;
+}
+
+.bb-log-day-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+/* Individual Log Entry Styles */
+.bb-world-log-entry {
+    background: rgba(15, 23, 42, 0.4) !important;
+    border: 1px solid rgba(51, 65, 85, 0.5) !important;
+    border-radius: 6px !important;
+    padding: 10px 12px !important;
+    margin: 0 !important;
+    transition: transform 0.15s, border-color 0.15s;
+}
+
+.bb-world-log-entry:hover {
+    transform: translateX(4px);
+    border-color: #475569 !important;
+    background: rgba(15, 23, 42, 0.7) !important;
+}
+
+.bb-world-log-entry-text {
+    flex: 1;
+}
+
+/* Load More Button */
+.bb-log-load-more-btn {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid #334155;
+    color: #94a3b8;
+    padding: 12px;
+    border-radius: 8px;
+    font-size: 0.9rem;
+    font-weight: 700;
+    font-family: var(--font-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    width: 100%;
+}
+
+.bb-log-load-more-btn:hover {
+    color: #fff;
+    background: rgba(30, 41, 59, 0.8);
+    border-color: #475569;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+

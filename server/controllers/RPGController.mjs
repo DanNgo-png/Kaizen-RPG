@@ -39,6 +39,10 @@ export class RPGController {
             this.quests.getNodeHistory(payload, app);
         });
 
+        app.events.on("getWorldHistory", () => {
+            this.quests.getWorldHistory(app);
+        });
+
 
         // --- PARTY & INVENTORY MANAGEMENT ---
         app.events.on("getPartyData", () => {
