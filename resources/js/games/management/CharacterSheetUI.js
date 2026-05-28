@@ -82,6 +82,42 @@ export class CharacterSheetUI {
         });
     }
 
+    _getItemTitleText(item) {
+        let titleText = item.name;
+        if (!item.stats) return titleText;
+
+        const stats = item.stats;
+        const details = [];
+
+        if (item.type === 'Head' && stats.defense !== undefined) {
+            details.push(`Head Armor: +${stats.defense}`);
+        } else if (item.type === 'Armor' && stats.defense !== undefined) {
+            details.push(`Body Armor: +${stats.defense}`);
+        } else if (item.type === 'Off-Hand' && stats.defense !== undefined) {
+            details.push(`Shield Defense: +${stats.defense}`);
+        } else if ((item.type === 'Weapon' || item.type === 'Ranged') && stats.attack !== undefined) {
+            details.push(`Attack: +${stats.attack}`);
+        }
+
+        if (stats.armor_penetration !== undefined) {
+            details.push(`Armor Pen: ${stats.armor_penetration}%`);
+        }
+        if (stats.fatigue_penalty !== undefined && stats.fatigue_penalty !== 0) {
+            details.push(`Fatigue Penalty: ${stats.fatigue_penalty}`);
+        }
+        if (stats.weight !== undefined) {
+            details.push(`Weight: ${stats.weight}`);
+        }
+        if (stats.spoil_days !== undefined) {
+            details.push(`Spoils in ${item.durability} days`);
+        }
+
+        if (details.length > 0) {
+            titleText += `\n(${details.join(', ')})`;
+        }
+        return titleText;
+    }
+
     render(merc) {
         if (!merc) return;
         this.currentMercId = merc.id;
@@ -219,7 +255,7 @@ export class CharacterSheetUI {
         img.style.position = "absolute"; // Align over the icon cleanly
         img.innerHTML = `<i class="${item.icon || 'fa-solid fa-cube'}"></i>`;
         
-        img.title = item.name;
+        img.title = this._getItemTitleText(item);
         img.draggable = true;
 
         img.addEventListener('dragstart', (e) => {

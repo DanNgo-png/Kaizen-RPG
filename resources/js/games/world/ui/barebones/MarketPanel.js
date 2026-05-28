@@ -172,6 +172,43 @@ export class MarketPanel {
         return element;
     }
 
+    _getItemStatsHtml(item) {
+        if (!item.stats) return '';
+        const stats = item.stats;
+        let html = '<div style="margin: 6px 0; padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 4px; font-size: 0.8rem; text-align: left; display: flex; flex-direction: column; gap: 2px;">';
+        let hasAnyStat = false;
+
+        if (item.type === 'Head' && stats.defense !== undefined) {
+            html += `<div><span style="color: #60a5fa;"><i class="fa-solid fa-shield"></i> Head Armor:</span> <b>+${stats.defense}</b></div>`;
+            hasAnyStat = true;
+        } else if (item.type === 'Armor' && stats.defense !== undefined) {
+            html += `<div><span style="color: #60a5fa;"><i class="fa-solid fa-shield"></i> Body Armor:</span> <b>+${stats.defense}</b></div>`;
+            hasAnyStat = true;
+        } else if (item.type === 'Off-Hand' && stats.defense !== undefined) {
+            html += `<div><span style="color: #60a5fa;"><i class="fa-solid fa-shield"></i> Shield Defense:</span> <b>+${stats.defense}</b></div>`;
+            hasAnyStat = true;
+        } else if ((item.type === 'Weapon' || item.type === 'Ranged') && stats.attack !== undefined) {
+            html += `<div><span style="color: #ef4444;"><i class="fa-solid fa-fire"></i> Attack:</span> <b>+${stats.attack}</b></div>`;
+            hasAnyStat = true;
+        }
+
+        if (stats.armor_penetration !== undefined) {
+            html += `<div><span style="color: #fbbf24;"><i class="fa-solid fa-gavel"></i> Armor Pen:</span> <b>${stats.armor_penetration}%</b></div>`;
+            hasAnyStat = true;
+        }
+        if (stats.fatigue_penalty !== undefined && stats.fatigue_penalty !== 0) {
+            html += `<div><span style="color: #f59e0b;"><i class="fa-solid fa-weight-hanging"></i> Fatigue:</span> <b>${stats.fatigue_penalty}</b></div>`;
+            hasAnyStat = true;
+        }
+        if (stats.weight !== undefined) {
+            html += `<div><span style="color: #94a3b8;"><i class="fa-solid fa-box"></i> Weight:</span> <b>${stats.weight}</b></div>`;
+            hasAnyStat = true;
+        }
+
+        html += '</div>';
+        return hasAnyStat ? html : '';
+    }
+
     _tooltipHtml({ item, quantity, isBuying, price, priceClass, isEquipped, equippedText }) {
         const actionText = isEquipped ? "Unequip before selling" : (isBuying ? "L-Click: Buy" : "L-Click: Sell");
         const quantityText = quantity > 1 ? ` (x${quantity})` : "";
@@ -194,6 +231,7 @@ export class MarketPanel {
             <div class="tt-name">${item.name}${quantityText}</div>
             <div class="tt-type">[${item.type || "Misc"}]</div>
             <div style="font-style: italic; color: #9ca3af; font-size: 0.8rem; margin: 5px 0;">${item.description || ""}</div>
+            ${this._getItemStatsHtml(item)}
             ${equippedHint}
             <div class="tt-action ${priceClass}">${actionText}${isEquipped ? "" : ` <i class="fa-solid fa-coins"></i> ${price}`}</div>
             ${priceHint}

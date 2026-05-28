@@ -12,6 +12,42 @@ export class InventoryUI {
         });
     }
 
+    _getItemTitleText(item) {
+        let titleText = item.name;
+        if (!item.stats) return titleText;
+
+        const stats = item.stats;
+        const details = [];
+
+        if (item.type === 'Head' && stats.defense !== undefined) {
+            details.push(`Head Armor: +${stats.defense}`);
+        } else if (item.type === 'Armor' && stats.defense !== undefined) {
+            details.push(`Body Armor: +${stats.defense}`);
+        } else if (item.type === 'Off-Hand' && stats.defense !== undefined) {
+            details.push(`Shield Defense: +${stats.defense}`);
+        } else if ((item.type === 'Weapon' || item.type === 'Ranged') && stats.attack !== undefined) {
+            details.push(`Attack: +${stats.attack}`);
+        }
+
+        if (stats.armor_penetration !== undefined) {
+            details.push(`Armor Pen: ${stats.armor_penetration}%`);
+        }
+        if (stats.fatigue_penalty !== undefined && stats.fatigue_penalty !== 0) {
+            details.push(`Fatigue Penalty: ${stats.fatigue_penalty}`);
+        }
+        if (stats.weight !== undefined) {
+            details.push(`Weight: ${stats.weight}`);
+        }
+        if (stats.spoil_days !== undefined) {
+            details.push(`Spoils in ${item.durability} days`);
+        }
+
+        if (details.length > 0) {
+            titleText += `\n(${details.join(', ')})`;
+        }
+        return titleText;
+    }
+
     render(items, filter = 'all') {
         this.container.innerHTML = '';
         
@@ -47,17 +83,12 @@ export class InventoryUI {
                     el.innerHTML += `<div style="position: absolute; top: 2px; right: 4px; font-size: 0.75rem; font-weight: 700; font-family: monospace; color: #d97706; text-shadow: 1px 1px 2px #000, -1px -1px 2px #000; pointer-events: none;"><i class="fa-solid fa-drumstick-bite"></i> ${item.stats.provisions}</div>`;
                 }
                 
-                // Add Spoil text to native title Tooltip
-                let titleText = item.name;
-                if (item.stats && item.stats.spoil_days) {
-                    titleText += ` (Spoils in ${item.durability} days)`;
-                }
-                el.title = titleText;
+                el.title = this._getItemTitleText(item);
                 el.draggable = true;
 
                 // --- Drag Start ---
                 el.addEventListener('dragstart', (e) => {
-                    // CHANGED: Package type and source inside a JSON payload so Character Sheet can validate it
+                    // Package type and source inside a JSON payload so Character Sheet can validate it
                     const payload = JSON.stringify({ invId: item.inventoryId, type: item.type, source: 'stash' });
                     e.dataTransfer.setData('text/plain', payload);
                     e.dataTransfer.effectAllowed = 'move';
