@@ -267,10 +267,34 @@ export class WorldMapManager {
         if (!this._shouldHandleEvent()) return;
         if (!e.detail.success) return;
 
-        const { wagesPaid, medicineUsed, totalHealed, spoiledCount, factionLogs } = e.detail;
+        const { 
+            wagesPaid, 
+            medicineUsed, 
+            totalHealed, 
+            spoiledCount, 
+            factionLogs, 
+            provisionsConsumed, 
+            starvationTriggered, 
+            consumedItemsCount 
+        } = e.detail;
+        
         let msg = `Paid ${wagesPaid}g. `;
-        if (totalHealed > 0) msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds. `;
-        else msg += "Party is fully rested. ";
+        
+        if (provisionsConsumed > 0) {
+            msg += `Consumed ${provisionsConsumed} provisions. `;
+        }
+        if (consumedItemsCount > 0) {
+            msg += `Ate ${consumedItemsCount} food item(s). `;
+        }
+        if (starvationTriggered) {
+            msg += `⚠️ STARVATION! The company went hungry. `;
+        }
+        
+        if (totalHealed > 0 && !starvationTriggered) {
+            msg += `Healed ${totalHealed} HP using ${medicineUsed} Meds. `;
+        } else if (!starvationTriggered) {
+            msg += "Party is fully rested. ";
+        }
 
         if (spoiledCount > 0) msg += `${spoiledCount} food item(s) spoiled!`;
 

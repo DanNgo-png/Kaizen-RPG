@@ -141,14 +141,34 @@ export class PartyManager {
         if (!this._shouldHandleEvent()) return;
 
         if (e.detail.success) {
-            const { wagesPaid, medicineUsed, totalHealed, spoiledCount, factionLogs } = e.detail;
+            const { 
+                wagesPaid, 
+                medicineUsed, 
+                totalHealed, 
+                spoiledCount, 
+                factionLogs, 
+                provisionsConsumed, 
+                starvationTriggered, 
+                consumedItemsCount 
+            } = e.detail;
+            
             let msg = `Paid ${wagesPaid}g wages.`;
+            
+            if (provisionsConsumed > 0) {
+                msg += ` Consumed ${provisionsConsumed} provisions.`;
+            }
+            if (consumedItemsCount > 0) {
+                msg += ` Ate ${consumedItemsCount} food item(s).`;
+            }
+            if (starvationTriggered) {
+                msg += ` ⚠️ STARVATION! Company went hungry and lost health.`;
+            }
             
             if (medicineUsed > 0) {
                 msg += ` Used ${medicineUsed} Meds to heal ${totalHealed} HP.`;
-            } else if (totalHealed > 0) {
+            } else if (totalHealed > 0 && !starvationTriggered) {
                 msg += ` Slowly healed ${totalHealed} HP (No Meds).`;
-            } else {
+            } else if (!starvationTriggered) {
                 msg += ` Party is fully rested.`;
             }
             
@@ -161,7 +181,6 @@ export class PartyManager {
             }
 
             notifier.show("Day Ended", msg, "fa-solid fa-moon");
-            // Data refresh is automatic via controller
         } else {
             alert("Failed to end day: " + e.detail.error);
         }

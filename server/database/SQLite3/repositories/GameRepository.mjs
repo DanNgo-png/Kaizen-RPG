@@ -867,7 +867,16 @@ export class GameRepository {
             daysPassed++;
             const dayResult = this.processDayEnd();
 
-            logs.push(`🌙 A day passed. Paid ${dayResult.wagesPaid}g in wages.`);
+            logs.push(`🌙 Day ${dayResult.day - 1} ended. Paid ${dayResult.wagesPaid}g in wages.`);
+            if (dayResult.provisionsConsumed > 0) {
+                logs.push(`🍞 Consumed ${dayResult.provisionsConsumed} provisions.`);
+            }
+            if (dayResult.consumedItemsCount > 0) {
+                logs.push(`🍴 Ate ${dayResult.consumedItemsCount} food item(s) from stash.`);
+            }
+            if (dayResult.starvationTriggered) {
+                logs.push(`⚠️ STARVATION! The company starved and grew weak.`);
+            }
             if (dayResult.medicineUsed > 0 || dayResult.totalHealed > 0) {
                 logs.push(`⚕️ Recovered ${dayResult.totalHealed} HP using ${dayResult.medicineUsed} meds.`);
             }
@@ -1066,6 +1075,15 @@ export class GameRepository {
 
         const db = this.db;
         const result = db.transaction(() => {
+            // Configuration Constants to avoid Magic Numbers
+            const PROVISIONS_CONSUMED_PER_MERC = 2;
+            const STARVATION_HP_DAMAGE = 15;
+            const STARVATION_FATIGUE_GAIN = 25;
+            const BASE_HEAL_MEDS = 25;
+            const BASE_HEAL_NO_MEDS = 5;
+            const FATIGUE_RECOVERY_ACTIVE = -10;
+            const FATIGUE_RECOVERY_RESTING = 30;
+
             const currentDay = parseInt(this.statements.getSetting.get('day').value);
             const currentGold = parseInt(this.statements.getSetting.get('gold').value);
             let currentMedicine = parseInt(this.statements.getSetting.get('medicine').value || '0');
@@ -1076,31 +1094,98 @@ export class GameRepository {
             this.statements.insertLedger.run({ day: currentDay, desc: 'Daily Wages', amount: -totalWages });
 
             const allMercs = this.db.prepare('SELECT * FROM mercenaries').all();
+
+            // --- PROVISIONS CONSUMPTION ---
+            let looseProvisions = parseInt(db.prepare("SELECT value FROM campaign_settings WHERE key = 'provisions'").get()?.value || '50');
+            const totalMercCount = allMercs.length;
+            const originalFoodNeeded = totalMercCount * PROVISIONS_CONSUMED_PER_MERC;
+            let foodNeeded = originalFoodNeeded;
+            let consumedItemsCount = 0;
+            let starvationTriggered = false;
+
+            if (foodNeeded > 0) {
+                if (looseProvisions >= foodNeeded) {
+                    looseProvisions -= foodNeeded;
+                    foodNeeded = 0;
+                } else {
+                    foodNeeded -= looseProvisions;
+                    looseProvisions = 0;
+
+                    // Grab items currently stored in the stash
+                    const stashItems = db.prepare(`
+                        SELECT id, item_id 
+                        FROM inventory 
+                        WHERE mercenary_id IS NULL AND stash_slot IS NOT NULL
+                    `).all();
+
+                    const foodItems = [];
+                    stashItems.forEach(item => {
+                        const template = ItemFactory.createItem(item.item_id);
+                        if (template && template.type === 'Provision') {
+                            foodItems.push({ id: item.id, template });
+                        }
+                    });
+
+                    // Consume physical food items one by one until the hunger is satisfied
+                    for (const food of foodItems) {
+                        if (foodNeeded <= 0) break;
+
+                        const itemProvisions = food.template.stats?.provisions || 25;
+                        db.prepare('DELETE FROM inventory WHERE id = ?').run(food.id);
+                        consumedItemsCount++;
+
+                        if (itemProvisions >= foodNeeded) {
+                            looseProvisions = itemProvisions - foodNeeded;
+                            foodNeeded = 0;
+                        } else {
+                            foodNeeded -= itemProvisions;
+                        }
+                    }
+
+                    if (foodNeeded > 0) {
+                        starvationTriggered = true;
+                    }
+                }
+            }
+
+            // Save modified loose provisions back to settings
+            this.statements.updateSetting.run({ key: 'provisions', value: String(looseProvisions) });
+
             let medicineUsed = 0;
             let totalHealed = 0;
 
             allMercs.forEach(m => {
-                let fatigueDecrease = m.is_active ? -10 : 30;
+                let fatigueDecrease = m.is_active ? FATIGUE_RECOVERY_ACTIVE : FATIGUE_RECOVERY_RESTING;
                 let newFatigue = Math.max(0, m.fatigue - fatigueDecrease);
 
+                // Apply starvation penalties if no food was available
+                let hpPenalty = 0;
+                if (starvationTriggered) {
+                    hpPenalty = STARVATION_HP_DAMAGE;
+                    newFatigue = Math.min(100, newFatigue + STARVATION_FATIGUE_GAIN);
+                }
+
+                // Apply natural HP recovery
                 let hpToHeal = 0;
                 if (m.current_hp < m.max_hp) {
                     if (currentMedicine > 0) {
-                        hpToHeal = Math.min(25, m.max_hp - m.current_hp);
+                        hpToHeal = Math.min(BASE_HEAL_MEDS, m.max_hp - m.current_hp);
                         currentMedicine--;
                         medicineUsed++;
                     } else {
-                        hpToHeal = Math.min(5, m.max_hp - m.current_hp);
+                        hpToHeal = Math.min(BASE_HEAL_NO_MEDS, m.max_hp - m.current_hp);
                     }
                 }
                 
                 totalHealed += hpToHeal;
+                // Calculate final HP; clamp to 1 HP during sleep starvation so they don't die instantly
+                const finalHp = Math.max(1, m.current_hp + hpToHeal - hpPenalty);
                 
                 this.db.prepare(`
                     UPDATE mercenaries 
-                    SET current_hp = current_hp + ?, fatigue = ?
+                    SET current_hp = ?, fatigue = ?
                     WHERE id = ?
-                `).run(hpToHeal, newFatigue, m.id);
+                `).run(finalHp, newFatigue, m.id);
             });
 
             let spoiledCount = 0;
@@ -1132,7 +1217,18 @@ export class GameRepository {
             this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
             this.statements.updateSetting.run({ key: 'day', value: currentDay + 1 });
 
-            return { newGold, day: currentDay + 1, wagesPaid: totalWages, medicineUsed, totalHealed, spoiledCount, factionLogs };
+            return { 
+                newGold, 
+                day: currentDay + 1, 
+                wagesPaid: totalWages, 
+                medicineUsed, 
+                totalHealed, 
+                spoiledCount, 
+                factionLogs,
+                provisionsConsumed: originalFoodNeeded - foodNeeded,
+                starvationTriggered,
+                consumedItemsCount
+            };
         })();
 
         return result;
