@@ -26,31 +26,56 @@ export class ChroniclesModal {
     constructor({ documentRef = document, onRequestHistory } = {}) {
         this.documentRef = documentRef;
         this.onRequestHistory = onRequestHistory;
+        
+        this.rawHistory = [];
+        this.activeFilter = "all";
+        
         this.root = this._createModal();
         this.titleEl = this.root.querySelector("#chronicles-title");
-        this.economyEl = this.root.querySelector("#inspect-economy-panel");
         this.listEl = this.root.querySelector("#chronicles-list");
+        
+        this._bindUIEvents();
     }
 
     showForNode(node) {
         if (!node) return;
 
         this.titleEl.innerHTML = `<i class="fa-solid fa-book-open"></i> ${escapeHtml(node.name)}`;
-        this.economyEl.innerHTML = this._economyHtml(node);
+        
+        // Populate tab panels
+        this.root.querySelector("#inspect-overview-panel").innerHTML = this._overviewHtml(node);
+        this.root.querySelector("#inspect-economy-panel").innerHTML = this._economyHtml(node);
+        this.root.querySelector("#inspect-politics-panel").innerHTML = this._politicsHtml(node);
+        
+        // Reset sub-components to defaults
+        this._switchLeftTab("overview");
+        this._switchLogFilter("all");
+
         this.listEl.innerHTML = loadingStateHtml("Reading archives...");
         this.root.classList.remove("hidden");
         this.onRequestHistory?.(node.id);
     }
 
     renderHistory(history = []) {
-        this.listEl.innerHTML = "";
+        this.rawHistory = history;
+        this.applyFilterAndRender();
+    }
 
-        if (!history.length) {
-            this.listEl.innerHTML = emptyStateHtml("The archives are empty. Nothing of note has happened here recently.");
+    applyFilterAndRender() {
+        this.listEl.innerHTML = "";
+        const filter = this.activeFilter || "all";
+
+        const filtered = this.rawHistory.filter(log => {
+            if (filter === "all") return true;
+            return log.event_type === filter;
+        });
+
+        if (!filtered.length) {
+            this.listEl.innerHTML = emptyStateHtml("The archives are quiet. No entries match this filter.");
             return;
         }
 
-        history.forEach((log) => {
+        filtered.forEach((log) => {
             this.listEl.appendChild(this._createHistoryEntry(log));
         });
     }
@@ -72,112 +97,171 @@ export class ChroniclesModal {
                         <i class="fa-solid fa-xmark"></i>
                     </button>
                 </div>
-                <div id="inspect-economy-panel" class="bb-chronicles-economy"></div>
-                <div id="chronicles-list" class="bb-chronicles-list"></div>
+                
+                <div class="bb-chronicles-body">
+                    <!-- Left Sidebar (Settlement Metadata, Economy, Expansion) -->
+                    <div class="bb-chronicles-sidebar">
+                        <div class="bb-chronicles-tabs">
+                            <button class="bb-chronicles-tab active" data-tab="overview">Overview</button>
+                            <button class="bb-chronicles-tab" data-tab="economy">Economy</button>
+                            <button class="bb-chronicles-tab" data-tab="politics">Politics</button>
+                        </div>
+                        
+                        <div class="bb-chronicles-tab-content" id="bb-tab-overview">
+                            <div id="inspect-overview-panel"></div>
+                        </div>
+                        <div class="bb-chronicles-tab-content hidden" id="bb-tab-economy">
+                            <div id="inspect-economy-panel"></div>
+                        </div>
+                        <div class="bb-chronicles-tab-content hidden" id="bb-tab-politics">
+                            <div id="inspect-politics-panel"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Right Panel (Chronicle Event Logs) -->
+                    <div class="bb-chronicles-main">
+                        <div class="bb-chronicles-main-header">
+                            <h3><i class="fa-solid fa-clock-rotate-left"></i> Settlement Logs</h3>
+                            <div class="bb-chronicles-log-filters">
+                                <button class="bb-log-filter active" data-filter="all">All</button>
+                                <button class="bb-log-filter" data-filter="world">World</button>
+                                <button class="bb-log-filter" data-filter="player">Deeds</button>
+                            </div>
+                        </div>
+                        <div id="chronicles-list" class="bb-chronicles-list"></div>
+                    </div>
+                </div>
             </div>
         `;
         this.documentRef.body.appendChild(modal);
-
-        modal.querySelector("#btn-close-chronicles").addEventListener("click", () => this.hide());
-        modal.addEventListener("click", (event) => {
-            if (event.target === modal) this.hide();
-        });
-
         return modal;
     }
 
-    _getSettlementTier(type) {
-        const tiers = {
-            'Hamlet': 1, 'Village': 1,
-            'Town': 2, 'City': 2,
-            'City-State': 3, 'Province': 3, 'Stronghold': 3,
-            'Kingdom': 4, 'High Kingdom': 4,
-            'Empire': 5,
-            'Bandit Camp': 0,
-            'Bandit Outpost': 0,
-            'Bandit Stronghold': 0,
-            'Stolen Stronghold': 0,
-            'Barbarian Camp': 0,
-            'Barbarian Outpost': 0,
-            'Barbarian Warcamp': 0,
-            'Ruins': 0
-        };
-        return tiers[type] !== undefined ? tiers[type] : '?';
+    _bindUIEvents() {
+        this.root.querySelector("#btn-close-chronicles").addEventListener("click", () => this.hide());
+        this.root.addEventListener("click", (e) => {
+            if (e.target === this.root) this.hide();
+        });
+
+        // Left sidebar tab click logic
+        this.root.querySelectorAll(".bb-chronicles-tab").forEach(tab => {
+            tab.addEventListener("click", () => this._switchLeftTab(tab.dataset.tab));
+        });
+
+        // Right panel log filter click logic
+        this.root.querySelectorAll(".bb-log-filter").forEach(filterBtn => {
+            filterBtn.addEventListener("click", () => this._switchLogFilter(filterBtn.dataset.filter));
+        });
     }
 
-    _getPopulationBadge(popTier) {
-        const tier = popTier || 1;
-        const labels = {
-            1: { name: "Low", bg: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" },
-            2: { name: "Medium", bg: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "rgba(16, 185, 129, 0.3)" },
-            3: { name: "High", bg: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "rgba(245, 158, 11, 0.3)" },
-            4: { name: "Very High", bg: "rgba(249, 115, 22, 0.15)", color: "#fb923c", border: "rgba(249, 115, 22, 0.3)" },
-            5: { name: "Overpopulated", bg: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "rgba(239, 68, 68, 0.3)" }
-        };
-        const config = labels[tier] || labels[1];
-        return `<span style="background: ${config.bg}; color: ${config.color}; border: 1px solid ${config.border}; padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; font-weight: 700; margin-left: 8px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.5px;">${config.name}</span>`;
+    _switchLeftTab(tabName) {
+        this.root.querySelectorAll(".bb-chronicles-tab").forEach(tab => {
+            tab.classList.toggle("active", tab.dataset.tab === tabName);
+        });
+
+        this.root.querySelectorAll(".bb-chronicles-tab-content").forEach(content => {
+            content.classList.toggle("hidden", content.id !== `bb-tab-${tabName}`);
+        });
     }
 
-    _tierHtml(node) {
-        const typeIcons = {
-            'Hamlet': 'fa-house',
-            'Village': 'fa-tree-city',
-            'Town': 'fa-house-chimney',
-            'City': 'fa-city',
-            'City-State': 'fa-chess-rook',
-            'Province': 'fa-chess-rook',
-            'Kingdom': 'fa-crown',
-            'High Kingdom': 'fa-crown',
-            'Empire': 'fa-chess-king',
-            'Stronghold': 'fa-shield-halved',
-            'Bandit Camp': 'fa-campground',
-            'Bandit Outpost': 'fa-tent',
-            'Bandit Stronghold': 'fa-tower-observation',
-            'Stolen Stronghold': 'fa-tower-observation',
-            'Barbarian Camp': 'fa-campground',
-            'Barbarian Outpost': 'fa-tent',
-            'Barbarian Warcamp': 'fa-tower-observation',
-            'Ruins': 'fa-skull'
-        };
-        const icon = typeIcons[node.type] || 'fa-landmark';
+    _switchLogFilter(filterName) {
+        this.root.querySelectorAll(".bb-log-filter").forEach(btn => {
+            btn.classList.toggle("active", btn.dataset.filter === filterName);
+        });
+
+        this.activeFilter = filterName;
+        if (this.rawHistory.length) {
+            this.applyFilterAndRender();
+        }
+    }
+
+    _overviewHtml(node) {
         const tier = this._getSettlementTier(node.type);
         const isHostileLocation = HOSTILE_NODE_TYPES.includes(node.type);
-        
+
         const tierBadge = tier > 0 
-            ? `<span style="background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.75rem; margin-left: 8px; vertical-align: middle; text-transform: uppercase; font-weight: 700; letter-spacing: 0.5px;">Tier ${tier}</span>` 
+            ? `<span style="background: rgba(250, 204, 21, 0.15); color: #facc15; border: 1px solid rgba(250, 204, 21, 0.3); padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">Tier ${tier}</span>` 
             : '';
 
         const popBadge = this._getPopulationBadge(node.population_tier);
         const populationHtml = node.type !== 'Ruins' && !isHostileLocation
-            ? `<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px; display: flex; align-items: center;"><i class="fa-solid fa-users" style="margin-right: 6px;"></i> Population: ${popBadge}</div>`
+            ? `<div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
+                   <span><i class="fa-solid fa-users" style="color: #60a5fa; margin-right: 8px;"></i> Population</span>
+                   ${popBadge}
+                 </div>`
             : '';
 
         let specHtml = '';
         if (isHostileLocation) {
-            specHtml = `<div style="font-size: 0.8rem; color: #ef4444; margin-top: 6px; font-weight: 700;"><i class="fa-solid fa-skull"></i> Hostile location.</div>`;
+            specHtml = `<div style="font-size: 0.85rem; color: #ef4444; font-weight: 700;"><i class="fa-solid fa-skull" style="margin-right: 8px;"></i> Hostile Territory</div>`;
         } else if (node.specialization) {
-            specHtml = `<div style="font-size: 0.8rem; color: #a78bfa; margin-top: 6px; font-weight: 600;"><i class="fa-solid fa-star"></i> Specialization: ${escapeHtml(node.specialization)}</div>`;
+            specHtml = `<div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
+                            <span><i class="fa-solid fa-star" style="color: #a78bfa; margin-right: 8px;"></i> Specialization</span>
+                            <span style="font-weight: 600; color: #a78bfa;">${escapeHtml(node.specialization)}</span>
+                          </div>`;
         } else if (node.type !== 'Ruins') {
-            specHtml = `<div style="font-size: 0.8rem; color: #64748b; margin-top: 6px; font-style: italic;"><i class="fa-solid fa-ban"></i> No specializations.</div>`;
+            specHtml = `<div style="font-size: 0.85rem; color: #64748b; font-style: italic;"><i class="fa-solid fa-ban" style="margin-right: 8px;"></i> No local specialization</div>`;
         }
 
         const attachHtml = node.attachments > 0 
-            ? `<div style="font-size: 0.8rem; color: #9ca3af; margin-top: 6px;"><i class="fa-solid fa-link"></i> ${node.attachments} Attached Locations</div>`
+            ? `<div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
+                   <span><i class="fa-solid fa-link" style="color: #94a3b8; margin-right: 8px;"></i> Attached Locations</span>
+                   <span style="font-weight: 600;">${node.attachments}</span>
+                 </div>`
             : '';
 
         return `
-            <div class="bb-chronicles-entry" style="border-left: 4px solid #facc15; background: rgba(255, 255, 255, 0.04);">
-                <div class="bb-chronicles-icon" style="color: #facc15;">
-                    <i class="fa-solid ${icon}"></i>
+            ${this._factionHtml(node)}
+            <div class="bb-chronicles-entry" style="border-left: 4px solid #facc15; background: rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 12px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 4px;">
+                    <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">${escapeHtml(node.type)}</span>
+                    ${tierBadge}
                 </div>
-                <div style="flex: 1;">
-                    <div class="bb-chronicles-day">Settlement Type</div>
-                    <div class="bb-chronicles-text" style="display: flex; align-items: center;">
-                        <b style="color: #fff; font-size: 1.05rem;">${escapeHtml(node.type)}</b> ${tierBadge}
-                    </div>
-                    ${populationHtml}
-                    ${specHtml}
-                    ${attachHtml}
+                ${populationHtml}
+                ${specHtml}
+                ${attachHtml}
+            </div>
+        `;
+    }
+
+    _politicsHtml(node) {
+        const isHostileLocation = HOSTILE_NODE_TYPES.includes(node.type);
+
+        if (isHostileLocation) {
+            return `
+                <div style="text-align: center; color: #ef4444; padding: 40px 10px; font-size: 0.85rem; font-style: italic;">
+                    <i class="fa-solid fa-skull" style="font-size: 1.5rem; margin-bottom: 12px; display: block;"></i>
+                    This location is currently occupied by hostile forces. Political mechanics are locked.
+                </div>
+            `;
+        }
+
+        // Futuristic placeholders for upcoming political/influence layers
+        const influence = node.faction ? 85 : 0;
+        const unrest = node.reputation <= -10 ? 30 : 5;
+
+        return `
+            <div class="bb-chronicles-entry" style="border-left: 4px solid #3b82f6; background: rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 12px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                    <span style="font-size: 0.9rem; font-weight: 700; color: #fff;"><i class="fa-solid fa-gavel"></i> Local Governance</span>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
+                    <span style="color: #94a3b8;">Noble Influence</span>
+                    <span style="font-weight: 700; color: #3b82f6;">${influence}%</span>
+                </div>
+                <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
+                    <div class="bb-fill" style="width: ${influence}%; background: #3b82f6;"></div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-top: 4px;">
+                    <span style="color: #94a3b8;">Civil Unrest</span>
+                    <span style="font-weight: 700; color: ${unrest > 15 ? '#f87171' : '#34d399'};">${unrest}%</span>
+                </div>
+                <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
+                    <div class="bb-fill" style="width: ${unrest}%; background: ${unrest > 15 ? '#ef4444' : '#10b981'};"></div>
+                </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-top: 4px; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 8px;">
+                    <span style="color: #94a3b8;"><i class="fa-solid fa-shield-halved"></i> Local Garrison</span>
+                    <span style="font-weight: 700; color: #e2e8f0;">Fortified</span>
                 </div>
             </div>
         `;
@@ -201,7 +285,7 @@ export class ChroniclesModal {
             }
             
             eventContext = `
-                <div style="margin-top: 6px; font-size: 0.85rem; color: ${color}; font-weight: 600;">
+                <div style="margin-top: 6px; font-size: 0.85rem; color: ${color}; font-weight: 700;">
                     <i class="fa-solid fa-bolt"></i> Altered by ${escapeHtml(node.event_name)}
                 </div>
             `;
@@ -259,19 +343,19 @@ export class ChroniclesModal {
         }
 
         return `
-            ${this._tierHtml(node)}
-            ${this._factionHtml(node)}
-            <div class="bb-chronicles-entry">
-                <div class="bb-chronicles-icon economy">
-                    <i class="fa-solid fa-scale-balanced"></i>
+            <div class="bb-chronicles-entry" style="border-left: 4px solid #10b981; background: rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 8px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px;">
+                    <span style="font-size: 0.9rem; font-weight: 700; color: #fff;"><i class="fa-solid fa-scale-balanced"></i> Market Values</span>
                 </div>
-                <div style="flex: 1;">
-                    <div class="bb-chronicles-day">Local Economy</div>
-                    <div class="bb-chronicles-text">
-                        Prices: <b style="color: #fff;">${prices}%</b> | Payouts: <b style="color: #fff;">${payouts}%</b>
-                    </div>
-                    ${eventContext}
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
+                    <span style="color: #94a3b8;">Local Prices</span>
+                    <span style="font-weight: 700; color: #f87171;">${prices}%</span>
                 </div>
+                <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
+                    <span style="color: #94a3b8;">Trade Payouts</span>
+                    <span style="font-weight: 700; color: #34d399;">${payouts}%</span>
+                </div>
+                ${eventContext}
             </div>
         `;
     }
@@ -337,14 +421,14 @@ export class ChroniclesModal {
             : `${escapeHtml(node.name)} answers to ${escapeHtml(node.faction.name)}.`;
 
         return `
-            <div class="bb-chronicles-entry bb-chronicles-faction" style="--faction-color:${color};">
+            <div class="bb-chronicles-entry bb-chronicles-faction" style="--faction-color:${color}; margin-bottom: 12px;">
                 <div class="bb-chronicles-icon faction">
                     <i class="fa-solid fa-flag"></i>
                 </div>
                 <div style="flex: 1;">
-                    <div class="bb-chronicles-day">${escapeHtml(node.faction.name)}</div>
-                    <div class="bb-chronicles-text">${motto}</div>
-                    <div class="bb-chronicles-faction-tag">${escapeHtml(node.faction.archetype)}</div>
+                    <div class="bb-chronicles-day" style="font-weight: 800; font-size: 0.75rem; text-transform: uppercase; color: ${color};">${escapeHtml(node.faction.name)}</div>
+                    <div class="bb-chronicles-text" style="font-style: italic; color: #cbd5e1; font-size: 0.85rem; line-height: 1.3;">${motto}</div>
+                    <div class="bb-chronicles-faction-tag" style="margin-top: 6px; padding: 2px 6px; border: 1px solid rgba(148, 163, 184, 0.2); background: rgba(0,0,0,0.4); font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">${escapeHtml(node.faction.archetype)}</div>
                 </div>
             </div>
         `;
@@ -365,7 +449,7 @@ export class ChroniclesModal {
             </div>
             <div>
                 <div class="bb-chronicles-day">Day ${Number(log.day) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE}</div>
-                <div class="bb-chronicles-text">${escapeHtml(log.event_text)}</div>
+                <div class="bb-chronicles-text" style="line-height: 1.3;">${escapeHtml(log.event_text)}</div>
             </div>
         `;
         return entry;
@@ -373,5 +457,37 @@ export class ChroniclesModal {
 
     _safeHexColor(color) {
         return HEX_COLOR_PATTERN.test(String(color ?? "")) ? color : DEFAULT_FACTION_COLOR;
+    }
+
+    _getSettlementTier(type) {
+        const tiers = {
+            'Hamlet': 1, 'Village': 1,
+            'Town': 2, 'City': 2,
+            'City-State': 3, 'Province': 3, 'Stronghold': 3,
+            'Kingdom': 4, 'High Kingdom': 4,
+            'Empire': 5,
+            'Bandit Camp': 0, 'Bandit Outpost': 0, 'Bandit Stronghold': 0, 'Stolen Stronghold': 0,
+            'Barbarian Camp': 0, 'Barbarian Outpost': 0, 'Barbarian Warcamp': 0,
+            'Ruins': 0
+        };
+        return tiers[type] !== undefined ? tiers[type] : '?';
+    }
+
+    _getOrCreateFaction() {
+        // Unused in current Modal logic, but preserved for standard file compatibility
+        return null;
+    }
+
+    _getPopulationBadge(popTier) {
+        const tier = popTier || 1;
+        const labels = {
+            1: { name: "Low", bg: "rgba(59, 130, 246, 0.15)", color: "#60a5fa", border: "rgba(59, 130, 246, 0.3)" },
+            2: { name: "Medium", bg: "rgba(16, 185, 129, 0.15)", color: "#34d399", border: "rgba(16, 185, 129, 0.3)" },
+            3: { name: "High", bg: "rgba(245, 158, 11, 0.15)", color: "#fbbf24", border: "rgba(245, 158, 11, 0.3)" },
+            4: { name: "Very High", bg: "rgba(249, 115, 22, 0.15)", color: "#fb923c", border: "rgba(249, 115, 22, 0.3)" },
+            5: { name: "Overpopulated", bg: "rgba(239, 68, 68, 0.15)", color: "#f87171", border: "rgba(239, 68, 68, 0.3)" }
+        };
+        const config = labels[tier] || labels[1];
+        return `<span style="background: ${config.bg}; color: ${config.color}; border: 1px solid ${config.border}; padding: 2px 6px; border-radius: 4px; font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;">${config.name}</span>`;
     }
 }
