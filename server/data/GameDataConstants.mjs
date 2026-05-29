@@ -106,6 +106,59 @@ export const SPECIALIZATIONS = {
     'Gem Mine': ['uncut_gems']
 };
 
+export const BUILDING_MATERIAL_SPECIALIZATIONS = [
+    'Peat Pit',
+    'Lumber Camp',
+    'Copper Mine'
+];
+
+export function normalizeSpecializations(value) {
+    if (!value) return [];
+
+    if (Array.isArray(value)) {
+        return [...new Set(value.filter((item) => SPECIALIZATIONS[item]))];
+    }
+
+    if (typeof value !== 'string') return [];
+
+    const trimmed = value.trim();
+    if (!trimmed) return [];
+
+    try {
+        const parsed = JSON.parse(trimmed);
+        if (Array.isArray(parsed)) {
+            return normalizeSpecializations(parsed);
+        }
+    } catch (error) {
+        // Legacy saves store a plain specialization name.
+    }
+
+    if (SPECIALIZATIONS[trimmed]) return [trimmed];
+
+    return trimmed
+        .split(',')
+        .map((item) => item.trim())
+        .filter((item) => SPECIALIZATIONS[item]);
+}
+
+export function serializeSpecializations(value) {
+    const specializations = normalizeSpecializations(value);
+    if (specializations.length === 0) return null;
+    return JSON.stringify(specializations);
+}
+
+export function formatSpecializations(value) {
+    const specializations = normalizeSpecializations(value);
+    return specializations.length > 0 ? specializations.join(', ') : null;
+}
+
+export function getSpecializationTradeGoodIds(value) {
+    const tradeGoodIds = normalizeSpecializations(value)
+        .flatMap((specialization) => SPECIALIZATIONS[specialization] || []);
+
+    return [...new Set(tradeGoodIds)];
+}
+
 export const SETTLEMENT_EVENTS = {
     'ruined_location': { 
         name: 'Ruined Location', 

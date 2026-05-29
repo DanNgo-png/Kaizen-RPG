@@ -19,6 +19,7 @@ import { HireHallPanel } from "./barebones/HireHallPanel.js";
 import { MarketPanel } from "./barebones/MarketPanel.js";
 import { ContractPanel } from "./barebones/ContractPanel.js";
 
+const HOSTILE_REPUTATION_THRESHOLD = -50;
 let activeBarebonesUIManager = null;
 
 export class BarebonesUIManager {
@@ -54,7 +55,8 @@ export class BarebonesUIManager {
             chroniclesModal: this.chroniclesModal,
             onSelectNode: (node) => this.selectNode(node),
             onSwitchTab: (tabName) => this.switchTab(tabName),
-            onTogglePin: (nodeId) => GameAPI.toggleNodePin(nodeId)
+            onTogglePin: (nodeId) => GameAPI.toggleNodePin(nodeId),
+            onClearHostileNode: (nodeId) => GameAPI.startHostileSettlementClearing(nodeId)
         });
         this.hirePanel = new HireHallPanel({
             dom: this.dom,
@@ -72,7 +74,8 @@ export class BarebonesUIManager {
         this.contractPanel = new ContractPanel({
             dom: this.dom,
             onAcceptContract: (contractId) => GameAPI.acceptContract(contractId),
-            onAbortContract: (contractId, nodeId) => GameAPI.abortContract(contractId, nodeId)
+            onAbortContract: (contractId, nodeId, contractType) => GameAPI.abortContract(contractId, nodeId, contractType),
+            onStartHostileClearing: (nodeId) => GameAPI.startHostileSettlementClearing(nodeId)
         });
 
         this._bindHandlers();
@@ -152,9 +155,13 @@ export class BarebonesUIManager {
 
         if (!shouldLoad) return;
 
-        const isHostile = this.selectedNode && (this.selectedNode.is_hostile === 1 || this.selectedNode.reputation <= -50);
+        const isHostile = this._isHostileNode(this.selectedNode);
         if (isHostile) {
-            if (this.dom.contractList) this.dom.contractList.innerHTML = emptyStateHtml("This settlement is hostile. No jobs available.", "fa-solid fa-skull");
+            if (tabName === BAREBONES_TABS.JOBS) {
+                this._renderHostileNodeActions(this.selectedNode);
+                return;
+            }
+
             if (this.dom.marketStashList) this.dom.marketStashList.innerHTML = "";
             if (this.dom.marketShopList) this.dom.marketShopList.innerHTML = emptyStateHtml("Hostile factions do not trade with you.", "fa-solid fa-skull");
             if (this.dom.hireList) this.dom.hireList.innerHTML = emptyStateHtml("No one here wants to join you.", "fa-solid fa-skull");
@@ -170,17 +177,19 @@ export class BarebonesUIManager {
         this._renderSelectedNodeLabel();
         this.renderNodeList();
 
-        const isHostile = node.is_hostile === 1 || node.reputation <= -50;
+        const isHostile = this._isHostileNode(node);
 
-        if (this.dom.tabJobs) this.dom.tabJobs.disabled = isHostile;
+        if (isHostile && this.activeTab !== BAREBONES_TABS.JOBS) {
+            this.activeTab = BAREBONES_TABS.JOBS;
+            this._renderTabState(this.activeTab);
+        }
+
+        if (this.dom.tabJobs) this.dom.tabJobs.disabled = false;
         if (this.dom.tabMarket) this.dom.tabMarket.disabled = isHostile;
         if (this.dom.tabHire) this.dom.tabHire.disabled = isHostile;
 
         if (isHostile) {
-            if (this.dom.contractList) this.dom.contractList.innerHTML = emptyStateHtml("This settlement is hostile. No jobs available.", "fa-solid fa-skull");
-            if (this.dom.marketStashList) this.dom.marketStashList.innerHTML = "";
-            if (this.dom.marketShopList) this.dom.marketShopList.innerHTML = emptyStateHtml("Hostile factions do not trade with you.", "fa-solid fa-skull");
-            if (this.dom.hireList) this.dom.hireList.innerHTML = emptyStateHtml("No one here wants to join you.", "fa-solid fa-skull");
+            this._renderHostileNodeActions(node);
         } else {
             this._loadSelectedTab();
         }
@@ -193,7 +202,7 @@ export class BarebonesUIManager {
             filteredNodes = this.nodes.filter(node => 
                 (node.name || "").toLowerCase().includes(this.settlementSearchQuery) ||
                 (node.type || "").toLowerCase().includes(this.settlementSearchQuery) ||
-                (node.specialization && node.specialization.toLowerCase().includes(this.settlementSearchQuery))
+                this._specializationText(node).toLowerCase().includes(this.settlementSearchQuery)
             );
         }
         
@@ -241,6 +250,7 @@ export class BarebonesUIManager {
             receiveNodeHistory: (event) => this._onReceiveNodeHistory(event),
             receivePartyData: (event) => this._onReceivePartyData(event),
             mercenaryHired: (event) => this._onMercenaryHired(event),
+            hostileSettlementClearingFailed: (event) => this._onHostileSettlementClearingFailed(event),
             nodePinToggled: () => GameAPI.getWorldData(),
             startDelve: () => GameAPI.setDelvingStatus(true),
             stopDelve: () => GameAPI.setDelvingStatus(false),
@@ -332,6 +342,7 @@ export class BarebonesUIManager {
             receiveNodeHistory: this._handlers.receiveNodeHistory,
             receivePartyData: this._handlers.receivePartyData,
             mercenaryHired: this._handlers.mercenaryHired,
+            hostileSettlementClearingFailed: this._handlers.hostileSettlementClearingFailed,
             nodePinToggled: this._handlers.nodePinToggled,
             receiveActiveContract: this._handlers.receiveActiveContract,
             receiveWorldHistory: this._handlers.receiveWorldHistory
@@ -383,6 +394,11 @@ export class BarebonesUIManager {
         if (outcome.shouldRefreshParty) GameAPI.getPartyData();
         if (outcome.shouldRefreshWorld) GameAPI.getWorldData();
         if (outcome.shouldRender && this.activeTab === BAREBONES_TABS.HIRE) this.renderHireList();
+    }
+
+    _onHostileSettlementClearingFailed(event) {
+        if (!this._shouldHandleEvent()) return;
+        alert(event.detail?.error || "Unable to begin the raid.");
     }
 
     _onReceiveNodeHistory(event) {
@@ -441,6 +457,11 @@ export class BarebonesUIManager {
         this.updateActiveBanner(activeContract);
 
         if (this.activeTab === BAREBONES_TABS.JOBS) {
+            if (this._isHostileNode(this.selectedNode)) {
+                this._renderHostileNodeActions(this.selectedNode);
+                return;
+            }
+
             this.renderContracts(contracts);
         }
     }
@@ -464,6 +485,12 @@ export class BarebonesUIManager {
         this.updateActiveBanner(null);
 
         if (this.selectedNode) {
+            if (this._isHostileNode(this.selectedNode)) {
+                this._renderHostileNodeActions(this.selectedNode);
+                GameAPI.getWorldData();
+                return;
+            }
+
             GameAPI.getContractsForNode(this.selectedNode.id);
             GameAPI.getWorldData();
         }
@@ -504,6 +531,23 @@ export class BarebonesUIManager {
         if (this.dom.selectedNodeName) {
             this.dom.selectedNodeName.innerHTML = selectedNodeLabelHtml(this.selectedNode);
         }
+    }
+
+    _renderHostileNodeActions(node) {
+        if (this.dom.marketStashList) this.dom.marketStashList.innerHTML = "";
+        if (this.dom.marketShopList) this.dom.marketShopList.innerHTML = emptyStateHtml("Hostile factions do not trade with you.", "fa-solid fa-skull");
+        if (this.dom.hireList) this.dom.hireList.innerHTML = emptyStateHtml("No one here wants to join you.", "fa-solid fa-skull");
+        this.contractPanel.renderHostileClearingAction(node, this.activeContract);
+    }
+
+    _isHostileNode(node) {
+        return Boolean(node && (node.is_hostile === 1 || node.reputation <= HOSTILE_REPUTATION_THRESHOLD));
+    }
+
+    _specializationText(node) {
+        if (node?.specialization) return node.specialization;
+        if (Array.isArray(node?.specializations)) return node.specializations.join(", ");
+        return "";
     }
 
     _setText(element, value) {

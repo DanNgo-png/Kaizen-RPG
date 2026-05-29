@@ -2,6 +2,7 @@ import { NobleBehavior } from './behaviors/NobleBehavior.mjs';
 import { BanditBehavior } from './behaviors/BanditBehavior.mjs';
 import { BarbarianBehavior } from './behaviors/BarbarianBehavior.mjs';
 import { GreenskinBehavior } from './behaviors/GreenskinBehavior.mjs'; 
+import { SettlementSpecializationPlanner } from './SettlementSpecializationPlanner.mjs';
 
 export class WorldSimulator {
     constructor(repo) {
@@ -27,6 +28,8 @@ export class WorldSimulator {
             const nodes = behavior.generateNodes(rng, context);
             context.nodes.push(...nodes);
         }
+
+        SettlementSpecializationPlanner.ensureWorldHasBuildingMaterialSettlement(this.repo, rng);
     }
 
     setupPremadeWorld(rng, premadeNodes) {
@@ -41,6 +44,8 @@ export class WorldSimulator {
             const nodes = behavior.generateNodes(rng, context);
             context.nodes.push(...nodes);
         }
+
+        SettlementSpecializationPlanner.ensureWorldHasBuildingMaterialSettlement(this.repo, rng);
     }
 
     processDayEnd(currentDay) {

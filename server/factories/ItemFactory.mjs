@@ -4,7 +4,7 @@ import { CONSUMABLES } from '../data/items/Consumables.mjs';
 import { TRADE_GOODS } from '../data/items/TradeGoods.mjs';
 import { TREASURE } from '../data/items/Treasure.mjs';
 import { PROVISIONS } from '../data/items/Provisions.mjs';
-import { SETTLEMENT_TIERS, SPECIALIZATIONS } from '../data/GameDataConstants.mjs';
+import { SETTLEMENT_TIERS, getSpecializationTradeGoodIds } from '../data/GameDataConstants.mjs';
 
 class ItemFactoryClass {
     constructor() {
@@ -78,8 +78,8 @@ class ItemFactoryClass {
     getTradeInventory(specialization = null, qtyMult = 1.0) {
         const inventory = [];
         
-        if (specialization && SPECIALIZATIONS[specialization]) {
-            const tradeGoodIds = SPECIALIZATIONS[specialization];
+        if (specialization) {
+            const tradeGoodIds = getSpecializationTradeGoodIds(specialization);
             tradeGoodIds.forEach(id => {
                 const baseQty = Math.floor(Math.random() * 5) + 2; 
                 const finalQty = Math.floor(baseQty * qtyMult);

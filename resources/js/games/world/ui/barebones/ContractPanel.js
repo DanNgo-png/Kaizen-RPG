@@ -8,18 +8,22 @@ import {
 const confirmAction = (message) => globalThis.confirm?.(message) ?? true;
 const CONTRACT_TYPE = Object.freeze({
     CARAVAN: "caravan",
-    BRIGAND_CAMP: "brigand_camp"
+    BRIGAND_CAMP: "brigand_camp",
+    HOSTILE_CAMP: "hostile_camp",
+    DIRECT_CLEARING: "direct_clearing"
 });
 
 export class ContractPanel {
     constructor({
         dom,
         onAcceptContract,
-        onAbortContract
+        onAbortContract,
+        onStartHostileClearing
     }) {
         this.dom = dom;
         this.onAcceptContract = onAcceptContract;
         this.onAbortContract = onAbortContract;
+        this.onStartHostileClearing = onStartHostileClearing;
     }
 
     renderLoading() {
@@ -41,6 +45,50 @@ export class ContractPanel {
         contracts.forEach((contract) => {
             this.dom.contractList.appendChild(this._createContractCard(contract, isBusy));
         });
+    }
+
+    renderHostileClearingAction(node, activeContract) {
+        if (!this.dom.contractList) return;
+
+        this.dom.contractList.innerHTML = "";
+        if (!node) {
+            this.dom.contractList.innerHTML = emptyStateHtml("Select an enemy settlement to plan an assault.", "fa-solid fa-skull");
+            return;
+        }
+
+        const isBusy = Boolean(activeContract);
+        const element = document.createElement("div");
+        element.className = "bb-contract-card danger";
+        element.innerHTML = `
+            <div class="bb-c-left">
+                <h4>Clear ${escapeHtml(node.name)}</h4>
+                <p>"Raid this hostile location without waiting for a settlement contract. There is no patron reward, but the stores can be looted."</p>
+                <div class="bb-contract-target">
+                    <i class="fa-solid fa-campground"></i>
+                    <span>Target: ${escapeHtml(node.type)}</span>
+                </div>
+                <div class="bb-c-rewards">
+                    <span class="bb-reward-gold"><i class="fa-solid fa-coins"></i> No contract pay</span>
+                    <span class="bb-reward-time"><i class="fa-regular fa-clock"></i> Focus operation</span>
+                    <span class="bb-reward-loot"><i class="fa-solid fa-box-open"></i> Camp loot</span>
+                </div>
+            </div>
+            <div class="bb-c-right">
+                <button class="bb-btn-accept" ${isBusy ? "disabled" : ""}>
+                    ${isBusy ? "Busy" : "Begin Raid"}
+                </button>
+            </div>
+        `;
+
+        if (!isBusy) {
+            element.querySelector(".bb-btn-accept").addEventListener("click", () => {
+                if (confirmAction(`Clear ${node.name} without a settlement contract? There will be no gold reward.`)) {
+                    this.onStartHostileClearing?.(node.id);
+                }
+            });
+        }
+
+        this.dom.contractList.appendChild(element);
     }
 
     updateActiveBanner(activeContract, isDelving) {
@@ -100,6 +148,8 @@ export class ContractPanel {
     }
 
     _contractCardClass(contract) {
+        if (contract.contract_type === CONTRACT_TYPE.DIRECT_CLEARING) return "danger";
+        if (contract.contract_type === CONTRACT_TYPE.HOSTILE_CAMP) return "danger";
         if (contract.contract_type === CONTRACT_TYPE.BRIGAND_CAMP) return "danger";
         if (contract.contract_type === CONTRACT_TYPE.CARAVAN) return "caravan";
         return "";
@@ -121,7 +171,7 @@ export class ContractPanel {
     }
 
     _contractLootHtml(contract) {
-        if (contract.contract_type !== CONTRACT_TYPE.BRIGAND_CAMP) return "";
+        if (![CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP, CONTRACT_TYPE.DIRECT_CLEARING].includes(contract.contract_type)) return "";
 
         return `<span class="bb-reward-loot"><i class="fa-solid fa-box-open"></i> Rich loot</span>`;
     }
@@ -135,9 +185,15 @@ export class ContractPanel {
 
         this.dom.btnAbort.classList.remove("hidden");
         this.dom.btnAbort = this._replaceButton(this.dom.btnAbort);
+        this.dom.btnAbort.innerHTML = this._isDirectClearing(activeContract)
+            ? `<i class="fa-solid fa-xmark"></i> Abandon`
+            : `<i class="fa-solid fa-xmark"></i> Abort`;
         this.dom.btnAbort.addEventListener("click", () => {
-            if (confirmAction("Abort this contract? You will lose reputation (-10) with the settlement.")) {
-                this.onAbortContract?.(activeContract.id, activeContract.node_id);
+            const message = this._isDirectClearing(activeContract)
+                ? "Abandon this direct raid? Progress on the operation will be lost."
+                : "Abort this contract? You will lose reputation (-10) with the settlement.";
+            if (confirmAction(message)) {
+                this.onAbortContract?.(activeContract.id, activeContract.node_id, activeContract.contract_type);
             }
         });
     }
@@ -169,6 +225,10 @@ export class ContractPanel {
         const newButton = button.cloneNode(true);
         button.parentNode.replaceChild(newButton, button);
         return newButton;
+    }
+
+    _isDirectClearing(contract) {
+        return contract?.contract_type === CONTRACT_TYPE.DIRECT_CLEARING;
     }
 
     _progressPercent(progress, target) {

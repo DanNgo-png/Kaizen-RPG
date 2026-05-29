@@ -1,6 +1,14 @@
 import { getActiveGameDB, loadGameDatabase } from '../connection.mjs';
 import { ItemFactory } from '../../../factories/ItemFactory.mjs';
-import { SETTLEMENT_EVENTS, SETTLEMENT_NAMES, SETTLEMENT_TIERS, SETTLEMENT_UPGRADE_PATH } from '../../../data/GameDataConstants.mjs';
+import {
+    SETTLEMENT_EVENTS,
+    SETTLEMENT_NAMES,
+    SETTLEMENT_TIERS,
+    SETTLEMENT_UPGRADE_PATH,
+    formatSpecializations,
+    normalizeSpecializations,
+    serializeSpecializations
+} from '../../../data/GameDataConstants.mjs';
 import { BARBARIAN_NODE_TYPES } from '../../../data/factions/BarbarianFactions.mjs';
 import { WorldSimulator } from '../../../services/simulation/WorldSimulator.mjs';
 
@@ -28,7 +36,8 @@ const CONTRACT_TYPE = Object.freeze({
     STANDARD: 'standard',
     CARAVAN: 'caravan',
     BRIGAND_CAMP: 'brigand_camp',
-    HOSTILE_CAMP: 'hostile_camp'
+    HOSTILE_CAMP: 'hostile_camp',
+    DIRECT_CLEARING: 'direct_clearing'
 });
 
 const CONTRACT_REPUTATION = Object.freeze({
@@ -39,6 +48,8 @@ const CONTRACT_REPUTATION = Object.freeze({
 
 const CONTRACT_GENERATION = Object.freeze({
     BOARD_SIZE: 3,
+    DEFAULT_MIN_MINUTES: 10,
+    DEFAULT_MAX_MINUTES: 120,
     MINUTE_STEP: 5,
     HOSTILE_CAMP_MIN_MINUTES: 45,
     GOLD_PER_MINUTE: 2.5,
@@ -58,6 +69,10 @@ const CONTRACT_LOOT = Object.freeze({
 
 const CONTRACT_EVENT_DURATION = Object.freeze({
     WELL_SUPPLIED_DAYS: 5
+});
+
+const DIRECT_CLEARING = Object.freeze({
+    GOLD_REWARD: 0
 });
 
 const IDLE_SESSION_CONFIG = Object.freeze({
@@ -227,7 +242,7 @@ export class GameRepository {
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`),
 
             getActiveContract: this.db.prepare(`${CONTRACT_SELECT} WHERE contracts.is_active = 1 LIMIT 1`),
-            getNodeContracts: this.db.prepare(`${CONTRACT_SELECT} WHERE contracts.node_id = ? AND contracts.is_completed = 0`),
+            getNodeContracts: this.db.prepare(`${CONTRACT_SELECT} WHERE contracts.node_id = ? AND contracts.is_completed = 0 AND contracts.contract_type != '${CONTRACT_TYPE.DIRECT_CLEARING}'`),
             insertContract: this.db.prepare(`
                 INSERT INTO contracts (node_id, target_node_id, contract_type, title, description, required_minutes, gold_reward)
                 VALUES (@node_id, @target_node_id, @contract_type, @title, @desc, @req_mins, @gold)
@@ -237,6 +252,7 @@ export class GameRepository {
             setContractProgress: this.db.prepare(`UPDATE contracts SET progress_minutes = @progress WHERE id = @id`),
             completeContract: this.db.prepare(`UPDATE contracts SET is_completed = 1, is_active = 0 WHERE id = @id`),
             abortContract: this.db.prepare(`DELETE FROM contracts WHERE id = ?`),
+            updateNodeSpecialization: this.db.prepare(`UPDATE world_nodes SET specialization = @specialization WHERE id = @id`),
 
             getInventory: this.db.prepare(`SELECT * FROM inventory`),
             deleteItem: this.db.prepare(`DELETE FROM inventory WHERE id = ?`),
@@ -420,6 +436,19 @@ export class GameRepository {
         return (node.reputation || 0) > HOSTILE_REPUTATION_THRESHOLD;
     }
 
+    _canDirectlyClearHostileNode(node) {
+        return Boolean(node && (HOSTILE_CONTRACT_TARGET_TYPES.includes(node.type) || node.is_hostile === 1));
+    }
+
+    _findNearestFriendlySettlement(originNode) {
+        if (!originNode) return null;
+
+        return this.statements.getAllNodes.all()
+            .map((node) => this._mapWorldNode(node))
+            .filter((node) => this._canOfferSettlementContracts(node))
+            .sort((a, b) => this._distanceSquared(originNode, a) - this._distanceSquared(originNode, b))[0] || null;
+    }
+
     _distanceSquared(a, b) {
         const dx = (a.x || 0) - (b.x || 0);
         const dy = (a.y || 0) - (b.y || 0);
@@ -443,6 +472,45 @@ export class GameRepository {
         this.ensureConnection();
         this.statements.setActiveContract.run(contractId);
         this.setCampaignSetting('is_delving', 'false');
+    }
+
+    startHostileSettlementClearing(
+        nodeId,
+        minMins = CONTRACT_GENERATION.DEFAULT_MIN_MINUTES,
+        maxMins = CONTRACT_GENERATION.DEFAULT_MAX_MINUTES
+    ) {
+        this.ensureConnection();
+
+        if (this.getActiveContract()) {
+            throw new Error("Your company is already committed to an active assignment.");
+        }
+
+        const campNode = this.getNodeById(nodeId);
+        if (!this._canDirectlyClearHostileNode(campNode)) {
+            throw new Error("Only enemy settlements can be cleared directly.");
+        }
+
+        const supportNode = this._findNearestFriendlySettlement(campNode);
+        if (!supportNode) {
+            throw new Error("No friendly settlement is close enough to support this raid.");
+        }
+
+        const possibleMins = this._buildContractMinuteOptions(minMins, maxMins);
+        const requiredMinutes = this._pickContractMinutes(possibleMins, CONTRACT_GENERATION.HOSTILE_CAMP_MIN_MINUTES);
+        const result = this.statements.insertContract.run({
+            node_id: supportNode.id,
+            target_node_id: campNode.id,
+            contract_type: CONTRACT_TYPE.DIRECT_CLEARING,
+            title: `Clear ${campNode.type}: ${campNode.name}`,
+            desc: `Your company will clear ${campNode.name} without waiting for a settlement contract. No patron pays a reward, but the camp stores can be plundered.`,
+            req_mins: requiredMinutes,
+            gold: DIRECT_CLEARING.GOLD_REWARD
+        });
+
+        this.statements.setActiveContract.run(result.lastInsertRowid);
+        this.setCampaignSetting('is_delving', 'false');
+
+        return this.getActiveContract();
     }
 
     getActiveContract() {
@@ -477,6 +545,10 @@ export class GameRepository {
         activeContract.contract_type = contractType;
         activeContract.beneficiary_node_id = beneficiaryNode?.id ?? null;
         activeContract.beneficiary_node_name = beneficiaryNode?.name ?? null;
+
+        if (this._isDirectClearingContractType(contractType)) {
+            return this._completeDirectClearing(activeContract, targetNode, originNode, companyName);
+        }
 
         const contractRepReward = Math.max(
             CONTRACT_REPUTATION.MIN_REWARD,
@@ -537,8 +609,35 @@ export class GameRepository {
         return { contract: activeContract, logs, loot: foundLoot };
     }
 
+    _completeDirectClearing(activeContract, targetNode, supportNode, companyName) {
+        const foundLoot = [];
+        const logs = [
+            `⚔️ Direct Clearing Completed: ${activeContract.title}`,
+            "No patron paid for this raid, but the surrounding roads are safer."
+        ];
+
+        const campDestroyedLoot = this._handleCampDestruction(activeContract, targetNode, supportNode, companyName);
+        if (campDestroyedLoot) {
+            foundLoot.push(campDestroyedLoot);
+            activeContract._campDestroyedLoot = campDestroyedLoot;
+            logs.push(`🔥 Hostile location destroyed! You found hidden stash: ${campDestroyedLoot.name}`);
+        }
+
+        const rolls = this._countLootRolls(activeContract, activeContract.contract_type);
+        for (let i = 0; i < rolls; i++) {
+            if (Math.random() < CONTRACT_LOOT.HOSTILE_CAMP_CHANCE) {
+                const newItem = ItemFactory.getRandomItem();
+                this.addItemToInventory(newItem.id);
+                foundLoot.push(newItem);
+                logs.push(`✨ You recovered loot: ${newItem.name}`);
+            }
+        }
+
+        return { contract: activeContract, logs, loot: foundLoot };
+    }
+
     _resolveContractType(contract) {
-        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP].includes(contract.contract_type)) {
+        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP, CONTRACT_TYPE.DIRECT_CLEARING].includes(contract.contract_type)) {
             return contract.contract_type;
         }
 
@@ -649,7 +748,13 @@ export class GameRepository {
     }
 
     _isHostileCampContractType(contractType) {
-        return contractType === CONTRACT_TYPE.HOSTILE_CAMP || contractType === CONTRACT_TYPE.BRIGAND_CAMP;
+        return contractType === CONTRACT_TYPE.HOSTILE_CAMP
+            || contractType === CONTRACT_TYPE.BRIGAND_CAMP
+            || this._isDirectClearingContractType(contractType);
+    }
+
+    _isDirectClearingContractType(contractType) {
+        return contractType === CONTRACT_TYPE.DIRECT_CLEARING;
     }
 
     _applyCaravanContractOutcome(contract, node, companyName) {
@@ -1288,6 +1393,8 @@ export class GameRepository {
 
     createWorldNode(node) {
         this.ensureConnection();
+        const specialization = node.specializations ?? node.specialization;
+
         return this.statements.insertNode.run({
             type: node.type,
             name: node.name,
@@ -1297,8 +1404,16 @@ export class GameRepository {
             reputation: node.reputation ?? 0,
             buy_modifier: node.buy_modifier ?? 1.0,
             sell_modifier: node.sell_modifier ?? 0.5,
-            specialization: node.specialization ?? null,
+            specialization: serializeSpecializations(specialization),
             attachments: node.attachments ?? 0
+        });
+    }
+
+    updateNodeSpecialization(nodeId, specializations) {
+        this.ensureConnection();
+        return this.statements.updateNodeSpecialization.run({
+            id: nodeId,
+            specialization: serializeSpecializations(specializations)
         });
     }
 
@@ -1458,6 +1573,9 @@ export class GameRepository {
             }
             : null;
 
+        node.specializations = normalizeSpecializations(node.specialization);
+        node.specialization = formatSpecializations(node.specializations);
+
         return node;
     }
 
@@ -1531,7 +1649,7 @@ export class GameRepository {
             faction_id: parentNode.faction_id,
             buy_modifier: 1.2, 
             sell_modifier: 0.85,
-            specialization: specialization,
+            specialization: serializeSpecializations(specialization),
             attachments: 0
         });
         

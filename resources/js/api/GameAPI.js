@@ -58,8 +58,12 @@ export const GameAPI = {
         await Neutralino.extensions.dispatch(EXTENSION_ID, "acceptContract", { contractId });
     },
 
-    abortContract: async (contractId, nodeId) => {
-        await Neutralino.extensions.dispatch(EXTENSION_ID, "abortContract", { contractId, nodeId });
+    startHostileSettlementClearing: async (nodeId) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "startHostileSettlementClearing", { nodeId });
+    },
+
+    abortContract: async (contractId, nodeId, contractType = null) => {
+        await Neutralino.extensions.dispatch(EXTENSION_ID, "abortContract", { contractId, nodeId, contractType });
     },
 
     getMarketData: async (nodeId) => {

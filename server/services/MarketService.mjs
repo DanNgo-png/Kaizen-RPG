@@ -4,8 +4,10 @@ import {
     BUILDING_MATERIALS, 
     SETTLEMENT_UPGRADE_PATH, 
     SETTLEMENT_TIERS,
-    SPECIALIZATIONS
+    getSpecializationTradeGoodIds,
+    normalizeSpecializations
 } from "../data/GameDataConstants.mjs";
+import { SettlementSpecializationPlanner } from "./simulation/SettlementSpecializationPlanner.mjs";
 
 const DEFAULT_MARKET_BUY_MODIFIER = 1.0;
 const REPUTATION_BUY_DISCOUNT_FACTOR = 0.0015;
@@ -13,11 +15,44 @@ const MIN_REPUTATION_BUY_FLOOR = 0.5;
 const REPUTATION_VOLUME_THRESHOLD = 300;
 const REPUTATION_BONUS_FACTOR = 0.002;
 const ATTACHMENT_BONUS_FACTOR = 0.02;
+const DEFAULT_MATERIAL_DELIVERIES_NEEDED = 10;
+const DEVELOPMENT_PROGRESS_STEP = 1;
+const MAX_POPULATION_TIER = 5;
+const POPULATION_LABELS = Object.freeze({
+    1: "Low",
+    2: "Medium",
+    3: "High",
+    4: "Very High",
+    5: "Overpopulated"
+});
 
 export class MarketService {
     constructor(repo, settingsRepo) {
         this.repo = repo;
         this.settingsRepo = settingsRepo;
+    }
+
+    _getNodeSpecializations(node) {
+        return normalizeSpecializations(node?.specializations ?? node?.specialization);
+    }
+
+    _chooseFirstSpecializationForNode(node, materialItemId) {
+        const currentSpecializations = this._getNodeSpecializations(node);
+        if (currentSpecializations.length > 0) return null;
+
+        return SettlementSpecializationPlanner.chooseBuildableSpecialization(
+            node,
+            materialItemId,
+            currentSpecializations
+        );
+    }
+
+    _chooseColonySpecialization(parentNode, materialItemId) {
+        return SettlementSpecializationPlanner.chooseBuildableSpecialization(
+            parentNode,
+            materialItemId,
+            this._getNodeSpecializations(parentNode)
+        );
     }
 
     _getEnrichedInventory(node = null) {
@@ -40,7 +75,7 @@ export class MarketService {
             } else if (itemInstance.type === 'Trade Good') {
                 let produces = false;
                 if (node && node.specialization) {
-                    const producedItems = SPECIALIZATIONS[node.specialization] || [];
+                    const producedItems = getSpecializationTradeGoodIds(node.specializations ?? node.specialization);
                     if (producedItems.includes(itemInstance.id)) produces = true;
                 }
                 baseTypeMult = produces ? 0.15 : 1.01;
@@ -109,7 +144,7 @@ export class MarketService {
 
                     buyMod = node.effective_buy;
                     nodeType = node.type;
-                    specialization = node.specialization;
+                    specialization = node.specializations ?? node.specialization;
                     nodeContext = node;
 
                     let inventoryChanged = false;
@@ -254,37 +289,40 @@ export class MarketService {
                     const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
                     
                     if (isBuildingMat) {
-                        const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: 10 } };
-                        const maxProg = tierInfo.growthReqs ? tierInfo.growthReqs.materials : 10;
+                        const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: DEFAULT_MATERIAL_DELIVERIES_NEEDED } };
+                        const maxProg = tierInfo.growthReqs ? tierInfo.growthReqs.materials : DEFAULT_MATERIAL_DELIVERIES_NEEDED;
 
                         if (node.current_event === 'building_boom') {
-                            let newProgress = (node.development_progress || 0) + 1;
+                            let newProgress = (node.development_progress || 0) + DEVELOPMENT_PROGRESS_STEP;
                             let newType = node.type;
                             let newEvent = node.current_event;
                             let buyMod = node.buy_modifier;
                             let sellMod = node.sell_modifier;
-                            let newPopulationTier = node.population_tier || 1;
+                            let newPopulationTier = node.population_tier || DEVELOPMENT_PROGRESS_STEP;
                             
                             const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
                             let upgraded = false;
                             let popGrown = false;
+                            let specializationBuilt = null;
                             let oldPopLabel = "";
                             let newPopLabel = "";
                             
                             if (newProgress >= maxProg) {
                                 newProgress = 0;
                                 newEvent = null;
+                                specializationBuilt = this._chooseFirstSpecializationForNode(node, itemId);
                                 
-                                if (newPopulationTier < 5) {
-                                    const populationLabels = { 1: "Low", 2: "Medium", 3: "High", 4: "Very High", 5: "Overpopulated" };
-                                    oldPopLabel = populationLabels[newPopulationTier];
-                                    newPopulationTier += 1;
-                                    newPopLabel = populationLabels[newPopulationTier];
+                                if (specializationBuilt) {
+                                    this.repo.updateNodeSpecialization(node.id, [specializationBuilt]);
+                                } else if (newPopulationTier < MAX_POPULATION_TIER) {
+                                    oldPopLabel = POPULATION_LABELS[newPopulationTier];
+                                    newPopulationTier += DEVELOPMENT_PROGRESS_STEP;
+                                    newPopLabel = POPULATION_LABELS[newPopulationTier];
                                     popGrown = true;
                                 } else {
                                     if (nextTier) {
                                         newType = nextTier;
-                                        newPopulationTier = 1;
+                                        newPopulationTier = DEVELOPMENT_PROGRESS_STEP;
                                         upgraded = true;
                                         
                                         const nextTierInfo = SETTLEMENT_TIERS[nextTier];
@@ -293,14 +331,16 @@ export class MarketService {
                                             sellMod = nextTierInfo.sellMult;
                                         }
                                     } else {
-                                        newPopulationTier = 5;
+                                        newPopulationTier = MAX_POPULATION_TIER;
                                     }
                                 }
                             }
                             
                             this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod, newPopulationTier);
                             
-                            if (popGrown) {
+                            if (specializationBuilt) {
+                                this.repo.logNodeHistory(node.id, `The construction finished! ${node.name} built a ${specializationBuilt}, giving the settlement its first local specialization.`, 'world');
+                            } else if (popGrown) {
                                 this.repo.logNodeHistory(node.id, `The construction finished! The settlement's population has grown from ${oldPopLabel} to ${newPopLabel}.`, 'world');
                             } else if (upgraded) {
                                 this.repo.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
@@ -308,25 +348,33 @@ export class MarketService {
                                 this.repo.logNodeHistory(node.id, `The construction finished! The settlement continues to thrive at maximum capacity.`, 'world');
                             }
                         } else if (node.current_event === 'settlement_expansion') {
-                            let newProgress = (node.development_progress || 0) + 1;
+                            let newProgress = (node.development_progress || 0) + DEVELOPMENT_PROGRESS_STEP;
                             
                             if (newProgress >= maxProg) {
-                                let newSpec = null;
-                                if (itemId === 'quality_wood') newSpec = 'Lumber Camp';
-                                if (itemId === 'peat_bricks') newSpec = 'Peat Pit';
-                                if (itemId === 'copper_ingots') newSpec = 'Copper Mine';
+                                const firstSpecialization = this._chooseFirstSpecializationForNode(node, itemId);
+                                const colonySpecialization = firstSpecialization
+                                    ? null
+                                    : this._chooseColonySpecialization(node, itemId);
 
-                                this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier, node.population_tier || 1);
+                                this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier, node.population_tier || DEVELOPMENT_PROGRESS_STEP);
+
+                                if (firstSpecialization) {
+                                    this.repo.updateNodeSpecialization(node.id, [firstSpecialization]);
+                                    this.repo.logNodeHistory(node.id, `The construction finished! ${node.name} built a ${firstSpecialization}, establishing its first local specialization.`, 'world');
+                                    app.events.broadcast("transactionComplete", { success: true });
+                                    return;
+                                }
+
                                 this.repo.logNodeHistory(node.id, `The construction finished! ${node.name} has expanded its borders.`, 'world');
                                 
-                                const spawnedNode = this.repo.spawnColony(node, newSpec);
+                                const spawnedNode = this.repo.spawnColony(node, colonySpecialization);
                                 
                                 if (spawnedNode) {
-                                     this.repo.logNodeHistory(node.id, `Established the new settlement of ${spawnedNode.name} with a ${newSpec ? 'focus on ' + newSpec : 'focus on local resources'}.`, 'world');
+                                     this.repo.logNodeHistory(node.id, `Established the new settlement of ${spawnedNode.name} with a ${colonySpecialization ? 'focus on ' + colonySpecialization : 'focus on local resources'}.`, 'world');
                                      this.repo.logNodeHistory(spawnedNode.id, `Founded as an outpost by ${node.name}.`, 'world');
                                 }
                             } else {
-                                this.repo.updateNodeDevelopment(node.id, newProgress, node.type, node.current_event, node.buy_modifier, node.sell_modifier, node.population_tier || 1);
+                                this.repo.updateNodeDevelopment(node.id, newProgress, node.type, node.current_event, node.buy_modifier, node.sell_modifier, node.population_tier || DEVELOPMENT_PROGRESS_STEP);
                             }
                         }
                     }

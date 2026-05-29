@@ -1,7 +1,8 @@
 import { BaseFactionBehavior } from "./BaseFactionBehavior.mjs";
 import { NOBLE_HOUSE_LORE_POOL, WORLD_GENERATION_CONFIG, WORLD_NODE_TYPE_WEIGHTS } from "../../../data/factions/NobleFactions.mjs";
 import { BARBARIAN_NODE_TYPES } from "../../../data/factions/BarbarianFactions.mjs";
-import { SETTLEMENT_NAMES, SETTLEMENT_TIERS, SPECIALIZATIONS, SETTLEMENT_EVENTS } from "../../../data/GameDataConstants.mjs";
+import { SETTLEMENT_NAMES, SETTLEMENT_TIERS, SETTLEMENT_EVENTS } from "../../../data/GameDataConstants.mjs";
+import { SettlementSpecializationPlanner } from "../SettlementSpecializationPlanner.mjs";
 
 const HOSTILE_SETTLEMENT_TYPES = Object.freeze([
     "Ruins",
@@ -64,23 +65,27 @@ export class NobleBehavior extends BaseFactionBehavior {
             factions.forEach(house => {
                 const pos = this._findCapitalPosition(capitals, rng);
                 const tierInfo = SETTLEMENT_TIERS[house.capitalType];
+                const specializations = SettlementSpecializationPlanner.pickInitialSpecializations(
+                    { type: house.capitalType, name: house.seatName, ...pos },
+                    rng,
+                    { map: WORLD_GENERATION_CONFIG }
+                );
                 const info = this.repo.createWorldNode({
                     type: house.capitalType,
                     name: house.seatName,
                     x: pos.x, y: pos.y,
                     faction_id: house.id,
                     buy_modifier: tierInfo.buyMult, sell_modifier: tierInfo.sellMult,
-                    specialization: null,
+                    specialization: specializations,
                     attachments: rng.randomInt(1, 3)
                 });
-                const node = { id: info.lastInsertRowid, ...pos, factionId: house.id, name: house.seatName, type: house.capitalType };
+                const node = { id: info.lastInsertRowid, ...pos, factionId: house.id, name: house.seatName, type: house.capitalType, specialization: specializations };
                 capitals.push(node);
                 createdNodes.push(node);
             });
 
             const reservedNames = new Set(factions.map(h => h.seatName));
             const availableNames = rng.shuffle(SETTLEMENT_NAMES.filter(n => !reservedNames.has(n)));
-            const specKeys = Object.keys(SPECIALIZATIONS);
             const remaining = Math.max(0, WORLD_GENERATION_CONFIG.NODE_COUNT - capitals.length);
 
             for (let i = 0; i < remaining; i++) {
@@ -89,18 +94,24 @@ export class NobleBehavior extends BaseFactionBehavior {
                 const type = rng.pick(WORLD_NODE_TYPE_WEIGHTS);
                 const name = availableNames.pop() || `Unknown ${i}`;
                 const closest = this._findClosestCapital({x,y}, capitals);
-                const isPoor = rng.next() < WORLD_GENERATION_CONFIG.POOR_SPECIALIZATION_CHANCE;
-                const spec = isPoor ? null : rng.pick(specKeys);
                 const tierInfo = SETTLEMENT_TIERS[type] || { buyMult: 1, sellMult: 1 };
+                const specializations = SettlementSpecializationPlanner.pickInitialSpecializations(
+                    { type, name, x, y },
+                    rng,
+                    {
+                        poorChance: WORLD_GENERATION_CONFIG.POOR_SPECIALIZATION_CHANCE,
+                        map: WORLD_GENERATION_CONFIG
+                    }
+                );
 
                 const info = this.repo.createWorldNode({
                     type, name, x, y,
                     faction_id: type === 'Ruins' ? null : closest?.factionId ?? null,
                     buy_modifier: tierInfo.buyMult, sell_modifier: tierInfo.sellMult,
-                    specialization: spec,
+                    specialization: specializations,
                     attachments: rng.randomInt(0, 3)
                 });
-                createdNodes.push({ id: info.lastInsertRowid, type, name, x, y, faction_id: closest?.factionId });
+                createdNodes.push({ id: info.lastInsertRowid, type, name, x, y, faction_id: closest?.factionId, specialization: specializations });
             }
         }
         return createdNodes;

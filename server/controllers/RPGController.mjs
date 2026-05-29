@@ -91,6 +91,10 @@ export class RPGController {
             this.quests.acceptContract(payload, app);
         });
 
+        app.events.on("startHostileSettlementClearing", (payload) => {
+            this.quests.startHostileSettlementClearing(payload, app);
+        });
+
         app.events.on("abortContract", (payload) => {
             this.quests.abortContract(payload, app);
         });

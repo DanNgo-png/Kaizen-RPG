@@ -9,6 +9,9 @@ const DEFAULT_MAP_CENTER_Y = 300;
 const DEFAULT_MIN_CONTRACT_DURATION = 10;
 const DEFAULT_MAX_CONTRACT_DURATION = 120;
 const CONTRACT_ABORT_REPUTATION_PENALTY = -10;
+const CONTRACT_TYPE = Object.freeze({
+    DIRECT_CLEARING: 'direct_clearing'
+});
 
 export class QuestService {
     constructor(repo, settingsRepo) {
@@ -137,10 +140,25 @@ export class QuestService {
         } catch(e) { console.error(e); }
     }
 
+    startHostileSettlementClearing(payload, app) {
+        try {
+            const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || DEFAULT_MIN_CONTRACT_DURATION;
+            const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || DEFAULT_MAX_CONTRACT_DURATION;
+            const activeContract = this.repo.startHostileSettlementClearing(payload.nodeId, minMins, maxMins);
+
+            app.events.broadcast("contractAccepted", { activeContract });
+        } catch(e) {
+            console.error(e);
+            app.events.broadcast("hostileSettlementClearingFailed", { error: e.message });
+        }
+    }
+
     abortContract(payload, app) {
         try {
             this.repo.cancelContract(payload.contractId);
-            this.repo.updateNodeReputation(payload.nodeId, CONTRACT_ABORT_REPUTATION_PENALTY);
+            if (payload.contractType !== CONTRACT_TYPE.DIRECT_CLEARING) {
+                this.repo.updateNodeReputation(payload.nodeId, CONTRACT_ABORT_REPUTATION_PENALTY);
+            }
             app.events.broadcast("contractAborted", { success: true });
         } catch(e) { console.error(e); }
     }
