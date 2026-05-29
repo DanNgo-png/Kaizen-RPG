@@ -186,7 +186,7 @@ export class ChroniclesModal {
         const popBadge = this._getPopulationBadge(node.population_tier);
         const populationHtml = node.type !== 'Ruins' && !isHostileLocation
             ? `<div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
-                   <span><i class="fa-solid fa-users" style="color: #60a5fa; margin-right: 8px;"></i> Population</span>
+                   <span style="margin-right: 8px;"><i class="fa-solid fa-users" style="color: #60a5fa; margin-right: 8px;"></i> Population</span>
                    ${popBadge}
                  </div>`
             : '';
@@ -196,7 +196,7 @@ export class ChroniclesModal {
             specHtml = `<div style="font-size: 0.85rem; color: #ef4444; font-weight: 700;"><i class="fa-solid fa-skull" style="margin-right: 8px;"></i> Hostile Territory</div>`;
         } else if (node.specialization) {
             specHtml = `<div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
-                            <span><i class="fa-solid fa-star" style="color: #a78bfa; margin-right: 8px;"></i> Specialization</span>
+                            <span style="margin-right: 8px;"><i class="fa-solid fa-star" style="color: #a78bfa; margin-right: 8px;"></i> Specialization</span>
                             <span style="font-weight: 600; color: #a78bfa;">${escapeHtml(node.specialization)}</span>
                           </div>`;
         } else if (node.type !== 'Ruins') {
@@ -205,7 +205,7 @@ export class ChroniclesModal {
 
         const attachHtml = node.attachments > 0 
             ? `<div style="font-size: 0.85rem; color: #cbd5e1; display: flex; align-items: center; justify-content: space-between;">
-                   <span><i class="fa-solid fa-link" style="color: #94a3b8; margin-right: 8px;"></i> Attached Locations</span>
+                   <span style="margin-right: 8px;"><i class="fa-solid fa-link" style="color: #94a3b8; margin-right: 8px;"></i> Attached Locations</span>
                    <span style="font-weight: 600;">${node.attachments}</span>
                  </div>`
             : '';
@@ -214,7 +214,7 @@ export class ChroniclesModal {
             ${this._factionHtml(node)}
             <div class="bb-chronicles-entry" style="border-left: 4px solid #facc15; background: rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 12px; padding: 16px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; margin-bottom: 4px;">
-                    <span style="font-size: 0.95rem; font-weight: 700; color: #fff;">${escapeHtml(node.type)}</span>
+                    <span style="margin-right: 8px; font-size: 0.95rem; font-weight: 700; color: #fff;">${escapeHtml(node.type)}</span>
                     ${tierBadge}
                 </div>
                 ${populationHtml}
@@ -246,21 +246,21 @@ export class ChroniclesModal {
                     <span style="font-size: 0.9rem; font-weight: 700; color: #fff;"><i class="fa-solid fa-gavel"></i> Local Governance</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
-                    <span style="color: #94a3b8;">Noble Influence</span>
+                    <span style="color: #94a3b8; margin-right: 8px;">Noble Influence</span>
                     <span style="font-weight: 700; color: #3b82f6;">${influence}%</span>
                 </div>
                 <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
                     <div class="bb-fill" style="width: ${influence}%; background: #3b82f6;"></div>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-top: 4px;">
-                    <span style="color: #94a3b8;">Civil Unrest</span>
+                    <span style="color: #94a3b8; margin-right: 8px;">Civil Unrest</span>
                     <span style="font-weight: 700; color: ${unrest > 15 ? '#f87171' : '#34d399'};">${unrest}%</span>
                 </div>
                 <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
                     <div class="bb-fill" style="width: ${unrest}%; background: ${unrest > 15 ? '#ef4444' : '#10b981'};"></div>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-top: 4px; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 8px;">
-                    <span style="color: #94a3b8;"><i class="fa-solid fa-shield-halved"></i> Local Garrison</span>
+                    <span style="color: #94a3b8; margin-right: 8px;"><i class="fa-solid fa-shield-halved"></i> Local Garrison</span>
                     <span style="font-weight: 700; color: #e2e8f0;">Fortified</span>
                 </div>
             </div>
@@ -348,11 +348,11 @@ export class ChroniclesModal {
                     <span style="font-size: 0.9rem; font-weight: 700; color: #fff;"><i class="fa-solid fa-scale-balanced"></i> Market Values</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
-                    <span style="color: #94a3b8;">Local Prices</span>
+                    <span style="color: #94a3b8; margin-right: 8px;">Local Prices</span>
                     <span style="font-weight: 700; color: #f87171;">${prices}%</span>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
-                    <span style="color: #94a3b8;">Trade Payouts</span>
+                    <span style="color: #94a3b8; margin-right: 8px;">Trade Payouts</span>
                     <span style="font-weight: 700; color: #34d399;">${payouts}%</span>
                 </div>
                 ${eventContext}
