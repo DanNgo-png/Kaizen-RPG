@@ -59,7 +59,7 @@ export const ORIGIN_CONFIGS = {
         roster: [
             { role: 'Vanguard', level: 1, gear: ['spear', 'shield', 'leather_armor'] },
             { role: 'Sellsword', level: 1, gear: ['axe', 'padded_armor'] },
-            { role: 'Skirmisher', level: 1, gear: ['bow', 'tunic'] }
+            { role: 'Skirmisher', level: 1, gear: ['bow'] }
         ]
     },
     'lonewolf': {
@@ -78,7 +78,7 @@ export const ORIGIN_CONFIGS = {
     'default': {
         gold: 1000,
         roster: [
-            { role: 'Recruit', level: 1, gear: ['club', 'tunic'] }
+            { role: 'Recruit', level: 1, gear: [] }
         ]
     }
 };
