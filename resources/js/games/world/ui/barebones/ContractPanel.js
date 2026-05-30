@@ -161,6 +161,10 @@ export class ContractPanel {
         if (contract.contract_type === CONTRACT_TYPE.HOSTILE_CAMP) return "danger";
         if (contract.contract_type === CONTRACT_TYPE.BRIGAND_CAMP) return "danger";
         if (contract.contract_type === CONTRACT_TYPE.CARAVAN) return "caravan";
+        if (['undead_defense', 'undead_purge', 'necromancer_hunt'].includes(contract.contract_type)) return "undead-threat";
+        
+        // Map to custom humanitarian theme class [2]
+        if (['refugee_defense', 'refugee_supply', 'refugee_guard'].includes(contract.contract_type)) return "refugee-aid";
         return "";
     }
 

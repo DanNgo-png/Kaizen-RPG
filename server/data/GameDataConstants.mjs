@@ -55,7 +55,8 @@ export const SETTLEMENT_TIERS = {
     'Ancient Tomb':       { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
     'Haunted Cave':       { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
     'Sunken Dungeon':     { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
-    'Necropolis':         { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 }
+    'Necropolis':         { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
+    'Refugee Camp':       { buyMult: 1.50, sellMult: 0.30, shopLevel: 1 }
 };
 
 export const ORIGIN_CONFIGS = {
@@ -187,6 +188,15 @@ export const SETTLEMENT_EVENTS = {
         buyMult: 4.0,     // Total cutoff from surrounding trade routes
         sellMult: 0.2,
         qtyMult: 0.0,     // Market completely empty
+        specDisabled: true,
+        freqMod: 0,
+        isRandom: false
+    },
+    'refugee_under_attack': {
+        name: 'Refugees Under Attack',
+        buyMult: 5.0,     // Resource desperation reaches its maximum [2]
+        sellMult: 0.1,    // Completely unable to purchase items sold by player [2]
+        qtyMult: 0.0,     // Stash completely depleted
         specDisabled: true,
         freqMod: 0,
         isRandom: false

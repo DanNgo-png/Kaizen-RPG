@@ -48,7 +48,8 @@ export const NODE_TYPE_ICONS = Object.freeze({
     'Ancient Tomb': "fa-monument",
     'Haunted Cave': "fa-mountain",
     'Sunken Dungeon': "fa-dungeon",
-    'Necropolis': "fa-skull-crossbones"
+    'Necropolis': "fa-skull-crossbones",
+    'Refugee Camp': "fa-tent"
 });
 
 export const CHRONICLE_EVENT_META = Object.freeze({

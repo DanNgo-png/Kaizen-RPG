@@ -177,7 +177,8 @@ const NON_GROWING_SETTLEMENT_TYPES = Object.freeze([
     'Ancient Tomb',
     'Haunted Cave',
     'Sunken Dungeon',
-    'Necropolis' 
+    'Necropolis',
+    'Refugee Camp' 
 ]);
 
 const HOSTILE_CONTRACT_TARGET_TYPES = Object.freeze([
@@ -421,6 +422,11 @@ export class GameRepository {
     }
 
     _buildContractBoard(originNode, possibleMins) {
+        // Divert to custom Refugee Camp logic if matching type [2]
+        if (originNode.type === 'Refugee Camp') {
+            return this._buildRefugeeContractBoard(originNode, possibleMins);
+        }
+
         if (!this._canOfferSettlementContracts(originNode)) return [];
 
         const contracts = [];
@@ -700,44 +706,64 @@ export class GameRepository {
         activeContract.beneficiary_node_id = beneficiaryNode?.id ?? null;
         activeContract.beneficiary_node_name = beneficiaryNode?.name ?? null;
         activeContract.renown_reward = this._awardContractRenown(activeContract, contractType);
-        activeContract.influence_reward = beneficiaryNode
-            ? this._awardContractInfluence(beneficiaryNode.id, activeContract, contractType)
-            : 0;
+
+        const isRefugeeContract = ['refugee_defense', 'refugee_supply', 'refugee_guard'].includes(contractType);
+
+        let contractRepReward;
+        let finalInfluenceReward;
+
+        if (isRefugeeContract) {
+            // Massive reputation and influence with refugees [2]
+            contractRepReward = contractType === 'refugee_defense' ? 40 : 25;
+            finalInfluenceReward = contractType === 'refugee_defense' ? 50 : 30;
+            
+            if (beneficiaryNode) {
+                this.updateNodeReputation(beneficiaryNode.id, contractRepReward);
+                this.updateNodeInfluence(beneficiaryNode.id, finalInfluenceReward);
+            }
+        } else {
+            contractRepReward = Math.max(
+                CONTRACT_REPUTATION.MIN_REWARD,
+                Math.floor(activeContract.required_minutes / CONTRACT_REPUTATION.MINUTES_PER_POINT)
+            );
+            finalInfluenceReward = beneficiaryNode
+                ? this._awardContractInfluence(beneficiaryNode.id, activeContract, contractType)
+                : 0;
+            if (beneficiaryNode) {
+                this.updateNodeReputation(beneficiaryNode.id, contractRepReward);
+            }
+        }
+
+        activeContract.renown_reward = this._calculateContractRenown(activeContract, contractType);
+        activeContract.influence_reward = finalInfluenceReward;
         activeContract.influence_node_name = beneficiaryNode?.name ?? null;
 
         if (this._isDirectClearingContractType(contractType)) {
             return this._completeDirectClearing(activeContract, targetNode, originNode, companyName);
         }
 
-        const contractRepReward = Math.max(
-            CONTRACT_REPUTATION.MIN_REWARD,
-            Math.floor(activeContract.required_minutes / CONTRACT_REPUTATION.MINUTES_PER_POINT)
-        );
         if (beneficiaryNode) {
-            this.updateNodeReputation(beneficiaryNode.id, contractRepReward);
             this.logNodeHistory(beneficiaryNode.id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
             
-            // Clear Undead invasion/siege if they completed a defense contract
             if (activeContract.contract_type === 'undead_defense' || activeContract.title.includes("Defend")) {
                 this.db.prepare("UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?").run(beneficiaryNode.id);
                 this.logNodeHistory(beneficiaryNode.id, `${companyName} successfully repelled the undead horde, saving the settlement!`, 'player');
             }
+
+            if (activeContract.contract_type === 'refugee_defense') {
+                this.db.prepare("UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?").run(beneficiaryNode.id);
+                this.logNodeHistory(beneficiaryNode.id, `${companyName} repelled the raiders, securing the camp survivors!`, 'player');
+            }
         }
 
+        // Apply caravan & camp destruction logics...
         const caravanOutcome = this._applyCaravanContractOutcome(activeContract, beneficiaryNode, companyName);
-
         const campDestroyedLoot = this._handleCampDestruction(activeContract, targetNode || originNode, beneficiaryNode, companyName);
 
         const refreshedBeneficiaryNode = beneficiaryNode ? this.getNodeById(beneficiaryNode.id) : null;
         this._trackSettlementContractGrowth(refreshedBeneficiaryNode);
 
-        const beneficiaryLabel = beneficiaryNode?.name || 'settlement';
-
-        // Dynamically increment the reported Influence reward if crisis relief occurred
-        let finalInfluenceReward = activeContract.influence_reward || 0;
-        if (caravanOutcome && caravanOutcome.bonusInfluence) {
-            finalInfluenceReward += caravanOutcome.bonusInfluence;
-        }
+        const beneficiaryLabel = beneficiaryNode?.name || 'camp';
         
         const logs = [
             `📜 Contract Completed: ${activeContract.title}`,
@@ -747,31 +773,19 @@ export class GameRepository {
             `Reputation with ${beneficiaryLabel} increased by ${contractRepReward}.`
         ];
 
-        // Append custom logging strings for caravan resolution
-        if (caravanOutcome && caravanOutcome.bonusRep > 0) {
-            if (caravanOutcome.eventMitigated) {
-                logs.push(`🔥 Crisis mitigated! Gained an additional +${caravanOutcome.bonusRep} reputation and +${caravanOutcome.bonusInfluence} influence for critical relief.`);
-            } else {
-                logs.push(`Bonus reputation for restoring trade routes: +${caravanOutcome.bonusRep}.`);
-            }
-        }
-
-        // --- LOOT LOGIC ---
+        // Process loot, salvages and return...
         const foundLoot = [];
         let lootChance = CONTRACT_LOOT.DEFAULT_CHANCE;
 
         if (this._isCombatLootContract(activeContract, contractType)) {
             lootChance = CONTRACT_LOOT.COMBAT_CHANCE;
         }
-
         if (this._isHostileCampContractType(contractType)) {
             lootChance = CONTRACT_LOOT.HOSTILE_CAMP_CHANCE;
         }
-
         if (campDestroyedLoot) {
             foundLoot.push(campDestroyedLoot);
-            activeContract._campDestroyedLoot = campDestroyedLoot;
-            logs.push(`🔥 Hostile location destroyed! You found hidden stash: ${activeContract._campDestroyedLoot.name}`);
+            logs.push(`🔥 Hostile location destroyed! You found hidden stash: ${campDestroyedLoot.name}`);
         }
 
         const rolls = this._countLootRolls(activeContract, contractType);
@@ -785,8 +799,6 @@ export class GameRepository {
         }
 
         this._grantSalvageRightsLoot(activeContract, logs, foundLoot);
-
-        activeContract.influence_reward = finalInfluenceReward;
 
         return { contract: activeContract, logs, loot: foundLoot };
     }
@@ -953,7 +965,7 @@ export class GameRepository {
     }
 
     _resolveContractType(contract) {
-        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP, CONTRACT_TYPE.DIRECT_CLEARING, 'undead_defense', 'undead_purge', 'necromancer_hunt'].includes(contract.contract_type)) {
+        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP, CONTRACT_TYPE.DIRECT_CLEARING, 'undead_defense', 'undead_purge', 'necromancer_hunt', 'refugee_defense', 'refugee_supply', 'refugee_guard'].includes(contract.contract_type)) {
             return contract.contract_type;
         }
 
@@ -2332,12 +2344,29 @@ export class GameRepository {
         return false;
     }
 
+    _buildRefugeeContractBoard(originNode, possibleMins) {
+        const contracts = [];
+        
+        if (originNode.current_event === 'refugee_under_attack') {
+            contracts.push(this._createRefugeeDefenseContract(originNode, possibleMins));
+        }
+
+        contracts.push(this._createRefugeeSupplyContract(originNode, possibleMins));
+        contracts.push(this._createRefugeeGuardContract(originNode, possibleMins));
+
+        while (contracts.length < CONTRACT_GENERATION.BOARD_SIZE) {
+            contracts.push(this._createRefugeeSupplyContract(originNode, possibleMins));
+        }
+
+        return this._shuffleContracts(contracts).slice(0, CONTRACT_GENERATION.BOARD_SIZE);
+    }
+
     _createUndeadDefenseContract(originNode, possibleMins) {
         const reqMins = this._pickContractMinutes(possibleMins, 30);
         const isSiege = originNode.current_event === 'undead_siege';
         const title = `Defend ${originNode.name} against Undead ${isSiege ? 'Siege' : 'Horde'}`;
         const desc = isSiege
-            ? `A massive army of the dead, orchestrated by a dark Necromancer, has surrounded ${originNode.name}. Lift the siege before the walls are breached.`
+            ? `A massive army of the dead, orchestrated by a dark Necromancer, has surrounded ${originNode.name}. Help the garrison lift the siege before the walls are breached.`
             : `A mindless horde of shambling zombies and skeleton thralls has struck ${originNode.name}. Take up arms and defend the survivors!`;
 
         return {
@@ -2380,6 +2409,47 @@ export class GameRepository {
             desc: desc,
             req_mins: reqMins,
             gold: this._calculateContractGold(reqMins, 3.0)
+        };
+    }
+
+    _createRefugeeDefenseContract(originNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, 30);
+        return {
+            node_id: originNode.id,
+            target_node_id: null,
+            contract_type: 'refugee_defense',
+            title: `Defend ${originNode.name} from Extermination`,
+            desc: `A vicious pack of wild beasts and scavengers has cornered the camp survivors. Stand alongside the desperate wounded and hold them back, or none will see the dawn.`,
+            req_mins: reqMins,
+            gold: 0 // Purely humanitarian assistance [2]
+        };
+    }
+
+    _createRefugeeSupplyContract(originNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, 15);
+        const tokenPay = Math.floor(5 + Math.random() * 15); // Scraped together from remnants [2]
+        return {
+            node_id: originNode.id,
+            target_node_id: null,
+            contract_type: 'refugee_supply',
+            title: `Deliver Medicine and Rations to ${originNode.name}`,
+            desc: `The children and elder survivors are shivering in the damp cold, starving and diseased. Deliver basic medical wraps and rations to help them endure another week in the wild.`,
+            req_mins: reqMins,
+            gold: tokenPay
+        };
+    }
+
+    _createRefugeeGuardContract(originNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, 20);
+        const tokenPay = Math.floor(10 + Math.random() * 20);
+        return {
+            node_id: originNode.id,
+            target_node_id: null,
+            contract_type: 'refugee_guard',
+            title: `Patrol the Perimeter of ${originNode.name}`,
+            desc: `Hostile scouts and hungry wolves are circling the perimeter of the camp. Watch the tree line and drive away any lurking threats while the survivors gather firewood.`,
+            req_mins: reqMins,
+            gold: tokenPay
         };
     }
 }

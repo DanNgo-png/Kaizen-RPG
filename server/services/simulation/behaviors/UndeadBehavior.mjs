@@ -68,13 +68,13 @@ export class UndeadBehavior extends BaseFactionBehavior {
         const settlements = allNodes.filter(node => 
             node.faction_id !== undeadFaction.id && 
             !Object.values(UNDEAD_NODE_TYPES).includes(node.type) &&
-            !['Ruins', 'Bandit Camp', 'Bandit Outpost', 'Bandit Stronghold', 'Stolen Stronghold', 'Barbarian Camp', 'Barbarian Outpost', 'Barbarian Warcamp', 'Goblin Camp', 'Goblin Outpost', 'Greenskin Stronghold'].includes(node.type)
+            !['Ruins', 'Refugee Camp', 'Bandit Camp', 'Bandit Outpost', 'Bandit Stronghold', 'Stolen Stronghold', 'Barbarian Camp', 'Barbarian Outpost', 'Barbarian Warcamp', 'Goblin Camp', 'Goblin Outpost', 'Greenskin Stronghold'].includes(node.type)
         );
 
-        // 1. Spawn new desecrated sites
+        // 1. Spawn new unholy locations
         this._spawnNewUndeadNode(currentDay, undeadFaction.id, allNodes, undeadNodes, logs);
 
-        // 2. Simulate Attacks (Immediate Invasions vs Necromancer Sieges)
+        // 2. Simulate Attacks (Mindless Invasions vs Necromancer Sieges)
         for (const uNode of undeadNodes) {
             const hasNecromancer = uNode.type === UNDEAD_NODE_TYPES.NECROPOLIS || (uNode.id % 3 === 0);
 
@@ -83,8 +83,8 @@ export class UndeadBehavior extends BaseFactionBehavior {
                     const target = this._findNearestActiveSettlement(uNode, settlements);
                     if (target && !target.current_event) {
                         this.repo.db.prepare('UPDATE world_nodes SET current_event = "undead_siege", event_expiration = 6 WHERE id = ?').run(target.id);
-                        this.repo.logNodeHistory(target.id, `A dark Necromancer from ${uNode.name} has laid siege to ${target.name}!`, 'world');
-                        logs.push(`💀 Ominous shadow falls! A dark Necromancer from ${uNode.name} is preparing a siege on ${target.name}.`);
+                        this.repo.logNodeHistory(target.id, `A sinister necromancer from ${uNode.name} has begun orchestrating a siege of desecration on ${target.name}!`, 'world');
+                        logs.push(`💀 Ominous shadow falls! A dark Necromancer from ${uNode.name} is preparing an undead siege on ${target.name}.`);
                     }
                 }
             } else {
@@ -92,7 +92,7 @@ export class UndeadBehavior extends BaseFactionBehavior {
                     const target = this._findNearestActiveSettlement(uNode, settlements);
                     if (target && !target.current_event) {
                         this.repo.db.prepare('UPDATE world_nodes SET current_event = "undead_invasion", event_expiration = 3 WHERE id = ?').run(target.id);
-                        this.repo.logNodeHistory(target.id, `An unholy tide of zombies and skeletons from ${uNode.name} has invaded ${target.name}!`, 'world');
+                        this.repo.logNodeHistory(target.id, `An unholy tide of zombies and skeletons has suddenly surged out of ${uNode.name} and directly invaded ${target.name}!`, 'world');
                         logs.push(`⚠️ Alarm! An unholy tide of zombies and skeletons has suddenly struck ${target.name}! Defend it before it is overrun.`);
                     }
                 }
@@ -108,6 +108,30 @@ export class UndeadBehavior extends BaseFactionBehavior {
                     this._overrunSettlement(settlement, undeadFaction.id, logs);
                 } else {
                     this.repo.db.prepare('UPDATE world_nodes SET event_expiration = event_expiration - 1 WHERE id = ?').run(settlement.id);
+                }
+            }
+        }
+
+        // 4. Refugee Camp Vulnerability Sweep
+        const refugeeCamps = allNodes.filter(node => node.type === 'Refugee Camp');
+        for (const camp of refugeeCamps) {
+            if (camp.current_event === 'refugee_under_attack') {
+                const currentExpiration = camp.event_expiration || 0;
+                if (currentExpiration <= 1) {
+                    this.repo.db.prepare('DELETE FROM world_nodes WHERE id = ?').run(camp.id);
+                    this.repo.db.prepare('DELETE FROM contracts WHERE node_id = ? AND is_completed = 0').run(camp.id);
+                    logs.push(`💀 Catastrophe! The vulnerable Refugee Camp "${camp.name}" was overrun by raiding monsters. The camp is burned to the ground and there are no survivors.`);
+                } else {
+                    this.repo.db.prepare('UPDATE world_nodes SET event_expiration = event_expiration - 1 WHERE id = ?').run(camp.id);
+                }
+            } else {
+                if (Math.random() < UNDEAD_FACTION_CONFIG.CAMP_ATTACK_CHANCE) {
+                    const monsters = ["Goblins", "Orcs", "Brigands", "Restless Skeletons"];
+                    const aggressor = monsters[Math.floor(Math.random() * monsters.length)];
+
+                    this.repo.db.prepare('UPDATE world_nodes SET current_event = "refugee_under_attack", event_expiration = 2 WHERE id = ?').run(camp.id);
+                    this.repo.logNodeHistory(camp.id, `The camp is being raided by a pack of ${aggressor}! Help is urgently needed.`, 'world');
+                    logs.push(`⚠️ Urgent! The Refugee Camp "${camp.name}" is under brutal attack by raiding ${aggressor}! They cannot hold out for more than 2 days without help.`);
                 }
             }
         }
@@ -185,9 +209,12 @@ export class UndeadBehavior extends BaseFactionBehavior {
             
             this.repo.db.prepare('DELETE FROM contracts WHERE node_id = ? AND is_completed = 0').run(settlement.id);
 
-            const msg = `💀 Tragedy! ${settlement.name} was overrun by the undead. Its streets are desolate and the dead now rise from its fresh graves as a Desecrated Crypt!`;
+            const msg = `💀 Tragedy! ${settlement.name} was completely overrun by the undead. Its streets are desolate and the dead now rise from its fresh graves as a Desecrated Crypt!`;
             this.repo.logNodeHistory(settlement.id, msg, 'world');
             logs.push(msg);
+
+            // Trigger Refugee evaluation logic [2]
+            this._handleRefugees(settlement, logs);
         } else {
             this.repo.db.prepare(`
                 UPDATE world_nodes 
@@ -202,6 +229,74 @@ export class UndeadBehavior extends BaseFactionBehavior {
             const msg = `💥 Ransacked! ${settlement.name} was raided and looted by shambling hordes. The survivors flee, and its population has collapsed to ${newPopTier}.`;
             this.repo.logNodeHistory(settlement.id, msg, 'world');
             logs.push(msg);
+        }
+    }
+
+    _handleRefugees(settlement, logs) {
+        const SURVIVOR_CHANCE = 0.70;
+        if (Math.random() > SURVIVOR_CHANCE) {
+            const noSurvivorsMsg = `🥀 No one survived the slaughter at ${settlement.name}. All were converted into thralls of the legion.`;
+            logs.push(noSurvivorsMsg);
+            return;
+        }
+
+        // Fetch other friendly settlements [2]
+        const activeSettlements = this.repo.db.prepare(`
+            SELECT id, name, type, population_tier, x, y 
+            FROM world_nodes 
+            WHERE is_hostile = 0 AND type NOT IN ('Ruins', 'Refugee Camp')
+        `).all();
+
+        let acceptedBy = null;
+        const ACCEPT_CHANCE = 0.40; // 40% probability per town [2]
+
+        for (const target of activeSettlements) {
+            if (Math.random() < ACCEPT_CHANCE) {
+                acceptedBy = target;
+                break;
+            }
+        }
+
+        if (acceptedBy) {
+            const newPopTier = Math.min(5, (acceptedBy.population_tier || 1) + 1);
+            this.repo.db.prepare(`
+                UPDATE world_nodes 
+                SET population_tier = ? 
+                WHERE id = ?
+            `).run(newPopTier, acceptedBy.id);
+
+            const successMsg = `🗣️ Refugees! Survivors of ${settlement.name} fled to ${acceptedBy.name}. The town has accepted them, straining local supplies but increasing the population to ${newPopTier}.`;
+            this.repo.logNodeHistory(acceptedBy.id, successMsg, 'world');
+            logs.push(successMsg);
+        } else {
+            // Refused by all! Spawn temporary camp close by [2]
+            const allNodes = this.repo.db.prepare('SELECT id, x, y FROM world_nodes').all();
+            const spawnPos = this._findSafeSpawnNear(settlement, allNodes, 90, 240, 70);
+
+            if (spawnPos) {
+                const campName = `Refugees of ${settlement.name}`;
+                const info = this.repo.createWorldNode({
+                    type: 'Refugee Camp',
+                    name: campName,
+                    x: spawnPos.x,
+                    y: spawnPos.y,
+                    faction_id: null,
+                    reputation: 0,
+                    buy_modifier: 1.50, // Scarcity means expensive supplies
+                    sell_modifier: 0.30, // They have nothing to give in exchange
+                    specialization: null,
+                    attachments: 0
+                });
+
+                this.repo.db.prepare('UPDATE world_nodes SET is_hidden = 0, is_hostile = 0, population_tier = 1 WHERE id = ?').run(info.lastInsertRowid);
+
+                const failMsg = `⛺ Rejected! Refused sanctuary by other settlements, the desperate survivors of ${settlement.name} have set up a temporary Refugee Camp near their former home. It is highly vulnerable.`;
+                this.repo.logNodeHistory(info.lastInsertRowid, failMsg, 'world');
+                logs.push(failMsg);
+            } else {
+                const lostMsg = `🥀 The survivors of ${settlement.name} were chased into the wilderness and lost.`;
+                logs.push(lostMsg);
+            }
         }
     }
 
@@ -240,6 +335,24 @@ export class UndeadBehavior extends BaseFactionBehavior {
     _findNearestActiveSettlement(originNode, settlements) {
         if (!originNode || settlements.length === 0) return null;
         return [...settlements].sort((a, b) => this.distance(originNode, a) - this.distance(originNode, b))[0];
+    }
+
+    _findSafeSpawnNear(parentNode, allNodes, minDistance, maxDistance, minCollisionDistance) {
+        for (let attempt = 0; attempt < UNDEAD_FACTION_CONFIG.PLACEMENT_ATTEMPTS; attempt++) {
+            const angle = Math.random() * FULL_CIRCLE_RADIANS;
+            const distance = minDistance + Math.random() * (maxDistance - minDistance);
+            const position = {
+                x: Math.round(parentNode.x + Math.cos(angle) * distance),
+                y: Math.round(parentNode.y + Math.sin(angle) * distance)
+            };
+
+            if (!this._isWithinMapBounds(position)) continue;
+            if (this._collidesWithAnyNode(position, allNodes, minCollisionDistance)) continue;
+
+            return position;
+        }
+
+        return null;
     }
 
     _findIsolatedPosition(rng, existingNodes) {
@@ -300,6 +413,13 @@ export class UndeadBehavior extends BaseFactionBehavior {
                 WORLD_GENERATION_CONFIG.MAP_HEIGHT - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
             )
         };
+    }
+
+    _isWithinMapBounds(position) {
+        return position.x >= UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            && position.x <= WORLD_GENERATION_CONFIG.MAP_WIDTH - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            && position.y >= UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            && position.y <= WORLD_GENERATION_CONFIG.MAP_HEIGHT - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX;
     }
 
     _collidesWithAnyNode(position, nodes, minDistance) {
