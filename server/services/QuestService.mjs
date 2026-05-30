@@ -140,6 +140,16 @@ export class QuestService {
         } catch(e) { console.error(e); }
     }
 
+    negotiateContractTerm(payload, app) {
+        try {
+            const result = this.repo.negotiateContractTerm(payload.contractId, payload.nodeId, payload.termId);
+            app.events.broadcast("contractTermNegotiated", result);
+        } catch(e) {
+            console.error(e);
+            app.events.broadcast("contractTermNegotiationFailed", { error: e.message });
+        }
+    }
+
     startHostileSettlementClearing(payload, app) {
         try {
             const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || DEFAULT_MIN_CONTRACT_DURATION;

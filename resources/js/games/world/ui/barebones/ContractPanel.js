@@ -18,12 +18,14 @@ export class ContractPanel {
         dom,
         onAcceptContract,
         onAbortContract,
-        onStartHostileClearing
+        onStartHostileClearing,
+        onNegotiateContractTerm
     }) {
         this.dom = dom;
         this.onAcceptContract = onAcceptContract;
         this.onAbortContract = onAbortContract;
         this.onStartHostileClearing = onStartHostileClearing;
+        this.onNegotiateContractTerm = onNegotiateContractTerm;
     }
 
     renderLoading() {
@@ -32,7 +34,7 @@ export class ContractPanel {
         }
     }
 
-    renderContracts(contracts, activeContract) {
+    renderContracts(contracts, activeContract, selectedNode) {
         if (!this.dom.contractList) return;
 
         this.dom.contractList.innerHTML = "";
@@ -43,7 +45,7 @@ export class ContractPanel {
 
         const isBusy = Boolean(activeContract);
         contracts.forEach((contract) => {
-            this.dom.contractList.appendChild(this._createContractCard(contract, isBusy));
+            this.dom.contractList.appendChild(this._createContractCard(contract, isBusy, selectedNode));
         });
     }
 
@@ -117,7 +119,7 @@ export class ContractPanel {
         this.dom.progressText.textContent = `Invest Focus Time to progress (${Math.floor(progress)}/${target}m).`;
     }
 
-    _createContractCard(contract, isBusy) {
+    _createContractCard(contract, isBusy, selectedNode) {
         const element = document.createElement("div");
         element.className = `bb-contract-card ${this._contractCardClass(contract)}`;
         element.innerHTML = `
@@ -130,6 +132,7 @@ export class ContractPanel {
                     <span class="bb-reward-time"><i class="fa-regular fa-clock"></i> ${contract.required_minutes}m Focus</span>
                     ${this._contractLootHtml(contract)}
                 </div>
+                ${this._influenceTermsHtml(contract, selectedNode, isBusy)}
             </div>
             <div class="bb-c-right">
                 <button class="bb-btn-accept" ${isBusy ? "disabled" : ""}>
@@ -144,6 +147,12 @@ export class ContractPanel {
             });
         }
 
+        element.querySelectorAll("[data-term-id]").forEach((button) => {
+            button.addEventListener("click", () => {
+                this.onNegotiateContractTerm?.(contract.id, selectedNode?.id, button.dataset.termId);
+            });
+        });
+
         return element;
     }
 
@@ -153,6 +162,43 @@ export class ContractPanel {
         if (contract.contract_type === CONTRACT_TYPE.BRIGAND_CAMP) return "danger";
         if (contract.contract_type === CONTRACT_TYPE.CARAVAN) return "caravan";
         return "";
+    }
+
+    _influenceTermsHtml(contract, selectedNode, isBusy) {
+        const options = contract.influence_options || [];
+        if (!options.length || !selectedNode) return "";
+
+        const influence = Number(selectedNode.influence) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+        const buttons = options.map((option) => {
+            const isApplied = Boolean(option.applied || contract.terms?.[option.id]);
+            const canAfford = influence >= option.cost;
+            const disabled = isBusy || isApplied || !canAfford;
+            const stateLabel = isApplied ? "Secured" : `${option.cost} Influence`;
+            const className = isApplied ? "bb-influence-action applied" : "bb-influence-action";
+            const title = isApplied
+                ? `${option.label} already secured.`
+                : option.description;
+
+            return `
+                <button class="${className}" data-term-id="${escapeHtml(option.id)}" title="${escapeHtml(title)}" ${disabled ? "disabled" : ""}>
+                    <i class="fa-solid ${escapeHtml(option.icon || 'fa-gavel')}"></i>
+                    <span>${escapeHtml(option.label)}</span>
+                    <b>${escapeHtml(stateLabel)}</b>
+                </button>
+            `;
+        }).join("");
+
+        return `
+            <div class="bb-influence-panel">
+                <div class="bb-influence-header">
+                    <span><i class="fa-solid fa-gavel"></i> Influence</span>
+                    <strong>${influence}</strong>
+                </div>
+                <div class="bb-influence-actions">
+                    ${buttons}
+                </div>
+            </div>
+        `;
     }
 
     _contractTargetHtml(contract) {

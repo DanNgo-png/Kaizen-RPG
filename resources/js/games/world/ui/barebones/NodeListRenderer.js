@@ -8,6 +8,7 @@ import { escapeHtml } from "./BarebonesTemplates.js";
 const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const HOSTILE_REPUTATION_THRESHOLD = -50;
+const confirmAction = (message) => globalThis.confirm?.(message) ?? true;
 
 export class NodeListRenderer {
     constructor({
@@ -16,7 +17,8 @@ export class NodeListRenderer {
         chroniclesModal,
         onSelectNode,
         onSwitchTab,
-        onTogglePin
+        onTogglePin,
+        onClearHostileNode
     }) {
         this.dom = dom;
         this.menuManager = menuManager;
@@ -24,6 +26,7 @@ export class NodeListRenderer {
         this.onSelectNode = onSelectNode;
         this.onSwitchTab = onSwitchTab;
         this.onTogglePin = onTogglePin;
+        this.onClearHostileNode = onClearHostileNode;
     }
 
     render(nodes, selectedNode) {
@@ -123,7 +126,22 @@ export class NodeListRenderer {
             }
         ];
 
-        if (!isHostile) {
+        if (isHostile) {
+            menuItems.push(
+                { separator: true },
+                {
+                    label: "Clear Hostile Settlement",
+                    icon: '<i class="fa-solid fa-skull-crossbones"></i>',
+                    action: () => {
+                        this.onSelectNode(node);
+                        this.onSwitchTab(BAREBONES_TABS.JOBS);
+                        if (confirmAction(`Clear ${node.name} without a settlement contract? There will be no gold reward.`)) {
+                            this.onClearHostileNode?.(node.id);
+                        }
+                    }
+                }
+            );
+        } else {
             menuItems.push(
                 { separator: true },
                 {

@@ -3,6 +3,7 @@ import { escapeHtml } from "./BarebonesTemplates.js";
 
 const RESOURCE_THEME_CLASS = Object.freeze({
     gold: "gold",
+    renown: "renown",
     provisions: "provisions",
     tools: "tools",
     ammo: "ammo",
@@ -112,6 +113,11 @@ export class ResourceTooltipManager {
                     `Your <b>${value("gold")}</b> crowns will last you for <b>${daysGold}</b> more days.`
                 ]);
             }
+            case "renown":
+                return this._layout("Renown", RESOURCE_THEME_CLASS.renown, [
+                    `Your company has <b>${value("renown")}</b> Renown.`,
+                    "Renown rises when you complete contracts and clear enemy strongholds."
+                ]);
             case "provisions": {
                 const foodPerDay = value("foodPerDay");
                 const daysFood = this._daysRemaining(value("provisions"), foodPerDay);

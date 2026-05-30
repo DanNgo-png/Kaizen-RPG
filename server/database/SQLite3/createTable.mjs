@@ -159,6 +159,18 @@ const migrations = [
         if (!nodeColumns.includes('population_tier')) {
             db.exec("ALTER TABLE world_nodes ADD COLUMN population_tier INTEGER DEFAULT 1;");
         }
+    },
+    // --- Version 14: Political Influence and negotiated contract terms ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('influence')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN influence INTEGER DEFAULT 0;");
+        }
+
+        const contractColumns = db.pragma('table_info(contracts)').map(col => col.name);
+        if (!contractColumns.includes('terms')) {
+            db.exec("ALTER TABLE contracts ADD COLUMN terms TEXT DEFAULT '{}';");
+        }
     }
 ];
 

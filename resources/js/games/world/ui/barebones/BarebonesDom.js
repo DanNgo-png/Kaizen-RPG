@@ -17,6 +17,7 @@ export function createBarebonesDom(documentRef = document) {
 
         timeDisplay: documentRef.getElementById("bb-time-display"),
         goldDisplay: documentRef.getElementById("bb-gold-display"),
+        renownDisplay: documentRef.getElementById("bb-renown-display"),
         provisionsDisplay: documentRef.getElementById("bb-provisions-display"),
         toolsDisplay: documentRef.getElementById("bb-tools-display"),
         ammoDisplay: documentRef.getElementById("bb-ammo-display"),
@@ -28,6 +29,7 @@ export function createBarebonesDom(documentRef = document) {
         resContainers: {
             time: documentRef.getElementById("bb-res-time-container"),
             gold: documentRef.getElementById("bb-res-gold-container"),
+            renown: documentRef.getElementById("bb-res-renown-container"),
             provisions: documentRef.getElementById("bb-res-provisions-container"),
             tools: documentRef.getElementById("bb-res-tools-container"),
             ammo: documentRef.getElementById("bb-res-ammo-container"),

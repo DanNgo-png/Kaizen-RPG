@@ -12,6 +12,12 @@ const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
 const GROWTH_PROGRESS_MAX_PERCENT = 100;
 const DEFAULT_MATERIAL_DELIVERIES_NEEDED = 10;
+const INFLUENCE_PROGRESS_CAP = 100;
+const UNREST_HIGH_THRESHOLD = 15;
+const DEFAULT_UNREST = 5;
+const WARY_UNREST = 30;
+const REPUTATION_UNREST_THRESHOLD = -10;
+const MAX_POPULATION_TIER = 5;
 const HOSTILE_NODE_TYPES = Object.freeze([
     'Bandit Camp',
     'Bandit Outpost',
@@ -236,9 +242,11 @@ export class ChroniclesModal {
             `;
         }
 
-        // Futuristic placeholders for upcoming political/influence layers
-        const influence = node.faction ? 85 : 0;
-        const unrest = node.reputation <= -10 ? 30 : 5;
+        const influence = Number(node.influence) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+        const influencePct = Math.min(INFLUENCE_PROGRESS_CAP, influence);
+        const unrest = node.reputation <= REPUTATION_UNREST_THRESHOLD ? WARY_UNREST : DEFAULT_UNREST;
+        const unrestColor = unrest > UNREST_HIGH_THRESHOLD ? '#f87171' : '#34d399';
+        const unrestFill = unrest > UNREST_HIGH_THRESHOLD ? '#ef4444' : '#10b981';
 
         return `
             <div class="bb-chronicles-entry" style="border-left: 4px solid #3b82f6; background: rgba(255, 255, 255, 0.02); display: flex; flex-direction: column; gap: 12px; padding: 16px;">
@@ -247,17 +255,20 @@ export class ChroniclesModal {
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem;">
                     <span style="color: #94a3b8; margin-right: 8px;">Noble Influence</span>
-                    <span style="font-weight: 700; color: #3b82f6;">${influence}%</span>
+                    <span style="font-weight: 700; color: #3b82f6;">${influence}</span>
                 </div>
                 <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
-                    <div class="bb-fill" style="width: ${influence}%; background: #3b82f6;"></div>
+                    <div class="bb-fill" style="width: ${influencePct}%; background: #3b82f6;"></div>
+                </div>
+                <div style="font-size: 0.78rem; color: #9ca3af; line-height: 1.4;">
+                    Spend Influence on job boards to push better pay, salvage rights, noble footmen, or local pardons.
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-top: 4px;">
                     <span style="color: #94a3b8; margin-right: 8px;">Civil Unrest</span>
-                    <span style="font-weight: 700; color: ${unrest > 15 ? '#f87171' : '#34d399'};">${unrest}%</span>
+                    <span style="font-weight: 700; color: ${unrestColor};">${unrest}%</span>
                 </div>
                 <div class="bb-progress-bar" style="height: 6px; margin: 0; background: #0f172a; width: 100%;">
-                    <div class="bb-fill" style="width: ${unrest}%; background: ${unrest > 15 ? '#ef4444' : '#10b981'};"></div>
+                    <div class="bb-fill" style="width: ${unrest}%; background: ${unrestFill};"></div>
                 </div>
                 <div style="display: flex; align-items: center; justify-content: space-between; font-size: 0.85rem; margin-top: 4px; border-top: 1px dashed rgba(255,255,255,0.05); padding-top: 8px;">
                     <span style="color: #94a3b8; margin-right: 8px;"><i class="fa-solid fa-shield-halved"></i> Local Garrison</span>
@@ -302,7 +313,10 @@ export class ChroniclesModal {
                 if (node.current_event === 'settlement_expansion') {
                     titleStr = 'Colonial Expansion';
                 } else if (node.current_event === 'building_boom') {
-                    if ((node.population_tier || 1) < 5) {
+                    if (!node.specialization) {
+                        titleStr = 'Found Local Industry';
+                        descStr = "Sell <b>Building Materials</b> (Wood, Peat, Copper) here to establish the settlement's first local specialization.";
+                    } else if ((node.population_tier || 1) < MAX_POPULATION_TIER) {
                         titleStr = 'Population Growth';
                         descStr = "Sell <b>Building Materials</b> (Wood, Peat, Copper) here to increase the settlement's population.";
                     } else {
@@ -376,7 +390,9 @@ export class ChroniclesModal {
         const targetTitle = growth.nextTier === 'Colonial Outpost' ? 'Fund Colonial Outpost' : `Upgrade to ${growth.nextTier}`;
         
         let growthDesc = `Contribute to the local economy to trigger a <b>Building Boom</b> and ${targetTitle.toLowerCase()}.`;
-        if ((node.population_tier || 1) < 5) {
+        if (!node.specialization) {
+            growthDesc = "Contribute to the local economy to trigger a <b>Building Boom</b> and establish a local specialization.";
+        } else if ((node.population_tier || 1) < MAX_POPULATION_TIER) {
             growthDesc = "Contribute to the local economy to trigger a <b>Building Boom</b> and grow the population.";
         }
 

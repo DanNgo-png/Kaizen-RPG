@@ -195,7 +195,8 @@ export function createDefaultPartyData() {
     return {
         mercenaries: [],
         resources: {
-            gold: BAREBONES_UI.DEFAULT_RESOURCE_VALUE
+            gold: BAREBONES_UI.DEFAULT_RESOURCE_VALUE,
+            renown: BAREBONES_UI.DEFAULT_RESOURCE_VALUE
         }
     };
 }

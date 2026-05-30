@@ -10,6 +10,7 @@ export class WorldHUD {
         
         this.stats = {
             gold: document.getElementById('hud-gold'),
+            renown: document.getElementById('hud-renown'),
             provisions: document.getElementById('hud-provisions'),
             tools: document.getElementById('hud-tools'),
             ammo: document.getElementById('hud-ammo'),
@@ -40,6 +41,7 @@ export class WorldHUD {
         }
 
         if (data.gold !== undefined && this.stats.gold) this.stats.gold.textContent = data.gold;
+        if (data.renown !== undefined && this.stats.renown) this.stats.renown.textContent = data.renown;
         if (data.provisions !== undefined && this.stats.provisions) this.stats.provisions.textContent = data.provisions;
         if (data.tools !== undefined && this.stats.tools) this.stats.tools.textContent = data.tools;
         if (data.ammo !== undefined && this.stats.ammo) this.stats.ammo.textContent = data.ammo;
@@ -64,6 +66,7 @@ export class WorldHUD {
         const resourceTriggers = [
             { id: 'res-time-container', type: 'time' },
             { id: 'res-gold-container', type: 'gold' },
+            { id: 'res-renown-container', type: 'renown' },
             { id: 'res-provisions-container', type: 'provisions' },
             { id: 'res-tools-container', type: 'tools' },
             { id: 'res-ammo-container', type: 'ammo' },
@@ -104,6 +107,13 @@ export class WorldHUD {
                     <div style="font-weight:700; color:#facc15; margin-bottom:5px; font-size:1.05rem;">Crowns</div>
                     <div style="max-width: 250px; line-height:1.4;">You pay out <b style="color:#fff;">${d.dailyWages || 0}</b> crowns per day.</div>
                     <div style="margin-top:8px; max-width: 250px; line-height:1.4;">Your <b style="color:#fff;">${d.gold}</b> crowns will last you for <b style="color:#fff;">${daysGold}</b> more days.</div>
+                `;
+                break;
+            case 'renown':
+                html = `
+                    <div style="font-weight:700; color:#c4b5fd; margin-bottom:5px; font-size:1.05rem;">Renown</div>
+                    <div style="max-width: 260px; line-height:1.4;">Your company has <b style="color:#fff;">${d.renown || 0}</b> Renown.</div>
+                    <div style="margin-top:8px; max-width: 260px; line-height:1.4; color:#9ca3af;">Renown rises when you complete contracts and clear enemy strongholds.</div>
                 `;
                 break;
             case 'provisions':
@@ -212,12 +222,14 @@ export class WorldHUD {
         const rep = node.reputation || 0;
         const repStr = getReputationString(rep);
         const repCol = getReputationColor(rep);
+        const influence = Number(node.influence) || 0;
 
         this.tooltip.innerHTML = `
             ${factionHtml}
             <div style="font-weight:700; font-size:1rem; margin-bottom:2px;">${this._escapeHtml(node.name)}</div>
             <div style="color:${typeColor}; font-size:0.8rem; text-transform:uppercase;">${this._escapeHtml(node.type)}</div>
             <div style="color:${repCol}; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-handshake"></i> Reputation: ${repStr} (${rep})</div>
+            <div style="color:#c4b5fd; font-size:0.75rem; margin-top:4px;"><i class="fa-solid fa-gavel"></i> Influence: ${influence}</div>
             ${eventHtml} <!-- Injected Event HTML here -->
             ${specHtml}
             ${attachHtml}

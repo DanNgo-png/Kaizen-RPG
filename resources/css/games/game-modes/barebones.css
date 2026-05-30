@@ -304,6 +304,16 @@
     align-items: center;
 }
 
+.bb-c-left {
+    flex: 1;
+    min-width: 0;
+}
+
+.bb-c-right {
+    flex-shrink: 0;
+    margin-left: 18px;
+}
+
 .bb-contract-card:hover {
     border-color: #64748b;
 }
@@ -364,6 +374,68 @@
 .bb-reward-gold { color: #facc15; }
 .bb-reward-time { color: #60a5fa; }
 .bb-reward-loot { color: #34d399; }
+
+.bb-influence-panel {
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px dashed rgba(148, 163, 184, 0.24);
+}
+
+.bb-influence-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: #c4b5fd;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-transform: uppercase;
+}
+
+.bb-influence-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.bb-influence-action {
+    min-height: 34px;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 7px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(196, 181, 253, 0.38);
+    background: rgba(76, 29, 149, 0.2);
+    color: #ddd6fe;
+    cursor: pointer;
+    font-size: 0.76rem;
+    font-weight: 800;
+    font-family: var(--font-main);
+    transition: 0.2s;
+}
+
+.bb-influence-action b {
+    color: #facc15;
+    font-size: 0.7rem;
+}
+
+.bb-influence-action:hover {
+    border-color: #c4b5fd;
+    background: rgba(109, 40, 217, 0.32);
+}
+
+.bb-influence-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+.bb-influence-action.applied {
+    border-color: rgba(52, 211, 153, 0.38);
+    background: rgba(6, 78, 59, 0.24);
+    color: #a7f3d0;
+}
 
 .bb-btn-accept {
     background: #059669;
@@ -679,6 +751,7 @@
 }
 
 .bb-tooltip-title.gold { color: #facc15; }
+.bb-tooltip-title.renown { color: #c4b5fd; }
 .bb-tooltip-title.provisions { color: #d97706; }
 .bb-tooltip-title.tools { color: #9ca3af; }
 .bb-tooltip-title.ammo { color: #d1d5db; }
@@ -1574,4 +1647,3 @@
     border-color: #475569;
     box-shadow: 0 4px 12px rgba(0,0,0,0.25);
 }
-

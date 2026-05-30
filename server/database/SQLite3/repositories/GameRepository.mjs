@@ -46,6 +46,62 @@ const CONTRACT_REPUTATION = Object.freeze({
     AMBUSHED_TRADE_ROUTE_CARAVAN_BONUS: 5
 });
 
+const RENOWN_REWARD = Object.freeze({
+    MIN_REWARD: 1,
+    MINUTES_PER_POINT: 30,
+    HOSTILE_CAMP_BONUS: 2,
+    DIRECT_CLEARING_BONUS: 1
+});
+
+const INFLUENCE_REWARD = Object.freeze({
+    MIN_REWARD: 1,
+    MINUTES_PER_POINT: 20,
+    CARAVAN_BONUS: 1,
+    HOSTILE_CAMP_BONUS: 2,
+    DIRECT_CLEARING_BONUS: 1
+});
+
+const CONTRACT_INFLUENCE_TERMS = Object.freeze([
+    Object.freeze({
+        id: 'better_pay',
+        label: 'Better Pay',
+        icon: 'fa-coins',
+        cost: 4,
+        goldMultiplier: 1.25,
+        description: 'Increase the crown reward before accepting the job.'
+    }),
+    Object.freeze({
+        id: 'salvage_rights',
+        label: 'Salvage Rights',
+        icon: 'fa-box-open',
+        cost: 6,
+        extraArmorPieces: 2,
+        description: 'Keep salvaged enemy armor and war gear.'
+    }),
+    Object.freeze({
+        id: 'footmen',
+        label: 'Noble Footmen',
+        icon: 'fa-people-group',
+        cost: 8,
+        damageChanceMultiplier: 0.55,
+        description: 'Bring local footmen to screen the next battle.'
+    }),
+    Object.freeze({
+        id: 'local_pardon',
+        label: 'Local Pardon',
+        icon: 'fa-scale-balanced',
+        cost: 5,
+        reputationGain: 10,
+        description: 'Have a local incident forgiven and restore standing.'
+    })
+]);
+
+const CONTRACT_INFLUENCE_TERM_BY_ID = new Map(
+    CONTRACT_INFLUENCE_TERMS.map((term) => [term.id, term])
+);
+
+const COMBAT_NEGOTIATION_TERM_IDS = Object.freeze(['salvage_rights', 'footmen']);
+
 const CONTRACT_GENERATION = Object.freeze({
     BOARD_SIZE: 3,
     DEFAULT_MIN_MINUTES: 10,
@@ -73,6 +129,21 @@ const CONTRACT_EVENT_DURATION = Object.freeze({
 
 const DIRECT_CLEARING = Object.freeze({
     GOLD_REWARD: 0
+});
+
+const CONTRACT_SESSION_RISK = Object.freeze({
+    BASE_DAMAGE_CHANCE: 0.20,
+    DAMAGE_ROLL_RANGE: 8,
+    MIN_DAMAGE: 2,
+    DEFENSE_MITIGATION_DIVISOR: 4,
+    FATIGUE_MINUTES_PER_POINT: 5,
+    FATIGUE_GEAR_DIVISOR: 2,
+    TRAVELERS_ENCOUNTER_CHANCE: 0.30,
+    ATTACK_LOOT_SCORE_DIVISOR: 100,
+    ATTACK_LOOT_BONUS_RATE: 0.10,
+    BASE_LOOT_CHANCE: 0.30,
+    MIN_LOOT_ROLLS: 1,
+    MINUTES_PER_LOOT_ROLL: 15
 });
 
 const IDLE_SESSION_CONFIG = Object.freeze({
@@ -215,8 +286,8 @@ export class GameRepository {
             insertLedger: this.db.prepare(`INSERT INTO company_ledger (day, description, amount) VALUES (@day, @desc, @amount)`),
 
             insertNode: this.db.prepare(`
-                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier, specialization, attachments) 
-                VALUES (@type, @name, @x, @y, @faction_id, @reputation, @buy_modifier, @sell_modifier, @specialization, @attachments)
+                INSERT INTO world_nodes (type, name, x, y, faction_id, reputation, buy_modifier, sell_modifier, specialization, attachments, influence) 
+                VALUES (@type, @name, @x, @y, @faction_id, @reputation, @buy_modifier, @sell_modifier, @specialization, @attachments, @influence)
             `),
             getAllNodes: this.db.prepare(WORLD_NODE_SELECT),
 
@@ -224,6 +295,7 @@ export class GameRepository {
             updateNodeShop: this.db.prepare(`UPDATE world_nodes SET shop_inventory = @inv, last_restock_day = @lastRestock, next_trade_restock_day = @nextTrade WHERE id = @id`),
 
             updateReputation: this.db.prepare(`UPDATE world_nodes SET reputation = COALESCE(reputation, 0) + ? WHERE id = ?`),
+            updateNodeInfluence: this.db.prepare(`UPDATE world_nodes SET influence = MAX(0, COALESCE(influence, 0) + @amount) WHERE id = @id`),
 
             togglePin: this.db.prepare(`UPDATE world_nodes SET is_pinned = CASE WHEN is_pinned = 1 THEN 0 ELSE 1 END WHERE id = ?`),
             getNodeHistory: this.db.prepare(`SELECT * FROM node_history WHERE node_id = ? ORDER BY day DESC, id DESC`),
@@ -242,6 +314,7 @@ export class GameRepository {
             updateSetting: this.db.prepare(`UPDATE campaign_settings SET value = @value WHERE key = @key`),
 
             getActiveContract: this.db.prepare(`${CONTRACT_SELECT} WHERE contracts.is_active = 1 LIMIT 1`),
+            getContractById: this.db.prepare(`${CONTRACT_SELECT} WHERE contracts.id = ?`),
             getNodeContracts: this.db.prepare(`${CONTRACT_SELECT} WHERE contracts.node_id = ? AND contracts.is_completed = 0 AND contracts.contract_type != '${CONTRACT_TYPE.DIRECT_CLEARING}'`),
             insertContract: this.db.prepare(`
                 INSERT INTO contracts (node_id, target_node_id, contract_type, title, description, required_minutes, gold_reward)
@@ -252,6 +325,7 @@ export class GameRepository {
             setContractProgress: this.db.prepare(`UPDATE contracts SET progress_minutes = @progress WHERE id = @id`),
             completeContract: this.db.prepare(`UPDATE contracts SET is_completed = 1, is_active = 0 WHERE id = @id`),
             abortContract: this.db.prepare(`DELETE FROM contracts WHERE id = ?`),
+            updateContractTerms: this.db.prepare(`UPDATE contracts SET terms = @terms, gold_reward = @gold_reward WHERE id = @id`),
             updateNodeSpecialization: this.db.prepare(`UPDATE world_nodes SET specialization = @specialization WHERE id = @id`),
 
             getInventory: this.db.prepare(`SELECT * FROM inventory`),
@@ -315,7 +389,7 @@ export class GameRepository {
             });
             contracts = this.statements.getNodeContracts.all(nodeId);
         }
-        return contracts;
+        return contracts.map((contract) => this._mapContract(contract));
     }
 
     _buildContractMinuteOptions(minMins, maxMins) {
@@ -474,6 +548,53 @@ export class GameRepository {
         this.setCampaignSetting('is_delving', 'false');
     }
 
+    negotiateContractTerm(contractId, nodeId, termId) {
+        this.ensureConnection();
+
+        const contract = this._mapContract(this.statements.getContractById.get(contractId));
+        if (!contract) throw new Error("Contract not found.");
+        if (contract.is_active === 1) throw new Error("Contract terms must be negotiated before accepting the job.");
+        if (contract.is_completed === 1) throw new Error("Completed contracts cannot be renegotiated.");
+        if (Number(contract.node_id) !== Number(nodeId)) throw new Error("This contract does not belong to the selected settlement.");
+
+        const term = CONTRACT_INFLUENCE_TERM_BY_ID.get(termId);
+        if (!term) throw new Error("Unknown political favor.");
+        const contractType = this._resolveContractType(contract);
+        if (COMBAT_NEGOTIATION_TERM_IDS.includes(term.id) && !this._isCombatLootContract(contract, contractType)) {
+            throw new Error("That favor only applies to dangerous combat work.");
+        }
+
+        const terms = this._getContractTerms(contract);
+        if (terms[term.id]) throw new Error("This favor is already attached to the contract.");
+
+        const node = this.getNodeById(nodeId);
+        const currentInfluence = Number(node?.influence) || 0;
+        if (currentInfluence < term.cost) {
+            throw new Error(`Not enough Influence in ${node?.name || 'this settlement'}.`);
+        }
+
+        let updatedGoldReward = contract.gold_reward;
+        const applyNegotiation = this.db.transaction(() => {
+            updatedGoldReward = this._applyNegotiatedTermEffect(contract, node, term, terms);
+            this.statements.updateNodeInfluence.run({ id: nodeId, amount: -term.cost });
+            this.statements.updateContractTerms.run({
+                id: contract.id,
+                terms: JSON.stringify(terms),
+                gold_reward: updatedGoldReward
+            });
+        });
+        applyNegotiation();
+
+        const updatedContract = this._mapContract(this.statements.getContractById.get(contract.id));
+        const updatedNode = this.getNodeById(nodeId);
+
+        return {
+            contract: updatedContract,
+            node: updatedNode,
+            message: `${term.label} secured in ${updatedNode?.name || 'the settlement'}.`
+        };
+    }
+
     startHostileSettlementClearing(
         nodeId,
         minMins = CONTRACT_GENERATION.DEFAULT_MIN_MINUTES,
@@ -515,7 +636,7 @@ export class GameRepository {
 
     getActiveContract() {
         this.ensureConnection();
-        return this.statements.getActiveContract.get();
+        return this._mapContract(this.statements.getActiveContract.get());
     }
 
     cancelContract(contractId) {
@@ -545,6 +666,11 @@ export class GameRepository {
         activeContract.contract_type = contractType;
         activeContract.beneficiary_node_id = beneficiaryNode?.id ?? null;
         activeContract.beneficiary_node_name = beneficiaryNode?.name ?? null;
+        activeContract.renown_reward = this._awardContractRenown(activeContract, contractType);
+        activeContract.influence_reward = beneficiaryNode
+            ? this._awardContractInfluence(beneficiaryNode.id, activeContract, contractType)
+            : 0;
+        activeContract.influence_node_name = beneficiaryNode?.name ?? null;
 
         if (this._isDirectClearingContractType(contractType)) {
             return this._completeDirectClearing(activeContract, targetNode, originNode, companyName);
@@ -570,6 +696,8 @@ export class GameRepository {
         const logs = [
             `📜 Contract Completed: ${activeContract.title}`,
             `💰 Earned ${activeContract.gold_reward} crowns!`,
+            `Renown increased by ${activeContract.renown_reward}.`,
+            `Influence in ${beneficiaryLabel} increased by ${activeContract.influence_reward}.`,
             `Reputation with ${beneficiaryLabel} increased by ${contractRepReward}.`
         ];
 
@@ -606,6 +734,8 @@ export class GameRepository {
             }
         }
 
+        this._grantSalvageRightsLoot(activeContract, logs, foundLoot);
+
         return { contract: activeContract, logs, loot: foundLoot };
     }
 
@@ -613,7 +743,9 @@ export class GameRepository {
         const foundLoot = [];
         const logs = [
             `⚔️ Direct Clearing Completed: ${activeContract.title}`,
-            "No patron paid for this raid, but the surrounding roads are safer."
+            "No patron paid for this raid, but the surrounding roads are safer.",
+            `Renown increased by ${activeContract.renown_reward}.`,
+            `Influence in ${supportNode?.name || 'nearby settlements'} increased by ${activeContract.influence_reward}.`
         ];
 
         const campDestroyedLoot = this._handleCampDestruction(activeContract, targetNode, supportNode, companyName);
@@ -633,7 +765,135 @@ export class GameRepository {
             }
         }
 
+        this._grantSalvageRightsLoot(activeContract, logs, foundLoot);
+
         return { contract: activeContract, logs, loot: foundLoot };
+    }
+
+    _awardContractRenown(contract, contractType) {
+        const reward = this._calculateContractRenown(contract, contractType);
+        this.updateRenown(reward);
+        return reward;
+    }
+
+    _calculateContractRenown(contract, contractType) {
+        const baseReward = Math.max(
+            RENOWN_REWARD.MIN_REWARD,
+            Math.floor(contract.required_minutes / RENOWN_REWARD.MINUTES_PER_POINT)
+        );
+
+        let bonus = 0;
+        if (this._isHostileCampContractType(contractType)) bonus += RENOWN_REWARD.HOSTILE_CAMP_BONUS;
+        if (this._isDirectClearingContractType(contractType)) bonus += RENOWN_REWARD.DIRECT_CLEARING_BONUS;
+
+        return baseReward + bonus;
+    }
+
+    _awardContractInfluence(nodeId, contract, contractType) {
+        const reward = this._calculateContractInfluence(contract, contractType);
+        this.updateNodeInfluence(nodeId, reward);
+        return reward;
+    }
+
+    _calculateContractInfluence(contract, contractType) {
+        const baseReward = Math.max(
+            INFLUENCE_REWARD.MIN_REWARD,
+            Math.floor(contract.required_minutes / INFLUENCE_REWARD.MINUTES_PER_POINT)
+        );
+
+        let bonus = 0;
+        if (contractType === CONTRACT_TYPE.CARAVAN) bonus += INFLUENCE_REWARD.CARAVAN_BONUS;
+        if (this._isHostileCampContractType(contractType)) bonus += INFLUENCE_REWARD.HOSTILE_CAMP_BONUS;
+        if (this._isDirectClearingContractType(contractType)) bonus += INFLUENCE_REWARD.DIRECT_CLEARING_BONUS;
+
+        return baseReward + bonus;
+    }
+
+    _grantSalvageRightsLoot(contract, logs, foundLoot) {
+        const salvageRights = CONTRACT_INFLUENCE_TERM_BY_ID.get('salvage_rights');
+        if (!salvageRights || !this._contractHasTerm(contract, salvageRights.id)) return;
+
+        for (let index = 0; index < salvageRights.extraArmorPieces; index++) {
+            const newItem = ItemFactory.getRandomArmorPiece();
+            this.addItemToInventory(newItem.id);
+            foundLoot.push(newItem);
+            logs.push(`Salvage rights honored: recovered ${newItem.name}.`);
+        }
+    }
+
+    _applyNegotiatedTermEffect(contract, node, term, terms) {
+        terms[term.id] = true;
+        const companyName = this.statements.getSetting.get('company_name')?.value || "The Company";
+
+        if (term.id === 'better_pay') {
+            this.logNodeHistory(
+                node.id,
+                `${companyName} spent Influence to secure better pay on "${contract.title}".`,
+                'player'
+            );
+            return Math.ceil(contract.gold_reward * term.goldMultiplier);
+        }
+
+        if (term.id === 'local_pardon') {
+            this.updateNodeReputation(node.id, term.reputationGain);
+            this.logNodeHistory(
+                node.id,
+                `${companyName} spent Influence to secure a localized pardon, restoring ${term.reputationGain} reputation.`,
+                'player'
+            );
+            return contract.gold_reward;
+        }
+
+        this.logNodeHistory(
+            node.id,
+            `${companyName} spent Influence to secure ${term.label.toLowerCase()} on "${contract.title}".`,
+            'player'
+        );
+
+        return contract.gold_reward;
+    }
+
+    _mapContract(contract) {
+        if (!contract) return contract;
+
+        const mapped = { ...contract };
+        mapped.terms = this._getContractTerms(mapped);
+        mapped.influence_options = this._buildInfluenceOptions(mapped);
+        return mapped;
+    }
+
+    _getContractTerms(contract) {
+        if (!contract) return {};
+        if (contract.terms && typeof contract.terms === 'object') return { ...contract.terms };
+
+        try {
+            const parsed = JSON.parse(contract.terms || '{}');
+            return parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+        } catch (error) {
+            return {};
+        }
+    }
+
+    _buildInfluenceOptions(contract) {
+        if (!contract || contract.is_active === 1 || contract.is_completed === 1) return [];
+        const terms = this._getContractTerms(contract);
+        const contractType = this._resolveContractType(contract);
+        const canUseCombatTerms = this._isCombatLootContract(contract, contractType);
+
+        return CONTRACT_INFLUENCE_TERMS
+            .filter((term) => canUseCombatTerms || !COMBAT_NEGOTIATION_TERM_IDS.includes(term.id))
+            .map((term) => ({
+                id: term.id,
+                label: term.label,
+                icon: term.icon,
+                cost: term.cost,
+                description: term.description,
+                applied: Boolean(terms[term.id])
+            }));
+    }
+
+    _contractHasTerm(contract, termId) {
+        return Boolean(this._getContractTerms(contract)[termId]);
     }
 
     _resolveContractType(contract) {
@@ -847,6 +1107,11 @@ export class GameRepository {
         this.ensureConnection();
         if (nodeId) this.statements.updateReputation.run(amount, nodeId);
     }
+
+    updateNodeInfluence(nodeId, amount) {
+        this.ensureConnection();
+        if (nodeId) this.statements.updateNodeInfluence.run({ id: nodeId, amount });
+    }
     
     // --- NODE HISTORY, SHOP, & PINNING ---
     updateNodeShopData(nodeId, inventoryJson, lastRestock, nextTrade) {
@@ -999,14 +1264,26 @@ export class GameRepository {
             const isDelving = this.statements.getSetting.get('is_delving')?.value === 'true';
 
             if (activeContract) {
+                const footmenTerm = CONTRACT_INFLUENCE_TERM_BY_ID.get('footmen');
+                const hasFootmen = Boolean(footmenTerm && this._contractHasTerm(activeContract, footmenTerm.id));
+                const contractDamageChance = hasFootmen
+                    ? CONTRACT_SESSION_RISK.BASE_DAMAGE_CHANCE * footmenTerm.damageChanceMultiplier
+                    : CONTRACT_SESSION_RISK.BASE_DAMAGE_CHANCE;
+
+                if (hasFootmen) {
+                    logs.push("Noble footmen screened the company during the contract, lowering the danger of stray attacks.");
+                }
+
                 activeMercs.forEach(merc => {
                     const mercXp = Math.floor(baseXpAmount * (1 + merc.xpBonus));
-                    const mercFatigue = Math.floor(focusMinutes / 5) + Math.floor(merc.fatiguePenalty / 2);
+                    const mercFatigue = Math.floor(focusMinutes / CONTRACT_SESSION_RISK.FATIGUE_MINUTES_PER_POINT)
+                        + Math.floor(merc.fatiguePenalty / CONTRACT_SESSION_RISK.FATIGUE_GEAR_DIVISOR);
                     this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
 
-                    if (Math.random() < 0.20) {
-                        const rawDamage = Math.floor(Math.random() * 8 * ratio) + 2;
-                        const defMitigation = Math.floor(merc.totalDefense / 4); 
+                    if (Math.random() < contractDamageChance) {
+                        const rawDamage = Math.floor(Math.random() * CONTRACT_SESSION_RISK.DAMAGE_ROLL_RANGE * ratio)
+                            + CONTRACT_SESSION_RISK.MIN_DAMAGE;
+                        const defMitigation = Math.floor(merc.totalDefense / CONTRACT_SESSION_RISK.DEFENSE_MITIGATION_DIVISOR);
                         const finalDamage = Math.max(0, rawDamage - defMitigation);
                         
                         if (finalDamage > 0) {
@@ -1016,13 +1293,17 @@ export class GameRepository {
                     }
                 });
 
-                if (Math.random() < 0.3) {
+                if (Math.random() < CONTRACT_SESSION_RISK.TRAVELERS_ENCOUNTER_CHANCE) {
                     logs.push(`🏕️ The party encountered travelers on the road during the contract.`);
                 }
 
-                const attackLootBonus = (partyTotalAttack / 100) * 0.10; 
-                const lootChance = 0.30 + attackLootBonus;
-                const rolls = Math.max(1, Math.floor(focusMinutes / 15)); 
+                const attackLootBonus = (partyTotalAttack / CONTRACT_SESSION_RISK.ATTACK_LOOT_SCORE_DIVISOR)
+                    * CONTRACT_SESSION_RISK.ATTACK_LOOT_BONUS_RATE;
+                const lootChance = CONTRACT_SESSION_RISK.BASE_LOOT_CHANCE + attackLootBonus;
+                const rolls = Math.max(
+                    CONTRACT_SESSION_RISK.MIN_LOOT_ROLLS,
+                    Math.floor(focusMinutes / CONTRACT_SESSION_RISK.MINUTES_PER_LOOT_ROLL)
+                );
 
                 for(let i=0; i<rolls; i++) rollForLoot(lootChance);
 
@@ -1405,7 +1686,8 @@ export class GameRepository {
             buy_modifier: node.buy_modifier ?? 1.0,
             sell_modifier: node.sell_modifier ?? 0.5,
             specialization: serializeSpecializations(specialization),
-            attachments: node.attachments ?? 0
+            attachments: node.attachments ?? 0,
+            influence: node.influence ?? 0
         });
     }
 
@@ -1532,6 +1814,17 @@ export class GameRepository {
         return newAmount;
     }
 
+    updateRenown(amount) {
+        this.ensureConnection();
+        const delta = Number(amount);
+        if (!Number.isFinite(delta)) throw new Error("Invalid Renown Amount");
+
+        const current = this.getResources().renown;
+        const newAmount = Math.max(0, current + delta);
+        this.statements.updateSetting.run({ key: 'renown', value: newAmount });
+        return newAmount;
+    }
+
     getAllMercenaries() {
         this.ensureConnection();
         return this.statements.getAll.all();
@@ -1575,6 +1868,7 @@ export class GameRepository {
 
         node.specializations = normalizeSpecializations(node.specialization);
         node.specialization = formatSpecializations(node.specializations);
+        node.influence = Number(node.influence) || 0;
 
         return node;
     }
@@ -1650,7 +1944,8 @@ export class GameRepository {
             buy_modifier: 1.2, 
             sell_modifier: 0.85,
             specialization: serializeSpecializations(specialization),
-            attachments: 0
+            attachments: 0,
+            influence: 0
         });
         
         return { id: info.lastInsertRowid, name: newName };

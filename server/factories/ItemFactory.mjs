@@ -6,6 +6,8 @@ import { TREASURE } from '../data/items/Treasure.mjs';
 import { PROVISIONS } from '../data/items/Provisions.mjs';
 import { SETTLEMENT_TIERS, getSpecializationTradeGoodIds } from '../data/GameDataConstants.mjs';
 
+const ARMOR_LOOT_TYPES = Object.freeze(['Armor', 'Head']);
+
 class ItemFactoryClass {
     constructor() {
         this.templates = new Map();
@@ -96,6 +98,13 @@ class ItemFactoryClass {
 
     getRandomItem() {
         const items = Array.from(this.templates.values());
+        const randomTemplate = items[Math.floor(Math.random() * items.length)];
+        return this.createItem(randomTemplate.id);
+    }
+
+    getRandomArmorPiece() {
+        const items = Array.from(this.templates.values())
+            .filter((template) => ARMOR_LOOT_TYPES.includes(template.type));
         const randomTemplate = items[Math.floor(Math.random() * items.length)];
         return this.createItem(randomTemplate.id);
     }

@@ -75,7 +75,8 @@ export class BarebonesUIManager {
             dom: this.dom,
             onAcceptContract: (contractId) => GameAPI.acceptContract(contractId),
             onAbortContract: (contractId, nodeId, contractType) => GameAPI.abortContract(contractId, nodeId, contractType),
-            onStartHostileClearing: (nodeId) => GameAPI.startHostileSettlementClearing(nodeId)
+            onStartHostileClearing: (nodeId) => GameAPI.startHostileSettlementClearing(nodeId),
+            onNegotiateContractTerm: (contractId, nodeId, termId) => GameAPI.negotiateContractTerm(contractId, nodeId, termId)
         });
 
         this._bindHandlers();
@@ -138,6 +139,7 @@ export class BarebonesUIManager {
         
         this._setText(this.dom.timeDisplay, `Day ${day} - ${timeStr}`);
         this._setText(this.dom.goldDisplay, resources.gold);
+        this._setText(this.dom.renownDisplay, resources.renown);
         this._setText(this.dom.provisionsDisplay, resources.provisions);
         this._setText(this.dom.toolsDisplay, resources.tools);
         this._setText(this.dom.ammoDisplay, resources.ammo);
@@ -230,7 +232,7 @@ export class BarebonesUIManager {
     }
 
     renderContracts(contracts) {
-        this.contractPanel.renderContracts(contracts, this.activeContract);
+        this.contractPanel.renderContracts(contracts, this.activeContract, this.selectedNode);
     }
 
     updateActiveBanner(activeContract) {
@@ -244,6 +246,8 @@ export class BarebonesUIManager {
             receiveContracts: (event) => this._onReceiveContracts(event),
             contractAccepted: (event) => this._onContractAccepted(event),
             contractAborted: (event) => this._onContractAborted(event),
+            contractTermNegotiated: (event) => this._onContractTermNegotiated(event),
+            contractTermNegotiationFailed: (event) => this._onContractTermNegotiationFailed(event),
             receiveMarketData: (event) => this._onReceiveMarketData(event),
             transactionComplete: (event) => this._onTransactionComplete(event),
             delvingStatusUpdated: (event) => this._onDelvingStatusUpdated(event),
@@ -336,6 +340,8 @@ export class BarebonesUIManager {
             receiveContracts: this._handlers.receiveContracts,
             contractAccepted: this._handlers.contractAccepted,
             contractAborted: this._handlers.contractAborted,
+            contractTermNegotiated: this._handlers.contractTermNegotiated,
+            contractTermNegotiationFailed: this._handlers.contractTermNegotiationFailed,
             receiveMarketData: this._handlers.receiveMarketData,
             transactionComplete: this._handlers.transactionComplete,
             delvingStatusUpdated: this._handlers.delvingStatusUpdated,
@@ -476,6 +482,32 @@ export class BarebonesUIManager {
         if (this.selectedNode && this.activeTab === BAREBONES_TABS.JOBS) {
             GameAPI.getContractsForNode(this.selectedNode.id);
         }
+    }
+
+    _onContractTermNegotiated(event) {
+        if (!this._shouldHandleEvent()) return;
+
+        if (event.detail?.node && this.selectedNode?.id === event.detail.node.id) {
+            this.selectedNode = event.detail.node;
+            this._renderSelectedNodeLabel();
+            this.renderNodeList();
+        }
+
+        notifier.show(
+            "Influence Spent",
+            event.detail?.message || "Contract terms updated.",
+            "fa-solid fa-gavel"
+        );
+
+        if (this.selectedNode && this.activeTab === BAREBONES_TABS.JOBS) {
+            GameAPI.getContractsForNode(this.selectedNode.id);
+        }
+        GameAPI.getWorldData();
+    }
+
+    _onContractTermNegotiationFailed(event) {
+        if (!this._shouldHandleEvent()) return;
+        alert(event.detail?.error || "Unable to secure that favor.");
     }
 
     _onContractAborted() {

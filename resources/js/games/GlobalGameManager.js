@@ -2,6 +2,10 @@ import { GameAPI } from "../api/GameAPI.js";
 import { notifier } from "../_global-managers/NotificationManager.js";
 import { buildAftermathModal } from "../handlers/MercenaryHandler.js";
 
+const CONTRACT_TYPE = Object.freeze({
+    DIRECT_CLEARING: "direct_clearing"
+});
+
 class GlobalGameManager {
     constructor() {
         this.activeContract = null;
@@ -28,11 +32,18 @@ class GlobalGameManager {
             const result = e.detail;
             
             if (result && result.contract) {
+                const isDirectClearing = result.contract.contract_type === CONTRACT_TYPE.DIRECT_CLEARING;
+                const lootCount = Array.isArray(result.loot) ? result.loot.length : 0;
+                const title = isDirectClearing ? "Enemy Settlement Cleared!" : "Contract Completed!";
+                const message = isDirectClearing
+                    ? `Recovered ${lootCount} item(s) from the hostile settlement.`
+                    : `You earned ${result.contract.gold_reward} crowns and ${result.contract.renown_reward || 0} Renown.`;
+
                 // OS Level Notification
                 notifier.show(
-                    "Contract Completed!",
-                    `You earned ${result.contract.gold_reward} crowns.`,
-                    "fa-solid fa-scroll"
+                    title,
+                    message,
+                    isDirectClearing ? "fa-solid fa-skull-crossbones" : "fa-solid fa-scroll"
                 );
                 
                 // Show the immersive RPG Loot screen

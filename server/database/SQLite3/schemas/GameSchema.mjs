@@ -69,6 +69,7 @@ export const GAME_SCHEMA_SQL = `
         is_hidden INTEGER DEFAULT 0,
         is_hostile INTEGER DEFAULT 0,
         population_tier INTEGER DEFAULT 1,
+        influence INTEGER DEFAULT 0,
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 
@@ -84,6 +85,7 @@ export const GAME_SCHEMA_SQL = `
         gold_reward INTEGER DEFAULT 0,
         is_active INTEGER DEFAULT 0,
         is_completed INTEGER DEFAULT 0,
+        terms TEXT DEFAULT '{}',
         FOREIGN KEY(node_id) REFERENCES world_nodes(id),
         FOREIGN KEY(target_node_id) REFERENCES world_nodes(id) ON DELETE SET NULL
     );

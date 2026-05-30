@@ -31,6 +31,7 @@ export function selectedNodeLabelHtml(node) {
     const rep = Number(node.reputation) || 0;
     const repStr = getReputationString(rep);
     const repCol = getReputationColor(rep);
+    const influence = Number(node.influence) || 0;
 
     // Create a badge for the settlement type (e.g., Stronghold, Village)
     const typeHtml = node.type 
@@ -50,6 +51,9 @@ export function selectedNodeLabelHtml(node) {
             <div style="display: flex; align-items: center; gap: 8px;">
                 <span style="color: ${repCol}; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: ${repCol}15; padding: 3px 8px; border-radius: 12px; border: 1px solid ${repCol}40;">
                     <i class="fa-solid fa-handshake"></i> ${repStr} (${rep})
+                </span>
+                <span style="color: #c4b5fd; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: rgba(124, 58, 237, 0.15); padding: 3px 8px; border-radius: 12px; border: 1px solid rgba(196, 181, 253, 0.32);">
+                    <i class="fa-solid fa-gavel"></i> Influence ${influence}
                 </span>
                 ${factionHtml}
             </div>
