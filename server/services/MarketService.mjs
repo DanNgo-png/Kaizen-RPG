@@ -13,6 +13,7 @@ const DEFAULT_MARKET_BUY_MODIFIER = 1.0;
 const REPUTATION_BUY_DISCOUNT_FACTOR = 0.0015;
 const MIN_REPUTATION_BUY_FLOOR = 0.5;
 const REPUTATION_VOLUME_THRESHOLD = 300;
+const RUINS_REPUTATION_MULTIPLIER = 3; // Ruins reputation threshold is 3x easier 
 const REPUTATION_BONUS_FACTOR = 0.002;
 const ATTACHMENT_BONUS_FACTOR = 0.02;
 const DEFAULT_MATERIAL_DELIVERIES_NEEDED = 10;
@@ -279,13 +280,19 @@ export class MarketService {
             if (payload.nodeId) {
                 this.repo.logTradeVolume(payload.nodeId, payload.price);
 
-                const repGain = Math.floor(payload.price / REPUTATION_VOLUME_THRESHOLD);
+                // Fetch the node early to determine its type and check for Ruins
+                const node = this.repo.getNodeById(payload.nodeId);
+                const isRuins = node && node.type === 'Ruins';
+                const threshold = isRuins 
+                    ? Math.floor(REPUTATION_VOLUME_THRESHOLD / RUINS_REPUTATION_MULTIPLIER) 
+                    : REPUTATION_VOLUME_THRESHOLD;
+
+                const repGain = Math.floor(payload.price / threshold);
                 if (repGain > 0) {
                     this.repo.updateNodeReputation(payload.nodeId, repGain);
                 }
 
                 if (itemId) {
-                    const node = this.repo.getNodeById(payload.nodeId);
                     const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
                     
                     if (isBuildingMat) {
