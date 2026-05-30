@@ -12,6 +12,11 @@ import {
 import { BARBARIAN_NODE_TYPES } from '../../../data/factions/BarbarianFactions.mjs';
 import { WorldSimulator } from '../../../services/simulation/WorldSimulator.mjs';
 
+const NEGATIVE_ECONOMIC_EVENTS = ['ambushed_trade_routes', 'raided', 'sieged', 'ruined_location', 'terrified_villagers'];
+const NEGATIVE_EVENT_DECAY_REDUCTION = 3;   // Reduce negative event duration by 3 days per economic contract completed
+const NEGATIVE_EVENT_REMEDY_BONUS_REP = 8;   // Extra reputation for helping alleviate an economic crisis
+const NEGATIVE_EVENT_REMEDY_BONUS_INF = 5;   // Extra influence for helping alleviate an economic crisis
+
 const WORLD_NODE_SELECT = `
     SELECT 
         world_nodes.*,
@@ -685,7 +690,7 @@ export class GameRepository {
             this.logNodeHistory(beneficiaryNode.id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
         }
 
-        const bonusRepReward = this._applyCaravanContractOutcome(activeContract, beneficiaryNode, companyName);
+        const caravanOutcome = this._applyCaravanContractOutcome(activeContract, beneficiaryNode, companyName);
 
         const campDestroyedLoot = this._handleCampDestruction(activeContract, targetNode || originNode, beneficiaryNode, companyName);
 
@@ -693,16 +698,28 @@ export class GameRepository {
         this._trackSettlementContractGrowth(refreshedBeneficiaryNode);
 
         const beneficiaryLabel = beneficiaryNode?.name || 'settlement';
+
+        // Dynamically increment the reported Influence reward if crisis relief occurred
+        let finalInfluenceReward = activeContract.influence_reward || 0;
+        if (caravanOutcome && caravanOutcome.bonusInfluence) {
+            finalInfluenceReward += caravanOutcome.bonusInfluence;
+        }
+        
         const logs = [
             `📜 Contract Completed: ${activeContract.title}`,
             `💰 Earned ${activeContract.gold_reward} crowns!`,
             `Renown increased by ${activeContract.renown_reward}.`,
-            `Influence in ${beneficiaryLabel} increased by ${activeContract.influence_reward}.`,
+            `Influence in ${beneficiaryLabel} increased by ${finalInfluenceReward}.`,
             `Reputation with ${beneficiaryLabel} increased by ${contractRepReward}.`
         ];
 
-        if (bonusRepReward > 0) {
-            logs.push(`Bonus reputation for restoring trade routes: +${bonusRepReward}.`);
+        // Append custom logging strings for caravan resolution
+        if (caravanOutcome && caravanOutcome.bonusRep > 0) {
+            if (caravanOutcome.eventMitigated) {
+                logs.push(`🔥 Crisis mitigated! Gained an additional +${caravanOutcome.bonusRep} reputation and +${caravanOutcome.bonusInfluence} influence for critical relief.`);
+            } else {
+                logs.push(`Bonus reputation for restoring trade routes: +${caravanOutcome.bonusRep}.`);
+            }
         }
 
         // --- LOOT LOGIC ---
@@ -717,7 +734,6 @@ export class GameRepository {
             lootChance = CONTRACT_LOOT.HOSTILE_CAMP_CHANCE;
         }
 
-        // Catch the guaranteed loot if we destroyed a camp
         if (campDestroyedLoot) {
             foundLoot.push(campDestroyedLoot);
             activeContract._campDestroyedLoot = campDestroyedLoot;
@@ -735,6 +751,8 @@ export class GameRepository {
         }
 
         this._grantSalvageRightsLoot(activeContract, logs, foundLoot);
+
+        activeContract.influence_reward = finalInfluenceReward;
 
         return { contract: activeContract, logs, loot: foundLoot };
     }
@@ -1019,34 +1037,64 @@ export class GameRepository {
 
     _applyCaravanContractOutcome(contract, node, companyName) {
         if (this._resolveContractType(contract) !== CONTRACT_TYPE.CARAVAN || !node) {
-            return 0;
+            return null;
         }
 
         let bonusRepReward = 0;
+        let bonusInfluenceReward = 0;
+        let eventMitigated = false;
 
-        if (node?.current_event === SETTLEMENT_EVENT_ID.AMBUSHED_TRADE_ROUTES) {
-            bonusRepReward = CONTRACT_REPUTATION.AMBUSHED_TRADE_ROUTE_CARAVAN_BONUS;
+        // Check if the node is currently suffering from a negative economic event
+        if (node.current_event && NEGATIVE_ECONOMIC_EVENTS.includes(node.current_event)) {
+            const currentExpiration = node.event_expiration || 0;
+            const newExpiration = Math.max(0, currentExpiration - NEGATIVE_EVENT_DECAY_REDUCTION);
+            eventMitigated = true;
+
+            bonusRepReward = NEGATIVE_EVENT_REMEDY_BONUS_REP;
+            bonusInfluenceReward = NEGATIVE_EVENT_REMEDY_BONUS_INF;
+
+            // Apply the bonus reputation and influence
             this.updateNodeReputation(node.id, bonusRepReward);
+            this.updateNodeInfluence(node.id, bonusInfluenceReward);
+
+            if (newExpiration <= 0) {
+                // Clear the negative event, returning prices to standard levels immediately
+                this.db.prepare('UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?').run(node.id);
+                this.logNodeHistory(
+                    node.id,
+                    `${companyName} completed a vital supply run, successfully ending the "${node.current_event}" crisis and restoring standard market prices!`,
+                    'player'
+                );
+            } else {
+                // Decrease the event decay timer
+                this.db.prepare('UPDATE world_nodes SET event_expiration = ? WHERE id = ?').run(newExpiration, node.id);
+                this.logNodeHistory(
+                    node.id,
+                    `${companyName} delivered essential supplies, mitigating the effects of "${node.current_event}" and reducing its expected duration by ${NEGATIVE_EVENT_DECAY_REDUCTION} days.`,
+                    'player'
+                );
+            }
+        } else {
+            // Default behavior if no negative economic event: apply Well Supplied
+            this._setNodeEvent(
+                node.id,
+                SETTLEMENT_EVENT_ID.WELL_SUPPLIED,
+                CONTRACT_EVENT_DURATION.WELL_SUPPLIED_DAYS
+            );
+
             this.logNodeHistory(
                 node.id,
-                `${companyName} reopened the ambushed trade routes with a successful caravan escort, earning extra local trust.`,
-                'player'
+                `A merchant caravan safely arrived at ${node.name}, guided by ${companyName}. The settlement is now well supplied!`,
+                'world'
             );
         }
 
-        this._setNodeEvent(
-            node.id,
-            SETTLEMENT_EVENT_ID.WELL_SUPPLIED,
-            CONTRACT_EVENT_DURATION.WELL_SUPPLIED_DAYS
-        );
-
-        this.logNodeHistory(
-            node.id,
-            `A merchant caravan safely arrived at ${node.name}, guided by ${companyName}. The settlement is now well supplied!`,
-            'world'
-        );
-
-        return bonusRepReward;
+        // Return a data package so the completion logging method can dynamically adapt
+        return {
+            bonusRep: bonusRepReward,
+            bonusInfluence: bonusInfluenceReward,
+            eventMitigated: eventMitigated
+        };
     }
 
     _setNodeEvent(nodeId, eventId, durationDays) {
