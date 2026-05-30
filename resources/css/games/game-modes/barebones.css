@@ -1538,14 +1538,62 @@
 }
 
 /* Grouping & Accordion Styles */
+.bb-world-log-list {
+    position: relative;
+    padding-left: 28px !important;
+    box-sizing: border-box;
+}
+
+.bb-world-log-list::before {
+    content: '';
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    bottom: 10px;
+    width: 2px;
+    background: linear-gradient(180deg, #3b82f6 0%, rgba(59, 130, 246, 0.15) 100%);
+    opacity: 0.7;
+    pointer-events: none;
+    border-radius: 999px;
+}
+
 .bb-log-day-group {
-    background: rgba(0, 0, 0, 0.15);
+    position: relative;
+    flex-shrink: 0; /* FIXES FLEXBOX SQUISHING BUG */
+    background: rgba(15, 23, 42, 0.35);
     border: 1px solid #334155;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: visible; /* Required to show timeline node */
     display: flex;
     flex-direction: column;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    transition: border-color 0.25s, box-shadow 0.25s;
+}
+
+.bb-log-day-group:hover {
+    border-color: rgba(96, 165, 250, 0.4);
+    box-shadow: 0 4px 15px rgba(59, 130, 246, 0.08);
+}
+
+/* Day Timeline Node */
+.bb-log-day-group::before {
+    content: '';
+    position: absolute;
+    left: -22px;
+    top: 16px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #0f172a;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.6);
+    z-index: 2;
+    transition: background-color 0.25s, border-color 0.25s, transform 0.25s;
+}
+
+.bb-log-day-group:hover::before {
+    background: #3b82f6;
+    transform: scale(1.2);
 }
 
 .bb-log-day-header {
@@ -1556,7 +1604,7 @@
     align-items: center;
     cursor: pointer;
     user-select: none;
-    transition: background 0.2s;
+    transition: background 0.2s, border-color 0.2s;
     border-bottom: 1px solid transparent;
 }
 
@@ -1564,8 +1612,9 @@
     background: rgba(30, 41, 59, 0.85);
 }
 
-.bb-log-day-header:not(.collapsed) {
+.bb-log-day-header.expanded-header {
     border-bottom-color: #334155;
+    background: rgba(30, 41, 59, 0.65);
 }
 
 .bb-log-day-title {
@@ -1587,17 +1636,114 @@
     font-weight: 600;
 }
 
+/* Chevron Transition Arrow */
 .bb-log-collapse-arrow {
     color: #64748b;
     font-size: 0.85rem;
-    transition: transform 0.2s;
+    transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s;
+}
+
+.bb-log-day-header:hover .bb-log-collapse-arrow {
+    color: #cbd5e1;
+}
+
+.bb-log-day-header.collapsed-header .bb-log-collapse-arrow {
+    transform: rotate(-180deg);
+}
+
+/* Smooth Accordion Grid Wrapper */
+.bb-log-day-wrapper {
+    display: grid;
+    grid-template-rows: 0fr;
+    transition: grid-template-rows 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bb-log-day-wrapper.expanded {
+    grid-template-rows: 1fr;
 }
 
 .bb-log-day-content {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.bb-log-day-events-inner {
     display: flex;
     flex-direction: column;
     gap: 8px;
     padding: 12px;
+}
+
+/* Sleek Stats Dashboard Panel */
+.bb-world-log-stats-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    width: 100%;
+    margin-bottom: 10px;
+    flex-shrink: 0;
+    box-sizing: border-box;
+}
+
+.bb-log-stat-card {
+    background: rgba(30, 41, 59, 0.35);
+    border: 1px solid rgba(51, 65, 85, 0.6);
+    border-radius: 8px;
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: all 0.2s;
+}
+
+.bb-log-stat-card:hover {
+    background: rgba(30, 41, 59, 0.55);
+    border-color: rgba(96, 165, 250, 0.25);
+}
+
+.bb-log-stat-icon {
+    font-size: 1.1rem;
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bb-log-stat-icon.days {
+    background: rgba(59, 130, 246, 0.12);
+    color: #60a5fa;
+}
+
+.bb-log-stat-icon.events {
+    background: rgba(249, 115, 22, 0.12);
+    color: #fb923c;
+}
+
+.bb-log-stat-icon.deeds {
+    background: rgba(16, 185, 129, 0.12);
+    color: #34d399;
+}
+
+.bb-log-stat-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.bb-log-stat-value {
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #f1f5f9;
+    line-height: 1.2;
+}
+
+.bb-log-stat-label {
+    font-size: 0.68rem;
+    color: #64748b;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 /* Individual Log Entry Styles */

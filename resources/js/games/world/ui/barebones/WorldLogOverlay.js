@@ -36,6 +36,7 @@ export class WorldLogOverlay {
         // Reset state
         this.visibleDaysCount = DAYS_PER_PAGE;
         this.collapsedDays.clear();
+        this.shouldAutoCollapse = true;
         this.activeFilter = "all";
         this.searchQuery = "";
         if (this.searchEl) this.searchEl.value = "";
@@ -48,6 +49,21 @@ export class WorldLogOverlay {
 
     renderHistory(history = []) {
         this.history = history;
+        
+        // Auto-collapse older days on first loading history
+        if (this.shouldAutoCollapse) {
+            this.shouldAutoCollapse = false;
+            
+            // Get unique days in history
+            const uniqueDays = Array.from(new Set(history.map((log) => Number(log.day) || 1))).sort((a, b) => b - a);
+            
+            this.collapsedDays.clear();
+            // Collapse all days except the most recent (first) one
+            for (let i = 1; i < uniqueDays.length; i++) {
+                this.collapsedDays.add(uniqueDays[i]);
+            }
+        }
+        
         this.applyFilterAndRender();
     }
 
@@ -78,6 +94,33 @@ export class WorldLogOverlay {
 
         if (!this.filteredHistory.length) {
             this.listEl.innerHTML = emptyStateHtml("No records found in the chronicles for this search or filter.");
+            // Render empty stats dashboard anyway
+            const statsContainer = this.root.querySelector("#world-log-stats");
+            if (statsContainer) {
+                statsContainer.innerHTML = `
+                    <div class="bb-log-stat-card">
+                        <div class="bb-log-stat-icon days"><i class="fa-solid fa-calendar-days"></i></div>
+                        <div class="bb-log-stat-details">
+                            <span class="bb-log-stat-value">0</span>
+                            <span class="bb-log-stat-label">Days Logged</span>
+                        </div>
+                    </div>
+                    <div class="bb-log-stat-card">
+                        <div class="bb-log-stat-icon events"><i class="fa-solid fa-bolt"></i></div>
+                        <div class="bb-log-stat-details">
+                            <span class="bb-log-stat-value">0</span>
+                            <span class="bb-log-stat-label">Total Events</span>
+                        </div>
+                    </div>
+                    <div class="bb-log-stat-card">
+                        <div class="bb-log-stat-icon deeds"><i class="fa-solid fa-user-shield"></i></div>
+                        <div class="bb-log-stat-details">
+                            <span class="bb-log-stat-value">0 <span style="font-size:0.75rem; font-weight:600; color:#64748b;">/ 0</span></span>
+                            <span class="bb-log-stat-label">Deeds / World</span>
+                        </div>
+                    </div>
+                `;
+            }
             return;
         }
 
@@ -94,6 +137,45 @@ export class WorldLogOverlay {
             .map(Number)
             .sort((a, b) => b - a);
 
+        // Dynamic Top Stats Dashboard Calculation and Injection
+        const totalDays = uniqueDays.length;
+        const totalEvents = this.filteredHistory.length;
+        const deedsCount = this.filteredHistory.filter(log => log.event_type === "player").length;
+        const worldCount = this.filteredHistory.filter(log => log.event_type === "world").length;
+
+        const statsContainer = this.root.querySelector("#world-log-stats");
+        if (statsContainer) {
+            statsContainer.innerHTML = `
+                <div class="bb-log-stat-card">
+                    <div class="bb-log-stat-icon days">
+                        <i class="fa-solid fa-calendar-days"></i>
+                    </div>
+                    <div class="bb-log-stat-details">
+                        <span class="bb-log-stat-value">${totalDays}</span>
+                        <span class="bb-log-stat-label">Days Logged</span>
+                    </div>
+                </div>
+                <div class="bb-log-stat-card">
+                    <div class="bb-log-stat-icon events">
+                        <i class="fa-solid fa-bolt"></i>
+                    </div>
+                    <div class="bb-log-stat-details">
+                        <span class="bb-log-stat-value">${totalEvents}</span>
+                        <span class="bb-log-stat-label">Total Events</span>
+                    </div>
+                </div>
+                <div class="bb-log-stat-card">
+                    <div class="bb-log-stat-icon deeds">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="bb-log-stat-details">
+                        <span class="bb-log-stat-value">${deedsCount} <span style="font-size:0.75rem; font-weight:600; color:#64748b;">/ ${worldCount}</span></span>
+                        <span class="bb-log-stat-label">Deeds / World</span>
+                    </div>
+                </div>
+            `;
+        }
+
         // Slice unique days for lazy-loading/scalability
         const slicedDays = uniqueDays.slice(0, this.visibleDaysCount);
 
@@ -106,34 +188,41 @@ export class WorldLogOverlay {
             const logs = logsByDay[day];
 
             dayContainer.innerHTML = `
-                <div class="bb-log-day-header" data-day="${day}">
+                <div class="bb-log-day-header ${isCollapsed ? 'collapsed-header' : 'expanded-header'}" data-day="${day}">
                     <div class="bb-log-day-title">
                         <i class="fa-solid fa-calendar-day"></i> Day ${day} 
                         <span class="bb-log-day-count">(${logs.length} ${logs.length === 1 ? 'event' : 'events'})</span>
                     </div>
-                    <i class="fa-solid ${isCollapsed ? 'fa-chevron-down' : 'fa-chevron-up'} bb-log-collapse-arrow"></i>
+                    <i class="fa-solid fa-chevron-up bb-log-collapse-arrow"></i>
                 </div>
-                <div class="bb-log-day-content ${isCollapsed ? 'hidden' : ''}"></div>
+                <div class="bb-log-day-wrapper ${isCollapsed ? '' : 'expanded'}">
+                    <div class="bb-log-day-content">
+                        <div class="bb-log-day-events-inner"></div>
+                    </div>
+                </div>
             `;
 
-            const contentEl = dayContainer.querySelector(".bb-log-day-content");
+            const eventsInner = dayContainer.querySelector(".bb-log-day-events-inner");
             
             logs.forEach((log) => {
                 const entry = this._createLogEntry(log);
-                contentEl.appendChild(entry);
+                eventsInner.appendChild(entry);
             });
 
             // Bind click handler for accordion collapse
             const headerEl = dayContainer.querySelector(".bb-log-day-header");
+            const wrapperEl = dayContainer.querySelector(".bb-log-day-wrapper");
             headerEl.addEventListener("click", () => {
                 if (this.collapsedDays.has(day)) {
                     this.collapsedDays.delete(day);
-                    contentEl.classList.remove("hidden");
-                    headerEl.querySelector(".bb-log-collapse-arrow").className = "fa-solid fa-chevron-up bb-log-collapse-arrow";
+                    wrapperEl.classList.add("expanded");
+                    headerEl.classList.add("expanded-header");
+                    headerEl.classList.remove("collapsed-header");
                 } else {
                     this.collapsedDays.add(day);
-                    contentEl.classList.add("hidden");
-                    headerEl.querySelector(".bb-log-collapse-arrow").className = "fa-solid fa-chevron-down bb-log-collapse-arrow";
+                    wrapperEl.classList.remove("expanded");
+                    headerEl.classList.remove("expanded-header");
+                    headerEl.classList.add("collapsed-header");
                 }
             });
 
@@ -172,6 +261,9 @@ export class WorldLogOverlay {
                 </div>
                 
                 <div class="bb-world-log-filters">
+                    <!-- Sleek Stats Dashboard Panel -->
+                    <div id="world-log-stats" class="bb-world-log-stats-panel"></div>
+
                     <div class="bb-world-log-tabs">
                         <button class="bb-log-filter-btn active" data-filter="all" style="font-family: var(--font-main)">All Days</button>
                         <button class="bb-log-filter-btn" data-filter="world" style="font-family: var(--font-main)">World Events</button>
@@ -238,6 +330,9 @@ export class WorldLogOverlay {
             this.searchEl.addEventListener("input", (e) => {
                 this.searchQuery = e.target.value;
                 this.visibleDaysCount = DAYS_PER_PAGE;
+                if (this.searchQuery) {
+                    this.collapsedDays.clear();
+                }
                 this.applyFilterAndRender();
             });
         }
