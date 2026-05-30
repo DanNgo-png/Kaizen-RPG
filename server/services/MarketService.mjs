@@ -336,7 +336,24 @@ export class MarketService {
                                 }
                             }
                             
-                            this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod, newPopulationTier);
+                            // Calculate any over-achieved surplus to carry over
+                            let remainingReqs = '{}';
+                            if (newProgress >= maxProg) {
+                                let reqs = {};
+                                try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+                                
+                                if (tierInfo.growthReqs) {
+                                    if (reqs.contracts !== undefined) {
+                                        reqs.contracts = Math.max(0, reqs.contracts - (tierInfo.growthReqs.contracts || 0));
+                                    }
+                                    if (reqs.trade !== undefined) {
+                                        reqs.trade = Math.max(0, reqs.trade - (tierInfo.growthReqs.trade || 0));
+                                    }
+                                }
+                                remainingReqs = JSON.stringify(reqs);
+                            }
+                            
+                            this.repo.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod, newPopulationTier, remainingReqs);
                             
                             if (specializationBuilt) {
                                 this.repo.logNodeHistory(node.id, `The construction finished! ${node.name} built a ${specializationBuilt}, giving the settlement its first local specialization.`, 'world');
@@ -356,7 +373,22 @@ export class MarketService {
                                     ? null
                                     : this._chooseColonySpecialization(node, itemId);
 
-                                this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier, node.population_tier || DEVELOPMENT_PROGRESS_STEP);
+                                // Calculate any over-achieved surplus to carry over
+                                let remainingReqs = '{}';
+                                let reqs = {};
+                                try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+                                
+                                if (tierInfo.growthReqs) {
+                                    if (reqs.contracts !== undefined) {
+                                        reqs.contracts = Math.max(0, reqs.contracts - (tierInfo.growthReqs.contracts || 0));
+                                    }
+                                    if (reqs.trade !== undefined) {
+                                        reqs.trade = Math.max(0, reqs.trade - (tierInfo.growthReqs.trade || 0));
+                                    }
+                                }
+                                remainingReqs = JSON.stringify(reqs);
+
+                                this.repo.updateNodeDevelopment(node.id, 0, node.type, null, node.buy_modifier, node.sell_modifier, node.population_tier || DEVELOPMENT_PROGRESS_STEP, remainingReqs);
 
                                 if (firstSpecialization) {
                                     this.repo.updateNodeSpecialization(node.id, [firstSpecialization]);

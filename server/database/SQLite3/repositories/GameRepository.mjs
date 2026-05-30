@@ -1873,14 +1873,14 @@ export class GameRepository {
         return node;
     }
 
-    updateNodeDevelopment(nodeId, progress, newType, newEvent, buyMod, sellMod, populationTier = 1) {
+    updateNodeDevelopment(nodeId, progress, newType, newEvent, buyMod, sellMod, populationTier = 1, remainingReqs = '{}') {
         this.ensureConnection();
         if (newEvent === null) {
             this.db.prepare(`
                 UPDATE world_nodes 
-                SET development_progress = ?, type = ?, current_event = ?, buy_modifier = ?, sell_modifier = ?, population_tier = ?, expansion_reqs = '{}'
+                SET development_progress = ?, type = ?, current_event = ?, buy_modifier = ?, sell_modifier = ?, population_tier = ?, expansion_reqs = ?
                 WHERE id = ?
-            `).run(progress, newType, newEvent, buyMod, sellMod, populationTier, nodeId);
+            `).run(progress, newType, newEvent, buyMod, sellMod, populationTier, remainingReqs, nodeId);
         } else {
             this.db.prepare(`
                 UPDATE world_nodes 
