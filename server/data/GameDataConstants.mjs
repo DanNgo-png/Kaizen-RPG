@@ -50,7 +50,12 @@ export const SETTLEMENT_TIERS = {
     'Barbarian Warcamp':  { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 },
     'Goblin Camp':          { buyMult: 1.05, sellMult: 0.25, shopLevel: 0 },
     'Goblin Outpost':       { buyMult: 1.15, sellMult: 0.20, shopLevel: 0 },
-    'Greenskin Stronghold': { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 }
+    'Greenskin Stronghold': { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 },
+    'Desecrated Crypt':   { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
+    'Ancient Tomb':       { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
+    'Haunted Cave':       { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
+    'Sunken Dungeon':     { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 },
+    'Necropolis':         { buyMult: 1.0, sellMult: 1.0, shopLevel: 0 }
 };
 
 export const ORIGIN_CONFIGS = {
@@ -167,6 +172,24 @@ export const SETTLEMENT_EVENTS = {
         qtyMult: 0.0, 
         specDisabled: true,
         freqMod: 5 
+    },
+    'undead_invasion': {
+        name: 'Undead Invasion',
+        buyMult: 3.0,     // Extreme inflation due to panic
+        sellMult: 0.3,    // Desperate sellers fleeing town
+        qtyMult: 0.1,     // Looted stocks
+        specDisabled: true,
+        freqMod: 0,
+        isRandom: false
+    },
+    'undead_siege': {
+        name: 'Undead Siege',
+        buyMult: 4.0,     // Total cutoff from surrounding trade routes
+        sellMult: 0.2,
+        qtyMult: 0.0,     // Market completely empty
+        specDisabled: true,
+        freqMod: 0,
+        isRandom: false
     },
     'ambushed_trade_routes': { 
         name: 'Ambushed Trade Routes', 

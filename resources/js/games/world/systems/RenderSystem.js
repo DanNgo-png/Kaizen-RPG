@@ -212,7 +212,7 @@ export class RenderSystem {
     _nodeSize(type) {
         if (['City', 'City-State'].includes(type)) return NODE_VISUALS.CITY_SIZE;
         if (['Province', 'Kingdom'].includes(type)) return NODE_VISUALS.REGION_SIZE;
-        if (['High Kingdom', 'Empire', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'Barbarian Warcamp', 'Greenskin Stronghold'].includes(type)) return NODE_VISUALS.CAPITAL_SIZE; 
+        if (['High Kingdom', 'Empire', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'Barbarian Warcamp', 'Greenskin Stronghold', 'Necropolis'].includes(type)) return NODE_VISUALS.CAPITAL_SIZE; 
         return NODE_VISUALS.DEFAULT_SIZE;
     }
 
@@ -223,7 +223,7 @@ export class RenderSystem {
     }
 
     _isCapitalType(type) {
-        return ['City', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'Barbarian Warcamp', 'City-State', 'Province', 'Kingdom', 'High Kingdom', 'Empire', 'Greenskin Stronghold'].includes(type); 
+        return ['City', 'Stronghold', 'Stolen Stronghold', 'Bandit Stronghold', 'Barbarian Warcamp', 'City-State', 'Province', 'Kingdom', 'High Kingdom', 'Empire', 'Greenskin Stronghold', 'Necropolis'].includes(type); 
     }
 
     _normalizeHexColor(color) {

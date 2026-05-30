@@ -43,7 +43,12 @@ export const NODE_TYPE_ICONS = Object.freeze({
     "Bandit Camp": "fa-campground",
     "Goblin Camp": "fa-campground",
     "Goblin Outpost": "fa-tent",
-    "Greenskin Stronghold": "fa-tower-observation"
+    "Greenskin Stronghold": "fa-tower-observation",
+    'Desecrated Crypt': "fa-ghost",
+    'Ancient Tomb': "fa-monument",
+    'Haunted Cave': "fa-mountain",
+    'Sunken Dungeon': "fa-dungeon",
+    'Necropolis': "fa-skull-crossbones"
 });
 
 export const CHRONICLE_EVENT_META = Object.freeze({

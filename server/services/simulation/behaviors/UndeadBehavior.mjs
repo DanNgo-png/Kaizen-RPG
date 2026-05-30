@@ -1,0 +1,339 @@
+import { BaseFactionBehavior } from "./BaseFactionBehavior.mjs";
+import { UNDEAD_FACTION_CONFIG, UNDEAD_NAMES, UNDEAD_NODE_TYPES } from "../../../data/factions/UndeadFactions.mjs";
+import { WORLD_GENERATION_CONFIG } from "../../../data/factions/NobleFactions.mjs";
+
+const HOSTILE_NODE_FLAGS = Object.freeze({
+    VISIBLE: 0,
+    HOSTILE: 1
+});
+
+const FULL_CIRCLE_RADIANS = Math.PI * 2;
+
+const FACTION_ECONOMY_MODS = Object.freeze({
+    CAMP_BUY_MODIFIER: 1.05,
+    CAMP_SELL_MODIFIER: 0.25,
+    STRONGHOLD_BUY_MODIFIER: 1.30,
+    STRONGHOLD_SELL_MODIFIER: 0.15
+});
+
+export class UndeadBehavior extends BaseFactionBehavior {
+    setupFactions(rng, context) {
+        return [this._getOrCreateFaction()];
+    }
+
+    generateNodes(rng, context) {
+        const createdNodes = [];
+        if (context.isPremade) return createdNodes;
+
+        const undeadFaction = context.factions.find(faction => faction.type === 'undead');
+        if (!undeadFaction) return createdNodes;
+
+        const existingNodes = context.nodes;
+        const campCount = rng.randomInt(
+            UNDEAD_FACTION_CONFIG.INITIAL_CAMP_MIN,
+            UNDEAD_FACTION_CONFIG.INITIAL_CAMP_MAX
+        );
+
+        for (let index = 0; index < campCount; index++) {
+            const position = this._findIsolatedPosition(rng, existingNodes);
+            const name = this._pickCampName(rng, index);
+            const type = index === 0 ? UNDEAD_NODE_TYPES.NECROPOLIS : (index % 2 === 0 ? UNDEAD_NODE_TYPES.CRYPT : UNDEAD_NODE_TYPES.TOMB);
+
+            const node = this._createUndeadNode({
+                type,
+                name,
+                position,
+                factionId: undeadFaction.id
+            });
+
+            createdNodes.push(node);
+            existingNodes.push(node);
+        }
+
+        return createdNodes;
+    }
+
+    processDayEnd(currentDay) {
+        const logs = [];
+        const undeadFaction = this._getOrCreateFaction();
+
+        const allNodes = this.repo.db
+            .prepare('SELECT id, type, name, x, y, faction_id, current_event, event_expiration, population_tier FROM world_nodes')
+            .all();
+
+        const undeadNodes = allNodes.filter(node =>
+            node.faction_id === undeadFaction.id && Object.values(UNDEAD_NODE_TYPES).includes(node.type)
+        );
+
+        const settlements = allNodes.filter(node => 
+            node.faction_id !== undeadFaction.id && 
+            !Object.values(UNDEAD_NODE_TYPES).includes(node.type) &&
+            !['Ruins', 'Bandit Camp', 'Bandit Outpost', 'Bandit Stronghold', 'Stolen Stronghold', 'Barbarian Camp', 'Barbarian Outpost', 'Barbarian Warcamp', 'Goblin Camp', 'Goblin Outpost', 'Greenskin Stronghold'].includes(node.type)
+        );
+
+        // 1. Spawn new desecrated sites
+        this._spawnNewUndeadNode(currentDay, undeadFaction.id, allNodes, undeadNodes, logs);
+
+        // 2. Simulate Attacks (Immediate Invasions vs Necromancer Sieges)
+        for (const uNode of undeadNodes) {
+            const hasNecromancer = uNode.type === UNDEAD_NODE_TYPES.NECROPOLIS || (uNode.id % 3 === 0);
+
+            if (hasNecromancer) {
+                if (Math.random() < UNDEAD_FACTION_CONFIG.SIEGE_CHANCE) {
+                    const target = this._findNearestActiveSettlement(uNode, settlements);
+                    if (target && !target.current_event) {
+                        this.repo.db.prepare('UPDATE world_nodes SET current_event = "undead_siege", event_expiration = 6 WHERE id = ?').run(target.id);
+                        this.repo.logNodeHistory(target.id, `A dark Necromancer from ${uNode.name} has laid siege to ${target.name}!`, 'world');
+                        logs.push(`💀 Ominous shadow falls! A dark Necromancer from ${uNode.name} is preparing a siege on ${target.name}.`);
+                    }
+                }
+            } else {
+                if (Math.random() < UNDEAD_FACTION_CONFIG.INVASION_CHANCE) {
+                    const target = this._findNearestActiveSettlement(uNode, settlements);
+                    if (target && !target.current_event) {
+                        this.repo.db.prepare('UPDATE world_nodes SET current_event = "undead_invasion", event_expiration = 3 WHERE id = ?').run(target.id);
+                        this.repo.logNodeHistory(target.id, `An unholy tide of zombies and skeletons from ${uNode.name} has invaded ${target.name}!`, 'world');
+                        logs.push(`⚠️ Alarm! An unholy tide of zombies and skeletons has suddenly struck ${target.name}! Defend it before it is overrun.`);
+                    }
+                }
+            }
+        }
+
+        // 3. Resolve Overrun Settlements (Failed or Ignored Defense)
+        for (const settlement of settlements) {
+            if (settlement.current_event === 'undead_invasion' || settlement.current_event === 'undead_siege') {
+                const currentExpiration = settlement.event_expiration || 0;
+                
+                if (currentExpiration <= 1) {
+                    this._overrunSettlement(settlement, undeadFaction.id, logs);
+                } else {
+                    this.repo.db.prepare('UPDATE world_nodes SET event_expiration = event_expiration - 1 WHERE id = ?').run(settlement.id);
+                }
+            }
+        }
+
+        return logs;
+    }
+
+    _spawnNewUndeadNode(currentDay, factionId, allNodes, undeadNodes, logs) {
+        const hasNoNodes = undeadNodes.length === 0;
+        const isSpawnDay = hasNoNodes || currentDay % UNDEAD_FACTION_CONFIG.SPAWN_INTERVAL_DAYS === 0;
+        const canAddNode = undeadNodes.length < UNDEAD_FACTION_CONFIG.MAX_CAMPS;
+
+        if (!isSpawnDay || !canAddNode || Math.random() >= UNDEAD_FACTION_CONFIG.CAMP_SPAWN_CHANCE) {
+            return;
+        }
+
+        const position = this._findIsolatedPositionRandom(allNodes);
+        const name = this._pickRandomName();
+        
+        const types = [
+            UNDEAD_NODE_TYPES.CRYPT, UNDEAD_NODE_TYPES.CRYPT, UNDEAD_NODE_TYPES.CRYPT,
+            UNDEAD_NODE_TYPES.TOMB, UNDEAD_NODE_TYPES.TOMB,
+            UNDEAD_NODE_TYPES.CAVE, UNDEAD_NODE_TYPES.DUNGEON,
+            UNDEAD_NODE_TYPES.NECROPOLIS
+        ];
+        const type = types[Math.floor(Math.random() * types.length)];
+
+        const node = this._createUndeadNode({
+            type,
+            name,
+            position,
+            factionId
+        });
+
+        allNodes.push(node);
+        undeadNodes.push(node);
+        this.repo.logNodeHistory(node.id, `A cold vapor rises. An ancient unholy place has emerged: ${name}.`, 'world');
+        logs.push(`💀 Ominous news: Scouts discovered a dark, desecrated place known as "${name}" (${type}) in the wild lands.`);
+    }
+
+    _overrunSettlement(settlement, undeadFactionId, logs) {
+        const companyName = this.repo.statements.getSetting.get('company_name')?.value || "The Company";
+        
+        let newPopTier = (settlement.population_tier || 1) - 1;
+        let newType = settlement.type;
+        let desolated = false;
+
+        if (newPopTier <= 0) {
+            desolated = true;
+            newType = 'Desecrated Crypt';
+        } else {
+            if (settlement.type === 'City-State' || settlement.type === 'Province' || settlement.type === 'Stronghold') {
+                newType = 'Town';
+            } else if (settlement.type === 'Town') {
+                newType = 'Village';
+            } else if (settlement.type === 'Village') {
+                newType = 'Hamlet';
+            }
+        }
+
+        if (desolated) {
+            this.repo.db.prepare(`
+                UPDATE world_nodes 
+                SET type = ?, 
+                    name = ?, 
+                    faction_id = ?, 
+                    is_hostile = 1, 
+                    current_event = NULL, 
+                    event_expiration = 0, 
+                    reputation = -100,
+                    population_tier = 1,
+                    specialization = NULL
+                WHERE id = ?
+            `).run(UNDEAD_NODE_TYPES.CRYPT, `Desecrated Ruins of ${settlement.name}`, undeadFactionId, settlement.id);
+            
+            this.repo.db.prepare('DELETE FROM contracts WHERE node_id = ? AND is_completed = 0').run(settlement.id);
+
+            const msg = `💀 Tragedy! ${settlement.name} was overrun by the undead. Its streets are desolate and the dead now rise from its fresh graves as a Desecrated Crypt!`;
+            this.repo.logNodeHistory(settlement.id, msg, 'world');
+            logs.push(msg);
+        } else {
+            this.repo.db.prepare(`
+                UPDATE world_nodes 
+                SET type = ?, 
+                    current_event = NULL, 
+                    event_expiration = 0, 
+                    reputation = MAX(-100, reputation - 40),
+                    population_tier = ?
+                WHERE id = ?
+            `).run(newType, newPopTier, settlement.id);
+
+            const msg = `💥 Ransacked! ${settlement.name} was raided and looted by shambling hordes. The survivors flee, and its population has collapsed to ${newPopTier}.`;
+            this.repo.logNodeHistory(settlement.id, msg, 'world');
+            logs.push(msg);
+        }
+    }
+
+    _createUndeadNode({ type, name, position, factionId }) {
+        const info = this.repo.createWorldNode({
+            type,
+            name,
+            x: position.x,
+            y: position.y,
+            faction_id: factionId,
+            reputation: -100,
+            buy_modifier: type === UNDEAD_NODE_TYPES.NECROPOLIS ? FACTION_ECONOMY_MODS.STRONGHOLD_BUY_MODIFIER : FACTION_ECONOMY_MODS.CAMP_BUY_MODIFIER,
+            sell_modifier: type === UNDEAD_NODE_TYPES.NECROPOLIS ? FACTION_ECONOMY_MODS.STRONGHOLD_SELL_MODIFIER : FACTION_ECONOMY_MODS.CAMP_SELL_MODIFIER,
+            specialization: null,
+            attachments: 0
+        });
+
+        const id = Number(info.lastInsertRowid);
+        this.repo.db
+            .prepare('UPDATE world_nodes SET is_hidden = ?, is_hostile = ? WHERE id = ?')
+            .run(HOSTILE_NODE_FLAGS.VISIBLE, HOSTILE_NODE_FLAGS.HOSTILE, id);
+
+        return {
+            id,
+            type,
+            name,
+            x: position.x,
+            y: position.y,
+            faction_id: factionId,
+            reputation: -100,
+            is_hidden: HOSTILE_NODE_FLAGS.VISIBLE,
+            is_hostile: HOSTILE_NODE_FLAGS.HOSTILE
+        };
+    }
+
+    _findNearestActiveSettlement(originNode, settlements) {
+        if (!originNode || settlements.length === 0) return null;
+        return [...settlements].sort((a, b) => this.distance(originNode, a) - this.distance(originNode, b))[0];
+    }
+
+    _findIsolatedPosition(rng, existingNodes) {
+        for (let attempt = 0; attempt < UNDEAD_FACTION_CONFIG.PLACEMENT_ATTEMPTS; attempt++) {
+            const position = {
+                x: rng.randomInt(
+                    UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                    WORLD_GENERATION_CONFIG.MAP_WIDTH - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+                ),
+                y: rng.randomInt(
+                    UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                    WORLD_GENERATION_CONFIG.MAP_HEIGHT - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+                )
+            };
+
+            if (!this._collidesWithAnyNode(position, existingNodes, UNDEAD_FACTION_CONFIG.ISOLATED_DISTANCE_PX)) {
+                return position;
+            }
+        }
+
+        return {
+            x: rng.randomInt(
+                UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                WORLD_GENERATION_CONFIG.MAP_WIDTH - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            ),
+            y: rng.randomInt(
+                UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                WORLD_GENERATION_CONFIG.MAP_HEIGHT - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            )
+        };
+    }
+
+    _findIsolatedPositionRandom(existingNodes) {
+        for (let attempt = 0; attempt < UNDEAD_FACTION_CONFIG.PLACEMENT_ATTEMPTS; attempt++) {
+            const position = {
+                x: this._randomInt(
+                    UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                    WORLD_GENERATION_CONFIG.MAP_WIDTH - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+                ),
+                y: this._randomInt(
+                    UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                    WORLD_GENERATION_CONFIG.MAP_HEIGHT - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+                )
+            };
+
+            if (!this._collidesWithAnyNode(position, existingNodes, UNDEAD_FACTION_CONFIG.ISOLATED_DISTANCE_PX)) {
+                return position;
+            }
+        }
+
+        return {
+            x: this._randomInt(
+                UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                WORLD_GENERATION_CONFIG.MAP_WIDTH - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            ),
+            y: this._randomInt(
+                UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX,
+                WORLD_GENERATION_CONFIG.MAP_HEIGHT - UNDEAD_FACTION_CONFIG.MAP_EDGE_PADDING_PX
+            )
+        };
+    }
+
+    _collidesWithAnyNode(position, nodes, minDistance) {
+        return nodes.some(node => this.distance(position, node) < minDistance);
+    }
+
+    _pickCampName(rng, index) {
+        return rng.pick(UNDEAD_NAMES) || `Ancient Tomb ${index + 1}`;
+    }
+
+    _pickRandomName() {
+        return UNDEAD_NAMES[this._randomInt(0, UNDEAD_NAMES.length - 1)];
+    }
+
+    _randomInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    _getOrCreateFaction() {
+        const realExisting = this.repo.db
+            .prepare("SELECT id FROM factions WHERE type = 'undead' LIMIT 1")
+            .get();
+
+        if (realExisting) {
+            return { name: "Undead Legions", color: "#8b5cf6", archetype: "undead", type: "undead", id: Number(realExisting.id) };
+        }
+
+        const result = this.repo.createFaction({
+            name: "Undead Legions",
+            color: "#8b5cf6", // Purple
+            archetype: "undead",
+            motto: "The grave cannot hold us.",
+            type: "undead"
+        });
+        return { name: "Undead Legions", color: "#8b5cf6", archetype: "undead", type: "undead", id: Number(result.lastInsertRowid) };
+    }
+}

@@ -172,7 +172,12 @@ const NON_GROWING_SETTLEMENT_TYPES = Object.freeze([
     ...Object.values(BARBARIAN_NODE_TYPES),
     'Goblin Camp',
     'Goblin Outpost',
-    'Greenskin Stronghold' 
+    'Greenskin Stronghold',
+    'Desecrated Crypt',
+    'Ancient Tomb',
+    'Haunted Cave',
+    'Sunken Dungeon',
+    'Necropolis' 
 ]);
 
 const HOSTILE_CONTRACT_TARGET_TYPES = Object.freeze([
@@ -183,7 +188,12 @@ const HOSTILE_CONTRACT_TARGET_TYPES = Object.freeze([
     ...Object.values(BARBARIAN_NODE_TYPES),
     'Goblin Camp',
     'Goblin Outpost',
-    'Greenskin Stronghold'
+    'Greenskin Stronghold',
+    'Desecrated Crypt',
+    'Ancient Tomb',
+    'Haunted Cave',
+    'Sunken Dungeon',
+    'Necropolis'
 ]);
 
 const GROWTH_PROGRESS_COMPATIBLE_EVENTS = Object.freeze([
@@ -414,9 +424,26 @@ export class GameRepository {
         if (!this._canOfferSettlementContracts(originNode)) return [];
 
         const contracts = [];
+        
+        // Priority 1: Force generate defense contract if invaded or sieged
+        if (originNode.current_event === 'undead_invasion' || originNode.current_event === 'undead_siege') {
+            contracts.push(this._createUndeadDefenseContract(originNode, possibleMins));
+        }
+
         const hostileTarget = this._findNearestHostileCamp(originNode);
         if (hostileTarget) {
-            contracts.push(this._createHostileCampContract(originNode, hostileTarget, possibleMins));
+            const isUndeadNode = ['Desecrated Crypt', 'Ancient Tomb', 'Haunted Cave', 'Sunken Dungeon', 'Necropolis'].includes(hostileTarget.type);
+            
+            if (isUndeadNode) {
+                const hasNecromancer = hostileTarget.type === 'Necropolis' || (hostileTarget.id % 3 === 0);
+                if (hasNecromancer) {
+                    contracts.push(this._createNecromancerHuntContract(originNode, hostileTarget, possibleMins));
+                } else {
+                    contracts.push(this._createUndeadPurgeContract(originNode, hostileTarget, possibleMins));
+                }
+            } else {
+                contracts.push(this._createHostileCampContract(originNode, hostileTarget, possibleMins));
+            }
         }
 
         const destination = this._pickSettlementDestination(originNode.id);
@@ -689,6 +716,12 @@ export class GameRepository {
         if (beneficiaryNode) {
             this.updateNodeReputation(beneficiaryNode.id, contractRepReward);
             this.logNodeHistory(beneficiaryNode.id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
+            
+            // Clear Undead invasion/siege if they completed a defense contract
+            if (activeContract.contract_type === 'undead_defense' || activeContract.title.includes("Defend")) {
+                this.db.prepare("UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?").run(beneficiaryNode.id);
+                this.logNodeHistory(beneficiaryNode.id, `${companyName} successfully repelled the undead horde, saving the settlement!`, 'player');
+            }
         }
 
         const caravanOutcome = this._applyCaravanContractOutcome(activeContract, beneficiaryNode, companyName);
@@ -804,6 +837,8 @@ export class GameRepository {
         let bonus = 0;
         if (this._isHostileCampContractType(contractType)) bonus += RENOWN_REWARD.HOSTILE_CAMP_BONUS;
         if (this._isDirectClearingContractType(contractType)) bonus += RENOWN_REWARD.DIRECT_CLEARING_BONUS;
+        if (contractType === 'undead_defense') bonus += 3; // Saved a town
+        if (contractType === 'necromancer_hunt') bonus += 5; // Slain commander
 
         return baseReward + bonus;
     }
@@ -824,6 +859,8 @@ export class GameRepository {
         if (contractType === CONTRACT_TYPE.CARAVAN) bonus += INFLUENCE_REWARD.CARAVAN_BONUS;
         if (this._isHostileCampContractType(contractType)) bonus += INFLUENCE_REWARD.HOSTILE_CAMP_BONUS;
         if (this._isDirectClearingContractType(contractType)) bonus += INFLUENCE_REWARD.DIRECT_CLEARING_BONUS;
+        if (contractType === 'undead_defense') bonus += 4;
+        if (contractType === 'necromancer_hunt') bonus += 6;
 
         return baseReward + bonus;
     }
@@ -916,7 +953,7 @@ export class GameRepository {
     }
 
     _resolveContractType(contract) {
-        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP, CONTRACT_TYPE.DIRECT_CLEARING].includes(contract.contract_type)) {
+        if ([CONTRACT_TYPE.CARAVAN, CONTRACT_TYPE.BRIGAND_CAMP, CONTRACT_TYPE.HOSTILE_CAMP, CONTRACT_TYPE.DIRECT_CLEARING, 'undead_defense', 'undead_purge', 'necromancer_hunt'].includes(contract.contract_type)) {
             return contract.contract_type;
         }
 
@@ -1001,7 +1038,8 @@ export class GameRepository {
         this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), growthNode.id);
 
         if (readyForBoom) {
-            const eventType = SETTLEMENT_UPGRADE_PATH[growthNode.type] ? 'building_boom' : 'settlement_expansion';
+            // Dynamic check for expansion vs upgrade
+            const eventType = this._shouldTriggerExpansion(growthNode) ? 'settlement_expansion' : 'building_boom';
             this.triggerSettlementGrowthEvent(growthNode.id, eventType);
         }
     }
@@ -1027,6 +1065,8 @@ export class GameRepository {
     _isHostileCampContractType(contractType) {
         return contractType === CONTRACT_TYPE.HOSTILE_CAMP
             || contractType === CONTRACT_TYPE.BRIGAND_CAMP
+            || contractType === 'undead_purge'
+            || contractType === 'necromancer_hunt'
             || this._isDirectClearingContractType(contractType);
     }
 
@@ -2017,7 +2057,8 @@ export class GameRepository {
             this.db.prepare('UPDATE world_nodes SET expansion_reqs = ? WHERE id = ?').run(JSON.stringify(reqs), node.id);
 
             if (readyForBoom) {
-                const eventType = SETTLEMENT_UPGRADE_PATH[node.type] ? 'building_boom' : 'settlement_expansion';
+                // Dynamic check for expansion vs upgrade
+                const eventType = this._shouldTriggerExpansion(node) ? 'settlement_expansion' : 'building_boom';
                 this.triggerSettlementGrowthEvent(node.id, eventType);
             }
         }
@@ -2269,6 +2310,76 @@ export class GameRepository {
             spawnedColonyName,
             newProgress,
             maxProg
+        };
+    }
+
+    _shouldTriggerExpansion(node) {
+        const nextType = SETTLEMENT_UPGRADE_PATH[node.type];
+        
+        // If there is no next upgrade type (e.g. Empire, Stronghold), they must expand
+        if (!nextType) return true;
+
+        const expandableTypes = ['City', 'City-State', 'Province', 'Kingdom', 'High Kingdom'];
+        if (expandableTypes.includes(node.type)) {
+            // Large settlements at Medium population or higher have a 20% chance
+            // of dispatching colonists to found an allied outpost.
+            const popTier = node.population_tier || 1;
+            if (popTier >= 2) {
+                return Math.random() < 0.20;
+            }
+        }
+
+        return false;
+    }
+
+    _createUndeadDefenseContract(originNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, 30);
+        const isSiege = originNode.current_event === 'undead_siege';
+        const title = `Defend ${originNode.name} against Undead ${isSiege ? 'Siege' : 'Horde'}`;
+        const desc = isSiege
+            ? `A massive army of the dead, orchestrated by a dark Necromancer, has surrounded ${originNode.name}. Lift the siege before the walls are breached.`
+            : `A mindless horde of shambling zombies and skeleton thralls has struck ${originNode.name}. Take up arms and defend the survivors!`;
+
+        return {
+            node_id: originNode.id,
+            target_node_id: null,
+            contract_type: 'undead_defense',
+            title: title,
+            desc: desc,
+            req_mins: reqMins,
+            gold: this._calculateContractGold(reqMins, 2.0)
+        };
+    }
+
+    _createUndeadPurgeContract(originNode, targetNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, 45);
+        const title = `Cleanse ${targetNode.name}`;
+        const desc = `The restless dead are leaking out of the dark chambers of ${targetNode.name}. Venture deep into the crypts, slay the ancient horrors, and seal the graves forever.`;
+
+        return {
+            node_id: originNode.id,
+            target_node_id: targetNode.id,
+            contract_type: 'undead_purge',
+            title: title,
+            desc: desc,
+            req_mins: reqMins,
+            gold: this._calculateContractGold(reqMins, 1.5)
+        };
+    }
+
+    _createNecromancerHuntContract(originNode, targetNode, possibleMins) {
+        const reqMins = this._pickContractMinutes(possibleMins, 60);
+        const title = `Slay Necromancer in ${targetNode.name}`;
+        const desc = `A dark sorcerer is weaving foul rituals from the shadow of ${targetNode.name}. Infiltrate the ruins, bypass their undead guardians, and cut down the necromancer.`;
+
+        return {
+            node_id: originNode.id,
+            target_node_id: targetNode.id,
+            contract_type: 'necromancer_hunt',
+            title: title,
+            desc: desc,
+            req_mins: reqMins,
+            gold: this._calculateContractGold(reqMins, 3.0)
         };
     }
 }

@@ -2,6 +2,7 @@ import { NobleBehavior } from './behaviors/NobleBehavior.mjs';
 import { BanditBehavior } from './behaviors/BanditBehavior.mjs';
 import { BarbarianBehavior } from './behaviors/BarbarianBehavior.mjs';
 import { GreenskinBehavior } from './behaviors/GreenskinBehavior.mjs'; 
+import { UndeadBehavior } from './behaviors/UndeadBehavior.mjs'; 
 import { SettlementSpecializationPlanner } from './SettlementSpecializationPlanner.mjs';
 
 export class WorldSimulator {
@@ -12,7 +13,8 @@ export class WorldSimulator {
             new NobleBehavior(repo),
             new BanditBehavior(repo),
             new BarbarianBehavior(repo),
-            new GreenskinBehavior(repo)
+            new GreenskinBehavior(repo),
+            new UndeadBehavior(repo)
         ];
     }
 
