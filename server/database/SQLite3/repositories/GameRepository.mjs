@@ -11,6 +11,7 @@ import {
 } from '../../../data/GameDataConstants.mjs';
 import { BARBARIAN_NODE_TYPES } from '../../../data/factions/BarbarianFactions.mjs';
 import { WorldSimulator } from '../../../services/simulation/WorldSimulator.mjs';
+import { SettlementSpecializationPlanner } from '../../../services/simulation/SettlementSpecializationPlanner.mjs';
 
 const NEGATIVE_ECONOMIC_EVENTS = ['ambushed_trade_routes', 'raided', 'sieged', 'ruined_location', 'terrified_villagers'];
 const NEGATIVE_EVENT_DECAY_REDUCTION = 3;   // Reduce negative event duration by 3 days per economic contract completed
@@ -1001,9 +1002,7 @@ export class GameRepository {
 
         if (readyForBoom) {
             const eventType = SETTLEMENT_UPGRADE_PATH[growthNode.type] ? 'building_boom' : 'settlement_expansion';
-            this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, development_progress = 0 WHERE id = ?')
-                .run(eventType, 999, growthNode.id);
-            this.logNodeHistory(growthNode.id, `Thanks to safe roads and bustling trade, ${growthNode.name} is preparing to expand! They are requesting building materials.`, 'world');
+            this.triggerSettlementGrowthEvent(growthNode.id, eventType);
         }
     }
 
@@ -1464,7 +1463,7 @@ export class GameRepository {
                     this.statements.updateMercXpFatigue.run({ amount: mercXp, fatigue: mercFatigue, id: merc.id });
                 });
             } else {
-                // --- NEW IDLE / RESTING STATE (Standard Campaign) ---
+                // --- IDLE / RESTING STATE (Standard Campaign) ---
                 const recoveryAmount = Math.floor(focusMinutes * IDLE_SESSION_CONFIG.FATIGUE_RECOVERY_PER_MINUTE);
                 const trainingXp = Math.floor(focusMinutes * IDLE_SESSION_CONFIG.XP_PER_MINUTE * ratio);
 
@@ -1479,6 +1478,9 @@ export class GameRepository {
                 }
             }
         }
+
+        // --- TRIGGER RANDOM SESSION EVENT ---
+        this._triggerRandomSessionEvent(focusMinutes, logs, foundLoot, activeMercs, ratio);
 
         const totalXpGranted = activeMercs.reduce((sum, m) => sum + Math.floor(baseXpAmount * (1 + m.xpBonus)), 0);
 
@@ -2016,10 +2018,257 @@ export class GameRepository {
 
             if (readyForBoom) {
                 const eventType = SETTLEMENT_UPGRADE_PATH[node.type] ? 'building_boom' : 'settlement_expansion';
-                this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, development_progress = 0 WHERE id = ?')
-                    .run(eventType, 999, node.id);
-                this.logNodeHistory(node.id, `Driven by booming commerce and safe roads, ${node.name} is preparing to expand! They are requesting building materials.`, 'world');
+                this.triggerSettlementGrowthEvent(node.id, eventType);
             }
         }
+    }
+
+    _triggerRandomSessionEvent(focusMinutes, logs, foundLoot, activeMercs, ratio) {
+        const MIN_EVENT_DURATION_MINS = 5;
+        const EVENT_TRIGGER_CHANCE = 0.35;
+        const OUT_OF_BOUNDS_RESTORE_XP = 35;
+        const DEFAULT_REMEDY_HEAL = 15;
+        const DEFAULT_REMEDY_FATIGUE = 20;
+
+        if (focusMinutes < MIN_EVENT_DURATION_MINS || activeMercs.length === 0) return;
+
+        // 35% chance to trigger a random event
+        if (Math.random() > EVENT_TRIGGER_CHANCE) return;
+
+        const events = [
+            // Event 1: Abandoned Carriage
+            () => {
+                const goldFound = Math.floor(50 + Math.random() * 100);
+                this.updateGold(goldFound);
+                
+                const tools = parseInt(this.statements.getSetting.get('tools')?.value || '20');
+                this.setCampaignSetting('tools', tools + 10);
+
+                logs.push(`📦 [Event] You discover an abandoned carriage in a ditch. Inside, you salvage some supplies (+10 Tools) and a coin purse (+${goldFound} crowns).`);
+            },
+            // Event 2: Travelling Merchant
+            () => {
+                const newItem = ItemFactory.getRandomItem();
+                this.addItemToInventory(newItem.id);
+                foundLoot.push(newItem);
+                logs.push(`🎒 [Event] A travelling peddler crosses paths with your company. Impressed by your presence, he gifts you an item: ${newItem.name}`);
+            },
+            // Event 3: Wandering Priest
+            () => {
+                activeMercs.forEach(merc => {
+                    this.db.prepare('UPDATE mercenaries SET current_hp = MIN(max_hp, current_hp + ?), fatigue = MAX(0, fatigue - ?) WHERE id = ?')
+                        .run(DEFAULT_REMEDY_HEAL, DEFAULT_REMEDY_FATIGUE, merc.id);
+                });
+                logs.push(`⛪ [Event] A wandering priest blesses your company. All active mercenaries heal 15 HP and recover 20 fatigue.`);
+            },
+            // Event 4: Local Legend
+            () => {
+                const RENOWN_BONUS = 5;
+                this.updateRenown(RENOWN_BONUS);
+                logs.push(`📣 [Event] Word of your company's growing competence spreads. Gained +5 Renown!`);
+            },
+            // Event 5: Beast Ambush
+            () => {
+                const targetMerc = activeMercs[Math.floor(Math.random() * activeMercs.length)];
+                const damage = Math.floor(5 + Math.random() * 10);
+                this.statements.damageMercenary.run({ damage, id: targetMerc.id });
+                
+                this.addItemToInventory('strange_meat');
+                const strangeMeatItem = ItemFactory.createItem('strange_meat');
+                foundLoot.push(strangeMeatItem);
+
+                logs.push(`⚔️ [Event] While breaking camp, a wild beast ambushes the company! ${targetMerc.name} takes ${damage} damage, but the beast is slain. Salvaged: Strange Meat.`);
+            },
+            // Event 6: Wandering Scholar
+            () => {
+                activeMercs.forEach(merc => {
+                    this.db.prepare('UPDATE mercenaries SET xp = xp + ? WHERE id = ?').run(OUT_OF_BOUNDS_RESTORE_XP, merc.id);
+                });
+                logs.push(`📖 [Event] A traveling scholar shares historical maps and tactics with your group. All active mercenaries gain +35 XP!`);
+            }
+        ];
+
+        // Trigger a random event from the list
+        const selectedEvent = events[Math.floor(Math.random() * events.length)];
+        selectedEvent();
+    }
+
+    _calculateInitialDevelopmentProgress(node) {
+        const specializations = normalizeSpecializations(node?.specializations ?? node?.specialization);
+        let count = 0;
+        if (specializations.includes('Peat Pit')) count++;
+        if (specializations.includes('Lumber Camp')) count++;
+        if (specializations.includes('Copper Mine')) count++;
+
+        const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: 10 } };
+        const maxProg = tierInfo.growthReqs ? tierInfo.growthReqs.materials : 10;
+
+        if (count === 1) {
+            return Math.floor(maxProg / 3);
+        } else if (count === 2) {
+            return Math.floor((maxProg * 2) / 3);
+        } else if (count >= 3) {
+            return maxProg;
+        }
+        return 0;
+    }
+
+    triggerSettlementGrowthEvent(nodeId, eventType) {
+        const node = this.getNodeById(nodeId);
+        if (!node) return;
+
+        const initialProgress = this._calculateInitialDevelopmentProgress(node);
+        const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: 10 } };
+        const maxProg = tierInfo.growthReqs ? tierInfo.growthReqs.materials : 10;
+
+        this.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, development_progress = ? WHERE id = ?')
+            .run(eventType, 999, initialProgress, node.id);
+
+        if (initialProgress >= maxProg) {
+            this.logNodeHistory(node.id, `With all three local building material specializations active, ${node.name} self-funded and completed its expansion project autonomously!`, 'world');
+            this.incrementNodeDevelopment(node.id, 0); // Trigger upgrade resolution immediately
+        } else {
+            let msg = `Driven by prosperity, ${node.name} has initiated a ${eventType === 'building_boom' ? 'building boom' : 'settlement expansion'}!`;
+            if (initialProgress > 0) {
+                msg += ` Leveraging local materials, they have already completed ${initialProgress}/${maxProg} of the required work.`;
+            } else {
+                msg += ` They require building materials from external traders to progress.`;
+            }
+            this.logNodeHistory(node.id, msg, 'world');
+        }
+    }
+
+    _chooseFirstSpecializationForNode(node, materialItemId) {
+        const currentSpecializations = normalizeSpecializations(node?.specializations ?? node?.specialization);
+        if (currentSpecializations.length > 0) return null;
+
+        return SettlementSpecializationPlanner.chooseBuildableSpecialization(
+            node,
+            materialItemId,
+            currentSpecializations
+        );
+    }
+
+    _chooseColonySpecialization(parentNode, materialItemId) {
+        const parentSpecializations = normalizeSpecializations(parentNode?.specializations ?? parentNode?.specialization);
+        return SettlementSpecializationPlanner.chooseBuildableSpecialization(
+            parentNode,
+            materialItemId,
+            parentSpecializations
+        );
+    }
+
+    incrementNodeDevelopment(nodeId, increment, itemId = null) {
+        const node = this.getNodeById(nodeId);
+        if (!node || !node.current_event) return null;
+
+        const tierInfo = SETTLEMENT_TIERS[node.type] || { growthReqs: { materials: 10 } };
+        const maxProg = tierInfo.growthReqs ? tierInfo.growthReqs.materials : 10;
+
+        let newProgress = (node.development_progress || 0) + increment;
+        let newType = node.type;
+        let newEvent = node.current_event;
+        let buyMod = node.buy_modifier;
+        let sellMod = node.sell_modifier;
+        let newPopulationTier = node.population_tier || 1;
+        let remainingReqs = '{}';
+
+        let upgraded = false;
+        let popGrown = false;
+        let specializationBuilt = null;
+        let oldPopLabel = "";
+        let newPopLabel = "";
+        let spawnedColonyName = null;
+
+        const POPULATION_LABELS = {
+            1: "Low",
+            2: "Medium",
+            3: "High",
+            4: "Very High",
+            5: "Overpopulated"
+        };
+
+        if (newProgress >= maxProg) {
+            newProgress = 0;
+            newEvent = null;
+
+            // Try to build a specialization first
+            specializationBuilt = this._chooseFirstSpecializationForNode(node, itemId);
+
+            if (specializationBuilt) {
+                this.updateNodeSpecialization(node.id, [specializationBuilt]);
+            } else if (newPopulationTier < 5) { // 5 is MAX_POPULATION_TIER
+                oldPopLabel = POPULATION_LABELS[newPopulationTier];
+                newPopulationTier += 1;
+                newPopLabel = POPULATION_LABELS[newPopulationTier];
+                popGrown = true;
+            } else {
+                const nextTier = SETTLEMENT_UPGRADE_PATH[node.type];
+                if (nextTier) {
+                    newType = nextTier;
+                    newPopulationTier = 1;
+                    upgraded = true;
+                    
+                    const nextTierInfo = SETTLEMENT_TIERS[nextTier];
+                    if (nextTierInfo) {
+                        buyMod = nextTierInfo.buyMult;
+                        sellMod = nextTierInfo.sellMult;
+                    }
+                } else {
+                    newPopulationTier = 5;
+                }
+            }
+
+            // Calculate surplus roll-over requirements
+            let reqs = {};
+            try { reqs = JSON.parse(node.expansion_reqs || '{}'); } catch(e){}
+            if (tierInfo.growthReqs) {
+                if (reqs.contracts !== undefined) {
+                    reqs.contracts = Math.max(0, reqs.contracts - (tierInfo.growthReqs.contracts || 0));
+                }
+                if (reqs.trade !== undefined) {
+                    reqs.trade = Math.max(0, reqs.trade - (tierInfo.growthReqs.trade || 0));
+                }
+            }
+            remainingReqs = JSON.stringify(reqs);
+        }
+
+        // If it was a settlement_expansion, we might spawn a colony on completion
+        if (node.current_event === 'settlement_expansion' && newProgress === 0 && !specializationBuilt) {
+            // Pick colony specialization
+            const colonySpecialization = this._chooseColonySpecialization(node, itemId);
+            const spawnedNode = this.spawnColony(node, colonySpecialization);
+            if (spawnedNode) {
+                spawnedColonyName = spawnedNode.name;
+                this.logNodeHistory(node.id, `Established the new settlement of ${spawnedNode.name} with a ${colonySpecialization ? 'focus on ' + colonySpecialization : 'focus on local resources'}.`, 'world');
+                this.logNodeHistory(spawnedNode.id, `Founded as an outpost by ${node.name}.`, 'world');
+            }
+        }
+
+        this.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod, newPopulationTier, remainingReqs);
+
+        // Logging history
+        if (newProgress === 0) {
+            if (specializationBuilt) {
+                this.logNodeHistory(node.id, `The construction finished! ${node.name} built a ${specializationBuilt}, giving the settlement its first local specialization.`, 'world');
+            } else if (popGrown) {
+                this.logNodeHistory(node.id, `The construction finished! The settlement's population has grown from ${oldPopLabel} to ${newPopLabel}.`, 'world');
+            } else if (upgraded) {
+                this.logNodeHistory(node.id, `The construction finished! The settlement has grown into a ${newType}.`, 'world');
+            } else if (node.current_event === 'settlement_expansion') {
+                this.logNodeHistory(node.id, `The construction finished! ${node.name} has expanded its borders.`, 'world');
+            } else {
+                this.logNodeHistory(node.id, `The construction finished! The settlement continues to thrive at maximum capacity.`, 'world');
+            }
+        }
+
+        return {
+            upgraded,
+            popGrown,
+            specializationBuilt,
+            spawnedColonyName,
+            newProgress,
+            maxProg
+        };
     }
 }

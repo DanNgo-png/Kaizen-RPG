@@ -1,7 +1,7 @@
 import { BaseFactionBehavior } from "./BaseFactionBehavior.mjs";
 import { NOBLE_HOUSE_LORE_POOL, WORLD_GENERATION_CONFIG, WORLD_NODE_TYPE_WEIGHTS } from "../../../data/factions/NobleFactions.mjs";
 import { BARBARIAN_NODE_TYPES } from "../../../data/factions/BarbarianFactions.mjs";
-import { SETTLEMENT_NAMES, SETTLEMENT_TIERS, SETTLEMENT_EVENTS } from "../../../data/GameDataConstants.mjs";
+import { SETTLEMENT_NAMES, SETTLEMENT_TIERS, SETTLEMENT_EVENTS, normalizeSpecializations } from "../../../data/GameDataConstants.mjs";
 import { SettlementSpecializationPlanner } from "../SettlementSpecializationPlanner.mjs";
 
 const HOSTILE_SETTLEMENT_TYPES = Object.freeze([
@@ -118,17 +118,71 @@ export class NobleBehavior extends BaseFactionBehavior {
     }
 
     processDayEnd(currentDay) {
-        // Fetch nodes including hostile camps to calculate safety distances
-        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name FROM world_nodes').all();
+        // Fetch nodes including hostile camps to calculate safety distances and load specializations
+        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization FROM world_nodes').all();
         
         const settlements = allNodes.filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
-        
         const enemies = allNodes.filter(n => HOSTILE_SETTLEMENT_TYPES.includes(n.type));
 
         const eventKeys = Object.keys(SETTLEMENT_EVENTS);
+        const logs = [];
 
+        // --- 1. SIMULATE CARAVAN TRADE FOR CONSTRUCTION PROJECTS ---
+        const activeConstructionNodes = settlements.filter(n => 
+            n.current_event === 'building_boom' || n.current_event === 'settlement_expansion'
+        );
+
+        for (const target of activeConstructionNodes) {
+            // 35% chance of a natural caravan arrival today
+            if (Math.random() < 0.35) {
+                const potentialSources = settlements.filter(s => s.id !== target.id);
+                if (potentialSources.length > 0) {
+                    const source = potentialSources[Math.floor(Math.random() * potentialSources.length)];
+                    
+                    // Normalize specializations of the source
+                    const sourceSpecs = normalizeSpecializations(source.specialization) || [];
+                    
+                    let materialDelivered = null;
+                    let materialName = "building supplies";
+
+                    if (sourceSpecs.includes('Lumber Camp')) {
+                        materialDelivered = 'quality_wood';
+                        materialName = 'Quality Wood';
+                    } else if (sourceSpecs.includes('Peat Pit')) {
+                        materialDelivered = 'peat_bricks';
+                        materialName = 'Peat Bricks';
+                    } else if (sourceSpecs.includes('Copper Mine')) {
+                        materialDelivered = 'copper_ingots';
+                        materialName = 'Copper Ingots';
+                    }
+
+                    // Increment progress
+                    const result = this.repo.incrementNodeDevelopment(target.id, 1, materialDelivered);
+                    
+                    let logMsg = `📢 A merchant caravan from ${source.name} arrived at ${target.name}, delivering ${materialName}.`;
+                    if (result && result.newProgress !== undefined) {
+                        if (result.newProgress === 0) {
+                            logMsg += ` This delivery completed the construction project!`;
+                        } else {
+                            logMsg += ` Progress: ${result.newProgress}/${result.maxProg}.`;
+                        }
+                    }
+                    
+                    this.repo.logNodeHistory(target.id, logMsg, 'world');
+                    logs.push(logMsg);
+                }
+            }
+        }
+
+        // --- 2. REGULAR SETTLEMENT EVENT PROCESSING ---
         for (const n of settlements) {
             if (n.current_event) {
+                // If it's a building boom or settlement expansion, we don't naturally expire it.
+                // It must be completed by material deliveries (either player or simulated caravan).
+                if (n.current_event === 'building_boom' || n.current_event === 'settlement_expansion') {
+                    continue;
+                }
+
                 const newExp = n.event_expiration - 1;
                 if (newExp <= 0) {
                     this.repo.db.prepare('UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?').run(n.id);
@@ -168,7 +222,7 @@ export class NobleBehavior extends BaseFactionBehavior {
                 }
             }
         }
-        return [];
+        return logs;
     }
 
     _findCapitalPosition(capitals, rng) {
