@@ -1,0 +1,323 @@
+/* --- Barebones Marketplace Split Layout --- */
+.bb-market-split {
+    display: flex;
+    gap: 15px;
+    flex: 1;
+    min-height: 0;
+}
+
+.bb-market-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.bb-market-header {
+    padding: 10px 15px;
+    background: #1e293b;
+    border-bottom: 1px solid #334155;
+    font-weight: 700;
+    text-align: center;
+    color: #cbd5e1;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    flex-shrink: 0;
+}
+
+/* --- Compact Grid & Slots --- */
+.bb-market-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+    gap: 8px;
+    padding: 15px;
+    align-content: start;
+}
+
+.bb-market-slot {
+    aspect-ratio: 1;
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    color: #94a3b8;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+}
+
+.bb-market-slot:hover:not(.disabled) {
+    background: #1e293b;
+    border-color: #e2e8f0;
+    color: #f1f5f9;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    z-index: 10;
+}
+
+.bb-market-slot.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+.bb-market-slot.equipped {
+    opacity: 0.9;
+    border-color: #f59e0b;
+    color: #fbbf24;
+    filter: none;
+    background: linear-gradient(145deg, #111827, #1f2937);
+    box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.3), inset 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.bb-market-slot.equipped:hover {
+    transform: none;
+    border-color: #fbbf24;
+    background: #1f2937;
+    box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.35), 0 4px 10px rgba(0,0,0,0.45);
+}
+
+.bb-slot-equipped {
+    position: absolute;
+    top: 4px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    max-width: calc(100% - 10px);
+    padding: 2px 5px;
+    border-radius: 999px;
+    background: rgba(127, 29, 29, 0.9);
+    border: 1px solid rgba(248, 113, 113, 0.55);
+    color: #fecaca;
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1;
+    text-transform: uppercase;
+    pointer-events: none;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+.bb-slot-equipped span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Rarity Colors */
+.bb-market-slot.rarity-uncommon { border-color: #059669; color: #34d399; }
+.bb-market-slot.rarity-rare { border-color: #2563eb; color: #60a5fa; }
+.bb-market-slot.rarity-legendary { border-color: #d97706; color: #fbbf24; box-shadow: inset 0 0 10px rgba(245, 158, 11, 0.2); }
+
+/* Tiny Price Tag inside the slot */
+.bb-slot-price {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: monospace;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    pointer-events: none;
+}
+.bb-slot-price.buy { color: #93c5fd; } /* Light Blue for Buying */
+.bb-slot-price.sell { color: #fcd34d; } /* Light Gold for Selling */
+.bb-slot-price.locked { color: #fecaca; }
+
+/* Tiny Quantity Tag inside the slot */
+.bb-slot-qty {
+    position: absolute;
+    top: 2px;
+    left: 4px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-family: monospace;
+    color: #fff;
+    text-shadow: 1px 1px 2px #000, -1px -1px 2px #000;
+    pointer-events: none;
+}
+
+/* --- Floating JS Tooltip --- */
+.bb-item-tooltip {
+    position: fixed;
+    background: rgba(15, 23, 42, 0.98);
+    border: 1px solid #475569;
+    padding: 10px 15px;
+    border-radius: 6px;
+    pointer-events: none;
+    z-index: 9999;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+    text-align: center;
+    min-width: 140px;
+}
+
+.bb-item-tooltip.hidden {
+    display: none;
+}
+
+.bb-item-tooltip .tt-name {
+    font-weight: 700;
+    font-size: 0.95rem;
+    color: #f8fafc;
+    margin-bottom: 2px;
+}
+
+.bb-item-tooltip .tt-type {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.bb-item-tooltip .tt-action {
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.bb-item-tooltip .tt-action.buy { color: #60a5fa; }
+.bb-item-tooltip .tt-action.sell { color: #fbbf24; }
+.bb-item-tooltip .tt-action.locked { color: #fecaca; }
+
+.bb-item-tooltip .tt-equipped {
+    color: #fbbf24;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin: 6px 0;
+}
+
+.bb-item-tooltip .tt-muted {
+    color: #94a3b8;
+    font-size: 0.78rem;
+    margin-top: 4px;
+}
+
+.bb-tooltip-title {
+    font-weight: 700;
+    margin-bottom: 5px;
+    font-size: 1.05rem;
+    text-align: left;
+}
+
+.bb-tooltip-title.gold { color: #facc15; }
+.bb-tooltip-title.renown { color: #c4b5fd; }
+.bb-tooltip-title.provisions { color: #d97706; }
+.bb-tooltip-title.tools { color: #9ca3af; }
+.bb-tooltip-title.ammo { color: #d1d5db; }
+.bb-tooltip-title.meds { color: #f87171; }
+.bb-tooltip-title.strength { color: #34d399; }
+
+.bb-tooltip-body {
+    max-width: 320px;
+    margin-top: 8px;
+    line-height: 1.4;
+    text-align: left;
+    color: #9ca3af;
+    font-weight: normal;
+}
+
+.bb-tooltip-title + .bb-tooltip-body {
+    margin-top: 0;
+}
+
+.bb-tooltip-body b {
+    color: #fff;
+}
+
+.bb-market-panel .bb-scroll-list {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.25) rgba(15, 23, 42, 0.1);
+}
+
+/* --- Marketplace Filter Chips --- */
+.bb-market-filters {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.bb-filter-chip {
+    background: transparent;
+    border: 1px solid transparent;
+    color: #64748b;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.bb-filter-chip:hover {
+    color: #f1f5f9;
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.bb-filter-chip.active {
+    color: #3b82f6;
+    border-color: rgba(59, 130, 246, 0.35);
+    background: rgba(59, 130, 246, 0.12);
+    box-shadow: 0 0 8px rgba(59, 130, 246, 0.15);
+}
+
+/* --- Barebones Marketplace Columns Overhaul --- */
+.bb-market-middle-filters {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(15, 23, 42, 0.4); /* Matches barebones radial background */
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 20px 12px;
+    gap: 20px;
+    min-width: 60px;
+    align-self: stretch; /* Fills full height of the parent container */
+    box-sizing: border-box;
+}
+
+.bb-market-filter-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.bb-market-filter-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    user-select: none;
+    margin-bottom: 4px;
+}
+
+.bb-market-filters.vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    align-items: center;
+}
+
+.bb-market-middle-divider {
+    width: 80%;
+    height: 1px;
+    background-color: #334155;
+    margin: 5px 0;
+    opacity: 0.5;
+}
