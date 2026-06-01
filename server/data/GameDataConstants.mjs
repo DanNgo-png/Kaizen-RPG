@@ -41,6 +41,9 @@ export const SETTLEMENT_TIERS = {
     'Empire':       { buyMult: 0.80, sellMult: 1.30, shopLevel: 5, growthReqs: { contracts: 50, trade: 50000, materials: 60 } },
     'Stronghold':   { buyMult: 1.30, sellMult: 0.95, shopLevel: 3, growthReqs: { contracts: 15, trade: 10000, materials: 25 } },
     'Ruins':              { buyMult: 1.00, sellMult: 1.00, shopLevel: 0 },
+    'Webknecht Nest':     { buyMult: 1.05, sellMult: 0.25, shopLevel: 0 },
+    'Webknecht Colony':   { buyMult: 1.15, sellMult: 0.20, shopLevel: 0 },
+    'Webknecht Citadel':  { buyMult: 1.30, sellMult: 0.15, shopLevel: 0 },
     'Bandit Camp':        { buyMult: 1.00, sellMult: 0.30, shopLevel: 0 },
     'Bandit Outpost':     { buyMult: 1.10, sellMult: 0.25, shopLevel: 0 },
     'Bandit Stronghold':  { buyMult: 1.25, sellMult: 0.20, shopLevel: 0 },
@@ -201,6 +204,16 @@ export const SETTLEMENT_EVENTS = {
         freqMod: 0,
         isRandom: false
     },
+    'web_infestation': {
+        name: 'Web Infestation',
+        description: 'Vast webbing has choked the local roads and livestock. Industry is paralyzed.',
+        buyMult: 1.80,     // High inflation on imports due to isolated roads
+        sellMult: 0.40,    // Hard to export local wares
+        qtyMult: 0.30,     // Stalls market inventory
+        specDisabled: true,
+        freqMod: 0,
+        isRandom: false
+    },
     'ambushed_trade_routes': { 
         name: 'Ambushed Trade Routes', 
         buyMult: 2.5, 
@@ -287,6 +300,9 @@ export const SETTLEMENT_UPGRADE_PATH = {
     'High Kingdom': 'Empire',
     'Empire': null,     
     'Stronghold': null,
+    'Webknecht Nest': 'Webknecht Colony',
+    'Webknecht Colony': 'Webknecht Citadel',
+    'Webknecht Citadel': null,
     'Goblin Camp': null,
     'Goblin Outpost': null,
     'Greenskin Stronghold': null  

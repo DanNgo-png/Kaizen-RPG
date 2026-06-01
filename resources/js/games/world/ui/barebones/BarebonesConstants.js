@@ -49,7 +49,10 @@ export const NODE_TYPE_ICONS = Object.freeze({
     'Haunted Cave': "fa-mountain",
     'Sunken Dungeon': "fa-dungeon",
     'Necropolis': "fa-skull-crossbones",
-    'Refugee Camp': "fa-tent"
+    'Refugee Camp': "fa-tent",
+    'Webknecht Nest': "fa-spider",
+    'Webknecht Colony': "fa-bug",
+    'Webknecht Citadel': "fa-hive" 
 });
 
 export const CHRONICLE_EVENT_META = Object.freeze({

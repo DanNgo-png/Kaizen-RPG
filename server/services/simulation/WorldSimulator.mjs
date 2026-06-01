@@ -3,18 +3,19 @@ import { BanditBehavior } from './behaviors/BanditBehavior.mjs';
 import { BarbarianBehavior } from './behaviors/BarbarianBehavior.mjs';
 import { GreenskinBehavior } from './behaviors/GreenskinBehavior.mjs'; 
 import { UndeadBehavior } from './behaviors/UndeadBehavior.mjs'; 
+import { WebknechtBehavior } from './behaviors/WebknechtBehavior.mjs';
 import { SettlementSpecializationPlanner } from './SettlementSpecializationPlanner.mjs';
 
 export class WorldSimulator {
     constructor(repo) {
         this.repo = repo;
-        // Add active factions in the world here
         this.behaviors = [
             new NobleBehavior(repo),
             new BanditBehavior(repo),
             new BarbarianBehavior(repo),
             new GreenskinBehavior(repo),
-            new UndeadBehavior(repo)
+            new UndeadBehavior(repo),
+            new WebknechtBehavior(repo)
         ];
     }
 
