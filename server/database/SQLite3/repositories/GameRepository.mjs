@@ -2338,13 +2338,99 @@ export class GameRepository {
         if (!nextType) return true;
 
         const expandableTypes = ['City', 'City-State', 'Province', 'Kingdom', 'High Kingdom'];
-        if (expandableTypes.includes(node.type)) {
-            // Large settlements at Medium population or higher have a 20% chance
-            // of dispatching colonists to found an allied outpost.
-            const popTier = node.population_tier || 1;
-            if (popTier >= 2) {
-                return Math.random() < 0.20;
-            }
+        if (!expandableTypes.includes(node.type)) {
+            return false;
+        }
+
+        // 1. Population Pressure
+        // Settlements only seek colonies if they are experiencing crowding pressure.
+        const popTier = node.population_tier || 1;
+        const MIN_EXPANSION_POP_TIER = 2; // Medium population minimum
+        if (popTier < MIN_EXPANSION_POP_TIER) {
+            return false; // Prefer growing internally via building_boom
+        }
+
+        // 2. Administrative Reach and Wealth
+        // The local noble requires political influence to fund and organize an outpost.
+        const localInfluence = Number(node.influence) || 0;
+        const MIN_REQUIRED_INFLUENCE = 15; // Political capital required to authorize a colony
+        if (localInfluence < MIN_REQUIRED_INFLUENCE) {
+            return false;
+        }
+
+        // 3. Stability & Regional Safety
+        // Settlements in active crises or with poor standing will not prioritize expansion.
+        const STABILITY_CRISIS_EVENTS = ['sieged', 'raided', 'ruined_location', 'undead_invasion', 'undead_siege', 'web_infestation'];
+        const isStable = !node.current_event || !STABILITY_CRISIS_EVENTS.includes(node.current_event);
+        
+        const HOSTILE_STANDING_LIMIT = 0; // Reputation below Neutral implies too much unrest to expand
+        const hasStableStanding = (node.reputation || 0) >= HOSTILE_STANDING_LIMIT;
+
+        if (!isStable || !hasStableStanding) {
+            return false;
+        }
+
+        // 4. Strategic Desire (Faction Resource Scarcity)
+        // If the parent faction has no unclaimed wilderness, or lacks basic industrial specializations,
+        // the economic pressure to find resources will force a colonization wave.
+        const parentFactionId = node.faction_id;
+        if (parentFactionId === null) {
+            return false; // Neutral/wild wilderness nodes cannot coordinate expansion
+        }
+
+        // Retrieve all nodes owned by this faction
+        const factionNodes = this.statements.getAllNodes.all()
+            .map(n => this._mapWorldNode(n))
+            .filter(n => n.faction_id === parentFactionId);
+
+        // Map what resources the faction currently produces
+        const factionSpecs = new Set();
+        factionNodes.forEach(fn => {
+            const specs = normalizeSpecializations(fn.specializations ?? fn.specialization);
+            specs.forEach(s => factionSpecs.add(s));
+        });
+
+        // Check for lack of foundational building materials (Wood, Peat, Copper)
+        const lacksWood = !factionSpecs.has('Lumber Camp');
+        const lacksPeat = !factionSpecs.has('Peat Pit');
+        const lacksCopper = !factionSpecs.has('Copper Mine');
+
+        // 5. Geographic Room (Crowding Check)
+        // If the region immediately surrounding the node is saturated, it cannot spawn a Hamlet.
+        const allNodes = this.statements.getAllNodes.all();
+        const CROWDING_RADIUS_PX = 300;
+        const CROWDING_RADIUS_SQ = CROWDING_RADIUS_PX * CROWDING_RADIUS_PX;
+
+        const localNodesCount = allNodes.filter(n => 
+            this._distanceSquared(node, n) <= CROWDING_RADIUS_SQ
+        ).length;
+
+        // If there are already 5 or more nodes in the vicinity, there is no physical room to colonize
+        const LOCAL_CROWDING_LIMIT = 5; 
+        if (localNodesCount >= LOCAL_CROWDING_LIMIT) {
+            return false;
+        }
+
+        // 6. Core Decision Tree
+        // Overpopulated (Tier 5) always triggers expansion due to extreme local resource strain.
+        const MAX_POPULATION_TIER = 5;
+        if (popTier === MAX_POPULATION_TIER) {
+            return true;
+        }
+
+        // If the parent faction lacks any of the three fundamental industrial materials,
+        // and has the required influence/stability, they will seek to colonize immediately.
+        if (lacksWood || lacksPeat || lacksCopper) {
+            return true;
+        }
+
+        // Luxury/Progressive Expansion:
+        // Even if they have building materials, if they are highly populated (Tier 4+) 
+        // and have administrative surplus, they expand to capture secondary luxury specializations.
+        const HIGH_POPULATION_TIER = 4;
+        const SURPLUS_INFLUENCE_LIMIT = 30;
+        if (popTier >= HIGH_POPULATION_TIER && localInfluence >= SURPLUS_INFLUENCE_LIMIT) {
+            return true;
         }
 
         return false;
