@@ -13,6 +13,85 @@ export const BAREBONES_UI = Object.freeze({
     MAX_DEVELOPMENT_PROGRESS: 5
 });
 
+export const HOSTILE_REPUTATION_THRESHOLD = -50;
+
+export const SETTLEMENT_SORT_MODES = Object.freeze({
+    NAME: "name",
+    HIERARCHY: "hierarchy",
+    FACTION: "faction",
+    REPUTATION: "reputation",
+    POPULATION: "population"
+});
+
+export const SETTLEMENT_SORT_DIRECTIONS = Object.freeze({
+    ASC: "asc",
+    DESC: "desc"
+});
+
+export const SETTLEMENT_SORT_LABELS = Object.freeze({
+    [SETTLEMENT_SORT_MODES.NAME]: "ABC Order",
+    [SETTLEMENT_SORT_MODES.HIERARCHY]: "Settlement Hierarchy",
+    [SETTLEMENT_SORT_MODES.FACTION]: "Faction",
+    [SETTLEMENT_SORT_MODES.REPUTATION]: "Reputation",
+    [SETTLEMENT_SORT_MODES.POPULATION]: "Population"
+});
+
+export const SETTLEMENT_SORT_SEQUENCE = Object.freeze([
+    SETTLEMENT_SORT_MODES.NAME,
+    SETTLEMENT_SORT_MODES.HIERARCHY,
+    SETTLEMENT_SORT_MODES.FACTION,
+    SETTLEMENT_SORT_MODES.REPUTATION,
+    SETTLEMENT_SORT_MODES.POPULATION
+]);
+
+export const SETTLEMENT_SORT_DEFAULT_DIRECTIONS = Object.freeze({
+    [SETTLEMENT_SORT_MODES.NAME]: SETTLEMENT_SORT_DIRECTIONS.ASC,
+    [SETTLEMENT_SORT_MODES.HIERARCHY]: SETTLEMENT_SORT_DIRECTIONS.DESC,
+    [SETTLEMENT_SORT_MODES.FACTION]: SETTLEMENT_SORT_DIRECTIONS.ASC,
+    [SETTLEMENT_SORT_MODES.REPUTATION]: SETTLEMENT_SORT_DIRECTIONS.DESC,
+    [SETTLEMENT_SORT_MODES.POPULATION]: SETTLEMENT_SORT_DIRECTIONS.DESC
+});
+
+export const SETTLEMENT_PANEL_DEFAULT_SETTINGS = Object.freeze({
+    sortMode: SETTLEMENT_SORT_MODES.NAME,
+    sortDirection: SETTLEMENT_SORT_DIRECTIONS.ASC,
+    hideHostile: false,
+    keepPinnedOnTop: true
+});
+
+export const SETTLEMENT_HIERARCHY_RANKS = Object.freeze({
+    Empire: 8,
+    "High Kingdom": 7,
+    Kingdom: 6,
+    Province: 5,
+    "City-State": 5,
+    City: 4,
+    Stronghold: 4,
+    Town: 3,
+    Village: 2,
+    Hamlet: 1,
+    "Stolen Stronghold": 0,
+    "Bandit Stronghold": 0,
+    "Bandit Outpost": 0,
+    "Bandit Camp": 0,
+    "Barbarian Warcamp": 0,
+    "Barbarian Outpost": 0,
+    "Barbarian Camp": 0,
+    "Greenskin Stronghold": 0,
+    "Goblin Outpost": 0,
+    "Goblin Camp": 0,
+    "Webknecht Citadel": 0,
+    "Webknecht Colony": 0,
+    "Webknecht Nest": 0,
+    Necropolis: 0,
+    "Sunken Dungeon": 0,
+    "Haunted Cave": 0,
+    "Ancient Tomb": 0,
+    "Desecrated Crypt": 0,
+    "Refugee Camp": 0,
+    Ruins: 0
+});
+
 export const RESOURCE_TOOLTIP = Object.freeze({
     INFINITY_HTML: "&infin;",
     PROVISIONS_PER_PERSON_PER_DAY: 2,
@@ -211,7 +290,7 @@ export function createDefaultPartyData() {
 }
 
 export function getReputationString(repValue) {
-    if (repValue <= -50) return "Hostile";
+    if (repValue <= HOSTILE_REPUTATION_THRESHOLD) return "Hostile";
     if (repValue <= -10) return "Wary";
     if (repValue <= 9) return "Stranger";
     if (repValue <= 50) return "Neutral";

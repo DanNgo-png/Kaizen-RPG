@@ -1,6 +1,7 @@
 export function createBarebonesDom(documentRef = document) {
     return {
         overlay: documentRef.getElementById("barebones-ui-overlay"),
+        settlementPanelHeader: documentRef.getElementById("bb-settlement-panel-header"),
         nodeList: documentRef.getElementById("bb-nodes-list"),
         settlementSearch: documentRef.getElementById("bb-settlement-search"), 
         contractList: documentRef.getElementById("bb-contracts-list"),

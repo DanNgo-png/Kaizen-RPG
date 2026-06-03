@@ -1,13 +1,18 @@
 import {
     BAREBONES_TABS,
+    BAREBONES_UI,
     DEFAULT_NODE_ICON,
-    NODE_TYPE_ICONS
+    HOSTILE_REPUTATION_THRESHOLD,
+    NODE_TYPE_ICONS,
+    SETTLEMENT_HIERARCHY_RANKS,
+    SETTLEMENT_PANEL_DEFAULT_SETTINGS,
+    SETTLEMENT_SORT_DIRECTIONS,
+    SETTLEMENT_SORT_MODES
 } from "./BarebonesConstants.js";
 import { escapeHtml } from "./BarebonesTemplates.js";
 
 const DEFAULT_FACTION_COLOR = "#60a5fa";
 const HEX_COLOR_PATTERN = /^#[0-9a-f]{6}$/i;
-const HOSTILE_REPUTATION_THRESHOLD = -50;
 const confirmAction = (message) => globalThis.confirm?.(message) ?? true;
 
 export class NodeListRenderer {
@@ -29,20 +34,82 @@ export class NodeListRenderer {
         this.onClearHostileNode = onClearHostileNode;
     }
 
-    render(nodes, selectedNode) {
+    render(nodes, selectedNode, settings = SETTLEMENT_PANEL_DEFAULT_SETTINGS) {
         if (!this.dom.nodeList) return;
 
         this.dom.nodeList.innerHTML = "";
-        this._sortNodes(nodes).forEach((node) => {
+        this._sortNodes(nodes, settings).forEach((node) => {
             this.dom.nodeList.appendChild(this._createNodeCard(node, selectedNode));
         });
     }
 
-    _sortNodes(nodes) {
+    _sortNodes(nodes, settings = SETTLEMENT_PANEL_DEFAULT_SETTINGS) {
+        const sortSettings = {
+            ...SETTLEMENT_PANEL_DEFAULT_SETTINGS,
+            ...settings
+        };
+        const direction = sortSettings.sortDirection === SETTLEMENT_SORT_DIRECTIONS.DESC ? -1 : 1;
+
         return [...nodes].sort((a, b) => {
-            if (b.is_pinned !== a.is_pinned) return Number(b.is_pinned) - Number(a.is_pinned);
-            return String(a.name).localeCompare(String(b.name));
+            if (sortSettings.keepPinnedOnTop && b.is_pinned !== a.is_pinned) {
+                return Number(b.is_pinned) - Number(a.is_pinned);
+            }
+
+            const modeResult = this._compareByMode(a, b, sortSettings.sortMode);
+            if (modeResult !== BAREBONES_UI.DEFAULT_RESOURCE_VALUE) return modeResult * direction;
+
+            return this._compareName(a, b);
         });
+    }
+
+    _compareByMode(a, b, sortMode) {
+        if (sortMode === SETTLEMENT_SORT_MODES.HIERARCHY) {
+            return this._compareNumber(this._hierarchyRank(a), this._hierarchyRank(b))
+                || this._compareNumber(this._populationTier(a), this._populationTier(b));
+        }
+
+        if (sortMode === SETTLEMENT_SORT_MODES.FACTION) {
+            return this._compareString(this._factionName(a), this._factionName(b));
+        }
+
+        if (sortMode === SETTLEMENT_SORT_MODES.REPUTATION) {
+            return this._compareNumber(this._reputation(a), this._reputation(b));
+        }
+
+        if (sortMode === SETTLEMENT_SORT_MODES.POPULATION) {
+            return this._compareNumber(this._populationTier(a), this._populationTier(b))
+                || this._compareNumber(this._hierarchyRank(a), this._hierarchyRank(b));
+        }
+
+        return this._compareName(a, b);
+    }
+
+    _compareName(a, b) {
+        return this._compareString(a.name, b.name);
+    }
+
+    _compareString(a, b) {
+        return String(a ?? "").localeCompare(String(b ?? ""));
+    }
+
+    _compareNumber(a, b) {
+        return Number(a) - Number(b);
+    }
+
+    _hierarchyRank(node) {
+        return SETTLEMENT_HIERARCHY_RANKS[node?.type] ?? BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+    }
+
+    _populationTier(node) {
+        return Number(node?.population_tier) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+    }
+
+    _reputation(node) {
+        return Number(node?.reputation) || BAREBONES_UI.DEFAULT_RESOURCE_VALUE;
+    }
+
+    _factionName(node) {
+        return node?.faction?.name || "";
     }
 
     _createNodeCard(node, selectedNode) {

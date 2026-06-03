@@ -5,6 +5,12 @@ import {
     BAREBONES_TABS,
     BAREBONES_UI,
     HIRE_CONFIG,
+    HOSTILE_REPUTATION_THRESHOLD,
+    SETTLEMENT_PANEL_DEFAULT_SETTINGS,
+    SETTLEMENT_SORT_DEFAULT_DIRECTIONS,
+    SETTLEMENT_SORT_DIRECTIONS,
+    SETTLEMENT_SORT_LABELS,
+    SETTLEMENT_SORT_SEQUENCE,
     createDefaultMarketData,
     createDefaultPartyData
 } from "./barebones/BarebonesConstants.js";
@@ -14,12 +20,14 @@ import { ResourceTooltipManager } from "./barebones/ResourceTooltipManager.js";
 import { ChroniclesModal } from "./barebones/ChroniclesModal.js";
 import { WorldLogOverlay } from "./barebones/WorldLogOverlay.js";
 import { NodeListRenderer } from "./barebones/NodeListRenderer.js";
+import { SettlementRelationshipOverlay } from "./barebones/SettlementRelationshipOverlay.js";
+import { SettlementSettingsOverlay } from "./barebones/SettlementSettingsOverlay.js";
 import { HireCandidateFactory } from "./barebones/HireCandidateFactory.js";
 import { HireHallPanel } from "./barebones/HireHallPanel.js";
 import { MarketPanel } from "./barebones/MarketPanel.js";
 import { ContractPanel } from "./barebones/ContractPanel.js";
 
-const HOSTILE_REPUTATION_THRESHOLD = -50;
+const SETTLEMENT_PANEL_SETTINGS_KEY = "kaizen.barebones.settlementPanelSettings";
 let activeBarebonesUIManager = null;
 
 export class BarebonesUIManager {
@@ -39,6 +47,7 @@ export class BarebonesUIManager {
         this.isDelving = false;
         this.isDestroyed = false;
         this.settlementSearchQuery = ""; 
+        this.settlementPanelSettings = this._loadSettlementPanelSettings();
         this._domEventBindings = [];
 
         this.menuManager = new CustomMenuManager();
@@ -48,6 +57,10 @@ export class BarebonesUIManager {
         });
         this.worldLogOverlay = new WorldLogOverlay({
             onRequestHistory: () => GameAPI.getWorldHistory()
+        });
+        this.relationshipOverlay = new SettlementRelationshipOverlay();
+        this.settlementSettingsOverlay = new SettlementSettingsOverlay({
+            onChange: (settings) => this._updateSettlementPanelSettings(settings)
         });
         this.nodeListRenderer = new NodeListRenderer({
             dom: this.dom,
@@ -92,8 +105,9 @@ export class BarebonesUIManager {
         this.switchTab(BAREBONES_TABS.JOBS, { shouldLoad: false });
         this.renderNodeList();
 
-        if (this.nodes.length > BAREBONES_UI.DEFAULT_RESOURCE_VALUE) {
-            this.selectNode(this.nodes[0]);
+        const selectableNodes = this._filteredSettlementNodes({ applySearch: false });
+        if (selectableNodes.length > BAREBONES_UI.DEFAULT_RESOURCE_VALUE) {
+            this.selectNode(selectableNodes[0]);
         }
 
         GameAPI.getPartyData();
@@ -105,6 +119,9 @@ export class BarebonesUIManager {
         if (this.isDestroyed) return;
         if (this.dom.overlay) this.dom.overlay.classList.add("hidden");
         this.tooltipManager.hide();
+        this.menuManager.hide();
+        this.relationshipOverlay.hide();
+        this.settlementSettingsOverlay.hide();
     }
 
     updateData(nodes = [], resources) {
@@ -198,17 +215,8 @@ export class BarebonesUIManager {
     }
 
     renderNodeList() {
-        let filteredNodes = this.nodes;
-        
-        if (this.settlementSearchQuery) {
-            filteredNodes = this.nodes.filter(node => 
-                (node.name || "").toLowerCase().includes(this.settlementSearchQuery) ||
-                (node.type || "").toLowerCase().includes(this.settlementSearchQuery) ||
-                this._specializationText(node).toLowerCase().includes(this.settlementSearchQuery)
-            );
-        }
-        
-        this.nodeListRenderer.render(filteredNodes, this.selectedNode);
+        const filteredNodes = this._filteredSettlementNodes();
+        this.nodeListRenderer.render(filteredNodes, this.selectedNode, this.settlementPanelSettings);
     }
 
     renderHireList() {
@@ -264,7 +272,8 @@ export class BarebonesUIManager {
             // Bind the active contract request
             receiveActiveContract: (event) => this._onReceiveActiveContract(event),
             showWorldLog: () => this.worldLogOverlay.show(),
-            receiveWorldHistory: (event) => this._onReceiveWorldHistory(event)
+            receiveWorldHistory: (event) => this._onReceiveWorldHistory(event),
+            showSettlementHeaderMenu: (event) => this._showSettlementHeaderMenu(event)
         };
     }
 
@@ -284,6 +293,7 @@ export class BarebonesUIManager {
             { element: this.dom.tabMarket, type: "click", handler: this._handlers.showMarketTab },
             { element: this.dom.tabHire, type: "click", handler: this._handlers.showHireTab },
             { element: this.dom.resContainers.time, type: "click", handler: this._handlers.showWorldLog },
+            { element: this.dom.settlementPanelHeader, type: "contextmenu", handler: this._handlers.showSettlementHeaderMenu },
             { 
                 element: this.dom.settlementSearch, 
                 type: "input", 
@@ -320,6 +330,8 @@ export class BarebonesUIManager {
 
         this.tooltipManager.destroy();
         this.worldLogOverlay?.root?.remove();
+        this.relationshipOverlay?.destroy();
+        this.settlementSettingsOverlay?.destroy();
 
         if (activeBarebonesUIManager === this) {
             activeBarebonesUIManager = null;
@@ -574,6 +586,151 @@ export class BarebonesUIManager {
 
     _isHostileNode(node) {
         return Boolean(node && (node.is_hostile === 1 || node.reputation <= HOSTILE_REPUTATION_THRESHOLD));
+    }
+
+    _filteredSettlementNodes({ applySearch = true } = {}) {
+        let filteredNodes = this.nodes;
+
+        if (this.settlementPanelSettings.hideHostile) {
+            filteredNodes = filteredNodes.filter((node) => !this._isHostileNode(node));
+        }
+
+        if (applySearch && this.settlementSearchQuery) {
+            filteredNodes = filteredNodes.filter((node) =>
+                (node.name || "").toLowerCase().includes(this.settlementSearchQuery) ||
+                (node.type || "").toLowerCase().includes(this.settlementSearchQuery) ||
+                this._specializationText(node).toLowerCase().includes(this.settlementSearchQuery)
+            );
+        }
+
+        return filteredNodes;
+    }
+
+    _showSettlementHeaderMenu(event) {
+        const sortLabel = SETTLEMENT_SORT_LABELS[this.settlementPanelSettings.sortMode] || SETTLEMENT_SORT_LABELS[SETTLEMENT_PANEL_DEFAULT_SETTINGS.sortMode];
+        const hostileLabel = this.settlementPanelSettings.hideHostile ? "Show Hostile" : "Hide Hostile";
+
+        this.menuManager.show(event, [
+            {
+                label: "Relationship",
+                icon: '<i class="fa-solid fa-diagram-project"></i>',
+                action: () => this._showRelationshipOverlay()
+            },
+            { separator: true },
+            {
+                label: `Sort: ${sortLabel}`,
+                icon: '<i class="fa-solid fa-sort"></i>',
+                action: () => this._cycleSettlementSortMode()
+            },
+            {
+                label: hostileLabel,
+                icon: '<i class="fa-solid fa-skull"></i>',
+                action: () => this._toggleHideHostile()
+            },
+            { separator: true },
+            {
+                label: "Settlement Settings",
+                icon: '<i class="fa-solid fa-sliders"></i>',
+                action: () => this.settlementSettingsOverlay.show(this.settlementPanelSettings)
+            }
+        ]);
+    }
+
+    _showRelationshipOverlay() {
+        this.relationshipOverlay.show(this._filteredSettlementNodes({ applySearch: false }), {
+            selectedNodeId: this.selectedNode?.id,
+            hideHostile: this.settlementPanelSettings.hideHostile
+        });
+    }
+
+    _cycleSettlementSortMode() {
+        const currentIndex = SETTLEMENT_SORT_SEQUENCE.indexOf(this.settlementPanelSettings.sortMode);
+        const nextIndex = currentIndex < BAREBONES_UI.DEFAULT_RESOURCE_VALUE ? BAREBONES_UI.DEFAULT_RESOURCE_VALUE : (currentIndex + 1) % SETTLEMENT_SORT_SEQUENCE.length;
+        const sortMode = SETTLEMENT_SORT_SEQUENCE[nextIndex];
+
+        this._updateSettlementPanelSettings({
+            sortMode,
+            sortDirection: SETTLEMENT_SORT_DEFAULT_DIRECTIONS[sortMode] || SETTLEMENT_SORT_DIRECTIONS.ASC
+        });
+    }
+
+    _toggleHideHostile() {
+        this._updateSettlementPanelSettings({
+            hideHostile: !this.settlementPanelSettings.hideHostile
+        });
+    }
+
+    _updateSettlementPanelSettings(settings = {}) {
+        const mergedSettings = {
+            ...this.settlementPanelSettings,
+            ...settings
+        };
+        const sortMode = SETTLEMENT_SORT_SEQUENCE.includes(mergedSettings.sortMode)
+            ? mergedSettings.sortMode
+            : SETTLEMENT_PANEL_DEFAULT_SETTINGS.sortMode;
+        const sortDirection = Object.values(SETTLEMENT_SORT_DIRECTIONS).includes(mergedSettings.sortDirection)
+            ? mergedSettings.sortDirection
+            : SETTLEMENT_SORT_DEFAULT_DIRECTIONS[sortMode];
+
+        this.settlementPanelSettings = {
+            ...SETTLEMENT_PANEL_DEFAULT_SETTINGS,
+            ...mergedSettings,
+            sortMode,
+            sortDirection,
+            hideHostile: Boolean(mergedSettings.hideHostile),
+            keepPinnedOnTop: mergedSettings.keepPinnedOnTop !== false
+        };
+        this._saveSettlementPanelSettings();
+
+        if (this.settlementPanelSettings.hideHostile && this._isHostileNode(this.selectedNode)) {
+            const visibleNodes = this._filteredSettlementNodes({ applySearch: false });
+            this.selectedNode = null;
+            this._renderSelectedNodeLabel();
+
+            if (visibleNodes.length > BAREBONES_UI.DEFAULT_RESOURCE_VALUE) {
+                this.selectNode(visibleNodes[0]);
+                return;
+            }
+        }
+
+        this.renderNodeList();
+    }
+
+    _loadSettlementPanelSettings() {
+        try {
+            const storedSettings = globalThis.localStorage?.getItem(SETTLEMENT_PANEL_SETTINGS_KEY);
+            if (!storedSettings) return { ...SETTLEMENT_PANEL_DEFAULT_SETTINGS };
+
+            const parsedSettings = JSON.parse(storedSettings);
+            const sortMode = SETTLEMENT_SORT_SEQUENCE.includes(parsedSettings.sortMode)
+                ? parsedSettings.sortMode
+                : SETTLEMENT_PANEL_DEFAULT_SETTINGS.sortMode;
+            const sortDirection = Object.values(SETTLEMENT_SORT_DIRECTIONS).includes(parsedSettings.sortDirection)
+                ? parsedSettings.sortDirection
+                : SETTLEMENT_SORT_DEFAULT_DIRECTIONS[sortMode];
+
+            return {
+                ...SETTLEMENT_PANEL_DEFAULT_SETTINGS,
+                ...parsedSettings,
+                sortMode,
+                sortDirection,
+                hideHostile: Boolean(parsedSettings.hideHostile),
+                keepPinnedOnTop: parsedSettings.keepPinnedOnTop !== false
+            };
+        } catch {
+            return { ...SETTLEMENT_PANEL_DEFAULT_SETTINGS };
+        }
+    }
+
+    _saveSettlementPanelSettings() {
+        try {
+            globalThis.localStorage?.setItem(
+                SETTLEMENT_PANEL_SETTINGS_KEY,
+                JSON.stringify(this.settlementPanelSettings)
+            );
+        } catch {
+            // Local storage is optional in Neutralino browser mode.
+        }
     }
 
     _specializationText(node) {

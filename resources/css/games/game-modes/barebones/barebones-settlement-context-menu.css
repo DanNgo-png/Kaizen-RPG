@@ -1,0 +1,471 @@
+.bb-settlement-panel-header {
+    cursor: context-menu;
+    user-select: none;
+}
+
+.bb-settlement-panel-header:hover {
+    background: rgba(15, 23, 42, 0.42);
+}
+
+.bb-settlement-relationship-overlay,
+.bb-settlement-settings-overlay {
+    z-index: 9400;
+}
+
+.bb-settlement-relationship-modal,
+.bb-settlement-settings-modal {
+    width: min(1180px, calc(100vw - 42px));
+    max-height: calc(100vh - 42px);
+    background: #111827;
+    border: 1px solid rgba(148, 163, 184, 0.22);
+    border-radius: 8px;
+    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.58);
+    color: #e5e7eb;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.bb-settlement-settings-modal {
+    width: min(560px, calc(100vw - 42px));
+}
+
+.bb-settlement-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px 18px;
+    background: rgba(2, 6, 23, 0.64);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.bb-settlement-modal-title {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: #f8fafc;
+}
+
+.bb-settlement-modal-title i {
+    color: #38bdf8;
+}
+
+.bb-settlement-modal-close {
+    width: 38px;
+    height: 38px;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.8);
+    color: #cbd5e1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+
+.bb-settlement-modal-close:hover {
+    background: rgba(239, 68, 68, 0.14);
+    border-color: rgba(248, 113, 113, 0.45);
+    color: #fecaca;
+}
+
+.bb-relationship-summary {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px 18px;
+    background: rgba(15, 23, 42, 0.5);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.bb-relationship-stat {
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background: rgba(30, 41, 59, 0.64);
+    padding: 10px 12px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 10px;
+}
+
+.bb-relationship-stat span {
+    font-size: 1.32rem;
+    font-weight: 900;
+    color: #f8fafc;
+}
+
+.bb-relationship-stat label {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.bb-relationship-stat.hostile span {
+    color: #f87171;
+}
+
+.bb-relationship-content {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 330px;
+    gap: 14px;
+    min-height: 0;
+    padding: 16px 18px 18px;
+}
+
+.bb-relationship-map-panel,
+.bb-relationship-faction-panel {
+    min-height: 0;
+}
+
+.bb-relationship-map-panel {
+    overflow: hidden;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 8px;
+    background: rgba(2, 6, 23, 0.42);
+}
+
+.bb-relationship-map {
+    width: 100%;
+    height: min(55vh, 560px);
+    display: block;
+}
+
+.bb-relationship-map-kicker {
+    fill: #94a3b8;
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+.bb-relationship-hub text {
+    fill: #e2e8f0;
+    font-size: 12px;
+    font-weight: 800;
+    paint-order: stroke;
+    stroke: rgba(15, 23, 42, 0.9);
+    stroke-width: 3px;
+}
+
+.bb-relationship-node text {
+    fill: #dbeafe;
+    font-size: 11px;
+    font-weight: 700;
+    paint-order: stroke;
+    stroke: rgba(15, 23, 42, 0.92);
+    stroke-width: 3px;
+}
+
+.bb-relationship-node.hostile text {
+    fill: #fecaca;
+}
+
+.bb-relationship-node.selected circle {
+    stroke-width: 4px;
+}
+
+.bb-relationship-faction-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    padding-right: 4px;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.25) rgba(15, 23, 42, 0.1);
+}
+
+.bb-relationship-faction-card {
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-left: 3px solid var(--faction-color);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.76);
+    overflow: hidden;
+}
+
+.bb-relationship-faction-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.bb-relationship-faction-dot {
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+    flex: 0 0 11px;
+    background: var(--faction-color);
+    box-shadow: 0 0 10px var(--faction-color);
+}
+
+.bb-relationship-faction-header h3 {
+    margin: 0;
+    color: #f8fafc;
+    font-size: 0.9rem;
+    font-weight: 900;
+}
+
+.bb-relationship-faction-header p {
+    margin: 2px 0 0;
+    color: #94a3b8;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.bb-relationship-faction-nodes {
+    display: flex;
+    flex-direction: column;
+}
+
+.bb-relationship-faction-node {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 9px 12px;
+    border-top: 1px solid rgba(148, 163, 184, 0.08);
+}
+
+.bb-relationship-faction-node:first-child {
+    border-top: 0;
+}
+
+.bb-relationship-faction-node.selected {
+    background: rgba(56, 189, 248, 0.12);
+}
+
+.bb-relationship-faction-node strong,
+.bb-relationship-faction-node span {
+    display: block;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.bb-relationship-faction-node strong {
+    color: #f8fafc;
+    font-size: 0.82rem;
+}
+
+.bb-relationship-faction-node span {
+    color: #94a3b8;
+    font-size: 0.72rem;
+    margin-top: 2px;
+}
+
+.bb-relationship-faction-node em {
+    min-width: 44px;
+    padding: 3px 8px;
+    border: 1px solid color-mix(in srgb, var(--standing-color) 45%, transparent);
+    border-radius: 999px;
+    color: var(--standing-color);
+    background: color-mix(in srgb, var(--standing-color) 14%, transparent);
+    font-style: normal;
+    font-size: 0.72rem;
+    font-weight: 900;
+    text-align: center;
+}
+
+.bb-settlement-settings-body {
+    padding: 16px 18px 18px;
+    overflow-y: auto;
+}
+
+.bb-settings-section {
+    border: 1px solid rgba(148, 163, 184, 0.14);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.58);
+    padding: 14px;
+    margin-bottom: 12px;
+}
+
+.bb-settings-section:last-child {
+    margin-bottom: 0;
+}
+
+.bb-settings-section h3 {
+    margin: 0 0 10px;
+    color: #f8fafc;
+    font-size: 0.85rem;
+    font-weight: 900;
+    letter-spacing: 0.7px;
+    text-transform: uppercase;
+}
+
+.bb-settings-radio-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.bb-settings-option,
+.bb-settings-segment,
+.bb-settings-toggle {
+    font-family: var(--font-main);
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    color: #cbd5e1;
+    background: rgba(2, 6, 23, 0.4);
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+}
+
+.bb-settings-option:hover,
+.bb-settings-segment:hover,
+.bb-settings-toggle:hover {
+    background: rgba(30, 41, 59, 0.82);
+    border-color: rgba(148, 163, 184, 0.36);
+    color: #f8fafc;
+}
+
+.bb-settings-option {
+    min-height: 74px;
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 8px;
+    text-align: left;
+}
+
+.bb-settings-option i {
+    color: #38bdf8;
+    font-size: 1rem;
+}
+
+.bb-settings-option span {
+    font-size: 0.82rem;
+    font-weight: 800;
+}
+
+.bb-settings-option.active,
+.bb-settings-segment.active {
+    background: rgba(56, 189, 248, 0.14);
+    border-color: rgba(56, 189, 248, 0.52);
+    color: #f8fafc;
+}
+
+.bb-settings-segmented {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.bb-settings-segment {
+    height: 44px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-weight: 800;
+}
+
+.bb-settings-toggle {
+    width: 100%;
+    min-height: 48px;
+    border-radius: 8px;
+    padding: 10px 12px;
+    margin-top: 8px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 10px;
+    text-align: left;
+    font-weight: 800;
+}
+
+.bb-settings-toggle:first-of-type {
+    margin-top: 0;
+}
+
+.bb-settings-toggle-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(148, 163, 184, 0.12);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+}
+
+.bb-settings-toggle.active .bb-settings-toggle-icon {
+    color: #38bdf8;
+}
+
+.bb-settings-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    border-radius: 999px;
+    background: #334155;
+    transition: background 0.18s ease;
+}
+
+.bb-settings-switch::after {
+    content: "";
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: #cbd5e1;
+    transition: transform 0.18s ease, background 0.18s ease;
+}
+
+.bb-settings-toggle.active .bb-settings-switch {
+    background: rgba(56, 189, 248, 0.42);
+}
+
+.bb-settings-toggle.active .bb-settings-switch::after {
+    transform: translateX(18px);
+    background: #f8fafc;
+}
+
+@media (max-width: 900px) {
+    .bb-relationship-content {
+        grid-template-columns: 1fr;
+    }
+
+    .bb-relationship-faction-panel {
+        max-height: 260px;
+    }
+}
+
+@media (max-width: 640px) {
+    .bb-relationship-summary,
+    .bb-settings-radio-grid,
+    .bb-settings-segmented {
+        grid-template-columns: 1fr;
+    }
+
+    .bb-settlement-relationship-modal,
+    .bb-settlement-settings-modal {
+        width: calc(100vw - 20px);
+        max-height: calc(100vh - 20px);
+    }
+
+    .bb-relationship-content,
+    .bb-settlement-settings-body {
+        padding: 12px;
+    }
+
+    .bb-relationship-map {
+        height: 420px;
+    }
+}
