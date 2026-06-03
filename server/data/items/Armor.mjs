@@ -231,5 +231,29 @@ export const ARMOR = [
         rarity: 'uncommon',
         stats: { defense: 18, weight: 5, fatigue_penalty: -3 },
         availableIn: ['Ruins'] 
+    },
+
+    // --- WEBKNECHT CARAPACE ARMOR ---
+    { 
+        id: 'webknecht_chitin_armor', 
+        name: 'Webknecht Chitin Armor', 
+        type: 'Armor', 
+        description: 'Lightweight, extremely resilient body plates harvested from Broodlords.',
+        icon: 'fa-solid fa-shirt', 
+        baseValue: 450, 
+        rarity: 'rare',
+        stats: { defense: 30, weight: 6, fatigue_penalty: -4 },
+        availableIn: ['Stronghold', 'City'] 
+    },
+    { 
+        id: 'webknecht_chitin_helm', 
+        name: 'Webknecht Chitin Helm', 
+        type: 'Head', 
+        description: 'Hardened helmet forged out of an intact arachnid carapace skull.',
+        icon: 'fa-solid fa-helmet-un', 
+        baseValue: 180, 
+        rarity: 'uncommon',
+        stats: { defense: 14, weight: 2, fatigue_penalty: -1 },
+        availableIn: ['Town', 'Stronghold'] 
     }
 ];

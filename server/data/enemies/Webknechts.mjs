@@ -13,7 +13,8 @@ export const WEBKNECHTS = [
         baseDef: 12,
         xpReward: 15,
         lootTable: [
-            'strange_meat'
+            'strange_meat',
+            'webknecht_eggs'
         ]
     },
     {
@@ -26,7 +27,8 @@ export const WEBKNECHTS = [
         xpReward: 45,
         lootTable: [
             'strange_meat',
-            'healing_salve'
+            'webknecht_venom_gland',
+            'webknecht_chitin_helm'
         ]
     },
 
@@ -41,8 +43,9 @@ export const WEBKNECHTS = [
         xpReward: 75,
         lootTable: [
             'strange_meat',
-            'ancient_coin',
-            'glowing_orb'
+            'unrefined_arachnid_silk',
+            'webknecht_chitin_dagger',
+            'ancient_coin'
         ]
     },
     {
@@ -55,9 +58,9 @@ export const WEBKNECHTS = [
         xpReward: 110,
         lootTable: [
             'strange_meat',
-            'handaxe',
-            'buckler',
-            'ancient_coin'
+            'webknecht_chitin_dagger',
+            'webknecht_chitin_helm',
+            'unrefined_arachnid_silk'
         ]
     },
     {
@@ -70,8 +73,10 @@ export const WEBKNECHTS = [
         xpReward: 190,
         lootTable: [
             'strange_meat',
-            'gold_goblet',
-            'glowing_orb',
+            'webknecht_venom_spear',
+            'webknecht_chitin_armor',
+            'steel_web_silk',
+            'petrified_web_egg',
             'focus_elixir'
         ]
     }

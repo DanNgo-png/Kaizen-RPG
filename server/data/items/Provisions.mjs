@@ -1,3 +1,4 @@
+// server/data/items/Provisions.mjs
 export const PROVISIONS = [
     // --- BASIC PROVISIONS ---
     { 
@@ -147,6 +148,17 @@ export const PROVISIONS = [
     },
 
     // --- HIGH TIER PROVISIONS ---
+    { 
+        id: 'webknecht_eggs', 
+        name: 'Webknecht Eggs', 
+        type: 'Provision', 
+        description: 'A clutch of large, translucent eggs. Pungent and earthy, but heavily rich in essential nutrients. Counts as 25 provisions.',
+        icon: 'fa-solid fa-circle-dot', 
+        baseValue: 80, 
+        rarity: 'uncommon',
+        stats: { provisions: 25, spoil_days: 6 }, 
+        availableIn: [] 
+    },
     { 
         id: 'dried_lamb', 
         name: 'Dried Lamb', 

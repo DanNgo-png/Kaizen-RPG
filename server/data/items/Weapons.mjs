@@ -272,5 +272,29 @@ export const WEAPONS = [
         rarity: 'uncommon',
         stats: { attack: 18, armor_penetration: 15, weight: 7 },
         availableIn: ['Ruins'] 
+    },
+
+    // --- WEBKNECHT WEAPONS ---
+    { 
+        id: 'webknecht_chitin_dagger', 
+        name: 'Webknecht Chitin Dagger', 
+        type: 'Weapon', 
+        description: "A sharp, serrated dagger carved from a spider limb, coated in structural toxins.",
+        icon: 'fa-solid fa-shield-cat', 
+        baseValue: 210, 
+        rarity: 'uncommon',
+        stats: { attack: 16, armor_penetration: 15, weight: 2 },
+        availableIn: ['Town', 'Ruins'] 
+    },
+    { 
+        id: 'webknecht_venom_spear', 
+        name: 'Webknecht Venom Spear', 
+        type: 'Weapon', 
+        description: "A high-reach polearm tipped with a heavy arachnid fang. Inflicts severe armor damage.",
+        icon: 'fa-solid fa-arrow-up-long', 
+        baseValue: 480, 
+        rarity: 'rare',
+        stats: { attack: 28, armor_penetration: 20, defense: 2, weight: 7 },
+        availableIn: ['Stronghold'] 
     }
 ];

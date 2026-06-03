@@ -60,6 +60,30 @@ export const CONSUMABLES = [
         baseValue: 500, 
         rarity: 'rare',
         stats: { xp_multiplier: 1.5, duration_sessions: 3 },
-        availableIn: ['Stronghold'] // Or perhaps only found in Ruins as loot!
+        availableIn: ['Stronghold'] 
+    },
+
+    // --- WEBKNECHT SPECIFIC ALCHEMICALS ---
+    { 
+        id: 'webknecht_venom_gland', 
+        name: 'Webknecht Venom Gland', 
+        type: 'Consumable', 
+        description: 'An intact toxic venom sac. Ingesting this triggers a highly accelerated focus rush, boosting gain at the price of brief fatigue.',
+        icon: 'fa-solid fa-skull-crossbones', 
+        baseValue: 150, 
+        rarity: 'uncommon',
+        stats: { restore_fatigue: -15, xp_multiplier: 1.2, duration_sessions: 1 },
+        availableIn: [] 
+    },
+    { 
+        id: 'arachnid_antidote', 
+        name: 'Arachnid Antidote', 
+        type: 'Consumable', 
+        description: 'Brewed out of diluted venom and active enzymes. Quickly purges poisons and seals lacerations.',
+        icon: 'fa-solid fa-prescription-bottle-medical', 
+        baseValue: 200, 
+        rarity: 'uncommon',
+        stats: { heal_amount: 15 },
+        availableIn: ['All'] 
     }
 ];

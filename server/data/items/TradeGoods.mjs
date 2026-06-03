@@ -1,3 +1,4 @@
+// server/data/items/TradeGoods.mjs
 export const TRADE_GOODS = [
     { id: 'peat_bricks', name: 'Peat Bricks', type: 'Trade Good', icon: 'fa-solid fa-cubes', baseValue: 100, rarity: 'common' },
     { id: 'cloth_rolls', name: 'Cloth Rolls', type: 'Trade Good', icon: 'fa-solid fa-scroll', baseValue: 140, rarity: 'common' },
@@ -11,4 +12,6 @@ export const TRADE_GOODS = [
     { id: 'dyes', name: 'Dyes', type: 'Trade Good', icon: 'fa-solid fa-palette', baseValue: 400, rarity: 'legendary' },
     { id: 'silk', name: 'Silk', type: 'Trade Good', icon: 'fa-brands fa-yarn', baseValue: 460, rarity: 'legendary' },
     { id: 'uncut_gems', name: 'Uncut Gems', type: 'Trade Good', icon: 'fa-solid fa-gem', baseValue: 520, rarity: 'legendary' },
+    { id: 'unrefined_arachnid_silk', name: 'Unrefined Arachnid Silk', type: 'Trade Good', icon: 'fa-solid fa-circle-nodes', baseValue: 150, rarity: 'uncommon' },
+    { id: 'steel_web_silk', name: 'Steel-Web Silk', type: 'Trade Good', icon: 'fa-solid fa-spider', baseValue: 500, rarity: 'legendary' }
 ];
