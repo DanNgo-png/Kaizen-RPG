@@ -1063,4 +1063,13 @@ export class GameRepository {
         return this.settlementDevelopment.shouldTriggerExpansion(...args);
     }
 
+    processPassiveFeederDeliveries(settlements, logs) {
+        this.ensureConnection();
+        return this.settlementDevelopment.processPassiveFeederDeliveries(settlements, logs);
+    }
+
+    checkAndTriggerSelfFundedUpgrade(settlements, logs) {
+        this.ensureConnection();
+        return this.settlementDevelopment.checkAndTriggerSelfFundedUpgrade(settlements, logs);
+    }
 }

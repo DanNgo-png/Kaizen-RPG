@@ -15,6 +15,11 @@ import {
 } from '../../database/SQLite3/repositories/game/GameRepositoryConstants.mjs';
 import { SettlementSpecializationPlanner } from './SettlementSpecializationPlanner.mjs';
 
+// --- CONFIGURATION CONSTANTS ---
+const FEEDER_DAILY_PROGRESS_CHANCE = 0.25; // 25% daily chance for connected feeders to ship raw materials
+const MUNICIPAL_TREASURY_TAX_RATE = 0.35;  // 35% of cumulative commercial trade is collected in the local treasury
+const BUYOUT_COST_PER_MATERIAL = 150;      // Cost in gold crowns to import/buy out a single building material unit
+
 export class SettlementDevelopmentService {
     constructor(repo) {
         this.repo = repo;
@@ -272,7 +277,8 @@ export class SettlementDevelopmentService {
             specializationBuilt,
             spawnedColonyName,
             newProgress,
-            maxProg: maxProgress
+            maxProg: maxProgress,
+            newType
         };
     }
 
@@ -319,6 +325,124 @@ export class SettlementDevelopmentService {
 
         return popTier >= EXPANSION_POLICY.HIGH_POPULATION_TIER
             && localInfluence >= EXPANSION_POLICY.SURPLUS_INFLUENCE_LIMIT;
+    }
+
+    /**
+     * Process resource feeding from specialized Hamlets/Villages to connected Faction Cities [2]
+     */
+    processPassiveFeederDeliveries(settlements, logs) {
+        this.ensureConnection();
+
+        const FEEDER_TYPES = ['Hamlet', 'Village'];
+        const RAW_MATERIAL_SPECIALIZATIONS = ['Lumber Camp', 'Peat Pit', 'Copper Mine'];
+        const CITY_TYPES = ['City', 'City-State', 'Province', 'Kingdom', 'High Kingdom', 'Empire'];
+
+        const feeders = settlements.filter(node => 
+            FEEDER_TYPES.includes(node.type) && 
+            node.faction_id !== null && 
+            normalizeSpecializations(node.specialization).some(spec => RAW_MATERIAL_SPECIALIZATIONS.includes(spec))
+        );
+
+        for (const feeder of feeders) {
+            const specs = normalizeSpecializations(feeder.specialization);
+            let material = null;
+            let materialName = "building supplies";
+
+            if (specs.includes('Lumber Camp')) {
+                material = 'quality_wood';
+                materialName = 'Quality Wood';
+            } else if (specs.includes('Peat Pit')) {
+                material = 'peat_bricks';
+                materialName = 'Peat Bricks';
+            } else if (specs.includes('Copper Mine')) {
+                material = 'copper_ingots';
+                materialName = 'Copper Ingots';
+            }
+
+            if (!material) continue;
+
+            // Find valid, undergoing active construction City nodes under the same noble house
+            const connectedCities = settlements.filter(node => 
+                CITY_TYPES.includes(node.type) && 
+                node.faction_id === feeder.faction_id &&
+                (node.current_event === 'building_boom' || node.current_event === 'settlement_expansion')
+            );
+
+            if (connectedCities.length === 0) continue;
+
+            // Target the closest active City geographically
+            let closestCity = null;
+            let minDist = Infinity;
+            for (const city of connectedCities) {
+                const dist = this._distanceSquared(feeder, city);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closestCity = city;
+                }
+            }
+
+            if (closestCity) {
+                // Feeder operations proceed under a set probability [2]
+                if (Math.random() < FEEDER_DAILY_PROGRESS_CHANCE) {
+                    const result = this.incrementNodeDevelopment(closestCity.id, 1, material);
+                    
+                    let logMsg = `🚚 Feeder Shipment: Raw materials (${materialName}) shipped from the feeder settlement of ${feeder.name} arrived at ${closestCity.name}, contributing to its ongoing construction project.`;
+                    if (result && result.newProgress !== undefined) {
+                        if (result.newProgress === 0) {
+                            logMsg += ` This delivery completed the construction project!`;
+                        } else {
+                            logMsg += ` Progress: ${result.newProgress}/${result.maxProg}.`;
+                        }
+                    }
+
+                    this.logNodeHistory(closestCity.id, logMsg, 'world');
+                    logs.push(logMsg);
+                }
+            }
+        }
+    }
+
+    /**
+     * Checks if a settlement under construction can fund its own buyout from accumulated trade volume.
+     */
+    checkAndTriggerSelfFundedUpgrade(settlements, logs) {
+        this.ensureConnection();
+
+        const activeConstructionNodes = settlements.filter(node => 
+            node.current_event === 'building_boom' || node.current_event === 'settlement_expansion'
+        );
+
+        for (const node of activeConstructionNodes) {
+            const maxProgress = this._getMaterialRequirement(node);
+            const currentProgress = node.development_progress || 0;
+            const remaining = maxProgress - currentProgress;
+
+            if (remaining <= 0) continue;
+
+            const totalCost = remaining * BUYOUT_COST_PER_MATERIAL;
+            const requirements = this._readExpansionRequirements(node);
+            const tradeVolume = requirements.trade || 0;
+            const treasury = Math.floor(tradeVolume * MUNICIPAL_TREASURY_TAX_RATE);
+
+            if (treasury >= totalCost) {
+                // Execute treasury payout
+                const tradeToDeduct = Math.floor(totalCost / MUNICIPAL_TREASURY_TAX_RATE);
+                requirements.trade = Math.max(0, tradeVolume - tradeToDeduct);
+                this._saveExpansionRequirements(node.id, requirements);
+
+                // Buy out and finalize
+                const result = this.incrementNodeDevelopment(node.id, remaining);
+
+                let logMsg = `🏛️ Self-Funded Upgrade: ${node.name} has utilized ${totalCost} crowns from its municipal trade treasury (accumulated from commercial activity) to buy out import contracts, instantly completing its active ${node.current_event === 'building_boom' ? 'building boom' : 'settlement expansion'}!`;
+                
+                if (result && result.upgraded) {
+                    logMsg += ` The settlement successfully upgraded to a ${result.newType}!`;
+                }
+
+                this.logNodeHistory(node.id, logMsg, 'world');
+                logs.push(logMsg);
+            }
+        }
     }
 
     _findColonyLocation(parentNode, allNodes) {

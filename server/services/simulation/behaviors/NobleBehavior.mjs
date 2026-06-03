@@ -119,7 +119,8 @@ export class NobleBehavior extends BaseFactionBehavior {
 
     processDayEnd(currentDay) {
         // Fetch nodes including hostile camps to calculate safety distances and load specializations
-        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization FROM world_nodes').all();
+        // Modified: Added faction_id, development_progress, expansion_reqs, and population_tier to the SELECT statement [2]
+        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all();
         
         const settlements = allNodes.filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
         const enemies = allNodes.filter(n => HOSTILE_SETTLEMENT_TYPES.includes(n.type));
@@ -127,15 +128,23 @@ export class NobleBehavior extends BaseFactionBehavior {
         const eventKeys = Object.keys(SETTLEMENT_EVENTS);
         const logs = [];
 
-        // --- 1. SIMULATE CARAVAN TRADE FOR CONSTRUCTION PROJECTS ---
-        const activeConstructionNodes = settlements.filter(n => 
+        // --- 1. PROCESS PASSIVE FEEDER SHIPMENTS ---
+        // Feeder settlements ship materials to active construction cities before standard trade [2]
+        this.repo.processPassiveFeederDeliveries(settlements, logs);
+
+        // --- 2. SIMULATE CARAVAN TRADE FOR CONSTRUCTION PROJECTS ---
+        // Refresh settlements list to represent any completed projects from the feeder stage
+        const updatedSettlementsAfterFeeders = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all()
+            .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
+
+        const activeConstructionNodes = updatedSettlementsAfterFeeders.filter(n => 
             n.current_event === 'building_boom' || n.current_event === 'settlement_expansion'
         );
 
         for (const target of activeConstructionNodes) {
             // 35% chance of a natural caravan arrival today
             if (Math.random() < 0.35) {
-                const potentialSources = settlements.filter(s => s.id !== target.id);
+                const potentialSources = updatedSettlementsAfterFeeders.filter(s => s.id !== target.id);
                 if (potentialSources.length > 0) {
                     const source = potentialSources[Math.floor(Math.random() * potentialSources.length)];
                     
@@ -174,11 +183,21 @@ export class NobleBehavior extends BaseFactionBehavior {
             }
         }
 
-        // --- 2. REGULAR SETTLEMENT EVENT PROCESSING ---
-        for (const n of settlements) {
+        // --- 3. CHECK AND TRIGGER SELF-FUNDED UPGRADES ---
+        // Refresh settlements from DB to ensure progress from feeders/caravans is up to date
+        const updatedSettlementsForBuyout = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all()
+            .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
+        this.repo.checkAndTriggerSelfFundedUpgrade(updatedSettlementsForBuyout, logs);
+
+        // --- 4. REGULAR SETTLEMENT EVENT PROCESSING ---
+        // Reload final settlements state to reflect completed projects (since completion clears current_event)
+        const finalSettlements = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all()
+            .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
+
+        for (const n of finalSettlements) {
             if (n.current_event) {
                 // If it's a building boom or settlement expansion, we don't naturally expire it.
-                // It must be completed by material deliveries (either player or simulated caravan).
+                // It must be completed by material deliveries (either player, feeder, or self-funding).
                 if (n.current_event === 'building_boom' || n.current_event === 'settlement_expansion') {
                     continue;
                 }
