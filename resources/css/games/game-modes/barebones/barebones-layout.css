@@ -427,3 +427,34 @@
 .bb-market-panel .bb-scroll-list::-webkit-scrollbar-thumb:hover {
     background: rgba(148, 163, 184, 0.45);
 }
+
+/* =======================================================
+   REPUTATION PILLS GLOW EFFECTS (Barebones HUD)
+   ======================================================= */
+
+.bb-reputation-pill {
+    transition: all 0.3s ease;
+}
+
+/* Fancy Animated Glow for Kindred (Max Standing) */
+.bb-reputation-pill.rep-kindred {
+    background: linear-gradient(135deg, rgba(52, 211, 153, 0.22) 0%, rgba(16, 185, 129, 0.06) 100%) !important;
+    border: 1px solid rgba(52, 211, 153, 0.55) !important;
+    color: #34d399 !important; /* Brighter, high-vibrancy emerald */
+    box-shadow: 0 0 10px rgba(52, 211, 153, 0.35), inset 0 0 4px rgba(52, 211, 153, 0.15) !important;
+    text-shadow: 0 0 6px rgba(52, 211, 153, 0.5);
+    animation: kindredGlowPulse 3s infinite alternate ease-in-out;
+    font-weight: 800 !important;
+    letter-spacing: 0.2px;
+}
+
+@keyframes kindredGlowPulse {
+    0% {
+        box-shadow: 0 0 6px rgba(16, 185, 129, 0.2), inset 0 0 2px rgba(16, 185, 129, 0.1) !important;
+        border-color: rgba(16, 185, 129, 0.45) !important;
+    }
+    100% {
+        box-shadow: 0 0 14px rgba(52, 211, 153, 0.6), inset 0 0 6px rgba(52, 211, 153, 0.25) !important;
+        border-color: rgba(52, 211, 153, 0.75) !important;
+    }
+}

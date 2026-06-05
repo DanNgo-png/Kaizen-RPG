@@ -49,7 +49,7 @@ export function selectedNodeLabelHtml(node) {
 
             <!-- Bottom Line: Reputation & Faction -->
             <div style="display: flex; align-items: center; gap: 8px;">
-                <span style="color: ${repCol}; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: ${repCol}15; padding: 3px 8px; border-radius: 12px; border: 1px solid ${repCol}40;">
+                <span class="bb-reputation-pill rep-${repStr.toLowerCase()}" style="color: ${repCol}; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: ${repCol}15; padding: 3px 8px; border-radius: 12px; border: 1px solid ${repCol}40;">
                     <i class="fa-solid fa-handshake"></i> ${repStr} (${rep})
                 </span>
                 <span style="color: #c4b5fd; font-size: 0.75rem; font-weight: 700; display: flex; align-items: center; gap: 4px; background: rgba(124, 58, 237, 0.15); padding: 3px 8px; border-radius: 12px; border: 1px solid rgba(196, 181, 253, 0.32);">
