@@ -4,13 +4,12 @@
 }
 
 .bb-world-log-modal {
-    width: 600px !important;
-    text-align: left !important;
-    align-items: flex-start !important;
-    max-height: 85vh;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
+    background-color: var(--surface-color, #1f2937);
+    border: 1px solid var(--bg-hover, #374151);
+    border-radius: 12px;
+    padding: 30px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.58);
+    color: #e5e7eb;
 }
 
 .bb-world-log-header {

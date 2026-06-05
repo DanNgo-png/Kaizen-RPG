@@ -250,7 +250,7 @@ export class WorldLogOverlay {
         const overlay = this.documentRef.createElement("div");
         overlay.className = "mgmt-overlay bb-world-log-overlay hidden";
         overlay.innerHTML = `
-            <div class="exit-modal-content bb-world-log-modal">
+            <div class="bb-world-log-modal">
                 <div class="bb-world-log-header">
                     <h2 class="bb-world-log-title">
                         <i class="fa-solid fa-calendar-days"></i> World Chronicles

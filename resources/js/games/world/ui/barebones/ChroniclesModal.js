@@ -94,7 +94,7 @@ export class ChroniclesModal {
         const modal = this.documentRef.createElement("div");
         modal.className = "mgmt-overlay bb-chronicles-overlay hidden";
         modal.innerHTML = `
-            <div class="exit-modal-content bb-chronicles-modal">
+            <div class="bb-chronicles-modal">
                 <div class="bb-chronicles-header">
                     <h2 id="chronicles-title" class="bb-chronicles-title">
                         <i class="fa-solid fa-book-open"></i> Local Chronicles
