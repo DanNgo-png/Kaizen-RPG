@@ -182,3 +182,45 @@
     color: #fff;
     transform: translateY(-2px);
 }
+
+/* --- CUSTOM SCROLLBARS FOR AFTERMATH MODULE --- */
+.aftermath-logs-panel::-webkit-scrollbar,
+.aftermath-loot-grid::-webkit-scrollbar {
+    width: 8px;
+}
+
+/* Remove scroll arrow buttons for a cleaner aesthetic */
+.aftermath-logs-panel::-webkit-scrollbar-button,
+.aftermath-loot-grid::-webkit-scrollbar-button {
+    display: none;
+}
+
+/* Darker tracks that blend with the panel backgrounds */
+.aftermath-logs-panel::-webkit-scrollbar-track,
+.aftermath-loot-grid::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+}
+
+/* Muted gold/bronze thumb with transparent borders to act as padding */
+.aftermath-logs-panel::-webkit-scrollbar-thumb,
+.aftermath-loot-grid::-webkit-scrollbar-thumb {
+    background-color: #5c4b37;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    transition: background-color 0.15s ease;
+}
+
+/* Hover effect: Glowy gold */
+.aftermath-logs-panel::-webkit-scrollbar-thumb:hover,
+.aftermath-loot-grid::-webkit-scrollbar-thumb:hover {
+    background-color: #eab308;
+}
+
+/* Fallback fallback support for Firefox */
+.aftermath-logs-panel,
+.aftermath-loot-grid {
+    scrollbar-width: thin;
+    scrollbar-color: #5c4b37 rgba(0, 0, 0, 0.15);
+}
