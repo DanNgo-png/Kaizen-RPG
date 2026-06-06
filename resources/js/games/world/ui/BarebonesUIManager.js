@@ -196,6 +196,11 @@ export class BarebonesUIManager {
         this._renderSelectedNodeLabel();
         this.renderNodeList();
 
+        // Reveal siege attacker if player gets involved by selecting/visiting the node
+        if ((node.current_event === 'sieged' || node.current_event === 'undead_siege') && node.siege_attacker_id && !node.siege_attacker_revealed) {
+            GameAPI.revealSiegeAttacker(node.id);
+        }
+
         const isHostile = this._isHostileNode(node);
 
         if (isHostile && this.activeTab !== BAREBONES_TABS.JOBS) {

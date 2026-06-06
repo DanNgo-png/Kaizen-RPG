@@ -33,7 +33,18 @@ export class QuestService {
                     const evt = SETTLEMENT_EVENTS[node.current_event];
                     node.effective_buy *= evt.buyMult;
                     node.effective_sell *= evt.sellMult;
-                    node.event_name = evt.name;
+                    
+                    if ((node.current_event === 'sieged' || node.current_event === 'undead_siege') && node.siege_attacker_id) {
+                        if (node.siege_attacker_revealed === 1) {
+                            const attacker = worldState.nodes.find(an => an.id === node.siege_attacker_id);
+                            const attackerName = attacker ? attacker.name : "Enemy Host";
+                            node.event_name = `Sieged by ${attackerName}`;
+                        } else {
+                            node.event_name = "Sieged by Unknown Enemy";
+                        }
+                    } else {
+                        node.event_name = evt.name;
+                    }
                 }
 
                 const tierData = SETTLEMENT_TIERS[node.type];
@@ -194,6 +205,26 @@ export class QuestService {
         } catch(e) {
             console.error("Failed to fetch world history:", e);
             app.events.broadcast("receiveWorldHistory", { history: [] });
+        }
+    }
+
+    revealSiegeAttacker(payload, app) {
+        try {
+            const nodeId = payload.nodeId;
+            const node = this.repo.getNodeById(nodeId);
+            if (node && node.siege_attacker_id && !node.siege_attacker_revealed) {
+                const attacker = this.repo.getNodeById(node.siege_attacker_id);
+                if (attacker) {
+                    this.repo.db.prepare('UPDATE world_nodes SET siege_attacker_revealed = 1 WHERE id = ?').run(nodeId);
+                    
+                    const companyName = this.repo.statements.getSetting.get('company_name')?.value || "The Company";
+                    this.repo.logNodeHistory(nodeId, `🔍 ${companyName} has arrived at the scene and identified the sieging forces as ${attacker.name} (${attacker.type})!`, 'player');
+                    
+                    this.getWorldData(app);
+                }
+            }
+        } catch(e) {
+            console.error("Failed to reveal siege attacker:", e);
         }
     }
 }

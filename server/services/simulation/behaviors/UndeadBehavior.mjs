@@ -82,9 +82,13 @@ export class UndeadBehavior extends BaseFactionBehavior {
                 if (Math.random() < UNDEAD_FACTION_CONFIG.SIEGE_CHANCE) {
                     const target = this._findNearestActiveSettlement(uNode, settlements);
                     if (target && !target.current_event) {
-                        this.repo.db.prepare('UPDATE world_nodes SET current_event = "undead_siege", event_expiration = 6 WHERE id = ?').run(target.id);
-                        this.repo.logNodeHistory(target.id, `A sinister necromancer from ${uNode.name} has begun orchestrating a siege of desecration on ${target.name}!`, 'world');
-                        logs.push(`💀 Ominous shadow falls! A dark Necromancer from ${uNode.name} is preparing an undead siege on ${target.name}.`);
+                        this.repo.db.prepare(`
+                            UPDATE world_nodes 
+                            SET current_event = "undead_siege", event_expiration = 6, siege_attacker_id = ?, siege_attacker_revealed = 0, siege_start_day = ? 
+                            WHERE id = ?
+                        `).run(uNode.id, currentDay, target.id);
+                        this.repo.logNodeHistory(target.id, `An ominous shadow falls over ${target.name} as it is placed under siege by an unknown host!`, 'world');
+                        logs.push(`💀 Ominous shadow falls! An unknown host has begun a siege of desecration on ${target.name}.`);
                     }
                 }
             } else {

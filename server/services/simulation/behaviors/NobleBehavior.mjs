@@ -117,10 +117,72 @@ export class NobleBehavior extends BaseFactionBehavior {
         return createdNodes;
     }
 
+    _findNearestFriendlySettlement(originNode, settlements) {
+        if (!originNode || settlements.length === 0) return null;
+        const candidates = settlements.filter(s => s.id !== originNode.id);
+        if (candidates.length === 0) return null;
+        return [...candidates].sort((a, b) => this.distance(originNode, a) - this.distance(originNode, b))[0];
+    }
+
+    _findNearestHostileCamp(originNode, enemies) {
+        if (!originNode || enemies.length === 0) return null;
+        return [...enemies].sort((a, b) => this.distance(originNode, a) - this.distance(originNode, b))[0];
+    }
+
+    _processSiegeTicks(settlements, currentDay, logs) {
+        const siegedNodes = settlements.filter(n => n.current_event === 'sieged' || n.current_event === 'undead_siege');
+        
+        for (const n of siegedNodes) {
+            const startDay = n.siege_start_day;
+            if (startDay === null || startDay === undefined) continue;
+
+            const attackerId = n.siege_attacker_id;
+            if (!attackerId) continue;
+
+            const attacker = this.repo.getNodeById(attackerId);
+            if (!attacker) continue;
+
+            const elapsedDays = currentDay - startDay;
+
+            // 1. Check for Rumor Spread (Only if not revealed yet, and it has been at least 2 days)
+            if (n.siege_attacker_revealed === 0 && elapsedDays >= 2) {
+                // 30% daily chance
+                if (Math.random() < 0.30) {
+                    const neighbor = this._findNearestFriendlySettlement(n, settlements);
+                    if (neighbor) {
+                        this.repo.db.prepare('UPDATE world_nodes SET siege_attacker_revealed = 1 WHERE id = ?').run(n.id);
+                        n.siege_attacker_revealed = 1; // Update in-memory state
+
+                        const rumorMsg = `🗣️ Travelers arriving at ${neighbor.name} whisper that the hostile host sieging ${n.name} is from ${attacker.name} (${attacker.type})!`;
+                        this.repo.logNodeHistory(neighbor.id, rumorMsg, 'world');
+                        this.repo.logNodeHistory(n.id, `A rumor spread from ${neighbor.name} revealing that the besieging army hails from ${attacker.name}.`, 'world');
+                        logs.push(rumorMsg);
+                    }
+                }
+            }
+
+            // 2. Process Daily Siege Logs (Only if revealed and elapsedDays >= 1)
+            if (n.siege_attacker_revealed === 1 && elapsedDays >= 1) {
+                const updates = [
+                    `The siege of ${n.name} by ${attacker.name} intensifies. Catapults are bombarding the outer walls.`,
+                    `Defenders at ${n.name} successfully repelled a midnight skirmish from ${attacker.name}'s vanguard.`,
+                    `Supplies are dwindling inside ${n.name} as ${attacker.name} tightens the blockade.`,
+                    `A bold sally by the garrison of ${n.name} managed to burn several siege engines of ${attacker.name}!`,
+                    `Despair grows in ${n.name} as the blockade by ${attacker.name} cuts off all incoming fresh water.`
+                ];
+                // Select a pseudorandom description based on day & node id to avoid duplicate messages in a row
+                const index = (currentDay + n.id) % updates.length;
+                const updateMsg = `⚔️ [Siege Update] ${updates[index]}`;
+                
+                this.repo.logNodeHistory(n.id, updateMsg, 'world');
+                logs.push(updateMsg);
+            }
+        }
+    }
+
     processDayEnd(currentDay) {
         // Fetch nodes including hostile camps to calculate safety distances and load specializations
-        // Modified: Added faction_id, development_progress, expansion_reqs, and population_tier to the SELECT statement [2]
-        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all();
+        const allNodes = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier, siege_attacker_id, siege_attacker_revealed, siege_start_day FROM world_nodes').all();
         
         const settlements = allNodes.filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
         const enemies = allNodes.filter(n => HOSTILE_SETTLEMENT_TYPES.includes(n.type));
@@ -129,11 +191,9 @@ export class NobleBehavior extends BaseFactionBehavior {
         const logs = [];
 
         // --- 1. PROCESS PASSIVE FEEDER SHIPMENTS ---
-        // Feeder settlements ship materials to active construction cities before standard trade [2]
         this.repo.processPassiveFeederDeliveries(settlements, logs);
 
         // --- 2. SIMULATE CARAVAN TRADE FOR CONSTRUCTION PROJECTS ---
-        // Refresh settlements list to represent any completed projects from the feeder stage
         const updatedSettlementsAfterFeeders = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all()
             .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
 
@@ -142,13 +202,10 @@ export class NobleBehavior extends BaseFactionBehavior {
         );
 
         for (const target of activeConstructionNodes) {
-            // 35% chance of a natural caravan arrival today
             if (Math.random() < 0.35) {
                 const potentialSources = updatedSettlementsAfterFeeders.filter(s => s.id !== target.id);
                 if (potentialSources.length > 0) {
                     const source = potentialSources[Math.floor(Math.random() * potentialSources.length)];
-                    
-                    // Normalize specializations of the source
                     const sourceSpecs = normalizeSpecializations(source.specialization) || [];
                     
                     let materialDelivered = null;
@@ -165,7 +222,6 @@ export class NobleBehavior extends BaseFactionBehavior {
                         materialName = 'Copper Ingots';
                     }
 
-                    // Increment progress
                     const result = this.repo.incrementNodeDevelopment(target.id, 1, materialDelivered);
                     
                     let logMsg = `📢 A merchant caravan from ${source.name} arrived at ${target.name}, delivering ${materialName}.`;
@@ -184,33 +240,29 @@ export class NobleBehavior extends BaseFactionBehavior {
         }
 
         // --- 3. CHECK AND TRIGGER SELF-FUNDED UPGRADES ---
-        // Refresh settlements from DB to ensure progress from feeders/caravans is up to date
         const updatedSettlementsForBuyout = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all()
             .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
         this.repo.checkAndTriggerSelfFundedUpgrade(updatedSettlementsForBuyout, logs);
 
         // --- 4. REGULAR SETTLEMENT EVENT PROCESSING ---
         // Reload final settlements state to reflect completed projects (since completion clears current_event)
-        const finalSettlements = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier FROM world_nodes').all()
+        const finalSettlements = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier, siege_attacker_id, siege_attacker_revealed, siege_start_day FROM world_nodes').all()
             .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
 
         for (const n of finalSettlements) {
             if (n.current_event) {
-                // If it's a building boom or settlement expansion, we don't naturally expire it.
-                // It must be completed by material deliveries (either player, feeder, or self-funding).
                 if (n.current_event === 'building_boom' || n.current_event === 'settlement_expansion') {
                     continue;
                 }
 
                 const newExp = n.event_expiration - 1;
                 if (newExp <= 0) {
-                    this.repo.db.prepare('UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?').run(n.id);
+                    this.repo.db.prepare('UPDATE world_nodes SET current_event = NULL, event_expiration = 0, siege_attacker_id = NULL, siege_attacker_revealed = 0, siege_start_day = NULL WHERE id = ?').run(n.id);
                     this.repo.logNodeHistory(n.id, `The local situation has stabilized. Things return to normal.`, 'world');
                 } else {
                     this.repo.db.prepare('UPDATE world_nodes SET event_expiration = ? WHERE id = ?').run(newExp, n.id);
                 }
             } else {
-                // Calculate distance to nearest enemy camp
                 let minEnemyDist = Infinity;
                 enemies.forEach(e => {
                     const dist = Math.hypot(n.x - e.x, n.y - e.y);
@@ -220,27 +272,43 @@ export class NobleBehavior extends BaseFactionBehavior {
                 if (Math.random() < SETTLEMENT_EVENT_CHANCE) {
                     const validEvents = eventKeys.filter(k => SETTLEMENT_EVENTS[k].isRandom !== false);
                     
-                    // Filter events based on safety
                     let pool = validEvents;
                     if (minEnemyDist < DANGEROUS_DISTANCE_PX) {
-                        // Very close to enemies: high chance of negative events
                         pool = validEvents.filter(k => DANGEROUS_EVENT_KEYS.includes(k));
                     } else if (minEnemyDist > SAFE_DISTANCE_PX) {
-                        // Very safe: high chance of positive events
                         pool = validEvents.filter(k => SAFE_EVENT_KEYS.includes(k));
                     }
                     
-                    // Fallback to random if pool is empty
                     if (pool.length === 0) pool = validEvents;
 
                     const randomEvent = pool[Math.floor(Math.random() * pool.length)];
                     const duration = Math.floor(Math.random() * EVENT_DURATION_VARIANCE_DAYS) + EVENT_DURATION_MIN_DAYS;
                     
-                    this.repo.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ? WHERE id = ?').run(randomEvent, duration, n.id);
-                    this.repo.logNodeHistory(n.id, `Rumors spread of: ${SETTLEMENT_EVENTS[randomEvent].name}.`, 'world');
+                    let attackerId = null;
+                    if (randomEvent === 'sieged') {
+                        const attacker = this._findNearestHostileCamp(n, enemies);
+                        if (attacker) {
+                            attackerId = attacker.id;
+                        }
+                    }
+
+                    this.repo.db.prepare('UPDATE world_nodes SET current_event = ?, event_expiration = ?, siege_attacker_id = ?, siege_attacker_revealed = 0, siege_start_day = ? WHERE id = ?').run(randomEvent, duration, attackerId, currentDay, n.id);
+                    
+                    if (randomEvent === 'sieged') {
+                        this.repo.logNodeHistory(n.id, `Rumors spread that ${n.name} has been placed under siege by an unknown hostile force!`, 'world');
+                        logs.push(`📢 Alarm! An unknown enemy has laid siege to the settlement of ${n.name}!`);
+                    } else {
+                        this.repo.logNodeHistory(n.id, `Rumors spread of: ${SETTLEMENT_EVENTS[randomEvent].name}.`, 'world');
+                    }
                 }
             }
         }
+
+        // --- 5. PROCESS ACTIVE SIEGES (RUMORS & DAILY LOGS) ---
+        const currentSettlements = this.repo.db.prepare('SELECT id, type, x, y, current_event, event_expiration, name, specialization, faction_id, development_progress, expansion_reqs, population_tier, siege_attacker_id, siege_attacker_revealed, siege_start_day FROM world_nodes').all()
+            .filter(n => !HOSTILE_SETTLEMENT_TYPES.includes(n.type));
+        this._processSiegeTicks(currentSettlements, currentDay, logs);
+
         return logs;
     }
 

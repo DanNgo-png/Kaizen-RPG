@@ -70,6 +70,9 @@ export const GAME_SCHEMA_SQL = `
         is_hostile INTEGER DEFAULT 0,
         population_tier INTEGER DEFAULT 1,
         influence INTEGER DEFAULT 0,
+        siege_attacker_id INTEGER DEFAULT NULL,
+        siege_attacker_revealed INTEGER DEFAULT 0,
+        siege_start_day INTEGER DEFAULT NULL,
         FOREIGN KEY(faction_id) REFERENCES factions(id)
     );
 

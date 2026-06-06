@@ -178,6 +178,19 @@ const migrations = [
         if (!nodeColumns.includes('last_contract_refresh_day')) {
             db.exec("ALTER TABLE world_nodes ADD COLUMN last_contract_refresh_day INTEGER DEFAULT 0;");
         }
+    },
+    // --- Version 16: Add siege tracking columns to world_nodes ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('siege_attacker_id')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN siege_attacker_id INTEGER DEFAULT NULL;");
+        }
+        if (!nodeColumns.includes('siege_attacker_revealed')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN siege_attacker_revealed INTEGER DEFAULT 0;");
+        }
+        if (!nodeColumns.includes('siege_start_day')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN siege_start_day INTEGER DEFAULT NULL;");
+        }
     }
 ];
 

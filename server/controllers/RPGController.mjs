@@ -116,5 +116,11 @@ export class RPGController {
         app.events.on("sellItem", (payload) => {
             this.market.sellItem(payload, app);
         });
+
+
+        // --- CONFLICT ---
+        app.events.on("revealSiegeAttacker", (payload) => {
+            this.quests.revealSiegeAttacker(payload, app);
+        });
     }
 }

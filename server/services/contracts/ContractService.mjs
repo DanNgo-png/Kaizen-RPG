@@ -464,8 +464,8 @@ export class ContractService {
             this.logNodeHistory(beneficiaryNode.id, `${companyName} completed a contract: "${activeContract.title}".`, 'player');
             
             if (activeContract.contract_type === 'undead_defense' || activeContract.title.includes("Defend")) {
-                this.db.prepare("UPDATE world_nodes SET current_event = NULL, event_expiration = 0 WHERE id = ?").run(beneficiaryNode.id);
-                this.logNodeHistory(beneficiaryNode.id, `${companyName} successfully repelled the undead horde, saving the settlement!`, 'player');
+                this.db.prepare("UPDATE world_nodes SET current_event = NULL, event_expiration = 0, siege_attacker_id = NULL, siege_attacker_revealed = 0, siege_start_day = NULL WHERE id = ?").run(beneficiaryNode.id);
+                this.logNodeHistory(beneficiaryNode.id, `${companyName} successfully repelled the besieging army, saving the settlement!`, 'player');
             }
 
             if (activeContract.contract_type === 'refugee_defense') {
