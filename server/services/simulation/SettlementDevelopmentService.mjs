@@ -159,7 +159,7 @@ export class SettlementDevelopmentService {
 
         if (initialProgress >= maxProgress) {
             this.logNodeHistory(node.id, `With all three local building material specializations active, ${node.name} self-funded and completed its expansion project autonomously!`, 'world');
-            this.incrementNodeDevelopment(node.id, 0);
+            this.incrementNodeDevelopment(node.id, 0, null, { source: 'autonomous' });
             return;
         }
 
@@ -193,7 +193,16 @@ export class SettlementDevelopmentService {
         );
     }
 
-    incrementNodeDevelopment(nodeId, increment, itemId = null) {
+    _getMaterialName(itemId) {
+        const names = {
+            'quality_wood': 'Quality Wood',
+            'peat_bricks': 'Peat Bricks',
+            'copper_ingots': 'Copper Ingots'
+        };
+        return names[itemId] || 'building supplies';
+    }
+
+    incrementNodeDevelopment(nodeId, increment, itemId = null, sourceInfo = null) {
         const node = this.getNodeById(nodeId);
         if (!node || !node.current_event) return null;
 
@@ -261,6 +270,8 @@ export class SettlementDevelopmentService {
         }
 
         this.updateNodeDevelopment(node.id, newProgress, newType, newEvent, buyMod, sellMod, newPopulationTier, remainingReqs);
+        
+        // Pass sourceInfo down to the logging pipeline
         this._logDevelopmentResult(node, {
             newProgress,
             specializationBuilt,
@@ -269,7 +280,7 @@ export class SettlementDevelopmentService {
             oldPopLabel,
             newPopLabel,
             newType
-        });
+        }, sourceInfo);
 
         return {
             upgraded,
@@ -280,6 +291,104 @@ export class SettlementDevelopmentService {
             maxProg: maxProgress,
             newType
         };
+    }
+
+    _logDevelopmentResult(node, result, sourceInfo = null) {
+        if (result.newProgress !== 0) return;
+
+        const source = sourceInfo?.source || 'unknown';
+        const materialName = sourceInfo?.itemId ? this._getMaterialName(sourceInfo.itemId) : 'building supplies';
+        let logText = "";
+
+        // Scenario A: Built a specialization (e.g. Vineyard)
+        if (result.specializationBuilt) {
+            switch (source) {
+                case 'player':
+                    logText = `Following the delivery of vital ${materialName} supplied by your company, construction is complete! ${node.name} has established a local ${result.specializationBuilt}.`;
+                    break;
+                case 'feeder':
+                    logText = `Supply wagons from the specialized feeder of ${sourceInfo.feederName} have delivered the final shipment of ${materialName}! The construction is complete, and ${node.name} has established a local ${result.specializationBuilt}.`;
+                    break;
+                case 'buyout':
+                    logText = `Local administrators of ${node.name} utilized ${sourceInfo.cost} crowns from the municipal trade treasury to buy out the remaining construction contracts! The work is finished, and they have established a local ${result.specializationBuilt}.`;
+                    break;
+                case 'autonomous':
+                    logText = `Leveraging its highly self-sufficient network of local material industries, the construction has finished! ${node.name} built a ${result.specializationBuilt}, giving the settlement its first local specialization.`;
+                    break;
+                default:
+                    logText = `The local building initiative has concluded! ${node.name} built a ${result.specializationBuilt}, giving the settlement its first local specialization.`;
+            }
+            this.logNodeHistory(node.id, logText, 'world');
+            return;
+        }
+
+        // Scenario B: Population grew (The issue in the screenshot)
+        if (result.popGrown) {
+            switch (source) {
+                case 'player':
+                    logText = `The influx of building materials (${materialName}) delivered by your company has finalized local expansion! The settlement's population has grown from ${result.oldPopLabel} to ${result.newPopLabel}.`;
+                    break;
+                case 'feeder':
+                    logText = `Thanks to a shipment of raw ${materialName} transported from ${sourceInfo.feederName}, local builders have finalized their expansion! The settlement's population has grown from ${result.oldPopLabel} to ${result.newPopLabel}.`;
+                    break;
+                case 'buyout':
+                    logText = `By funding an import buyout of ${sourceInfo.cost} crowns from the local trade treasury, ${node.name} has finalized its residential expansion! The population has grown from ${result.oldPopLabel} to ${result.newPopLabel}.`;
+                    break;
+                case 'autonomous':
+                    logText = `Channelling a steady, autonomous supply of local timber, peat, and copper, the construction has finished! ${node.name} expanded its residential zones, and the population has grown from ${result.oldPopLabel} to ${result.newPopLabel}.`;
+                    break;
+                default:
+                    logText = `The local residential construction has finished! The settlement's population has grown from ${result.oldPopLabel} to ${result.newPopLabel}.`;
+            }
+            this.logNodeHistory(node.id, logText, 'world');
+            return;
+        }
+
+        // Scenario C: Settlement upgraded (e.g. Hamlet -> Village)
+        if (result.upgraded) {
+            switch (source) {
+                case 'player':
+                    logText = `With the final delivery of ${materialName} supplied by your company, the massive expansion project is complete! ${node.name} has officially grown into a thriving ${result.newType}.`;
+                    break;
+                case 'feeder':
+                    logText = `With a final cargo of ${materialName} shipped autonomously from ${sourceInfo.feederName}, the great construction project is complete! ${node.name} has officially been upgraded into a ${result.newType}.`;
+                    break;
+                case 'buyout':
+                    logText = `Local magistrates utilized ${sourceInfo.cost} crowns from accumulated commercial taxes to fund a direct buyout of all remaining building contracts! ${node.name} has completed its grand expansion and upgraded into a ${result.newType}.`;
+                    break;
+                case 'autonomous':
+                    logText = `Thanks to an abundance of local building material industries operating directly within the region, the construction is complete! ${node.name} has completed its grand expansion and upgraded into a ${result.newType}.`;
+                    break;
+                default:
+                    logText = `The long-awaited town development has finished! The settlement has officially grown into a ${result.newType}.`;
+            }
+            this.logNodeHistory(node.id, logText, 'world');
+            return;
+        }
+
+        // Scenario D: Boundary expanded
+        if (node.current_event === 'settlement_expansion') {
+            switch (source) {
+                case 'player':
+                    logText = `Supported by building materials (${materialName}) delivered by your company, the regional expansion has finished! ${node.name} has expanded its borders.`;
+                    break;
+                case 'feeder':
+                    logText = `Supplied with ${materialName} shipped from ${sourceInfo.feederName}, the regional expansion has finished! ${node.name} has expanded its borders.`;
+                    break;
+                case 'buyout':
+                    logText = `Financed by a direct treasury investment of ${sourceInfo.cost} crowns, the regional expansion has finished! ${node.name} has expanded its borders.`;
+                    break;
+                case 'autonomous':
+                    logText = `Fueled entirely by local natural resources, the regional expansion has finished! ${node.name} has expanded its borders.`;
+                    break;
+                default:
+                    logText = `The construction finished! ${node.name} has expanded its borders.`;
+            }
+            this.logNodeHistory(node.id, logText, 'world');
+            return;
+        }
+
+        this.logNodeHistory(node.id, 'The construction finished! The settlement continues to thrive at maximum capacity.', 'world');
     }
 
     shouldTriggerExpansion(node) {
@@ -384,7 +493,11 @@ export class SettlementDevelopmentService {
             if (closestCity) {
                 // Feeder operations proceed under a set probability [2]
                 if (Math.random() < FEEDER_DAILY_PROGRESS_CHANCE) {
-                    const result = this.incrementNodeDevelopment(closestCity.id, 1, material);
+                    const result = this.incrementNodeDevelopment(closestCity.id, 1, material, { 
+                        source: 'feeder', 
+                        feederName: feeder.name, 
+                        itemId: material 
+                    });
                     
                     let logMsg = `🚚 Feeder Shipment: Raw materials (${materialName}) shipped from the feeder settlement of ${feeder.name} arrived at ${closestCity.name}, contributing to its ongoing construction project.`;
                     if (result && result.newProgress !== undefined) {
@@ -431,7 +544,10 @@ export class SettlementDevelopmentService {
                 this._saveExpansionRequirements(node.id, requirements);
 
                 // Buy out and finalize
-                const result = this.incrementNodeDevelopment(node.id, remaining);
+                const result = this.incrementNodeDevelopment(node.id, remaining, null, { 
+                    source: 'buyout', 
+                    cost: totalCost 
+                });
 
                 let logMsg = `🏛️ Self-Funded Upgrade: ${node.name} has utilized ${totalCost} crowns from its municipal trade treasury (accumulated from commercial activity) to buy out import contracts, instantly completing its active ${node.current_event === 'building_boom' ? 'building boom' : 'settlement expansion'}!`;
                 

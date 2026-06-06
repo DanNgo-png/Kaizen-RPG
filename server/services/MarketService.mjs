@@ -296,8 +296,7 @@ export class MarketService {
                     const isBuildingMat = BUILDING_MATERIALS.includes(itemId);
                     
                     if (isBuildingMat) {
-                        //Centralized resolution logic
-                        this.repo.incrementNodeDevelopment(node.id, 1, itemId);
+                        this.repo.incrementNodeDevelopment(node.id, 1, itemId, { source: 'player', itemId: itemId });
                     }
                 }
             }
