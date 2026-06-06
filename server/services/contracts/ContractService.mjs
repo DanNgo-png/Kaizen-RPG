@@ -1,3 +1,4 @@
+import { AppSettingsRepository } from "../../database/SQLite3/repositories/settings/AppSettingsRepository.mjs";
 import { ItemFactory } from '../../factories/ItemFactory.mjs';
 import {
     CARAVAN_CONTRACT_KEYWORDS,
@@ -33,6 +34,7 @@ import {
 export class ContractService {
     constructor(repo) {
         this.repo = repo;
+        this.settingsRepo = new AppSettingsRepository();
     }
 
     get db() {
@@ -90,17 +92,30 @@ export class ContractService {
     ) {
         this.ensureConnection();
         let contracts = this.statements.getNodeContracts.all(nodeId);
+        const originNode = this.getNodeById(nodeId);
+        
+        // 1. Instantly inject emergency contracts if active
+        this._checkAndInjectEmergencyContracts(originNode, contracts);
+        
+        // Re-fetch to include any freshly injected emergency contracts
+        contracts = this.statements.getNodeContracts.all(nodeId);
 
+        // 2. Fallback to standard board generation if empty
         if (contracts.length === 0) {
-            const originNode = this.getNodeById(nodeId);
             const possibleMins = this._buildContractMinuteOptions(minMins, maxMins);
             const generatedContracts = this._buildContractBoard(originNode, possibleMins);
 
             generatedContracts.forEach((contract) => {
+                // Prevent duplicate insertions
+                if (contract.contract_type === 'undead_defense' || contract.contract_type === 'refugee_defense') {
+                    const exists = contracts.some(c => c.contract_type === contract.contract_type);
+                    if (exists) return;
+                }
                 this.statements.insertContract.run(contract);
             });
             contracts = this.statements.getNodeContracts.all(nodeId);
         }
+
         return contracts.map((contract) => this._mapContract(contract));
     }
 
@@ -155,7 +170,13 @@ export class ContractService {
             contracts.push(this._createStandardContract(originNode, possibleMins));
         }
 
-        return this._shuffleContracts(contracts).slice(0, CONTRACT_GENERATION.BOARD_SIZE);
+        // Separate emergency contracts to bypass standard limits
+        const emergencies = contracts.filter(c => c.contract_type === 'undead_defense' || c.contract_type === 'refugee_defense');
+        const standards = contracts.filter(c => c.contract_type !== 'undead_defense' && c.contract_type !== 'refugee_defense');
+
+        const slicedStandards = this._shuffleContracts(standards).slice(0, CONTRACT_GENERATION.BOARD_SIZE);
+        
+        return [...slicedStandards, ...emergencies];
     }
 
     _createStandardContract(originNode, possibleMins) {
@@ -941,5 +962,84 @@ export class ContractService {
             req_mins: reqMins,
             gold: tokenPay
         };
+    }
+
+    _checkAndInjectEmergencyContracts(node, existing) {
+        const hasUndeadEmergency = node.current_event === 'undead_invasion' || node.current_event === 'undead_siege';
+        const hasRefugeeEmergency = node.current_event === 'refugee_under_attack';
+
+        if (hasUndeadEmergency) {
+            const hasExistingUndeadDefense = existing.some(c => c.contract_type === 'undead_defense');
+            if (!hasExistingUndeadDefense) {
+                const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || CONTRACT_GENERATION.DEFAULT_MIN_MINUTES;
+                const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || CONTRACT_GENERATION.DEFAULT_MAX_MINUTES;
+                const possibleMins = this._buildContractMinuteOptions(minMins, maxMins);
+                const emergencyContract = this._createUndeadDefenseContract(node, possibleMins);
+                
+                this.statements.insertContract.run(emergencyContract);
+                this.logNodeHistory(node.id, `🚨 Emergency Contract Issued: ${emergencyContract.title}`, 'world');
+            }
+        }
+
+        if (hasRefugeeEmergency) {
+            const hasExistingRefugeeDefense = existing.some(c => c.contract_type === 'refugee_defense');
+            if (!hasExistingRefugeeDefense) {
+                const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || CONTRACT_GENERATION.DEFAULT_MIN_MINUTES;
+                const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || CONTRACT_GENERATION.DEFAULT_MAX_MINUTES;
+                const possibleMins = this._buildContractMinuteOptions(minMins, maxMins);
+                const emergencyContract = this._createRefugeeDefenseContract(node, possibleMins);
+                
+                this.statements.insertContract.run(emergencyContract);
+                this.logNodeHistory(node.id, `🚨 Emergency Contract Issued: ${emergencyContract.title}`, 'world');
+            }
+        }
+    }
+
+    refreshDailyContracts(currentDay) {
+        this.ensureConnection();
+        const nodes = this.statements.getAllNodes.all().map(n => this._mapWorldNode(n));
+        
+        for (const node of nodes) {
+            if (!this._canOfferSettlementContracts(node) && node.type !== 'Refugee Camp') {
+                continue;
+            }
+
+            const existing = this.statements.getNodeContracts.all(node.id);
+            const standardContracts = existing.filter(c => c.contract_type !== 'undead_defense' && c.contract_type !== 'refugee_defense');
+
+            // 1. Process emergency injections first
+            this._checkAndInjectEmergencyContracts(node, existing);
+
+            // 2. Perform standard daily top-up
+            const lastRefresh = node.last_contract_refresh_day || 0;
+            if (currentDay > lastRefresh) {
+                if (standardContracts.length < CONTRACT_GENERATION.BOARD_SIZE) {
+                    const minMins = parseInt(this.settingsRepo.getSetting('gameMinFocusTime')) || CONTRACT_GENERATION.DEFAULT_MIN_MINUTES;
+                    const maxMins = parseInt(this.settingsRepo.getSetting('gameMaxFocusTime')) || CONTRACT_GENERATION.DEFAULT_MAX_MINUTES;
+                    const possibleMins = this._buildContractMinuteOptions(minMins, maxMins);
+                    
+                    const needed = CONTRACT_GENERATION.BOARD_SIZE - standardContracts.length;
+                    const newContracts = this._buildContractBoard(node, possibleMins);
+                    
+                    let added = 0;
+                    for (const nc of newContracts) {
+                        if (added >= needed) break;
+                        
+                        // Ignore emergency contracts here (they are handled separately)
+                        if (nc.contract_type === 'undead_defense' || nc.contract_type === 'refugee_defense') {
+                            continue;
+                        }
+
+                        // Avoid duplicate titles
+                        if (!standardContracts.some(sc => sc.title === nc.title)) {
+                            this.statements.insertContract.run(nc);
+                            added++;
+                        }
+                    }
+                }
+                
+                this.db.prepare('UPDATE world_nodes SET last_contract_refresh_day = ? WHERE id = ?').run(currentDay, node.id);
+            }
+        }
     }
 }

@@ -677,6 +677,11 @@ export class GameRepository {
             const simulator = new WorldSimulator(this);
             const factionLogs = simulator.processDayEnd(currentDay);
 
+            // ============================================
+            // CONTRACT REFRESH SYSTEM
+            // ============================================
+            this.refreshDailyContracts(currentDay + TIME_PROGRESSION.DAY_INCREMENT);
+
             this.statements.updateSetting.run({ key: 'medicine', value: currentMedicine });
             this.statements.updateSetting.run({ key: 'day', value: currentDay + TIME_PROGRESSION.DAY_INCREMENT });
 
@@ -1071,5 +1076,10 @@ export class GameRepository {
     checkAndTriggerSelfFundedUpgrade(settlements, logs) {
         this.ensureConnection();
         return this.settlementDevelopment.checkAndTriggerSelfFundedUpgrade(settlements, logs);
+    }
+
+    refreshDailyContracts(day) {
+        this.ensureConnection();
+        this.contracts.refreshDailyContracts(day);
     }
 }

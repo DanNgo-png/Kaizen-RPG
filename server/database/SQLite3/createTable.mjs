@@ -171,6 +171,13 @@ const migrations = [
         if (!contractColumns.includes('terms')) {
             db.exec("ALTER TABLE contracts ADD COLUMN terms TEXT DEFAULT '{}';");
         }
+    },
+    // --- Version 15: Add last_contract_refresh_day column to world_nodes ---
+    (db) => {
+        const nodeColumns = db.pragma('table_info(world_nodes)').map(col => col.name);
+        if (!nodeColumns.includes('last_contract_refresh_day')) {
+            db.exec("ALTER TABLE world_nodes ADD COLUMN last_contract_refresh_day INTEGER DEFAULT 0;");
+        }
     }
 ];
 
