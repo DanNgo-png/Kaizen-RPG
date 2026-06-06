@@ -119,12 +119,17 @@
 }
 
 .bb-chronicles-tab-content::-webkit-scrollbar {
-    width: 4px;
+    width: 6px;
 }
 
 .bb-chronicles-tab-content::-webkit-scrollbar-thumb {
     background: #334155;
-    border-radius: 2px;
+    border-radius: 3px;
+    transition: background-color 0.15s ease;
+}
+
+.bb-chronicles-tab-content::-webkit-scrollbar-thumb:hover {
+    background-color: #475569;
 }
 
 /* Right Panel: Scrollable Local Logs */
@@ -209,7 +214,38 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    padding-right: 5px;
+    padding-right: 8px; 
+    box-sizing: border-box;
+    
+    /* Fallback support for Firefox */
+    scrollbar-width: thin;
+    scrollbar-color: #334155 rgba(15, 23, 42, 0.15);
+}
+
+/* --- CUSTOM SCROLLBARS FOR MAIN CHRONICLES LOGS LIST --- */
+.bb-chronicles-list::-webkit-scrollbar {
+    width: 8px;
+}
+
+.bb-chronicles-list::-webkit-scrollbar-button {
+    display: none;
+}
+
+.bb-chronicles-list::-webkit-scrollbar-track {
+    background: rgba(15, 23, 42, 0.15);
+    border-radius: 4px;
+}
+
+.bb-chronicles-list::-webkit-scrollbar-thumb {
+    background-color: #334155;
+    border-radius: 4px;
+    border: 2px solid transparent; /* Allows background-clip to create padding effect */
+    background-clip: padding-box;
+    transition: background-color 0.15s ease;
+}
+
+.bb-chronicles-list::-webkit-scrollbar-thumb:hover {
+    background-color: #60a5fa; /* Glow effect matching active Blue text on hover */
 }
 
 .bb-chronicles-entry {
