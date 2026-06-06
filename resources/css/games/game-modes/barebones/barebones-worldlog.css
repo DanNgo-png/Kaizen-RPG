@@ -1,15 +1,32 @@
 /* --- World Chronicles & Daily Log Overlay --- */
 .bb-world-log-overlay {
-    z-index: 70;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 2000 !important; 
+    background-color: rgba(0, 0, 0, 0.8) !important;
+    backdrop-filter: blur(8px) !important;
+    display: flex; 
+    align-items: center !important;
+    justify-content: center !important;
 }
 
 .bb-world-log-modal {
-    background-color: var(--surface-color, #1f2937);
-    border: 1px solid var(--bg-hover, #374151);
+    width: 800px;
+    max-width: 92vw;
+    height: 650px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background-color: #11141d; 
     border-radius: 12px;
-    padding: 30px;
+    padding: 24px;
     box-shadow: 0 20px 50px rgba(0, 0, 0, 0.58);
     color: #e5e7eb;
+    overflow: hidden; 
+    box-sizing: border-box;
 }
 
 .bb-world-log-header {
