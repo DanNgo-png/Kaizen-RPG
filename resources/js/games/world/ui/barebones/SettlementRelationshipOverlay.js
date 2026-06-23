@@ -47,6 +47,10 @@ export class SettlementRelationshipOverlay {
     }
 
     _createOverlay() {
+        // Remove existing instance if any lingers in document.body
+        const existing = this.documentRef.querySelector(".bb-settlement-relationship-overlay");
+        if (existing) existing.remove();
+
         const overlay = this.documentRef.createElement("div");
         overlay.className = "mgmt-overlay bb-settlement-relationship-overlay hidden";
         overlay.innerHTML = `
@@ -111,6 +115,101 @@ export class SettlementRelationshipOverlay {
                 }
             };
         }
+
+        this._bindBiDirectionalHoverSync();
+    }
+
+    /**
+     * Sets up modern high-performance mouse hover syncing between right factions panel and SVG map nodes.
+     */
+    _bindBiDirectionalHoverSync() {
+        const cards = this.root.querySelectorAll('.bb-relationship-faction-card');
+        const nodesSvg = this.root.querySelectorAll('.bb-relationship-node');
+        const hubsSvg = this.root.querySelectorAll('.bb-relationship-hub');
+        const linksSvg = this.root.querySelectorAll('.settlement-link');
+        const relationLinksSvg = this.root.querySelectorAll('.relation-line');
+        const nodeRows = this.root.querySelectorAll('.bb-relationship-faction-node');
+
+        const dimOthers = (activeKey) => {
+            nodesSvg.forEach(n => {
+                if (n.dataset.key !== activeKey) n.classList.add('dnd-dimmed');
+            });
+            hubsSvg.forEach(h => {
+                if (h.dataset.key !== activeKey) h.classList.add('dnd-dimmed');
+            });
+            linksSvg.forEach(l => {
+                if (l.dataset.key !== activeKey) l.classList.add('dnd-dimmed');
+            });
+            relationLinksSvg.forEach(rl => {
+                if (rl.dataset.from !== activeKey && rl.dataset.to !== activeKey) {
+                    rl.classList.add('dnd-dimmed');
+                }
+            });
+        };
+
+        const resetAll = () => {
+            nodesSvg.forEach(n => n.classList.remove('dnd-dimmed', 'dnd-highlighted'));
+            hubsSvg.forEach(h => h.classList.remove('dnd-dimmed', 'dnd-highlighted'));
+            linksSvg.forEach(l => l.classList.remove('dnd-dimmed', 'dnd-highlighted'));
+            relationLinksSvg.forEach(rl => rl.classList.remove('dnd-dimmed', 'dnd-highlighted'));
+            nodeRows.forEach(row => row.classList.remove('dnd-highlighted'));
+            cards.forEach(card => card.classList.remove('dnd-highlighted'));
+        };
+
+        // Right Faction Cards Hover
+        cards.forEach(card => {
+            const key = card.dataset.key;
+            card.addEventListener('mouseenter', () => {
+                dimOthers(key);
+                const matchingHub = this.root.querySelector(`.bb-relationship-hub[data-key="${key}"]`);
+                if (matchingHub) matchingHub.classList.add('dnd-highlighted');
+            });
+            card.addEventListener('mouseleave', resetAll);
+        });
+
+        // Right Specific Settlement Rows Hover
+        nodeRows.forEach(row => {
+            const nodeId = row.dataset.nodeId;
+            const key = row.dataset.key;
+            row.addEventListener('mouseenter', () => {
+                dimOthers(key);
+                const matchingNode = this.root.querySelector(`.bb-relationship-node[data-node-id="${nodeId}"]`);
+                if (matchingNode) matchingNode.classList.add('dnd-highlighted');
+            });
+            row.addEventListener('mouseleave', resetAll);
+        });
+
+        // SVG Node Hover
+        nodesSvg.forEach(node => {
+            const nodeId = node.dataset.nodeId;
+            const key = node.dataset.key;
+            node.addEventListener('mouseenter', () => {
+                dimOthers(key);
+                node.classList.add('dnd-highlighted');
+                
+                const matchingRow = this.root.querySelector(`.bb-relationship-faction-node[data-node-id="${nodeId}"]`);
+                if (matchingRow) {
+                    matchingRow.classList.add('dnd-highlighted');
+                    matchingRow.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+            node.addEventListener('mouseleave', resetAll);
+        });
+
+        // SVG Hub Hover
+        hubsSvg.forEach(hub => {
+            const key = hub.dataset.key;
+            hub.addEventListener('mouseenter', () => {
+                dimOthers(key);
+                hub.classList.add('dnd-highlighted');
+                const matchingCard = this.root.querySelector(`.bb-relationship-faction-card[data-key="${key}"]`);
+                if (matchingCard) {
+                    matchingCard.classList.add('dnd-highlighted');
+                    matchingCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
+            });
+            hub.addEventListener('mouseleave', resetAll);
+        });
     }
 
     _render() {
@@ -175,24 +274,24 @@ export class SettlementRelationshipOverlay {
         const resetBtnHtml = this.selectedFactionKey 
             ? `
                 <g class="reset-view-btn" style="cursor:pointer;" id="bb-map-reset-btn">
-                    <rect x="${MAP_WIDTH - 150}" y="${MAP_PADDING - 20}" width="120" height="30" rx="6" fill="#1e293b" stroke="#3b82f6" stroke-width="1.5" />
-                    <text x="${MAP_WIDTH - 90}" y="${MAP_PADDING}" fill="#60a5fa" font-size="12" font-weight="700" text-anchor="middle">Reset View</text>
+                    <rect x="${MAP_WIDTH - 150}" y="${MAP_PADDING - 20}" width="120" height="30" rx="8" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5" />
+                    <text x="${MAP_WIDTH - 90}" y="${MAP_PADDING}" fill="#38bdf8" font-size="11" font-weight="800" text-anchor="middle" letter-spacing="0.5px">Reset View</text>
                 </g>
             `
             : "";
 
         const legendHtml = `
             <g class="map-legend" transform="translate(${MAP_PADDING}, ${MAP_HEIGHT - 60})">
-                <rect width="330" height="40" rx="6" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(148, 163, 184, 0.15)" stroke-width="1" />
+                <rect width="330" height="40" rx="8" fill="rgba(15, 23, 42, 0.92)" stroke="rgba(255, 255, 255, 0.08)" stroke-width="1" />
                 
-                <line x1="15" y1="20" x2="35" y2="20" stroke="#10b981" stroke-width="2" />
-                <text x="42" y="24" fill="#cbd5e1" font-size="10" font-weight="600">Alliance</text>
+                <line x1="15" y1="20" x2="35" y2="20" stroke="#10b981" stroke-width="2.5" />
+                <text x="42" y="24" fill="#cbd5e1" font-size="10" font-weight="700" letter-spacing="0.2px">Alliance</text>
                 
-                <line x1="105" y1="20" x2="125" y2="20" stroke="#3b82f6" stroke-width="1.5" />
-                <text x="132" y="24" fill="#cbd5e1" font-size="10" font-weight="600">Trade / Peace</text>
+                <line x1="105" y1="20" x2="125" y2="20" stroke="#3b82f6" stroke-width="1.8" />
+                <text x="132" y="24" fill="#cbd5e1" font-size="10" font-weight="700" letter-spacing="0.2px">Trade / Peace</text>
                 
-                <line x1="205" y1="20" x2="225" y2="20" stroke="#ef4444" stroke-dasharray="3,3" stroke-width="2" />
-                <text x="232" y="24" fill="#cbd5e1" font-size="10" font-weight="600">Conflict / War</text>
+                <line x1="205" y1="20" x2="225" y2="20" stroke="#ef4444" stroke-dasharray="3,3" stroke-width="2.2" />
+                <text x="232" y="24" fill="#cbd5e1" font-size="10" font-weight="700" letter-spacing="0.2px">Conflict / War</text>
             </g>
         `;
 
@@ -200,7 +299,7 @@ export class SettlementRelationshipOverlay {
             <svg class="bb-relationship-map" viewBox="0 0 ${MAP_WIDTH} ${MAP_HEIGHT}" role="img" aria-label="Settlement relationship map">
                 <defs>
                     <pattern id="bbRelationshipGrid" width="46" height="46" patternUnits="userSpaceOnUse">
-                        <path d="M 46 0 L 0 0 0 46" fill="none" stroke="rgba(148, 163, 184, 0.12)" stroke-width="1" />
+                        <path d="M 46 0 L 0 0 0 46" fill="none" stroke="rgba(255, 255, 255, 0.04)" stroke-width="1" />
                     </pattern>
                     <filter id="bbRelationshipGlow" x="-40%" y="-40%" width="180%" height="180%">
                         <feGaussianBlur stdDeviation="3" result="blur" />
@@ -210,8 +309,8 @@ export class SettlementRelationshipOverlay {
                         </feMerge>
                     </filter>
                 </defs>
-                <rect width="${MAP_WIDTH}" height="${MAP_HEIGHT}" rx="8" fill="rgba(15, 23, 42, 0.72)" />
-                <rect width="${MAP_WIDTH}" height="${MAP_HEIGHT}" rx="8" fill="url(#bbRelationshipGrid)" />
+                <rect width="${MAP_WIDTH}" height="${MAP_HEIGHT}" rx="12" fill="rgba(15, 23, 42, 0.72)" />
+                <rect width="${MAP_WIDTH}" height="${MAP_HEIGHT}" rx="12" fill="url(#bbRelationshipGrid)" />
                 <text x="${MAP_PADDING}" y="${MAP_PADDING - 16}" class="bb-relationship-map-kicker">${PLAYER_RELATIONSHIP_LABEL}</text>
                 
                 ${relationLinks}
@@ -333,7 +432,7 @@ export class SettlementRelationshipOverlay {
                 .join("");
 
             return `
-                <section class="bb-relationship-faction-card" style="--faction-color:${group.color};">
+                <section class="bb-relationship-faction-card" data-key="${group.key}" style="--faction-color:${group.color};">
                     <div class="bb-relationship-faction-header">
                         <span class="bb-relationship-faction-dot"></span>
                         <div>
@@ -356,7 +455,7 @@ export class SettlementRelationshipOverlay {
         const isSelected = this.options.selectedNodeId === node.id;
 
         return `
-            <div class="bb-relationship-faction-node ${isSelected ? "selected" : ""}">
+            <div class="bb-relationship-faction-node ${isSelected ? "selected" : ""}" data-node-id="${node.id}" data-key="${this._factionKey(node)}">
                 <div>
                     <strong>${escapeHtml(node.name)}</strong>
                     <span>${escapeHtml(node.type)} / ${escapeHtml(standing)}</span>
@@ -445,7 +544,7 @@ export class SettlementRelationshipOverlay {
                 stroke-opacity="${opacity}"
                 stroke-width="1.5"
                 class="settlement-link"
-                data-faction="${this._factionKey(node)}"
+                data-key="${this._factionKey(node)}"
             />
         `;
     }
@@ -483,7 +582,7 @@ export class SettlementRelationshipOverlay {
         }
 
         return `
-            <g class="bb-relationship-node${hostileClass}${selectedClass}" filter="url(#bbRelationshipGlow)" style="opacity: ${opacity};">
+            <g class="bb-relationship-node${hostileClass}${selectedClass}" data-node-id="${node.id}" data-key="${this._factionKey(node)}" filter="url(#bbRelationshipGlow)" style="opacity: ${opacity};">
                 <title>${escapeHtml(node.name)} / ${escapeHtml(standing)} (${reputation})</title>
                 <circle cx="${node.mapX.toFixed(2)}" cy="${node.mapY.toFixed(2)}" r="${radius}" fill="${factionColor}" stroke="${standingColor}" stroke-width="3" />
                 <text x="${(node.mapX + radius + 5).toFixed(2)}" y="${(node.mapY + 4).toFixed(2)}">${escapeHtml(node.name)}</text>

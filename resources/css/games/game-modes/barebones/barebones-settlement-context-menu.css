@@ -7,27 +7,61 @@
     background: rgba(15, 23, 42, 0.42);
 }
 
-.bb-settlement-relationship-overlay,
-.bb-settlement-settings-overlay {
-    z-index: 9400;
+.bb-settlement-relationship-overlay:not(.hidden) {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10001 !important; /* Forces layout context above sidebars */
+    background-color: rgba(15, 23, 42, 0.8) !important;
+    backdrop-filter: blur(12px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+.bb-settlement-relationship-overlay.hidden {
+    display: none !important;
+}
+
+.bb-settlement-settings-overlay:not(.hidden) {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 10002 !important;
+    background-color: rgba(15, 23, 42, 0.7) !important;
+    backdrop-filter: blur(8px) !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    overflow: hidden !important;
+}
+
+.bb-settlement-settings-overlay.hidden {
+    display: none !important;
 }
 
 .bb-settlement-relationship-modal,
 .bb-settlement-settings-modal {
-    width: min(1180px, calc(100vw - 42px));
-    max-height: calc(100vh - 42px);
-    background: #111827;
-    border: 1px solid rgba(148, 163, 184, 0.22);
-    border-radius: 8px;
-    box-shadow: 0 22px 60px rgba(0, 0, 0, 0.58);
+    width: min(1200px, calc(100vw - 40px));
+    max-height: calc(100vh - 40px);
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
     color: #e5e7eb;
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .bb-settlement-settings-modal {
-    width: min(560px, calc(100vw - 42px));
+    width: min(560px, calc(100vw - 40px));
 }
 
 .bb-settlement-modal-header {
@@ -35,68 +69,77 @@
     align-items: center;
     justify-content: space-between;
     gap: 16px;
-    padding: 16px 18px;
-    background: rgba(2, 6, 23, 0.64);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+    padding: 20px 24px;
+    background: rgba(2, 6, 23, 0.4);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
 .bb-settlement-modal-title {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: #f8fafc;
+    letter-spacing: 0.5px;
 }
 
 .bb-settlement-modal-title i {
     color: #38bdf8;
+    filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.4));
 }
 
 .bb-settlement-modal-close {
-    width: 38px;
-    height: 38px;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    border-radius: 8px;
-    background: rgba(15, 23, 42, 0.8);
+    width: 36px;
+    height: 36px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: rgba(15, 23, 42, 0.5);
     color: #cbd5e1;
     cursor: pointer;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+    transition: all 0.2s ease;
 }
 
 .bb-settlement-modal-close:hover {
-    background: rgba(239, 68, 68, 0.14);
-    border-color: rgba(248, 113, 113, 0.45);
+    background: rgba(239, 68, 68, 0.15);
+    border-color: rgba(248, 113, 113, 0.4);
     color: #fecaca;
+    transform: rotate(90deg);
 }
 
 .bb-relationship-summary {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)) !important;
-    gap: 12px;
-    padding: 14px 18px;
-    background: rgba(15, 23, 42, 0.5);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) !important;
+    gap: 14px;
+    padding: 16px 24px;
+    background: rgba(15, 23, 42, 0.2);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 /* Map Interactions & Animation Rules */
 .bb-relationship-hub,
-.bb-relationship-node {
-    transition: transform 0.22s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.22s ease;
+.bb-relationship-node,
+.settlement-link,
+.relation-line {
+    transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                stroke-opacity 0.25s ease,
+                stroke-width 0.25s ease,
+                filter 0.25s ease;
 }
 
 .bb-relationship-hub:hover,
 .bb-relationship-node:hover {
-    transform: scale(1.12);
+    transform: scale(1.1);
 }
 
 .selected-active-hub {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 8px var(--faction-color));
+    transform: scale(1.08);
+    filter: drop-shadow(0 0 10px var(--faction-color));
 }
 
 .relation-line {
@@ -117,40 +160,49 @@
 }
 
 .bb-relationship-stat {
-    border: 1px solid rgba(148, 163, 184, 0.18);
-    border-radius: 8px;
-    background: rgba(30, 41, 59, 0.64);
-    padding: 10px 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.3);
+    padding: 12px 18px;
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
+    transition: all 0.25s ease;
+}
+
+.bb-relationship-stat:hover {
+    transform: translateY(-2px);
+    border-color: rgba(56, 189, 248, 0.25);
+    background: rgba(30, 41, 59, 0.45);
 }
 
 .bb-relationship-stat span {
-    font-size: 1.32rem;
+    font-size: 1.5rem;
     font-weight: 900;
     color: #f8fafc;
+    font-family: monospace;
 }
 
 .bb-relationship-stat label {
     color: #94a3b8;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 800;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
 }
 
 .bb-relationship-stat.hostile span {
     color: #f87171;
+    text-shadow: 0 0 10px rgba(248, 113, 113, 0.3);
 }
 
 .bb-relationship-content {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 330px;
-    gap: 14px;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap: 20px;
     min-height: 0;
-    padding: 16px 18px 18px;
+    padding: 20px 24px 24px;
 }
 
 .bb-relationship-map-panel,
@@ -160,40 +212,45 @@
 
 .bb-relationship-map-panel {
     overflow: hidden;
-    border: 1px solid rgba(148, 163, 184, 0.16);
-    border-radius: 8px;
-    background: rgba(2, 6, 23, 0.42);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.35);
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .bb-relationship-map {
     width: 100%;
     height: min(55vh, 560px);
     display: block;
+    background: transparent;
 }
 
 .bb-relationship-map-kicker {
-    fill: #94a3b8;
-    font-size: 13px;
+    fill: #64748b;
+    font-size: 11px;
     font-weight: 800;
-    letter-spacing: 1px;
+    letter-spacing: 1.2px;
     text-transform: uppercase;
 }
 
 .bb-relationship-hub text {
-    fill: #e2e8f0;
-    font-size: 12px;
+    fill: #f8fafc;
+    font-size: 11px;
     font-weight: 800;
     paint-order: stroke;
-    stroke: rgba(15, 23, 42, 0.9);
+    stroke: #0f172a;
     stroke-width: 3px;
+    letter-spacing: 0.3px;
 }
 
 .bb-relationship-node text {
-    fill: #dbeafe;
-    font-size: 11px;
+    fill: #cbd5e1;
+    font-size: 10px;
     font-weight: 700;
     paint-order: stroke;
-    stroke: rgba(15, 23, 42, 0.92);
+    stroke: #0f172a;
     stroke-width: 3px;
 }
 
@@ -205,55 +262,116 @@
     stroke-width: 4px;
 }
 
+.bb-relationship-hub.dnd-dimmed,
+.bb-relationship-node.dnd-dimmed {
+    opacity: 0.15 !important;
+    filter: grayscale(0.8) !important;
+}
+
+.settlement-link.dnd-dimmed,
+.relation-line.dnd-dimmed {
+    stroke-opacity: 0.02 !important;
+}
+
+.bb-relationship-hub.dnd-highlighted,
+.bb-relationship-node.dnd-highlighted {
+    opacity: 1.0 !important;
+    transform: scale(1.18) !important;
+    filter: drop-shadow(0 0 12px var(--faction-color, #38bdf8)) !important;
+}
+
+.bb-relationship-node.dnd-highlighted circle {
+    stroke: #ffffff !important;
+    stroke-width: 4px !important;
+}
+
+.bb-relationship-faction-card.dnd-highlighted {
+    border-color: var(--faction-color) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), inset 0 0 8px rgba(255, 255, 255, 0.05) !important;
+    transform: translateY(-2px);
+}
+
+.bb-relationship-faction-node.dnd-highlighted {
+    background: rgba(56, 189, 248, 0.16) !important;
+    border-color: rgba(56, 189, 248, 0.4) !important;
+}
+
 .bb-relationship-faction-panel {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     overflow-y: auto;
-    padding-right: 4px;
+    padding-right: 6px;
     scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.25) rgba(15, 23, 42, 0.1);
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+}
+
+.bb-relationship-faction-panel::-webkit-scrollbar {
+    width: 6px;
+}
+
+.bb-relationship-faction-panel::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.bb-relationship-faction-panel::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.12);
+    border-radius: 10px;
+    transition: background-color 0.2s;
+}
+
+.bb-relationship-faction-panel::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(56, 189, 248, 0.4);
 }
 
 .bb-relationship-faction-card {
-    border: 1px solid rgba(148, 163, 184, 0.16);
-    border-left: 3px solid var(--faction-color);
-    border-radius: 8px;
-    background: rgba(15, 23, 42, 0.76);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-left: 4px solid var(--faction-color);
+    border-radius: 12px;
+    background: rgba(30, 41, 59, 0.25);
     overflow: hidden;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bb-relationship-faction-card:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: rgba(30, 41, 59, 0.35);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
 .bb-relationship-faction-header {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 11px 12px;
-    background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+    gap: 12px;
+    padding: 12px 16px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .bb-relationship-faction-dot {
-    width: 11px;
-    height: 11px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
-    flex: 0 0 11px;
+    flex: 0 0 10px;
     background: var(--faction-color);
-    box-shadow: 0 0 10px var(--faction-color);
+    box-shadow: 0 0 8px var(--faction-color);
 }
 
 .bb-relationship-faction-header h3 {
     margin: 0;
     color: #f8fafc;
-    font-size: 0.9rem;
-    font-weight: 900;
+    font-size: 0.95rem;
+    font-weight: 800;
 }
 
 .bb-relationship-faction-header p {
     margin: 2px 0 0;
     color: #94a3b8;
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .bb-relationship-faction-nodes {
@@ -265,17 +383,24 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
-    padding: 9px 12px;
-    border-top: 1px solid rgba(148, 163, 184, 0.08);
+    gap: 12px;
+    padding: 10px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
 }
 
 .bb-relationship-faction-node:first-child {
     border-top: 0;
 }
 
+.bb-relationship-faction-node:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
 .bb-relationship-faction-node.selected {
-    background: rgba(56, 189, 248, 0.12);
+    background: rgba(56, 189, 248, 0.08);
+    border-left: 2px solid #38bdf8;
+    padding-left: 14px;
 }
 
 .bb-relationship-faction-node strong,
@@ -289,7 +414,8 @@
 
 .bb-relationship-faction-node strong {
     color: #f8fafc;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
+    font-weight: 700;
 }
 
 .bb-relationship-faction-node span {
@@ -304,7 +430,7 @@
     border: 1px solid color-mix(in srgb, var(--standing-color) 45%, transparent);
     border-radius: 999px;
     color: var(--standing-color);
-    background: color-mix(in srgb, var(--standing-color) 14%, transparent);
+    background: color-mix(in srgb, var(--standing-color) 12%, transparent);
     font-style: normal;
     font-size: 0.72rem;
     font-weight: 900;
@@ -312,16 +438,16 @@
 }
 
 .bb-settlement-settings-body {
-    padding: 16px 18px 18px;
+    padding: 20px 24px 24px;
     overflow-y: auto;
 }
 
 .bb-settings-section {
-    border: 1px solid rgba(148, 163, 184, 0.14);
-    border-radius: 8px;
-    background: rgba(15, 23, 42, 0.58);
-    padding: 14px;
-    margin-bottom: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    background: rgba(15, 23, 42, 0.2);
+    padding: 16px;
+    margin-bottom: 16px;
 }
 
 .bb-settings-section:last-child {
@@ -329,43 +455,43 @@
 }
 
 .bb-settings-section h3 {
-    margin: 0 0 10px;
+    margin: 0 0 12px;
     color: #f8fafc;
     font-size: 0.85rem;
     font-weight: 900;
-    letter-spacing: 0.7px;
+    letter-spacing: 0.8px;
     text-transform: uppercase;
 }
 
 .bb-settings-radio-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 10px;
 }
 
 .bb-settings-option,
 .bb-settings-segment,
 .bb-settings-toggle {
     font-family: var(--font-main);
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.05);
     color: #cbd5e1;
-    background: rgba(2, 6, 23, 0.4);
+    background: rgba(2, 6, 23, 0.25);
     cursor: pointer;
-    transition: background 0.18s ease, border-color 0.18s ease, color 0.18s ease, transform 0.18s ease;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bb-settings-option:hover,
 .bb-settings-segment:hover,
 .bb-settings-toggle:hover {
-    background: rgba(30, 41, 59, 0.82);
-    border-color: rgba(148, 163, 184, 0.36);
+    background: rgba(30, 41, 59, 0.4);
+    border-color: rgba(255, 255, 255, 0.15);
     color: #f8fafc;
 }
 
 .bb-settings-option {
-    min-height: 74px;
-    border-radius: 8px;
-    padding: 12px;
+    min-height: 78px;
+    border-radius: 10px;
+    padding: 12px 14px;
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -376,49 +502,51 @@
 
 .bb-settings-option i {
     color: #38bdf8;
-    font-size: 1rem;
+    font-size: 1.1rem;
 }
 
 .bb-settings-option span {
     font-size: 0.82rem;
-    font-weight: 800;
+    font-weight: 700;
 }
 
 .bb-settings-option.active,
 .bb-settings-segment.active {
-    background: rgba(56, 189, 248, 0.14);
-    border-color: rgba(56, 189, 248, 0.52);
-    color: #f8fafc;
+    background: rgba(56, 189, 248, 0.12) !important;
+    border-color: rgba(56, 189, 248, 0.4) !important;
+    color: #38bdf8;
 }
 
 .bb-settings-segmented {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 8px;
+    gap: 10px;
 }
 
 .bb-settings-segment {
-    height: 44px;
+    height: 40px;
     border-radius: 8px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
-    font-weight: 800;
+    font-weight: 700;
+    font-size: 0.85rem;
 }
 
 .bb-settings-toggle {
     width: 100%;
-    min-height: 48px;
-    border-radius: 8px;
-    padding: 10px 12px;
-    margin-top: 8px;
+    min-height: 52px;
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-top: 10px;
     display: grid;
     grid-template-columns: auto 1fr auto;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     text-align: left;
-    font-weight: 800;
+    font-weight: 700;
+    font-size: 0.85rem;
 }
 
 .bb-settings-toggle:first-of-type {
@@ -426,27 +554,29 @@
 }
 
 .bb-settings-toggle-icon {
-    width: 28px;
-    height: 28px;
+    width: 30px;
+    height: 30px;
     border-radius: 8px;
-    background: rgba(148, 163, 184, 0.12);
+    background: rgba(255, 255, 255, 0.04);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     color: #94a3b8;
+    transition: all 0.2s ease;
 }
 
 .bb-settings-toggle.active .bb-settings-toggle-icon {
     color: #38bdf8;
+    background: rgba(56, 189, 248, 0.1);
 }
 
 .bb-settings-switch {
     position: relative;
-    width: 40px;
-    height: 22px;
+    width: 38px;
+    height: 20px;
     border-radius: 999px;
     background: #334155;
-    transition: background 0.18s ease;
+    transition: background 0.2s ease;
 }
 
 .bb-settings-switch::after {
@@ -454,15 +584,15 @@
     position: absolute;
     top: 3px;
     left: 3px;
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     background: #cbd5e1;
-    transition: transform 0.18s ease, background 0.18s ease;
+    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bb-settings-toggle.active .bb-settings-switch {
-    background: rgba(56, 189, 248, 0.42);
+    background: #38bdf8;
 }
 
 .bb-settings-toggle.active .bb-settings-switch::after {
@@ -476,7 +606,7 @@
     }
 
     .bb-relationship-faction-panel {
-        max-height: 260px;
+        max-height: 280px;
     }
 }
 
@@ -499,6 +629,17 @@
     }
 
     .bb-relationship-map {
-        height: 420px;
+        height: 380px;
+    }
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0.96);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
     }
 }

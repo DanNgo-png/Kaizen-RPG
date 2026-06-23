@@ -247,6 +247,10 @@ export class WorldLogOverlay {
     }
 
     _createOverlay() {
+        // Remove existing instance if any lingers in document.body
+        const existing = this.documentRef.querySelector(".bb-world-log-overlay");
+        if (existing) existing.remove();
+
         const overlay = this.documentRef.createElement("div");
         overlay.className = "mgmt-overlay bb-world-log-overlay hidden";
         overlay.innerHTML = `
@@ -261,7 +265,6 @@ export class WorldLogOverlay {
                 </div>
                 
                 <div class="bb-world-log-filters">
-                    <!-- Sleek Stats Dashboard Panel -->
                     <div id="world-log-stats" class="bb-world-log-stats-panel"></div>
 
                     <div class="bb-world-log-tabs">

@@ -91,6 +91,10 @@ export class ChroniclesModal {
     }
 
     _createModal() {
+        // Remove existing instance if any lingers in document.body
+        const existing = this.documentRef.querySelector(".bb-chronicles-overlay");
+        if (existing) existing.remove();
+
         const modal = this.documentRef.createElement("div");
         modal.className = "mgmt-overlay bb-chronicles-overlay hidden";
         modal.innerHTML = `
@@ -105,7 +109,6 @@ export class ChroniclesModal {
                 </div>
                 
                 <div class="bb-chronicles-body">
-                    <!-- Left Sidebar (Settlement Metadata, Economy, Expansion) -->
                     <div class="bb-chronicles-sidebar">
                         <div class="bb-chronicles-tabs">
                             <button class="bb-chronicles-tab active" data-tab="overview">Overview</button>
@@ -124,7 +127,6 @@ export class ChroniclesModal {
                         </div>
                     </div>
                     
-                    <!-- Right Panel (Chronicle Event Logs) -->
                     <div class="bb-chronicles-main">
                         <div class="bb-chronicles-main-header">
                             <h3><i class="fa-solid fa-clock-rotate-left"></i> Settlement Logs</h3>

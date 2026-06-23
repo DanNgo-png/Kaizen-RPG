@@ -39,24 +39,28 @@ export class SettlementSettingsOverlay {
     }
 
     _createOverlay() {
-    const overlay = this.documentRef.createElement("div");
-    overlay.className = "mgmt-overlay bb-settlement-settings-overlay hidden";
-    overlay.innerHTML = `
-        <div class="bb-settlement-settings-modal">
-            <div class="bb-settlement-modal-header">
-                <h2 class="bb-settlement-modal-title">
-                    <i class="fa-solid fa-sliders"></i> Settlement Settings
-                </h2>
-                <button class="bb-settlement-modal-close" data-action="${SETTING_ACTIONS.CLOSE}" title="Close">
-                    <i class="fa-solid fa-xmark"></i>
-                </button>
+        // Remove existing instance if any lingers in document.body
+        const existing = this.documentRef.querySelector(".bb-settlement-settings-overlay");
+        if (existing) existing.remove();
+
+        const overlay = this.documentRef.createElement("div");
+        overlay.className = "mgmt-overlay bb-settlement-settings-overlay hidden";
+        overlay.innerHTML = `
+            <div class="bb-settlement-settings-modal">
+                <div class="bb-settlement-modal-header">
+                    <h2 class="bb-settlement-modal-title">
+                        <i class="fa-solid fa-sliders"></i> Settlement Settings
+                    </h2>
+                    <button class="bb-settlement-modal-close" data-action="${SETTING_ACTIONS.CLOSE}" title="Close">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
+                </div>
+                <div class="bb-settlement-settings-body" data-role="body"></div>
             </div>
-            <div class="bb-settlement-settings-body" data-role="body"></div>
-        </div>
-    `;
-    this.documentRef.body.appendChild(overlay);
-    return overlay;
-}
+        `;
+        this.documentRef.body.appendChild(overlay);
+        return overlay;
+    }
 
     _bindEvents() {
         this.root.addEventListener("click", (event) => {
